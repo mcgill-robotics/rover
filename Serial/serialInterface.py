@@ -105,7 +105,21 @@ class SerialInterface:
             Raised when the CRC8-CCITT of the frame doesn't match the computed one
             Argument is the frame ID of the received frame
         """
-        return None
+        read_byte = ''
+        while(read_byte != '~'):
+            read_byte = self.mcu.read(1).decode('ascii')
+        frame = f'{read_byte}'      # Should be ~ or it shouldn't get here...
+        while(read_byte != '#'):    # Read until end delimiter
+            frame = f'{frame}{self.mcu.read(1).decode('ascii')}'
+        
+        # Check CRC8
+        for char in frame[4:-1]:
+            crc = compute_crc8ccitt(crc,int.from_bytes(char.encode('ascii'), byteorder='big'))      #compute for entire payload
+        if(crc != int.from_bytes(frame[3].encode('ascii'), byteorder='big'))
+            raise ValueError            # Raise error if CRCs don't match
+        
+        frame = f'{frame}{read_byte}'   # Should append # to frame
+        return frame
 
     def send_manager(self):
         """Thread loop for grabbing frames from the queue 
@@ -173,7 +187,7 @@ class SerialInterface:
         """
         if(self.mcu is not None and self.mcu.is_open):
             self.mcu.close()
-            self.mcu = None
+        self.mcu = None
 
 def find_ports():
     """Finds all ports available for connection

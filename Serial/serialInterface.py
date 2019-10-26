@@ -1,6 +1,7 @@
 import serial
 import queue
 import threading
+import sys
 
 #TODO Create Queues priority I/O
 
@@ -110,12 +111,14 @@ class SerialInterface:
             read_byte = self.mcu.read(1).decode('ascii')
         frame = f'{read_byte}'      # Should be ~ or it shouldn't get here...
         while(read_byte != '#'):    # Read until end delimiter
-            frame = f'{frame}{self.mcu.read(1).decode('ascii')}'
+            read_byte = self.mcu.read(1).decode('ascii')
+            frame = f'{frame}{read_byte}'
         
         # Check CRC8
         for char in frame[4:-1]:
             crc = compute_crc8ccitt(crc,int.from_bytes(char.encode('ascii'), byteorder='big'))      #compute for entire payload
-        if(crc != int.from_bytes(frame[3].encode('ascii'), byteorder='big'))
+        msg_crc = int.from_bytes(frame[3].encode('ascii'), byteorder='big')
+        if(crc != msg_crc):
             raise ValueError            # Raise error if CRCs don't match
         
         frame = f'{frame}{read_byte}'   # Should append # to frame
@@ -144,7 +147,7 @@ class SerialInterface:
         """
         previous_frame_id = 0
         while(not self.stop.is_set()):
-            if(self.mcu.in_waiting()):
+            if(self.mcu.in_waiting):
                 try:
                     received_frame = self.receive_frame()
                     sys_id_str, frame_id_str, frame_type_str, payload_str = unpackage_frame(received_frame)
@@ -247,7 +250,7 @@ def package_frame(sys_id, frame_id, frame_type, payload):
     crc = compute_crc8ccitt(crc,int.from_bytes(frame_type.encode('ascii'), byteorder='big'))    #compute for frame type
     for char in payload:
         crc = compute_crc8ccitt(crc,int.from_bytes(char.encode('ascii'), byteorder='big'))      #compute for entire payload
-    crc_str = crc.to_bytes(1,byteorder='big')
+    crc_str = crc.to_bytes(1,byteorder='big').decode('ascii')
     frame = f"~{sys_id}{frame_id}{crc_str}{frame_type}{payload}#"
     return frame
 
@@ -273,7 +276,7 @@ def unpackage_frame(frame):
     sys_id = frame[1]
     frame_id = frame[2]
     frame_type = frame[4]
-    payload = frame[5:-2]
+    payload = frame[5:-1]
     return sys_id, frame_id, frame_type, payload
 
 def compute_crc8ccitt(crc, data):
@@ -292,7 +295,7 @@ def compute_crc8ccitt(crc, data):
         new computed crc value
     """
     index = crc ^ data
-    return int(g_pui8Crc8CCITT[index])
+    return int.from_bytes(g_pui8Crc8CCITT[index], byteorder='big')
 
 g_pui8Crc8CCITT = [
     b'\x00', b'\x07', b'\x0E', b'\x09', b'\x1C', b'\x1B', b'\x12', b'\x15',

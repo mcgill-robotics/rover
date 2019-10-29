@@ -83,7 +83,7 @@ class SerialInterface:
         for char in frame:
             while(self.mcu.out_waiting): pass
             try:
-                sent = self.mcu.write(char.encode('ascii'))
+                sent = self.mcu.write(char.encode('utf-8'))
                 if(sent<1):
                     raise serial.SerialException
             except (serial.SerialException, serial.SerialTimeoutException) as e:
@@ -108,16 +108,16 @@ class SerialInterface:
         """
         read_byte = ''
         while(read_byte != '~'):
-            read_byte = self.mcu.read(1).decode('ascii')
+            read_byte = self.mcu.read(1).decode('utf-8')
         frame = f'{read_byte}'      # Should be ~ or it shouldn't get here...
         while(read_byte != '#'):    # Read until end delimiter
-            read_byte = self.mcu.read(1).decode('ascii')
+            read_byte = self.mcu.read(1).decode('utf-8')
             frame = f'{frame}{read_byte}'
         
         # Check CRC8
         for char in frame[4:-1]:
-            crc = compute_crc8ccitt(crc,int.from_bytes(char.encode('ascii'), byteorder='big'))      #compute for entire payload
-        msg_crc = int.from_bytes(frame[3].encode('ascii'), byteorder='big')
+            crc = compute_crc8ccitt(crc,int.from_bytes(char.encode('utf-8'), byteorder='big'))      #compute for entire payload
+        msg_crc = int.from_bytes(frame[3].encode('utf-8'), byteorder='big')
         if(crc != msg_crc):
             raise ValueError            # Raise error if CRCs don't match
         
@@ -130,15 +130,15 @@ class SerialInterface:
         current_frame = None
         while not self.stop.is_set():
             if(current_frame is not None):      # We are trying to send the head but window is blocking
-                if(self.window[int.from_bytes(current_frame[2].encode('ascii'),byteorder='big')]==''):
+                if(self.window[int.from_bytes(current_frame[2].encode('utf-8'),byteorder='big')]==''):
                     self.send_frame(current_frame)
-                    self.window[int.from_bytes(current_frame[2].encode('ascii'),byteorder='big')]=current_frame
+                    self.window[int.from_bytes(current_frame[2].encode('utf-8'),byteorder='big')]=current_frame
                     current_frame = None
             elif not self.send_queue.empty():   # Send the next available frame to send
                 next_frame = self.send_queue.get()
-                if(self.window[int.from_bytes(next_frame[2].encode('ascii'),byteorder='big')]==''):
+                if(self.window[int.from_bytes(next_frame[2].encode('utf-8'),byteorder='big')]==''):
                     self.send_frame(next_frame)
-                    self.window[int.from_bytes(next_frame[2].encode('ascii'),byteorder='big')]=next_frame
+                    self.window[int.from_bytes(next_frame[2].encode('utf-8'),byteorder='big')]=next_frame
                 else:
                     current_frame = next_frame
 
@@ -151,28 +151,28 @@ class SerialInterface:
                 try:
                     received_frame = self.receive_frame()
                     sys_id_str, frame_id_str, frame_type_str, payload_str = unpackage_frame(received_frame)
-                    frame_id = int.from_bytes(frame_id_str.encode('ascii'),byteorder='big')
+                    frame_id = int.from_bytes(frame_id_str.encode('utf-8'),byteorder='big')
                     
                     # Check if frames were lost
                     if((previous_frame_id+1)<frame_id):
                         for j in range(frame_id-previous_frame_id):
                             self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
-                            next_frame_id_str = self.next_frame_id.to_bytes(1,byteorder='big').decode('ascii')
-                            request_frame_id = (previous_frame_id+1+j).to_bytes(1,byteorder='big').decode('ascii')
+                            next_frame_id_str = self.next_frame_id.to_bytes(1,byteorder='big').decode('utf-8')
+                            request_frame_id = (previous_frame_id+1+j).to_bytes(1,byteorder='big').decode('utf-8')
                             frame = package_frame(sys_id_str, next_frame_id_str, 'R', request_frame_id)
                             self.send_queue.put(frame)
                     # Preprocess Protocol specific frames
                     if(frame_type_str=='A'):
-                        start_window = int.from_bytes(payload_str.encode('ascii'),byteorder='big')
+                        start_window = int.from_bytes(payload_str.encode('utf-8'),byteorder='big')
                         end_window = self.next_frame_id
                         for i in range((start_window-end_window)%self.WINDOW_SIZE):     # Circularly remove all outside window
                             self.window[(end_window+i)%self.WINDOW_SIZE]=''
                     elif(frame_type_str=='R'):
-                        self.send_queue.put(self.window[int.from_bytes(payload_str.encode('ascii'),byteorder='big')])
+                        self.send_queue.put(self.window[int.from_bytes(payload_str.encode('utf-8'),byteorder='big')])
                     # ACK and place frame in receive queue
                     else:
                         self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
-                        next_frame_id_str = self.next_frame_id.to_bytes(1,byteorder='big').decode('ascii')
+                        next_frame_id_str = self.next_frame_id.to_bytes(1,byteorder='big').decode('utf-8')
                         ack = package_frame(self.SYS_ID, next_frame_id_str, 'A', frame_id_str)
                         self.send_queue.put(ack)
                         self.receive_queue.put(received_frame)
@@ -180,7 +180,7 @@ class SerialInterface:
                     previous_frame_id = frame_id
                 except ValueError as err:
                     self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
-                    next_frame_id_str = self.next_frame_id.to_bytes(1,byteorder='big').decode('ascii')
+                    next_frame_id_str = self.next_frame_id.to_bytes(1,byteorder='big').decode('utf-8')
                     frame = package_frame(sys_id_str, next_frame_id_str, 'R', err.args)
                     self.send_queue.put(frame)
 
@@ -241,17 +241,29 @@ def port_is_valid(port):
 def package_frame(sys_id, frame_id, frame_type, payload):
     """Builds the frame following the protocol standard
 
+    Parameters
+    --------
+    sys_id : str
+        system ID field of the frame
+    frame_id : int
+        frame ID field of the frame
+    frame_type : str
+        frame type field to decode the payload
+    payload : str
+        payload field of the frame
+
     Returns
     --------
-    frame : str
+    frame : bytes
         frame of proper form following the standard
     """
+    frame_id_str = chr(frame_id)
     crc = 0
-    crc = compute_crc8ccitt(crc,int.from_bytes(frame_type.encode('ascii'), byteorder='big'))    #compute for frame type
+    crc = compute_crc8ccitt(crc,int.from_bytes(frame_type.encode('utf-8'), byteorder='big'))    #compute for frame type
     for char in payload:
-        crc = compute_crc8ccitt(crc,int.from_bytes(char.encode('ascii'), byteorder='big'))      #compute for entire payload
-    crc_str = crc.to_bytes(1,byteorder='big').decode('ascii')
-    frame = f"~{sys_id}{frame_id}{crc_str}{frame_type}{payload}#"
+        crc = compute_crc8ccitt(crc,int.from_bytes(char.encode('utf-8'), byteorder='big'))      #compute for entire payload
+    crc_str = chr(crc)
+    frame = f"~{sys_id}{frame_id_str}{crc_str}{frame_type}{payload}#"
     return frame
 
 def unpackage_frame(frame):
@@ -266,7 +278,7 @@ def unpackage_frame(frame):
     --------
     sys_id : str
         system ID field of the frame
-    frame_id : str
+    frame_id : int
         frame ID field of the frame
     frame_type : str
         frame type field to decode the payload
@@ -274,7 +286,7 @@ def unpackage_frame(frame):
         payload field of the frame
     """
     sys_id = frame[1]
-    frame_id = frame[2]
+    frame_id = ord(frame[2])
     frame_type = frame[4]
     payload = frame[5:-1]
     return sys_id, frame_id, frame_type, payload

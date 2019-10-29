@@ -20,7 +20,7 @@ class SerialInterface:
     """
 
     WINDOW_SIZE = 32
-    next_expected_frame_id = 0
+    next_frame_id = 0
 
     def __init__(self, port, baudRate):
         self.port = port
@@ -31,7 +31,7 @@ class SerialInterface:
         self.stop = threading.Event()
         self.window = ['']*self.WINDOW_SIZE
         self.SYS_ID = ''
-        self.next_outgoing_frame_id = 0
+        self.next_frame_id = 0
 
     def start_link(self):
         """Start connection with the paired device
@@ -157,40 +157,40 @@ class SerialInterface:
                     # Check if frames were lost
                     if((previous_frame_id+1)<frame_id):
                         for j in range(frame_id-previous_frame_id):
-                            self.next_expected_frame_id = (self.next_expected_frame_id + 1) % self.WINDOW_SIZE
-                            next_expected_frame_id_str = self.next_expected_frame_id.to_bytes(1,byteorder='big').decode('utf-8')
-                            request_frame_id = (previous_frame_id+1+j).to_bytes(1,byteorder='big').decode('utf-8')
-                            frame = package_frame(sys_id_str, next_expected_frame_id_str, 'R', request_frame_id)
+                            self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
+                            next_frame_id_str = chr(self.next_frame_id)
+                            request_frame_id = chr(previous_frame_id+1+j)
+                            frame = package_frame(sys_id_str, next_frame_id_str, 'R', request_frame_id)
                             self.send_queue.put(frame)
                     # Preprocess Protocol specific frames
                     if(frame_type_str=='A'):
                         start_window = int.from_bytes(payload_str.encode('utf-8'),byteorder='big')
-                        end_window = self.next_expected_frame_id
+                        end_window = self.next_frame_id
                         for i in range((start_window-end_window)%self.WINDOW_SIZE):     # Circularly remove all outside window
                             self.window[(end_window+i)%self.WINDOW_SIZE]=''
                     elif(frame_type_str=='R'):
                         self.send_queue.put(self.window[int.from_bytes(payload_str.encode('utf-8'),byteorder='big')])
                     # ACK and place frame in receive queue
                     else:
-                        self.next_expected_frame_id = (self.next_expected_frame_id + 1) % self.WINDOW_SIZE
-                        next_expected_frame_id_str = self.next_expected_frame_id.to_bytes(1,byteorder='big').decode('utf-8')
-                        ack = package_frame(self.SYS_ID, next_expected_frame_id_str, 'A', frame_id_str)
+                        self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
+                        next_frame_id_str = chr(self.next_frame_id)
+                        ack = package_frame(self.SYS_ID, next_frame_id_str, 'A', frame_id_str)
                         self.send_queue.put(ack)
                         self.receive_queue.put(received_frame)
                         
                     previous_frame_id = frame_id
                 except ValueError as err:
-                    self.next_expected_frame_id = (self.next_expected_frame_id + 1) % self.WINDOW_SIZE
-                    next_expected_frame_id_str = self.next_expected_frame_id.to_bytes(1,byteorder='big').decode('utf-8')
-                    frame = package_frame(sys_id_str, next_expected_frame_id_str, 'R', err.args)
+                    self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
+                    next_frame_id_str = chr(self.next_frame_id)
+                    frame = package_frame(sys_id_str, next_frame_id_str, 'R', err.args)
                     self.send_queue.put(frame)
 
     def send_packet(self, frame_type, packet):
         """Add packet to send to the output frame queue after packaging
         the packet into the frame
         """
-        frame = package_frame(self.SYS_ID, self.next_outgoing_frame_id, frame_type, packet)
-        self.next_outgoing_frame_id = (self.next_outgoing_frame_id +1)%32
+        frame = package_frame(self.SYS_ID, self.next_frame_id, frame_type, packet)
+        self.next_frame_id = (self.next_frame_id +1)%32
         self.send_queue.put(frame)
 
     def receive_packet(self):

@@ -23,6 +23,7 @@ class SerialInterface:
     TIMEOUT = 1000000
     next_frame_id = 0
     last_sent_frame_id = 0
+    connected = False
 
     def __init__(self, port, baudRate):
         self.port = port
@@ -50,12 +51,21 @@ class SerialInterface:
         except serial.SerialException:
             return False
         # Establish threads
+        self.stop.clear()
         self.send_thread = threading.Thread(target=self.send_manager)
         self.send_thread.start()
         self.receive_thread = threading.Thread(target=self.receive_manager)
         self.receive_thread.start()
 
-        #TODO Add frame exchange to let other device know exchange can begin
+        # Frame exchange to sync with other device and allow exchange to begin
+        sync_frame = package_frame(self.SYS_ID, self.next_frame_id, 'S','')
+        self.priority_send_queue.put(sync_frame)
+        timeout = 0
+        while(not self.connected and timeout < self.TIMEOUT):
+            timeout = timeout + 1
+        if(timeout>=self.TIMEOUT):
+            return False
+
         return True
 
     def stop_link(self):
@@ -148,7 +158,8 @@ class SerialInterface:
                         self._send_frame(self.window[frame_id])
                         timeout = 0
                     else:                                       # Assume that the peer device is not able to communicate
-                        self.stop_link()                        # Terminate connection
+                        self.connected = False
+                        self.stop.set()                         # Terminate connection
                 timeout = timeout + 1
             elif(priority_frame is not None):
                 sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(priority_frame)
@@ -164,33 +175,38 @@ class SerialInterface:
         """Thread for placing received frames into a queue for processing
         """
         previous_frame_id = 0
+        requesting_frame = False
         while(not self.stop.is_set()):
             if(self.mcu.in_waiting):
                 try:
                     received_frame = self._receive_frame()
-                    if(previous_frame_id == received_frame):
-                        continue
                     sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(received_frame)
                     print(f'Received : {received_frame}, SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                     # Preprocess Protocol specific frames
-                    if(frame_type_str=='A'):
+                    if(frame_type_str == 'A'):          # Acknowledge case
                         self.window[frame_id]=''
-                    elif(frame_type_str=='R'):
+                    elif(frame_type_str == 'R'):        # Request case
                         for i in range(frame_id, self.last_sent_frame_id):
                             self.priority_send_queue.put(self.window[i])
-                    else:
+                    elif(frame_type_str == 'Y' and frame_id == self.last_sent_frame_id):    # Sync-Ack case
+                        ack = package_frame(self.SYS_ID, payload_str, 'A', '')
+                        self.priority_send_queue.put(ack)
+                        self.connected = True
+                    else:                               # Data case
                         # Check if frames were lost
                         if(not ((previous_frame_id+1)==frame_id)):
-                            #Request all lost frames
-                            for i in range(previous_frame_id+1,frame_id+1):
-                                frame = package_frame(self.SYS_ID, i, 'R', '')
+                            if not requesting_frame:
+                                #Request first lost frames
+                                frame = package_frame(self.SYS_ID, previous_frame_id+1, 'R', '')
                                 self.priority_send_queue.put(frame)
+                                requesting_frame = True
                         # ACK and place frame in receive queue
                         else:
                             ack = package_frame(self.SYS_ID, frame_id, 'A', '')
                             self.priority_send_queue.put(ack)
                             self.receive_queue.put(received_frame)
                             previous_frame_id = frame_id
+                            requesting_frame = False
                 except ValueError:
                     frame = package_frame(self.SYS_ID, previous_frame_id + 1, 'R', '')
                     self.priority_send_queue.put(frame)
@@ -220,8 +236,7 @@ class SerialInterface:
         """Deconstructor of object
         Closes open serial port
         """
-        if(self.mcu is not None and self.mcu.is_open):
-            self.mcu.close()
+        self.stop_link()
         self.mcu = None
 
 def find_ports():

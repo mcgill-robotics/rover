@@ -20,6 +20,7 @@ class SerialInterface:
     """
 
     WINDOW_SIZE = 32
+    TIMEOUT = 1000000
     next_frame_id = 0
 
     def __init__(self, port, baudRate):
@@ -27,6 +28,7 @@ class SerialInterface:
         self.baudRate = baudRate
         self.mcu = None
         self.send_queue = queue.Queue()
+        self.priority_send_queue = queue.Queue()
         self.receive_queue = queue.Queue()
         self.stop = threading.Event()
         self.window = ['']*self.WINDOW_SIZE
@@ -67,7 +69,7 @@ class SerialInterface:
 
         self.mcu.close()
 
-    def send_frame(self, frame):
+    def _send_frame(self, frame):
         """Sends out frame byte by byte to the paired device
 
         Parameters
@@ -81,7 +83,6 @@ class SerialInterface:
             whether frame has been properly sent out
         """
         counter = 0
-        print(frame)
         for char in frame:
             while(self.mcu.out_waiting): pass
             try:
@@ -89,13 +90,12 @@ class SerialInterface:
                 if(sent<1):
                     raise serial.SerialException
             except (serial.SerialException, serial.SerialTimeoutException) as e:
-                    #TODO Establish way of resetting connection
+                    #TODO Establish way of dealing with write timeout
                     pass
             counter = counter + 1
-        print(counter)
         return (counter == len(frame))
 
-    def receive_frame(self):
+    def _receive_frame(self):
         """Receive frame from paired device byte by byte if available
 
         Returns
@@ -116,28 +116,45 @@ class SerialInterface:
         while(read_byte != '#' or len(frame)==4):       # Read until end delimiter/second condition if CRC is #
             read_byte = chr(int.from_bytes(self.mcu.read(1),"big"))
             frame = f'{frame}{read_byte}'
-        print(frame)
         # Check CRC8
         crc = 0
-        for char in frame[5:-1]:            #TODO CHANGE 5 TO 4
+        for char in frame[4:-1]:            
             crc = compute_crc8ccitt(crc,ord(char))      #compute for entire payload
         msg_crc = ord(frame[3])
         if(crc != msg_crc):
             raise ValueError            # Raise error if CRCs don't match
-        
-        frame = f'{frame}{read_byte}'   # Should append # to frame
         return frame
 
     def send_manager(self):
         """Thread loop for grabbing frames from the queue 
         """
         current_frame = None
+        priority_frame = None
+        timeout = 0
+        timeout_count = 0
         while not self.stop.is_set():
             if(current_frame is not None):      # We are trying to send the head but window is blocking
-                if(self.window[ord(current_frame[2])]==''):
-                    print(self.send_frame(current_frame))
-                    self.window[ord(current_frame[2])]=current_frame
+                sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(current_frame)
+                if(self.window[frame_id]==''):
+                    print(f'Sent : {current_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
+                    self._send_frame(current_frame)
+                    self.window[frame_id]=current_frame
                     current_frame = None
+                    timeout = 0
+                elif(self.window[frame_id] != '' and timeout > self.TIMEOUT):
+                    if(timeout_count > 10):                     # Try 10 times to get acknowledge
+                        self._send_frame(self.window[frame_id])
+                        timeout = 0
+                    else:                                       # Assume that the peer device is not able to communicate
+                        self.stop_link()                        # Terminate connection
+                timeout = timeout + 1
+            elif(priority_frame is not None):
+                sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(priority_frame)
+                print(f'Sent : {priority_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
+                self._send_frame(priority_frame)
+                priority_frame = None
+            elif not self.priority_send_queue.empty():   # Send the next available frame to send
+                priority_frame = self.priority_send_queue.get() 
             elif not self.send_queue.empty():   # Send the next available frame to send
                 current_frame = self.send_queue.get()
 
@@ -148,38 +165,32 @@ class SerialInterface:
         while(not self.stop.is_set()):
             if(self.mcu.in_waiting):
                 try:
-                    received_frame = self.receive_frame()
+                    received_frame = self._receive_frame()
                     sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(received_frame)
-                    
-                    # Check if frames were lost
-                    if((previous_frame_id+1)<frame_id):
-                        request_frame_id = previous_frame_id + 1
-                        frame_id_str = chr(request_frame_id)
-                        frame = package_frame(self.SYS_ID, frame_id_str, 'R', '')
-                        self.send_queue.put(frame)
+                    print(f'Received : {received_frame}, SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                     # Preprocess Protocol specific frames
                     if(frame_type_str=='A'):
-                        start_window = frame_id
-                        end_window = self.next_frame_id
-                        for i in range((start_window-end_window)%self.WINDOW_SIZE):     # Circularly remove all outside window
-                            self.window[(end_window+i)%self.WINDOW_SIZE]=''
+                        self.window[frame_id]=''
                     elif(frame_type_str=='R'):
-                        self.send_queue.put(self.window[frame_id])
-                    # ACK and place frame in receive queue
+                        self.priority_send_queue.put(self.window[frame_id])
                     else:
-                        self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
-                        ack = package_frame(self.SYS_ID, self.next_frame_id, 'A', frame_type_str)
-                        self.send_queue.put(ack)
-                        self.receive_queue.put(received_frame)
-                        
-                    previous_frame_id = frame_id
+                        # Check if frames were lost
+                        if(not ((previous_frame_id+1)==frame_id)):
+                            #Request all lost frames
+                            for i in range(previous_frame_id+1,frame_id+1):
+                                frame = package_frame(self.SYS_ID, i, 'R', '')
+                                self.priority_send_queue.put(frame)
+                        # ACK and place frame in receive queue
+                        else:
+                            ack = package_frame(self.SYS_ID, frame_id, 'A', '')
+                            self.priority_send_queue.put(ack)
+                            self.receive_queue.put(received_frame)
+                            previous_frame_id = frame_id
                 except ValueError:
-                    self.next_frame_id = (self.next_frame_id + 1) % self.WINDOW_SIZE
-                    next_frame_id_str = chr(self.next_frame_id)
-                    frame = package_frame(self.SYS_ID, next_frame_id_str, 'R', '')
-                    self.send_queue.put(frame)
+                    frame = package_frame(self.SYS_ID, previous_frame_id + 1, 'R', '')
+                    self.priority_send_queue.put(frame)
 
-    def send_packet(self, frame_type, packet):
+    def put_packet(self, frame_type, packet):
         """Add packet to send to the output frame queue after packaging
         the packet into the frame
         """
@@ -187,7 +198,7 @@ class SerialInterface:
         self.next_frame_id = (self.next_frame_id +1)%32
         self.send_queue.put(frame)
 
-    def receive_packet(self):
+    def get_packet(self):
         """Receive packet from oldest available non-processed frame
 
         Returns
@@ -228,14 +239,16 @@ def find_ports():
             port = "/dev/ttyUSB"+str(i)
             if(port_is_valid(port)):
                 port_list.append(port)
-            else:
+            else: 
                 break
+   
         for i in range(0,128):
             port = "/dev/ttyACM"+str(i)
             if(port_is_valid(port)):
                 port_list.append(port)
             else:
                 break
+
     return port_list
 
 def port_is_valid(port):
@@ -254,7 +267,7 @@ def port_is_valid(port):
     except serial.SerialException:
         return False
 
-def package_frame(sys_id, frame_id, frame_type, payload):
+def package_frame(sys_id, frame_id, frame_type, payload=''):
     """Builds the frame following the protocol standard
 
     Parameters
@@ -275,7 +288,7 @@ def package_frame(sys_id, frame_id, frame_type, payload):
     """
     frame_id_str = chr(frame_id)
     crc = 0
-    #crc = compute_crc8ccitt(crc, ord(frame_type))    #compute for frame type
+    crc = compute_crc8ccitt(crc, ord(frame_type))
     for char in payload:
         crc = compute_crc8ccitt(crc, ord(char))      #compute for entire payload
     crc_str = chr(crc)
@@ -304,7 +317,9 @@ def unpackage_frame(frame):
     sys_id = frame[1]
     frame_id = ord(frame[2])
     frame_type = frame[4]
-    payload = frame[5:-1]
+    payload = ''
+    if len(frame)>5:
+        payload = frame[5:-1]
     return sys_id, frame_id, frame_type, payload
 
 def compute_crc8ccitt(crc, data):

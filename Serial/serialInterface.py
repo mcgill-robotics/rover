@@ -22,6 +22,7 @@ class SerialInterface:
     WINDOW_SIZE = 32
     TIMEOUT = 1000000
     next_frame_id = 0
+    last_sent_frame_id = 0
 
     def __init__(self, port, baudRate):
         self.port = port
@@ -139,6 +140,7 @@ class SerialInterface:
                     print(f'Sent : {current_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                     self._send_frame(current_frame)
                     self.window[frame_id]=current_frame
+                    self.last_sent_frame_id = frame_id
                     current_frame = None
                     timeout = 0
                 elif(self.window[frame_id] != '' and timeout > self.TIMEOUT):
@@ -166,13 +168,16 @@ class SerialInterface:
             if(self.mcu.in_waiting):
                 try:
                     received_frame = self._receive_frame()
+                    if(previous_frame_id == received_frame):
+                        continue
                     sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(received_frame)
                     print(f'Received : {received_frame}, SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                     # Preprocess Protocol specific frames
                     if(frame_type_str=='A'):
                         self.window[frame_id]=''
                     elif(frame_type_str=='R'):
-                        self.priority_send_queue.put(self.window[frame_id])
+                        for i in range(frame_id, self.last_sent_frame_id):
+                            self.priority_send_queue.put(self.window[i])
                     else:
                         # Check if frames were lost
                         if(not ((previous_frame_id+1)==frame_id)):

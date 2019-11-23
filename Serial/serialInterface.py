@@ -2,6 +2,7 @@ import serial
 import queue
 import threading
 import sys
+import time
 
 #TODO Create Queues priority I/O
 
@@ -20,9 +21,10 @@ class SerialInterface:
     """
 
     WINDOW_SIZE = 32
-    TIMEOUT = 1000000
+    TIMEOUT = 1000
     next_frame_id = 0
     last_sent_frame_id = 0
+    sync_id = 0
     connected = False
 
     def __init__(self, port, baudRate):
@@ -63,7 +65,9 @@ class SerialInterface:
         timeout = 0
         while(not self.connected and timeout < self.TIMEOUT):
             timeout = timeout + 1
+            time.sleep(0.001)
         if(timeout>=self.TIMEOUT):
+            self.stop_link()
             return False
 
         return True
@@ -144,7 +148,7 @@ class SerialInterface:
         timeout = 0
         timeout_count = 0
         while not self.stop.is_set():
-            if(current_frame is not None):      # We are trying to send the head but window is blocking
+            if(current_frame is not None and self.connected):      # We are trying to send the head but window is blocking
                 sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(current_frame)
                 if(self.window[frame_id]==''):
                     print(f'Sent : {current_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
@@ -165,6 +169,8 @@ class SerialInterface:
                 sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(priority_frame)
                 print(f'Sent : {priority_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                 self._send_frame(priority_frame)
+                if(frame_type_str=='S'):
+                    self.sync_id = frame_id
                 priority_frame = None
             elif not self.priority_send_queue.empty():   # Send the next available frame to send
                 priority_frame = self.priority_send_queue.get() 
@@ -188,8 +194,9 @@ class SerialInterface:
                     elif(frame_type_str == 'R'):        # Request case
                         for i in range(frame_id, self.last_sent_frame_id):
                             self.priority_send_queue.put(self.window[i])
-                    elif(frame_type_str == 'Y' and frame_id == self.last_sent_frame_id):    # Sync-Ack case
-                        ack = package_frame(self.SYS_ID, payload_str, 'A', '')
+                    elif(frame_type_str == 'Y' and frame_id == self.sync_id):    # Sync-Ack case
+                        previous_frame_id = int(payload_str)
+                        ack = package_frame(self.SYS_ID, previous_frame_id, 'A', '')
                         self.priority_send_queue.put(ack)
                         self.connected = True
                     else:                               # Data case

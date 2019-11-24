@@ -4,8 +4,6 @@ import threading
 import sys
 import time
 
-#TODO Create Queues priority I/O
-
 class SerialInterface:
     """Serial Interface to establish connection and communicate
     with devices using the McGill Robotics Rover Serial Frame standard

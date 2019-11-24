@@ -21,7 +21,7 @@ class SerialInterface:
     """
 
     WINDOW_SIZE = 32
-    TIMEOUT = 1000
+    TIMEOUT = 10
     next_frame_id = 0
     last_sent_frame_id = 0
     sync_id = 0
@@ -59,13 +59,17 @@ class SerialInterface:
         self.receive_thread = threading.Thread(target=self.receive_manager)
         self.receive_thread.start()
 
+        # Clear buffers
+        self.mcu.reset_input_buffer()
+        self.mcu.reset_output_buffer()
+
         # Frame exchange to sync with other device and allow exchange to begin
-        sync_frame = package_frame(self.SYS_ID, self.next_frame_id, 'S','')
-        self.priority_send_queue.put(sync_frame)
         timeout = 0
         while(not self.connected and timeout < self.TIMEOUT):
+            sync_frame = package_frame(self.SYS_ID, self.next_frame_id, 'S','')
+            self.priority_send_queue.put(sync_frame)
             timeout = timeout + 1
-            time.sleep(0.001)
+            time.sleep(0.1)
         if(timeout>=self.TIMEOUT):
             self.stop_link()
             return False
@@ -164,7 +168,7 @@ class SerialInterface:
                     else:                                       # Assume that the peer device is not able to communicate
                         self.connected = False
                         self.stop.set()                         # Terminate connection
-                timeout = timeout + 1
+                        timeout = timeout + 1
             elif(priority_frame is not None):
                 sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(priority_frame)
                 print(f'Sent : {priority_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
@@ -195,16 +199,17 @@ class SerialInterface:
                         for i in range(frame_id, self.last_sent_frame_id):
                             self.priority_send_queue.put(self.window[i])
                     elif(frame_type_str == 'Y' and frame_id == self.sync_id):    # Sync-Ack case
-                        previous_frame_id = int(payload_str)
-                        ack = package_frame(self.SYS_ID, previous_frame_id, 'A', '')
+                        previous_frame_id = int(payload_str)-1
+                        ack = package_frame(self.SYS_ID, previous_frame_id+1, 'A', '')
+                        self.peer_sys = sys_id_str
                         self.priority_send_queue.put(ack)
                         self.connected = True
                     else:                               # Data case
                         # Check if frames were lost
-                        if(not ((previous_frame_id+1)==frame_id)):
+                        if(not (((previous_frame_id+1)%self.WINDOW_SIZE)==frame_id)):
                             if not requesting_frame:
                                 #Request first lost frames
-                                frame = package_frame(self.SYS_ID, previous_frame_id+1, 'R', '')
+                                frame = package_frame(self.SYS_ID, (previous_frame_id+1)%self.WINDOW_SIZE, 'R', '')
                                 self.priority_send_queue.put(frame)
                                 requesting_frame = True
                         # ACK and place frame in receive queue
@@ -215,7 +220,7 @@ class SerialInterface:
                             previous_frame_id = frame_id
                             requesting_frame = False
                 except ValueError:
-                    frame = package_frame(self.SYS_ID, previous_frame_id + 1, 'R', '')
+                    frame = package_frame(self.SYS_ID, (previous_frame_id+1)%self.WINDOW_SIZE, 'R', '')
                     self.priority_send_queue.put(frame)
 
     def put_packet(self, frame_type, packet):

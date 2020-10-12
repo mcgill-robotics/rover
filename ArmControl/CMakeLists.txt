@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
 )
 
+
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -157,7 +159,21 @@ ${catkin_INCLUDE_DIRS}
 #   ${catkin_LIBRARIES}
 # )
 
+if (NOT CMAKE_BUILD_TYPE)
+    message(WARNING "Build type not set")
+    message(WARNING "Setting build type to Release")
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+set(DEBUG_CONFIG "-O0 -fno-strict-aliasing -Wall -mavx2 -fsanitize=address -fsanitize=undefined -fsanitize=null -fsanitize=return ")
+set(RELEASE_CONFIG "-O3 -fno-strict-aliasing -Wall -mavx2 ")
+
+
 add_executable(ArmControl src/ArmControlNode.cpp)
+add_compile_options("$<$<CONFIG:Debug>: ${DEBUG_CONFIG}")
+add_compile_options("$<$<CONFIG:Debug>: ${RELEASE_CONFIG}")
 target_link_libraries(ArmControl ${catkin_LIBRARIES})
 
 #############

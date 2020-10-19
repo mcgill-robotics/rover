@@ -126,7 +126,11 @@ catkin_package(
 include_directories(
 # include
 ${catkin_INCLUDE_DIRS}
+"${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include"
 )
+
+# message(SEND_ERROR "${CMAKE_CURRENT_SOURCE_DIR}/../../devel/include")
+# message(SEND_ERROR ${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -166,15 +170,15 @@ endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-set(DEBUG_CONFIG "-fno-strict-aliasing;-Wall;-mavx2;-fsanitize=address;-fsanitize=undefined;-fsanitize=null;-fsanitize=return")
-set(RELEASE_CONFIG "-O3;-fno-strict-aliasing;-Wall;-mavx2")
+set(DEBUG_CONFIG "-fno-strict-aliasing;-Wall;-mavx2;-fsanitize=undefined;-fsanitize=null;-fsanitize=return")
+set(RELEASE_CONFIG "-O3;-fno-strict-aliasing;-Wall;-mavx2;-mfpmath=sse;-ftree-vectorizer-verbose=5")
 
 
-add_executable(ArmControl src/ArmControlNode.cpp)
+add_executable(ArmControl src/ArmControlNode.cpp src/DirectArmControlManager.cpp)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(ArmControl PUBLIC "${DEBUG_CONFIG}")
-    target_link_libraries(ArmControl "-fsanitize=address;-fsanitize=undefined;-fsanitize=null;-fsanitize=return")
+    target_link_libraries(ArmControl "-fsanitize=undefined;-fsanitize=null;-fsanitize=return")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_options(ArmControl PUBLIC "${RELEASE_CONFIG}")
 else()

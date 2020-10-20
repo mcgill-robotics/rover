@@ -10,7 +10,7 @@ namespace Rover
     void DirectArmControlManager::Update(float timestep)
     {
         ROS_INFO("Elapsed: %f", timestep);
-        m_ArmMotorPublisher.publish(static_cast<ArmControl::ArmMotorData>(m_ArmData));
+        m_ArmMotorPublisher.publish(m_ArmData);
     }
 }
 

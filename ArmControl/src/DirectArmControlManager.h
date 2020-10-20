@@ -18,6 +18,7 @@ namespace Rover
         };
 
         // TODO : to be populated later
+        // TODO : refactor
         // In radians
         static constexpr MotorRange AXIS_0_RANGE = {0.0f, 0.0f};
         static constexpr MotorRange AXIS_1_RANGE = {0.0f, 0.0f};
@@ -28,50 +29,6 @@ namespace Rover
         DirectArmControlManager(ros::NodeHandle& handle);
 
         void Update(float timestep);
-
-        float& GetMotorData(size_t index)
-        {
-            ROS_ASSERT(index <= 4 && index >= 0);
-            // TODO : optimize
-            switch (index)
-            {
-                case 0:
-                {
-                    return m_ArmData.Axis0;
-                }
-                case 1:
-                {
-                    return m_ArmData.Axis1;
-                }
-                case 2:
-                {
-                    return m_ArmData.Axis2;
-                }
-                case 3:
-                {
-                    return m_ArmData.Axis3;
-                }
-                case 4:
-                {
-                    return m_ArmData.Axis4;
-                }
-                default:
-                {
-                    ROS_ASSERT(false);
-                }
-            }
-        }
-
-        float& operator[](size_t index)
-        {
-            return GetMotorData(index);
-        }
-
-        void SelectMotor(size_t index)
-        {
-            ROS_ASSERT(index <= 4 && index >= 0);
-            m_ActiveMotor = index;
-        }
 
         void DisconnectDirectInput()
         {
@@ -92,45 +49,16 @@ namespace Rover
         {
             ROS_INFO("Pitch: %f\nRoll: %f\nYall: %f\nBtnCycleForward: %d\nBtnCycleBackward: %d", 
                 input.PitchAxis, 
-                input.RollAxis, // ignore
-                input.YawAxis, // ignore
+                input.RollAxis,
+                input.YawAxis,
                 input.BtnCycleForward, 
                 input.BtnCycleForward
             );
-            if (input.BtnCycleForward)
-            {
-                CycleForward();
-            }
-            if (input.BtnCycleBackward)
-            {
-                CycleBackward();
-            }
-            GetMotorData(m_ActiveMotor) += input.PitchAxis * m_LatestTimestep;
+            
+            
+            // TODO wrist control
         }
 
-        void EnsureMotorIndexInRange()
-        {
-            if (m_ActiveMotor > 4)
-            {
-                m_ActiveMotor -= 5;
-            }
-            if (m_ActiveMotor < 0)
-            {
-                m_ActiveMotor += 5;
-            }
-        }
-
-        void CycleForward()
-        {
-            m_ActiveMotor++;
-            EnsureMotorIndexInRange();
-        }
-
-        void CycleBackward()
-        {
-            m_ActiveMotor--;
-            EnsureMotorIndexInRange();
-        }
 
         ArmMotorData m_ArmData;
         ros::NodeHandle& m_NodeHandle;

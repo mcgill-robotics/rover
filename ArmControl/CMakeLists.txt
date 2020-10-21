@@ -52,7 +52,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  ArmMotorData.msg
+  ArmMotorCommand.msg
   ProcessedControllerInput.msg
 )
 
@@ -175,11 +175,16 @@ set(DEBUG_CONFIG "-fno-strict-aliasing;-Wall;-mavx2;-fsanitize=undefined;-fsanit
 set(RELEASE_CONFIG "-O3;-fno-strict-aliasing;-Wall;-mavx2;-mfpmath=sse;-ftree-vectorizer-verbose=5")
 
 
-add_executable(ArmControl src/ArmControlNode.cpp src/DirectArmControlManager.cpp)
+add_executable(ArmControl
+    src/ArmControlNode.cpp
+    src/DirectArmControlManager.cpp
+    src/Motor.cpp
+)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(ArmControl PUBLIC "${DEBUG_CONFIG}")
     target_link_libraries(ArmControl "-fsanitize=undefined;-fsanitize=null;-fsanitize=return")
+    target_compile_definitions(ArmControl PRIVATE _DEBUG)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_options(ArmControl PUBLIC "${RELEASE_CONFIG}")
 else()

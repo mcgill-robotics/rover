@@ -1,8 +1,11 @@
 #pragma once
 #include <stdlib.h>
-#include "ArmControl/ArmMotorData.h"
+#include "ArmControl/ArmMotorCommand.h"
 #include "ArmControl/ProcessedControllerInput.h"
+#include "Motor.h"
 #include <ros/ros.h>
+
+static_assert(std::is_trivially_copyable<ArmControl::ProcessedControllerInput>::value);
 
 namespace Rover
 {
@@ -11,21 +14,6 @@ namespace Rover
     class DirectArmControlManager final
     {
     public:
-        struct MotorRange
-        {
-            float Min;
-            float Max;
-        };
-
-        // TODO : to be populated later
-        // TODO : refactor
-        // In radians
-        static constexpr MotorRange AXIS_0_RANGE = {0.0f, 0.0f};
-        static constexpr MotorRange AXIS_1_RANGE = {0.0f, 0.0f};
-        static constexpr MotorRange AXIS_2_RANGE = {0.0f, 0.0f};
-        static constexpr MotorRange AXIS_3_RANGE = {0.0f, 0.0f};
-        static constexpr MotorRange AXIS_4_RANGE = {0.0f, 0.0f};
-
         DirectArmControlManager(ros::NodeHandle& handle);
 
         void Update(float timestep);
@@ -43,24 +31,32 @@ namespace Rover
             };
             m_ProcessedInputSubscriber = m_NodeHandle.subscribe<ProcessedControllerInput>("ProcessedArmControllerInput", 16, bindedFunc);
         }
+
+        Motor* GetMotor(size_t index);
+
+        Motor* operator[](size_t index)
+        {
+            return GetMotor(index);
+        }
+
+        Motor* GetTurnTableMotor() { return &m_Motors[0]; };
+        Motor* GetShoulderMotor() { return &m_Motors[1]; };
+        Motor* GetElbowMotor() { return &m_Motors[2]; };
+        Motor* GetWristXMotor() { return &m_Motors[3]; };
+        Motor* GetWristYMotor() { return &m_Motors[4]; };
+        Motor* GetClawMotor() { return &m_Motors[5]; };
         
     private:
         void DirectControllCallback(const ProcessedControllerInput& input)
         {
-            ROS_INFO("Pitch: %f\nRoll: %f\nYall: %f\nBtnCycleForward: %d\nBtnCycleBackward: %d", 
-                input.PitchAxis, 
-                input.RollAxis,
-                input.YawAxis,
-                input.BtnCycleForward, 
-                input.BtnCycleForward
-            );
-            
-            
-            // TODO wrist control
+            for (size_t i = 0; i < 6; i++)
+            {
+                GetMotor(i)->SetAngularVelocityRelative(input.ControllerInput[i]);
+            }
         }
 
+        Motor m_Motors[6];
 
-        ArmMotorData m_ArmData;
         ros::NodeHandle& m_NodeHandle;
         ros::Publisher m_ArmMotorPublisher;
         ros::Subscriber m_ProcessedInputSubscriber;

@@ -1,4 +1,4 @@
-#include "ArmControl/ArmMotorData.h"
+#include "ArmControl/ArmMotorCommand.h"
 #include "DirectArmControlManager.h"
 #include <ros/ros.h>
 #include <chrono>

@@ -51,7 +51,7 @@ namespace Rover
         {
             for (size_t i = 0; i < 6; i++)
             {
-                GetMotor(i)->SetAngularVelocityRelative(input.ControllerInput[i]);
+                m_Motors[i].SetAngularVelocityRelative(input.ControllerInput[i]);
             }
         }
 
@@ -60,7 +60,6 @@ namespace Rover
         ros::NodeHandle& m_NodeHandle;
         ros::Publisher m_ArmMotorPublisher;
         ros::Subscriber m_ProcessedInputSubscriber;
-        size_t m_ActiveMotor;
         float m_LatestTimestep;
     };
 }

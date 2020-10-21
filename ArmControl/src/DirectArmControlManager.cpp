@@ -8,7 +8,7 @@ namespace Rover
 
     DirectArmControlManager::DirectArmControlManager(ros::NodeHandle& handle)
         : m_NodeHandle(handle), m_ArmMotorPublisher(handle.advertise<ArmMotorCommand>("arm_control_data", 16)),
-          m_ActiveMotor(0), m_LatestTimestep(0.0f)
+          m_LatestTimestep(0.0f)
     {
         boost::function<void(const ProcessedControllerInput& input)> bindedFunc = [this](const ProcessedControllerInput& input) -> void
         {

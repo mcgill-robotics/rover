@@ -1,5 +1,7 @@
 #include "Motor.h"
 
+#include <ros/ros.h>
+
 namespace Rover
 {
     Motor::Motor()

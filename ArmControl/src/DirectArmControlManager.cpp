@@ -31,6 +31,11 @@ namespace Rover
             }
         }
 #endif
+        // update motor state per tick
+        std::for_each(std::begin(m_Motors), std::end(m_Motors), [=](Motor& motor) -> void
+        {
+            motor.Update(timestep);
+        });
         ArmMotorCommand command;
         for (size_t i = 0; i < 6; i++)
         {

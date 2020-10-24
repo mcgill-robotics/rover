@@ -12,6 +12,6 @@ namespace Rover
 
     void Motor::Update(float timestep)
     {
-        // TODO
+        // TODO : manage the internal state of the motor
     }
 }

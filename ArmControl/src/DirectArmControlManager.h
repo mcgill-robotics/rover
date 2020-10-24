@@ -16,13 +16,22 @@ namespace Rover
     public:
         DirectArmControlManager(ros::NodeHandle& handle);
 
+        /**
+         * called every single tick to update the internal states
+         */
         void Update(float timestep);
 
+        /**
+         * call this method before doing any IK
+         */
         void DisconnectDirectInput()
         {
             m_ProcessedInputSubscriber.shutdown();
         }
 
+        /**
+         * call this method to resume manual control (non-IK)
+         */
         void ConnectDirectInput()
         {
             boost::function<void(const ProcessedControllerInput& input)> bindedFunc = [this](const ProcessedControllerInput& input) -> void
@@ -32,6 +41,11 @@ namespace Rover
             m_ProcessedInputSubscriber = m_NodeHandle.subscribe<ProcessedControllerInput>("ProcessedArmControllerInput", 16, bindedFunc);
         }
 
+        /**
+         * get a pointer to one of the motors
+         * do not take ownership of this pointer
+         * 0 <= index <= 5
+         */
         Motor* GetMotor(size_t index);
 
         Motor* operator[](size_t index)
@@ -39,6 +53,9 @@ namespace Rover
             return GetMotor(index);
         }
 
+        /**
+         * do not take ownership of these pointers
+         */
         Motor* GetTurnTableMotor() { return &m_Motors[0]; };
         Motor* GetShoulderMotor() { return &m_Motors[1]; };
         Motor* GetElbowMotor() { return &m_Motors[2]; };

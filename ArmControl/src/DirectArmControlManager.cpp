@@ -10,11 +10,7 @@ namespace Rover
         : m_NodeHandle(handle), m_ArmMotorPublisher(handle.advertise<ArmMotorCommand>("arm_control_data", 16)),
           m_LatestTimestep(0.0f)
     {
-        boost::function<void(const ProcessedControllerInput& input)> bindedFunc = [this](const ProcessedControllerInput& input) -> void
-        {
-            DirectControllCallback(input);
-        };
-        m_ProcessedInputSubscriber = handle.subscribe<ProcessedControllerInput>("ProcessedArmControllerInput", 16, bindedFunc);
+        ConnectDirectInput();
     }
 
     void DirectArmControlManager::Update(float timestep)

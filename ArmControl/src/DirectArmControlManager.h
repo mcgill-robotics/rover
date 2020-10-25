@@ -38,7 +38,7 @@ namespace Rover
             {
                 DirectControllCallback(input);
             };
-            m_ProcessedInputSubscriber = m_NodeHandle.subscribe<ProcessedControllerInput>("ProcessedArmControllerInput", 16, bindedFunc);
+            m_ProcessedInputSubscriber = m_NodeHandle.subscribe<ProcessedControllerInput>("processed_arm_controller_input", 16, bindedFunc);
         }
 
         /**

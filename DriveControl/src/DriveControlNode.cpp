@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
-#include <DriveControl/joy.h>
+#include <sensor_msgs/Joy.h>
 
 
 class Drive_Control
@@ -10,7 +10,7 @@ public:
 
 private:
 
-    void joyCallback(const DriveControl::joy::ConstPtr& joy);
+    void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
     
 
     ros::NodeHandle handle;
@@ -29,13 +29,13 @@ Drive_Control::Drive_Control():
     angular(2)
 {
 
-    drive_sub =  handle.subscribe<DriveControl::joy>("joy", 10, &Drive_Control::joyCallback, this);
+    drive_sub =  handle.subscribe<sensor_msgs::Joy>("joy", 10, &Drive_Control::joyCallback, this);
 
 }
 
-void Drive_Control::joyCallback(const DriveControl::joy::ConstPtr& joy)
+void Drive_Control::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-    
+
 }
 
 

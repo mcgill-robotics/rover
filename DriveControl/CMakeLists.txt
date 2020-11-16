@@ -131,7 +131,7 @@ ${catkin_INCLUDE_DIRS}
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/DriveControl.cpp
+#   src/${PROJECT_NAME}/drive_control_node.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -159,7 +159,7 @@ ${catkin_INCLUDE_DIRS}
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(DriveControl src/DriveControlNode.cpp)
+add_executable(DriveControl src/drive_control_node.cpp)
 target_link_libraries(DriveControl ${catkin_LIBRARIES})
 
 #############

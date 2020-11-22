@@ -14,9 +14,6 @@ from visualization_msgs.msg import MarkerArray
 
 import sys
 import copy
-import moveit_commander
-import moveit_msgs.msg
-import geometry_msgs.msg
 from std_msgs.msg import String
 
 # Initialize ekf node to appear in rosnode list

@@ -21,8 +21,8 @@ private:
     static constexpr int linearAxis = 1; //1 is the index controlling up/down axis on xbox 360 controller
     static constexpr int rotationAxis = 0; //0 is the index controlling up/down axis on xbox 360 controller
     
-    static constexpr float kv = 0.49; //just a constant
-    static constexpr float ko = 0.49; //just a constant
+    static constexpr float kv = 0.5; //just a constant
+    static constexpr float ko = 0.5; //just a constant
 
     static constexpr float radiusWheel = 0.15; //radius of the wheel in meters
     static constexpr float length = 0.4; //wheel to center in meters
@@ -55,17 +55,18 @@ drive_control::drive_control()
 void drive_control::joy_callback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     DriveControl::WheelSpeed speed;
-
-    x = joy->axes[rotationAxis];
-    y = joy->axes[linearAxis];
     
-    linearVelocity = kv*0.5* maxV * y * (2-abs(x)); //linear velocity received from controller input
-    rotationalVelocity = ko * 0.5 * maxOmega * x * (2-abs(y)); //rotational velocity received from controller input
 
-    speed.wheel_speed[0] = (linearVelocity + (rotationalVelocity*length))/radiusWheel; //left wheel speed
-    speed.wheel_speed[1] = (linearVelocity - (rotationalVelocity*length))/radiusWheel; //right wheel speed
+     x = joy->axes[rotationAxis];
+     y = joy->axes[linearAxis];
+    
+     linearVelocity = kv*0.5* maxV * y * (2-abs(x)); //linear velocity received from controller input
+     rotationalVelocity = ko * 0.5 * maxOmega * x * (2-abs(y)); //rotational velocity received from controller input
 
+     speed.wheel_speed[0] = (linearVelocity + (rotationalVelocity*length))/radiusWheel; //left wheel speed
+     speed.wheel_speed[1] = (linearVelocity - (rotationalVelocity*length))/radiusWheel; //right wheel speed
 
+    ROS_INFO("wheel_speed sent");
 
     velPub.publish(speed);  //publish wheelspeed message to WheelSpeed topic
 

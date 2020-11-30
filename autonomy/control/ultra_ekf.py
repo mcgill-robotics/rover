@@ -14,7 +14,7 @@ from visualization_msgs.msg import MarkerArray
 
 import sys
 import copy
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32
 
 # Initialize ekf node to appear in rosnode list
 rospy.init_node("ekf_node")
@@ -34,6 +34,21 @@ ekf_topic = 'visualization_marker_array'
 ekfPublisher = rospy.Publisher(ekf_topic, MarkerArray)
 
 ekfArray = MarkerArray()
+
+# Declare distance variable
+distance = 0
+
+#Callback function for extracting data from the ultrasonic sensor and assigning it to distance variable
+def callback(data):
+    global distance 
+    distance = data.data
+
+# Subscribes to distReader topic (ultrasonic sensor)
+distanceRead = rospy.Subscriber("distReader", Float32, callback)
+rospy.spin()
+
+#initial starting point for robot (goal/wall/obstacle as reference)
+init_distance = distance
 
 class RobotEKF(EKF):
     def __init__(self, dt, std_vel, std_steer):
@@ -60,7 +75,6 @@ class RobotEKF(EKF):
         self.v, self.beta, self.theta = v, beta, theta
 
     def predict(self, u=0):
-        self.x = self.move(self.x, u, self.dt)
         self.subs[self.theta] = self.x[2, 0]
         self.subs[self.v] = u[0]
         self.subs[self.beta] = u[1]
@@ -74,19 +88,6 @@ class RobotEKF(EKF):
 
         self.P = dot(F, self.P).dot(F.T) + dot(V, M).dot(V.T)
 
-    def move(self, x, u, dt):
-        theta = x[2, 0]
-        vel = u[0]
-        beta = u[1]
-        dist = vel * dt
-        new_theta = (theta + beta) % (2 * np.pi)
-        if new_theta > np.pi:             # move to [-pi, pi)
-            new_theta -= 2 * np.pi
-
-        new_x = np.array([[x[0, 0] + dist*sin(new_theta)], 
-                          [x[1, 0] + dist*cos(new_theta)], 
-                          [new_theta]])
-        return new_x
 
 def H_of(x):
     """ compute Jacobian of H matrix where h(x) computes 
@@ -119,6 +120,7 @@ def residual(a, b):
 
 def get_measurement(sim_pos, std_rng, std_brg):
     """ simulate measurement by adding random noise within variance range """
+    #sim_pos[0,0] = distance - init_distance
     x, y, theta = sim_pos[0, 0], sim_pos[1, 0], sim_pos[2, 0]
     noised_theta = (theta + randn()*std_brg) % (2 * np.pi)
     if noised_theta > np.pi:  # move to [-pi, pi)
@@ -163,16 +165,16 @@ def run_navigation(start_state, goal_state, init_var, tol, std_vel, std_steer,
         # u = get_control(current_state, goal_state)
 
         # ideal movement of robot
-        ideal_state = ekf.move(ideal_state, u, dt)
+        #ideal_state = ekf.move(ideal_state, u, dt)
         # keep track of the ideal path
-        ideal_track.append(ideal_state)
+        #ideal_track.append(ideal_state)
 
         # apply noise to control and measurement with EKF
         ekf.predict(u=u)
         z = get_measurement(ekf.x, std_range, std_bearing)
         ekf.update(z, HJacobian=H_of, Hx=Hx, residual=residual)
         # keep track of the EKF path
-        ekf_track.append(ekf.x) 
+        ekf_track.append(ekf.x)
 
     ideal_track = np.array(ideal_track)
     ekf_track = np.array(ekf_track)
@@ -268,8 +270,8 @@ def run_navigation(start_state, goal_state, init_var, tol, std_vel, std_steer,
     plt.show()
     return ekf
 
-start_state = array([[2.0, 2.0, 0.0]]).T
-goal_state = array([[12.0, 2.0]]).T
+start_state = np.array([[2.0, 0.0, 0.0]]).T
+goal_state = np.array([[12.0,0.0]]).T
 init_var = [0.1, 0.1, 0.01]   # initial std for state variables x, y and theta
 	
 ekf = run_navigation(

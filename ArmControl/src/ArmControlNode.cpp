@@ -18,11 +18,7 @@ constexpr int LOOP_RATE = 120;
 // message format, add this to the DirectArmControlManager, and modify the Motor classes
 // so that the Motor class can manage its own state. It's up to you to decide how to do
 // that.
-// For the Motor class, you will not need to instantiate them yourself. You can get
-// an instance to any of the 6 motors by calling methods on DirectArmControlManager,
-// either by index or by name.
-// The DirectArmControlManager class owns these pointers!
-// When the program is ready for inverse kinematics, call the DirectArmControl::DisconnectDirectInput
+// When the program is ready for inverse kinematics, call the DirectArmControl::disconnect_direct_input
 // method to "hijack" the class. Only after that can you safely subscribe to the processed
 // joystick input and do IK. As said, you will be getting encoder data from the Motor
 // class and IK output will be sent to the Motor class.
@@ -32,12 +28,6 @@ constexpr int LOOP_RATE = 120;
 // You might want to find a way to allow the operator to restart IK.
 // You might also want to find a way for the operator to disable IK in case they believe it failed.
 // Direct input is connected by default when the class is instantiated.
-//
-// About building this package:
-// Debug and Release configurations have been setup in CMakeLists.txt for this package.
-// The Debug config has a few sanitizers enabled, definitely take advantage of them.
-//
-// That's all I have for you. GOOD LUCK!
 ///////////////////////////////
 
 
@@ -54,7 +44,7 @@ int main(int argc, char **argv)
     auto newTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());
     while (ros::ok())
     {
-        armControl.Update(std::chrono::duration_cast<std::chrono::duration<float, std::micro>>(newTime - time).count() / 1000000.0f);
+        armControl.update(std::chrono::duration_cast<std::chrono::duration<float, std::micro>>(newTime - time).count() / 1000000.0f);
         loopRate.sleep();
         time = newTime;
         newTime = std::chrono::time_point_cast<std::chrono::microseconds>(std::chrono::system_clock::now());

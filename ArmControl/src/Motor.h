@@ -13,28 +13,28 @@ namespace Rover
          * -1.0f <= vel <= 1.0f
          * reepresents the motor speed output as a percentage
          */
-        void SetAngularVelocityRelative(float vel)
+        void set_angular_velocity_relative(float vel)
         {
-            m_AngularVelocity = vel;
+            angularVelocity = vel;
         }
 
-        float GetAngularVelocityRelative() const
+        float get_angular_velocity_relative() const
         {
-            return m_AngularVelocity;
+            return angularVelocity;
         }
 
         /**
          * update the internal state of the motor if needed
          * this method is called for every motor and every tick
          */
-        void Update(float timestep);
+        void update(float timestep);
 
     private:
         // tentative
         // TODO : change this to fit your need
-        float m_AngularPosition; // in rad
-        float m_AngularVelocity; // in rad/sec
-        float m_Min; // ?
-        float m_Max;
+        float angularPosition; // in rad
+        float angularVelocity; // in rad/sec
+        float min; // ?
+        float max;
     };
 }

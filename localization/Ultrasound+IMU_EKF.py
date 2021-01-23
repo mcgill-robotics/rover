@@ -22,7 +22,6 @@ from geometry_msgs.msg import Pose
 distance = 0
 pose = Pose() # automatically sets all values to zero
 
-"""
 # Goal marker topic
 topic = 'visualization_marker'
 publisher = rospy.Publisher(topic, Marker)
@@ -32,7 +31,7 @@ ekf_topic = 'visualization_marker_array'
 ekfPublisher = rospy.Publisher(ekf_topic, MarkerArray)
 
 ekfArray = MarkerArray()
-"""
+
 # Initialize ekf node to appear in rosnode list
 rospy.init_node("ekf_node")
 
@@ -141,6 +140,7 @@ import numpy as np
 # sets time step to 0.1s
 dt = 0.1
 
+
 def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=10, ellipse_step=50, ylim=None):
     ekf = RobotEKF(dt, std_vel=std_vel)		# initializes new RobotEKF with given time step and std. of velocity
     ekf.x = start_state         # x position
@@ -152,6 +152,8 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
     # array containing the positions of the robot	
     ekf_track = []
 
+    markerCount = 0
+
     while not rospy.is_shutdown():
 	u = array([0.1]) # steering command (constant velocity of 0.1m/s)
         ekf.predict(u=u)	# predict function with assigned steering commandz
@@ -160,23 +162,23 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
         
 	# keep track of the EKF path
 	ekf_track.append(ekf.x)
-	rospy.loginfo(pose) # for debugging purposes 
+	# rospy.loginfo(ekf.x) # for debugging purposes 
 
 	# calls subscriber to get distance readings
         ultraSub()
 	imuSub()
 
-	"""
-	# RVIZ sim (temp. not working)
+	
+	# RVIZ sim (needs improvement, still displays old markers)
 	#Define values for the visualized goal state
 	goal = Marker()
 	goal.header.frame_id = "/ekf"
 	goal.type = goal.SPHERE	
 	goal.action = goal.ADD
 
-	goal.scale.x = 1.0
-	goal.scale.y = 1.0
-	goal.scale.z = 1.0
+	goal.scale.x = 0.55
+	goal.scale.y = 0.55
+	goal.scale.z = 0.55
 
 	goal.pose.position.x = 0.0
 	goal.pose.position.y = 0.0
@@ -200,8 +202,8 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
 	ekfMarker.ns = "ekf_space"
 	ekfMarker.type = ekfMarker.SPHERE
 	ekfMarker.action = ekfMarker.ADD
-	ekfMarker.scale.x = 0.1
-	ekfMarker.scale.y = 0.1
+	ekfMarker.scale.x = 0.2
+	ekfMarker.scale.y = 0.2
 	ekfMarker.scale.z = 0.05
 	ekfMarker.color.a = 1
 	ekfMarker.color.r = 0.5
@@ -213,32 +215,26 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
 	ekfMarker.pose.position.x = ekf.x[0]
 	ekfMarker.pose.position.y = 0
 	ekfMarker.pose.position.z = 0
+	
+	# Should remove the first entry in array after count reaches past 5
+	if (markerCount > 5):
+	   ekfArray.markers.pop(0)
+	   markerCount = 0
 
 	ekfArray.markers.append(ekfMarker)
-	print(ekfMarker.pose.position.x)
+	# print(markerCount)
 
 	for e in ekfArray.markers:
 	 	e.id = id
          	id += 1	
 
 	ekfPublisher.publish(ekfArray)
+	markerCount += 1	
+
 	rospy.sleep(0.02)
-"""
-"""
-    # Matplot (might revamp)
-    plt.figure()
-    plt.scatter(goal_state[0], 0, marker='s', s=60)
-    plt.plot(ekf_track[:0], color='r', lw=2)
-    print(ekf_track[:0])
-    plt.axis('equal')
-    plt.title("EKF Robot localization")
-    if ylim is not None: plt.ylim(*ylim)
-    plt.show()
-    return ekf
-"""
+
 start_state = np.array([100.0]) # start state of robot is defined at the initial distance measured (pre-set to 100cm/1m)
 goal_state = np.array([0.0]) # goal state is set as the origin in the frame
 init_var = [0.1]   # initial std for state variable x
 	
 ekf = run_navigation(start_state=start_state, goal_state=goal_state, init_var = init_var, std_vel = 0.3, std_range = 0.5) # starts navigation with set values
-

@@ -4,6 +4,7 @@ from filterpy.kalman import ExtendedKalmanFilter as EKF
 from numpy import dot, array, sqrt
 from numpy.random import randn
 from math import atan2, sqrt
+
 import sympy
 from sympy import symbols, Matrix
 from sympy.abc import x
@@ -14,19 +15,28 @@ from visualization_msgs.msg import MarkerArray
 
 import sys
 import copy
-from std_msgs.msg import String
 from std_msgs.msg import Float32
 
 # Declare distance variable
 distance = 0
 
+# Goal marker topic
+topic = 'visualization_marker'
+publisher = rospy.Publisher(topic, Marker)
+
+# Ekf track topic
+ekf_topic = 'visualization_marker_array'
+ekfPublisher = rospy.Publisher(ekf_topic, MarkerArray)
+
+ekfArray = MarkerArray()
+
 # Initialize ekf node to appear in rosnode list
 rospy.init_node("ekf_node")
 
 #Callback function for extracting data from the ultrasonic sensor and assigning it to distance variable
-def callback(data):
+def ultraCall(distData):
     global distance 
-    distance = data.data
+    distance = distData.data
 
     # Testing rospy status
     """
@@ -37,19 +47,8 @@ def callback(data):
     """
 
 # Subscribes to distReader topic (ultrasonic sensor)
-def subscriber():
-    distanceRead = rospy.Subscriber("distReader", Float32, callback)
-    rospy.spin()
-
-# Goal marker topic
-goal_topic = 'visualization_marker'
-goalPublisher = rospy.Publisher(goal_topic, Marker)
-
-# Ekf track topic
-ekf_topic = 'visualization_marker_array'
-ekfPublisher = rospy.Publisher(ekf_topic, MarkerArray)
-
-ekfArray = MarkerArray()
+def ultraSub():
+    distanceRead = rospy.Subscriber("distReader", Float32, ultraCall)
 
 class RobotEKF(EKF):
     # initializes motion model with standard dev. of velocity and time step
@@ -141,29 +140,31 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
     # array containing the positions of the robot	
     ekf_track = []
 
-    # calls subscriber to get distance readings
-    subscriber()
-    
+    markerCount = 0
+
     while not rospy.is_shutdown():
 	u = array([0.1]) # steering command (constant velocity of 0.1m/s)
-        ekf.predict(u=u)	# predict function with assigned steering command
+        ekf.predict(u=u)	# predict function with assigned steering commandz
         z = get_sensor_reading() # measurement function that gives position from sensor
         ekf.update(z, HJacobian = Hj, Hx=Hx, residual=residual)		# update function
         
 	# keep track of the EKF path
 	ekf_track.append(ekf.x)
-	# rospy.loginfo(ekf.x)
-"""
-	# RVIZ sim (temp. not working)
+	# rospy.loginfo(ekf.x) # for debugging purposes 
+
+	# calls subscriber to get distance readings
+        ultraSub()
+	
+	# RVIZ sim (needs improvement, still displays old markers)
 	#Define values for the visualized goal state
 	goal = Marker()
 	goal.header.frame_id = "/ekf"
-	goal.type = goal.CUBE	
+	goal.type = goal.SPHERE	
 	goal.action = goal.ADD
 
-	goal.scale.x = 1.0
-	goal.scale.y = 1.0
-	goal.scale.z = 1.0
+	goal.scale.x = 0.55
+	goal.scale.y = 0.55
+	goal.scale.z = 0.55
 
 	goal.pose.position.x = 0.0
 	goal.pose.position.y = 0.0
@@ -179,7 +180,7 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
     	goal.pose.orientation.z = 0.0
    	goal.pose.orientation.w = 1.0
 
-	goalPublisher.publish(goal)
+	publisher.publish(goal)
 
 	# Define trajectory for ekf track
 	ekfMarker = Marker()
@@ -187,8 +188,8 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
 	ekfMarker.ns = "ekf_space"
 	ekfMarker.type = ekfMarker.SPHERE
 	ekfMarker.action = ekfMarker.ADD
-	ekfMarker.scale.x = 0.1
-	ekfMarker.scale.y = 0.1
+	ekfMarker.scale.x = 0.2
+	ekfMarker.scale.y = 0.2
 	ekfMarker.scale.z = 0.05
 	ekfMarker.color.a = 1
 	ekfMarker.color.r = 0.5
@@ -200,32 +201,26 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
 	ekfMarker.pose.position.x = ekf.x[0]
 	ekfMarker.pose.position.y = 0
 	ekfMarker.pose.position.z = 0
+	
+	# Should remove the first entry in array after count reaches past 5
+	if (markerCount > 5):
+	   ekfArray.markers.pop(0)
+	   markerCount = 0
 
 	ekfArray.markers.append(ekfMarker)
-	print(ekfMarker.pose.position.x)
+	# print(markerCount)
 
 	for e in ekfArray.markers:
 	 	e.id = id
          	id += 1	
 
 	ekfPublisher.publish(ekfArray)
+	markerCount += 1	
+
 	rospy.sleep(0.02)
-"""
-"""
-    # Matplot (might revamp)
-    plt.figure()
-    plt.scatter(goal_state[0], 0, marker='s', s=60)
-    plt.plot(ekf_track[:0], color='r', lw=2)
-    print(ekf_track[:0])
-    plt.axis('equal')
-    plt.title("EKF Robot localization")
-    if ylim is not None: plt.ylim(*ylim)
-    plt.show()
-    return ekf
-"""
+
 start_state = np.array([100.0]) # start state of robot is defined at the initial distance measured (pre-set to 100cm/1m)
 goal_state = np.array([0.0]) # goal state is set as the origin in the frame
 init_var = [0.1]   # initial std for state variable x
 	
-ekf = run_navigation(start_state=start_state, goal_state=goal_state, init_var = init_var, std_vel = 0.1, std_range = 0.1) # starts navigation with set values
-
+ekf = run_navigation(start_state=start_state, goal_state=goal_state, init_var = init_var, std_vel = 0.3, std_range = 0.5) # starts navigation with set values

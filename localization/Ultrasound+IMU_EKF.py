@@ -55,7 +55,7 @@ def ultraSub():
 # Callback for simulated IMU sensor (pose contains position for x y z, and orientation for x y z w)
 def imuCall(poseData):
     global pose
-    pose = poseData.data
+    pose = poseData
 
 # Subscribes to rover_pose topic (simulated IMU sensor)
 def imuSub():
@@ -63,24 +63,29 @@ def imuSub():
     
 class RobotEKF(EKF):
     # initializes motion model with standard dev. of velocity and time step
-    def __init__(self, dt, std_vel):
-	# uses filterpy.kalman to create a one-dimensional state with 1 measurement (for position)
-	EKF.__init__(self, 1, 1, 2)
+    def __init__(self, dt, std_vel, std_steer):
+	# uses filterpy.kalman to create a three-dimensional state with 3 measurements (for x and y; obtain yaw with pose orientation?)
+	EKF.__init__(self, 3, 3, 2)
 	self.dt = dt
 	self.std_vel = std_vel
+	self.std_steer = std_steer
 	
-	# defines symbols of x pos., velocity and time
-	x, v, time = symbols('x, v, t')
+	# defines symbols of x pos., y pos., theta (bearing angle), velocity,  and time? *** (not sure whether to add turn angle beta...)
+	x, y, theta, v, time = symbols('x, y, theta, v, t')
 	d = v * time
 	
-	# motion model (focusing only on x position and distance travelled)
-	self.fxu = Matrix([[x + d]])
-	self.F_j = self.fxu.jacobian(Matrix([x]))
+	# motion model (focusing only on x position, y position distance travelled in component form, and pose angle about z-axis?) ***
+	self.fxu = Matrix([[x + d*sympy.sin(theta)],
+			   [y + d*sympy.cos(theta)],
+                           [theta]])
+	self.F_j = self.fxu.jacobian(Matrix([x, y, theta]))
 	self.V_j = self.fxu.jacobian(Matrix([v]))
 	
 	# save dictionary and its variables for later use
-	self.subs = {x: 0, v:0, time:dt}
+	self.subs = {x: 0, y: 0, theta: 0, v:0, time:dt}
         self.x_x = x
+	self.x_y = y
+	self.theta = theta
         self.v = v
 	
     def predict(self, u=0):
@@ -92,7 +97,8 @@ class RobotEKF(EKF):
         V = array(self.V_j.evalf(subs=self.subs)).astype(float)
 
 	# covariance of motion noise in control space
-        M = array([[self.std_vel**2]])
+        M = array([[self.std_vel**2, 0],
+		   [0, self.std_steer**2]])
 
 	# total motion noise (take noise related to position and adds it to noise related to control input)
         self.P = dot(F, self.P).dot(F.T) + dot(V, M).dot(V.T)
@@ -101,7 +107,9 @@ class RobotEKF(EKF):
 def Hj(x):
     """ compute Jacobian of H matrix where h(x) computes 
     the range and bearing to a landmark for state x """
-    H = array([[1]])
+    H = array([[1, 0, 0],
+	       [0, 1, 0],
+               [0, 0, 1]])
     
     return H
 
@@ -109,23 +117,27 @@ def Hj(x):
 def Hx(x):
     """ takes a state variable and returns the measurement
     that would correspond to that state. """
-    Hx = array([x[0]])
+    Hx = array([x[0, 0]],
+               [x[1, 0]],
+	       [x[2, 0]]])
 
     return Hx
 
-# what was actually measured minus what the measurement was supposed to be
+# what was actually measured minus what the measurement was supposed to be (***)
 def residual(a, b):
 	# no rotation
 	y = a - b
 	return y
 
-# takes distance given by ultrasonic sensor and converts to position
+# pose variable contains Pose() given by IMU sensor, takes x and y positions; *** unsure for theta (temp. put angle about z-axis) 
 def get_sensor_reading():
     # obtains current x position; distance measured is the same value
-    z = [distance]
+    z = [[pose.position.x],
+         [pose.position.y],
+	 [pose.orientation.z]]
     return z
 
-# verify whether wall/goal is reached (*tested, works*)
+# verify whether wall/goal is reached (*tested, works*); *** will need to change for IMU (talk to Kieran about how it should look)
 def reach_goal(current_state, goal_state):
     """ check whether goal state is reached """
     if current_state[0] - goal_state[0] < 10:
@@ -162,7 +174,7 @@ def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=1
         
 	# keep track of the EKF path
 	ekf_track.append(ekf.x)
-	# rospy.loginfo(ekf.x) # for debugging purposes 
+	# rospy.loginfo(pose) # for debugging purposes 
 
 	# calls subscriber to get distance readings
         ultraSub()
@@ -238,3 +250,4 @@ goal_state = np.array([0.0]) # goal state is set as the origin in the frame
 init_var = [0.1]   # initial std for state variable x
 	
 ekf = run_navigation(start_state=start_state, goal_state=goal_state, init_var = init_var, std_vel = 0.3, std_range = 0.5) # starts navigation with set values
+

@@ -69,7 +69,7 @@ class RobotEKF(EKF):
 	
 	# save dictionary and its variables for later use
 	self.subs = {x: 0, v:0, time:dt}
-        self.x_x = x
+        self.pos_x = x
         self.v = v
 	
     def predict(self, u=0):
@@ -123,13 +123,12 @@ def reach_goal(current_state, goal_state):
       return False
 
 from math import sqrt, tan, cos, sin, atan2
-import matplotlib.pyplot as plt
 import numpy as np
 
 # sets time step to 0.1s
 dt = 0.1
 
-def run_navigation(start_state, goal_state, init_var, std_vel, std_range, step=10, ellipse_step=50, ylim=None):
+def run_navigation(start_state, goal_state, init_var, std_vel, std_range):
     ekf = RobotEKF(dt, std_vel=std_vel)		# initializes new RobotEKF with given time step and std. of velocity
     ekf.x = start_state         # x position
 

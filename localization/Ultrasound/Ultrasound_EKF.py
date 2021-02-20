@@ -222,5 +222,5 @@ start_state = np.array([100.0]) # start state of robot is defined at the initial
 goal_state = np.array([0.0]) # goal state is set as the origin in the frame
 init_var = [0.1]   # initial std for state variable x
 	
-ekf = run_navigation(start_state=start_state, goal_state=goal_state, init_var = init_var, std_vel = 0.3, std_range = 0.5) # starts navigation with set values
+ekf = run_navigation(start_state=start_state, goal_state=goal_state, init_var = init_var, std_vel = 0.3, std_range = 0.5) # start navigation with set values
 

@@ -16,24 +16,13 @@ from visualization_msgs.msg import MarkerArray
 import sys
 import copy
 from std_msgs.msg import Float32
-from geometry_msgs.msg import Pose
 
-from tf.transformations import euler_from_quaternion
-
-# Declare distance and pose variables
+# Declare distance variable
 distance = 0
-pose = Pose() # automatically sets all values to zero
 
-# Create variables for roll, pitch, yaw; initialize in callback
-roll = 0
-pitch = 0
-yaw = 0
-
-# Goal marker topic (temporarily unneeded)
-"""
+# Goal marker topic
 topic = 'visualization_marker'
 publisher = rospy.Publisher(topic, Marker)
-"""
 
 # Ekf track topic
 ekf_topic = 'visualization_marker_array'
@@ -60,52 +49,27 @@ def ultraCall(distData):
 # Subscribes to distReader topic (ultrasonic sensor)
 def ultraSub():
     distanceRead = rospy.Subscriber("distReader", Float32, ultraCall)
-    
-# Callback for simulated IMU sensor (pose contains position for x y z, and orientation for x y z w)
-def imuCall(poseData):
-    global pose
-    pose = poseData
-    
-    # converts quaternion values into euler angles using tf.transformations
-    global roll 
-    roll = euler_from_quaternion(pose.orientation.x)
 
-    global pitch 
-    pitch = euler_from_quaternion(pose.orientation.y)
-
-    global yaw 
-    yaw = euler_from_quaternion(pose.orientation.z)
-    
-
-# Subscribes to rover_pose topic (simulated IMU sensor)
-def imuSub():
-    poseRead = rospy.Subscriber("rover_pose", Pose, imuCall)
-    
 class RobotEKF(EKF):
     # initializes motion model with standard dev. of velocity and time step
     def __init__(self, dt, std_vel):
-	# uses filterpy.kalman to create a three-dimensional state with 3 measurements (for x and y; obtain yaw with pose orientation?)
-	EKF.__init__(self, 3, 3, 2)
+	# uses filterpy.kalman to create a one-dimensional state with 1 measurement (for position)
+	EKF.__init__(self, 1, 1, 2)
 	self.dt = dt
 	self.std_vel = std_vel
 	
-	# defines symbols of x pos., y pos., theta (bearing angle), velocity,  and time 
-	x, y, theta, v, time = symbols('x, y, theta, v, t')
+	# defines symbols of x pos., velocity and time
+	x, v, time = symbols('x, v, t')
 	d = v * time
 	
-	# motion model (focusing only on x position, y position distance travelled in component form, and pose angle about z-axis?) ***
-	self.fxu = Matrix([[x + d*sympy.cos(theta)],
-			   [y + d*sympy.sin(theta)],
-                           [theta]])
-	self.F_j = self.fxu.jacobian(Matrix([x, y, theta]))
+	# motion model (focusing only on x position and distance travelled)
+	self.fxu = Matrix([[x + d]])
+	self.F_j = self.fxu.jacobian(Matrix([x]))
 	self.V_j = self.fxu.jacobian(Matrix([v]))
 	
 	# save dictionary and its variables for later use
-	self.subs = {x: 0, y: 0, theta: 0, v:0, time:dt}
-
+	self.subs = {x: 0, v:0, time:dt}
         self.pos_x = x
-	self.pos_y = y
-	self.theta = theta
         self.v = v
 	
     def predict(self, u=0):
@@ -119,16 +83,14 @@ class RobotEKF(EKF):
 	# covariance of motion noise in control space
         M = array([[self.std_vel**2]])
 
-	# total motion noise (take noise related to position/orientation and adds it to noise related to control input)
+	# total motion noise (take noise related to position and adds it to noise related to control input)
         self.P = dot(F, self.P).dot(F.T) + dot(V, M).dot(V.T)
 
 # jacobian of sensor model (assumes measurements are exact)
 def Hj(x):
     """ compute Jacobian of H matrix where h(x) computes 
     the range and bearing to a landmark for state x """
-    H = array([[1, 0, 0],
-	       [0, 1, 0],
-               [0, 0, 1]])
+    H = array([[1]])
     
     return H
 
@@ -136,27 +98,23 @@ def Hj(x):
 def Hx(x):
     """ takes a state variable and returns the measurement
     that would correspond to that state. """
-    Hx = array([[x[0, 0]],
-                [x[1, 0]],
-	        [x[2, 0]]])
-
+    Hx = array([x[0]])
+    
     return Hx
 
-# what was actually measured minus what the measurement was supposed to be (***)
+# what was actually measured minus what the measurement was supposed to be
 def residual(a, b):
-	# rotation added, angle must stay within 0 and 180 degrees (-pi and pi radians)
+	# no rotation
 	y = a - b
 	return y
 
-# pose variable contains Pose() given by IMU sensor, takes x and y positions; *** 
+# takes distance given by ultrasonic sensor and converts to position
 def get_sensor_reading():
     # obtains current x position; distance measured is the same value
-    z = [[pose.position.x],
-         [pose.position.y],
-	 [yaw]]
+    z = [distance]
     return z
 
-# verify whether wall/goal is reached (*tested, works*); *** will need to change for IMU (talk to Kieran about how it should look)
+# verify whether wall/goal is reached (*tested, works*)
 def reach_goal(current_state, goal_state):
     """ check whether goal state is reached """
     if current_state[0] - goal_state[0] < 10:
@@ -170,14 +128,13 @@ import numpy as np
 # sets time step to 0.1s
 dt = 0.1
 
-
-def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
-    ekf = RobotEKF(dt, std_vel=std_vel)		# initializes new RobotEKF with given time step, std. of velocity
-    ekf.x = start_state         # x position, y position, bearing angle (starting pos.)
+def run_navigation(start_state, goal_state, init_var, std_vel, std_range):
+    ekf = RobotEKF(dt, std_vel=std_vel)		# initializes new RobotEKF with given time step and std. of velocity
+    ekf.x = start_state         # x position
 
     # initialize state variance P and measurement variance R
-    ekf.P = np.diag([init_var[0], init_var[1], init_var[2]])
-    ekf.R = np.diag([std_range**2, std_range**2, std_bearing**2]) # variance in range of sensor and bearing angle 
+    ekf.P = np.diag([init_var[0]])
+    ekf.R = np.diag([std_range**2])
 
     # array containing the positions of the robot	
     ekf_track = []
@@ -185,22 +142,19 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
     markerCount = 0
 
     while not rospy.is_shutdown():
-	u = array([0.1, 0.2]) # steering command (constant velocity of 0.1m/s)
-        ekf.predict(u=u)	# predict function with assigned steering command
+	u = array([0.1]) # steering command (constant velocity of 0.1m/s)
+        ekf.predict(u=u)	# predict function with assigned steering commandz
         z = get_sensor_reading() # measurement function that gives position from sensor
         ekf.update(z, HJacobian = Hj, Hx=Hx, residual=residual)		# update function
         
 	# keep track of the EKF path
 	ekf_track.append(ekf.x)
-	rospy.loginfo(ekf.x) # for debugging purposes 
+	# rospy.loginfo(ekf.x) # for debugging purposes 
 
 	# calls subscriber to get distance readings
         ultraSub()
-	imuSub()
-
 	
-	# RVIZ sim (needs improvement, still displays old markers) + goal temporarily unneeded + might update to see orientation
-	"""
+	# RVIZ sim (needs improvement, still displays old markers)
 	#Define values for the visualized goal state
 	goal = Marker()
 	goal.header.frame_id = "/ekf"
@@ -226,7 +180,6 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
    	goal.pose.orientation.w = 1.0
 
 	publisher.publish(goal)
-	"""
 
 	# Define trajectory for ekf track
 	ekfMarker = Marker()
@@ -245,7 +198,7 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
 
 	id = 0				
 	ekfMarker.pose.position.x = ekf.x[0]
-	ekfMarker.pose.position.y = ekf.x[1]
+	ekfMarker.pose.position.y = 0
 	ekfMarker.pose.position.z = 0
 	
 	# Should remove the first entry in array after count reaches past 5
@@ -265,9 +218,9 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
 
 	rospy.sleep(0.02)
 
-start_state = np.array([[-0.0662, -0.0706, 0.2571]]).T # start state of robot is defined at the initial distance measured (according to sim)
-# goal_state = np.array([0.0]) # goal state is set as the origin in the frame; temp. not used
-init_var = [0.1, 0.1, 0.1]   # initial std for state variable x, y and theta
+start_state = np.array([100.0]) # start state of robot is defined at the initial distance measured (pre-set to 100cm/1m)
+goal_state = np.array([0.0]) # goal state is set as the origin in the frame
+init_var = [0.1]   # initial std for state variable x
 	
-ekf = run_navigation(start_state=start_state, init_var = init_var, std_vel = 0.01, std_range = 0.108, std_bearing = 0.02) # starts navigation with set values
+ekf = run_navigation(start_state=start_state, goal_state=goal_state, init_var = init_var, std_vel = 0.3, std_range = 0.5) # starts navigation with set values
 

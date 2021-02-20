@@ -29,11 +29,9 @@ roll = 0
 pitch = 0
 yaw = 0
 
-# Goal marker topic (temporarily unneeded)
-"""
+# Goal marker topic
 topic = 'visualization_marker'
 publisher = rospy.Publisher(topic, Marker)
-"""
 
 # Ekf track topic
 ekf_topic = 'visualization_marker_array'
@@ -199,8 +197,7 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
 	imuSub()
 
 	
-	# RVIZ sim (needs improvement, still displays old markers) + goal temporarily unneeded + might update to see orientation
-	"""
+	# RVIZ sim (needs improvement, still displays old markers)
 	#Define values for the visualized goal state
 	goal = Marker()
 	goal.header.frame_id = "/ekf"
@@ -226,7 +223,6 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
    	goal.pose.orientation.w = 1.0
 
 	publisher.publish(goal)
-	"""
 
 	# Define trajectory for ekf track
 	ekfMarker = Marker()
@@ -245,7 +241,7 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
 
 	id = 0				
 	ekfMarker.pose.position.x = ekf.x[0]
-	ekfMarker.pose.position.y = ekf.x[1]
+	ekfMarker.pose.position.y = 0
 	ekfMarker.pose.position.z = 0
 	
 	# Should remove the first entry in array after count reaches past 5
@@ -266,7 +262,7 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
 	rospy.sleep(0.02)
 
 start_state = np.array([[-0.0662, -0.0706, 0.2571]]).T # start state of robot is defined at the initial distance measured (according to sim)
-# goal_state = np.array([0.0]) # goal state is set as the origin in the frame; temp. not used
+# goal_state = np.array([0.0]) # goal state is set as the origin in the frame
 init_var = [0.1, 0.1, 0.1]   # initial std for state variable x, y and theta
 	
 ekf = run_navigation(start_state=start_state, init_var = init_var, std_vel = 0.01, std_range = 0.108, std_bearing = 0.02) # starts navigation with set values

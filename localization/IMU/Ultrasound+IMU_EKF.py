@@ -265,5 +265,5 @@ start_state = np.array([[-0.0662, -0.0706, 0.2571]]).T # start state of robot is
 # goal_state = np.array([0.0]) # goal state is set as the origin in the frame
 init_var = [0.1, 0.1, 0.1]   # initial std for state variable x, y and theta
 	
-ekf = run_navigation(start_state=start_state, init_var = init_var, std_vel = 0.01, std_range = 0.108, std_bearing = 0.02) # starts navigation with set values
+ekf = run_navigation(start_state=start_state, init_var = init_var, std_vel = 0.01, std_range = 0.108, std_bearing = 0.02) # begins navigation with set values
 

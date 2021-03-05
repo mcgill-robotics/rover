@@ -65,14 +65,9 @@ def imuCall(poseData):
     pose = poseData
     
     # converts quaternion values into euler angles using tf.transformations
-    global roll 
-    roll = euler_from_quaternion(pose.orientation.x)
-
-    global pitch 
-    pitch = euler_from_quaternion(pose.orientation.y)
-
-    global yaw 
-    yaw = euler_from_quaternion(pose.orientation.z)
+    global roll, pitch, yaw
+    quaternion_list = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
+    (roll, pitch, yaw) = euler_from_quaternion(quaternion_list)
     
 
 # Subscribes to rover_pose topic (simulated IMU sensor)
@@ -265,5 +260,4 @@ start_state = np.array([[-0.0662, -0.0706, 0.2571]]).T # start state of robot is
 # goal_state = np.array([0.0]) # goal state is set as the origin in the frame
 init_var = [0.1, 0.1, 0.1]   # initial std for state variable x, y and theta
 	
-ekf = run_navigation(start_state=start_state, init_var = init_var, std_vel = 0.01, std_range = 0.108, std_bearing = 0.02) # begins navigation with set values
-
+ekf = run_navigation(start_state=start_state, init_var = init_var, std_vel = 0.01, std_range = 0.108, std_bearing = 0.02) # starts navigation with set values

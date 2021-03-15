@@ -16,7 +16,9 @@ catkin_package(
   std_msgs
 )
 
-catkin_install_python(PROGRAMS src/Joystick/Joystick.py
+catkin_install_python(PROGRAMS 
+  src/Controller/Joystick.py
+  src/Controller/Gamepad.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 

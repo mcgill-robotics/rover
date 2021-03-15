@@ -133,7 +133,7 @@ class Joystick():
                     self.data.a1 = self.controller.get_axis(0)
                     self.data.a2 = -1 * self.controller.get_axis(1)
                     self.data.a3 = self.controller.get_axis(2)
-                    self.data.a4 = self.controller.get_axis(3)
+                    self.data.a4 = -1 * self.controller.get_axis(3)
                 else:
                     self.data.hat = self.controller.get_hat(0)
 

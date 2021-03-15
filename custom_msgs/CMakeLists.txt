@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Joystick_input.msg
+  Gamepad_input.msg
 )
 
 generate_messages(

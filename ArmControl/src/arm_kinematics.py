@@ -232,3 +232,55 @@ def Jacobian(q):
 
     return J, Jv, Jw
 
+
+def forwardVelocity(q, dq):
+    """Computes the cartesian velocity of the arm
+
+    Parameters
+    --------
+        q : list(float)
+            joint configuration
+        dq : list(float)
+            joint velocities
+
+    Returns
+    --------
+        np.array(len(qCur))
+            cartesian velocity [x,y,z]
+    """
+    J, Jv, Jw = Jacobian(q)
+
+    dx = J.dot(dq)
+    
+    return dx
+
+
+def inverseVelocity(q, dx):
+    """Computes the joint velocity of the arm given a desired
+    cartesian velocity
+
+    Parameters
+    --------
+        q : list(float)
+            joint configuration
+        dx : list(float)
+            cartesian velocities
+
+    Raises
+    --------
+        ValueError
+            joint velocities could not be computed
+
+    Returns
+    --------
+        np.array(len(qCur))
+            joint velocity
+    """
+    J, Jv, Jw = Jacobian(q)
+
+    try:
+        dq = np.linalg.pinv(Jv).dot(dx)
+    except np.linalg.LinAlgError:
+        raise ValueError
+
+    return dq

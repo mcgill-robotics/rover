@@ -1,2 +1,2 @@
-int8[6] MotorVel
-
+float32[5] MotorVel
+int8 ClawState

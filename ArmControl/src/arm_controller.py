@@ -2,6 +2,7 @@
 
 import arm_kinematics
 import numpy as np
+import time
 import rospy
 from arm_control.msg import ProcessedControllerInput, ArmMotorCommand
 from arm_control.msg import ArmStatusFeedback
@@ -34,11 +35,11 @@ class Node_ArmControl():
         # (one joint at a time to keep it intuitive to the user)
 
         # Physical Constraints
-        self.jointUpperLimits = [np.pi, np.pi, np.pi, np.pi, np.pi]      # rad
-        self.jointLowerLimits = [-np.pi, -np.pi, -np.pi, -np.pi, -np.pi] # rad
+        self.jointUpperLimits = [175*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
+        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
-        self.cartVelLimits = [1, 1, 1]   # m/s 
+        self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
 
         # Initialize ROS
         rospy.init_node("arm_control", anonymous=False)
@@ -57,12 +58,15 @@ class Node_ArmControl():
 
             self.armControlPublisher.publish(cmds)
 
+            time.sleep(0.01)
+
 
     def controlLoop(self, ctrlInput):
         
         if ctrlInput.ModeChange:
             self.changeControlMode()
 
+        # Cartesian Velocity Control
         if self.mode == 'Cartesian':
             xyz_ctrl = [
                 ctrlInput.X_dir,
@@ -72,6 +76,7 @@ class Node_ArmControl():
             self.dq_d, self.dx_d = self.computeTargetJointVel(xyz_ctrl)
 
         else:
+            # Joint Velocity Control
             try:
                 i = int(self.mode[-1]) - 1
             except ValueError as error:
@@ -84,6 +89,20 @@ class Node_ArmControl():
             self.ee_d = int(ctrlInput.ClawOpen)
         except ValueError as error:
                 rospy.logerr(str(error))
+
+        # Check Joint Limits
+        for i in range(len(self.q)):
+            if(
+                self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 
+                or
+                self.q[i] < self.jointLowerLimits[i] and self.dq_d[i] < 0
+            ):
+                if self.mode == 'Cartesian':
+                        self.dq_d = [0] * self.nbJoints
+
+                else:
+                    self.dq_d[i] = 0
+                
 
 
     def updateArmState(self, state):
@@ -124,6 +143,15 @@ class Node_ArmControl():
         except ValueError:
             # Leave JointVels as is
             pass
+
+        max_ratio = 1
+        for i in range(len(self.dq_d)):
+            ratio = abs(self.dq_d[i] / self.jointVelLimits[i])
+            if ratio > max_ratio:
+                max_ratio = ratio
+            
+        if max_ratio != 1:
+            self.dq_d[i] = self.dq_d[i] / max_ratio
 
         return self.dq_d, self.dx_d
 

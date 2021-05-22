@@ -63,7 +63,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Wheel Speed (rpm)</string>
+    <string>Wheel Speed (%)</string>
    </property>
   </widget>
   <widget class="QLabel" name="lblFR">

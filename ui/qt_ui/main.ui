@@ -37,8 +37,107 @@
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <widget class="QMenu" name="menuWindows">
+     <property name="title">
+      <string>Windows</string>
+     </property>
+     <widget class="QMenu" name="menuElectrical">
+      <property name="title">
+       <string>Electrical</string>
+      </property>
+      <addaction name="actionPower_Info_2"/>
+      <addaction name="actionCurrents"/>
+      <addaction name="actionWheels_2"/>
+     </widget>
+     <widget class="QMenu" name="menuMechanical">
+      <property name="title">
+       <string>Mechanical</string>
+      </property>
+      <addaction name="actionArm"/>
+     </widget>
+     <addaction name="menuElectrical"/>
+     <addaction name="menuMechanical"/>
+     <addaction name="actionScience"/>
+     <addaction name="actionVideo_Feeds"/>
+    </widget>
+    <addaction name="separator"/>
+    <addaction name="menuWindows"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuWindow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
+  </action>
+  <action name="actionOpen_2">
+   <property name="text">
+    <string>Windows</string>
+   </property>
+  </action>
+  <action name="actionPower_Info">
+   <property name="text">
+    <string>Power Info</string>
+   </property>
+  </action>
+  <action name="actionScience">
+   <property name="text">
+    <string>Science</string>
+   </property>
+  </action>
+  <action name="actionVideo_Feeds">
+   <property name="text">
+    <string>Video Feeds</string>
+   </property>
+  </action>
+  <action name="actionPower_Info_2">
+   <property name="text">
+    <string>Power Info</string>
+   </property>
+  </action>
+  <action name="actionCurrents">
+   <property name="text">
+    <string>Current Info</string>
+   </property>
+  </action>
+  <action name="actionArm">
+   <property name="text">
+    <string>Arm</string>
+   </property>
+  </action>
+  <action name="actionWheels">
+   <property name="text">
+    <string>Wheels</string>
+   </property>
+  </action>
+  <action name="actionWheels_2">
+   <property name="text">
+    <string>Wheels</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

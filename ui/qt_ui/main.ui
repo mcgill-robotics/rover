@@ -13,21 +13,7 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>100</y>
-      <width>221</width>
-      <height>111</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>PushButton</string>
-    </property>
-   </widget>
-  </widget>
+  <widget class="QWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -55,9 +41,9 @@
       <property name="title">
        <string>Electrical</string>
       </property>
-      <addaction name="actionPower_Info_2"/>
+      <addaction name="actionPowerInfo"/>
       <addaction name="actionCurrents"/>
-      <addaction name="actionWheels_2"/>
+      <addaction name="actionWheelSpeeds"/>
      </widget>
      <widget class="QMenu" name="menuMechanical">
       <property name="title">
@@ -68,10 +54,11 @@
      <addaction name="menuElectrical"/>
      <addaction name="menuMechanical"/>
      <addaction name="actionScience"/>
-     <addaction name="actionVideo_Feeds"/>
+     <addaction name="actionVideoFeeds"/>
     </widget>
     <addaction name="separator"/>
     <addaction name="menuWindows"/>
+    <addaction name="actionReset"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWindow"/>
@@ -108,12 +95,12 @@
     <string>Science</string>
    </property>
   </action>
-  <action name="actionVideo_Feeds">
+  <action name="actionVideoFeeds">
    <property name="text">
     <string>Video Feeds</string>
    </property>
   </action>
-  <action name="actionPower_Info_2">
+  <action name="actionPowerInfo">
    <property name="text">
     <string>Power Info</string>
    </property>
@@ -133,9 +120,20 @@
     <string>Wheels</string>
    </property>
   </action>
-  <action name="actionWheels_2">
+  <action name="actionWheelSpeeds">
    <property name="text">
     <string>Wheels</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
    </property>
   </action>
  </widget>

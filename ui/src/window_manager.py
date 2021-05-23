@@ -22,14 +22,17 @@ def batteryInfoOnClose(self, T, event):
     clearWindowOpenStatus(T)
 
 
-def openWindow(TWindow, parent, onClose):
-    T = type(TWindow)
+def wheelSpeedOnClose(self, T, event):
+    clearWindowOpenStatus(T)
+
+
+def openWindow(T, parent, onClose):
     if T in windowOpenStatus.keys():
         if windowOpenStatus[T] is not None:
             return
     wid = QtWidgets.QWidget()
     parent.windows.append(wid)
-    wnd = TWindow()
+    wnd = T()
     wnd.setupUi(wid)
     wid.closeEvent = partial(onClose, wid, T)
     wid.show()
@@ -39,3 +42,6 @@ def openWindow(TWindow, parent, onClose):
 def openBatteryInfo(parent):
     openWindow(gui.battery.Ui_BatteryInfo, parent, batteryInfoOnClose)
 
+
+def openWheelSpeed(parent):
+    openWindow(gui.elec.wheel_speed.Ui_WheelSpeed, parent, wheelSpeedOnClose)

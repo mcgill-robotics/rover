@@ -34,9 +34,10 @@ def exitProgram():
     exit(0)
 
 
-def setUpMainWindowHandlers(mainWnd):
+def setUpMainWindowHandlers(mainWnd : gui.main_window.Ui_MainWindow):
     mainWnd.actionExit.triggered.connect(exitProgram)
     mainWnd.actionPowerInfo.triggered.connect(partial(openBatteryInfo, mainWnd))
+    mainWnd.actionWheelSpeeds.triggered.connect(partial(openWheelSpeed, mainWnd))
 
 
 async def main():

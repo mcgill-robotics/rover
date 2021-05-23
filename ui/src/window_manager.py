@@ -11,11 +11,11 @@ import gui.elec.current_consumption
 import gui.elec.wheel_speed
 
 
-windowOpenStatus = {}
+_windowOpenStatus = {}
 
 
 def _clearWindowOpenStatus(T):
-    windowOpenStatus[T] = None
+    _windowOpenStatus[T] = None
 
 
 def _batteryInfoOnClose(self, T, event):
@@ -26,10 +26,21 @@ def _wheelSpeedOnClose(self, T, event):
     _clearWindowOpenStatus(T)
 
 
+def _currentConsumptionOnClose(self, T, event):
+    _clearWindowOpenStatus(T)
+
+
+def closeAllWindows():
+    for _, wid in _windowOpenStatus.items():
+        wid: QtWidgets.QWidget = wid
+        if wid is not None:
+            wid.close()
+
+
 def _openWindow(T, parent, onClose):
-    if T in windowOpenStatus.keys():
-        if windowOpenStatus[T] is not None:
-            theWidget: QtWidgets.QWidget = windowOpenStatus[T]
+    if T in _windowOpenStatus.keys():
+        if _windowOpenStatus[T] is not None:
+            theWidget: QtWidgets.QWidget = _windowOpenStatus[T]
             theWidget.activateWindow()
             return
             
@@ -39,7 +50,7 @@ def _openWindow(T, parent, onClose):
     wnd.setupUi(wid)
     wid.closeEvent = partial(onClose, wid, T)
     wid.show()
-    windowOpenStatus[T] = wid
+    _windowOpenStatus[T] = wid
 
 
 def openBatteryInfo(parent):
@@ -48,3 +59,7 @@ def openBatteryInfo(parent):
 
 def openWheelSpeed(parent):
     _openWindow(gui.elec.wheel_speed.Ui_WheelSpeed, parent, _wheelSpeedOnClose)
+
+
+def openCurrentConsumption(parent):
+    _openWindow(gui.elec.current_consumption.Ui_CurrentConsumption, parent, _currentConsumptionOnClose)

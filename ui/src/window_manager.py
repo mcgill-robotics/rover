@@ -14,19 +14,19 @@ import gui.elec.wheel_speed
 windowOpenStatus = {}
 
 
-def clearWindowOpenStatus(T):
+def _clearWindowOpenStatus(T):
     windowOpenStatus[T] = None
 
 
-def batteryInfoOnClose(self, T, event):
-    clearWindowOpenStatus(T)
+def _batteryInfoOnClose(self, T, event):
+    _clearWindowOpenStatus(T)
 
 
-def wheelSpeedOnClose(self, T, event):
-    clearWindowOpenStatus(T)
+def _wheelSpeedOnClose(self, T, event):
+    _clearWindowOpenStatus(T)
 
 
-def openWindow(T, parent, onClose):
+def _openWindow(T, parent, onClose):
     if T in windowOpenStatus.keys():
         if windowOpenStatus[T] is not None:
             theWidget: QtWidgets.QWidget = windowOpenStatus[T]
@@ -43,8 +43,8 @@ def openWindow(T, parent, onClose):
 
 
 def openBatteryInfo(parent):
-    openWindow(gui.battery.Ui_BatteryInfo, parent, batteryInfoOnClose)
+    _openWindow(gui.battery.Ui_BatteryInfo, parent, _batteryInfoOnClose)
 
 
 def openWheelSpeed(parent):
-    openWindow(gui.elec.wheel_speed.Ui_WheelSpeed, parent, wheelSpeedOnClose)
+    _openWindow(gui.elec.wheel_speed.Ui_WheelSpeed, parent, _wheelSpeedOnClose)

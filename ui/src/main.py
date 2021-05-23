@@ -48,6 +48,7 @@ async def main():
     global pub
     pub = rp.Publisher("test2", msg.String, queue_size=1)
     ui.setupUi(wnd)
+    ui.windows = []
     setUpMainWindowHandlers(ui)
     wnd.show()
     app.exec()

@@ -29,7 +29,10 @@ def wheelSpeedOnClose(self, T, event):
 def openWindow(T, parent, onClose):
     if T in windowOpenStatus.keys():
         if windowOpenStatus[T] is not None:
+            theWidget: QtWidgets.QWidget = windowOpenStatus[T]
+            theWidget.activateWindow()
             return
+            
     wid = QtWidgets.QWidget()
     parent.windows.append(wid)
     wnd = T()

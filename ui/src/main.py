@@ -9,7 +9,7 @@ import gui.main_window
 import gui.battery
 import gui.elec.current_consumption
 import gui.elec.wheel_speed
-
+import signal
 
 ui: gui.main_window.Ui_MainWindow = None
 
@@ -60,6 +60,8 @@ async def main():
     setUpMainWindowHandlers(ui)
     wnd.closeEvent = mainWindowOnClose
     wnd.show()
+    # interrupt handling
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     app.exec()
 
 

@@ -52,7 +52,6 @@ def setUpMainWindowHandlers(mainWnd : gui.main_window.Ui_MainWindow):
     mainWnd.actionWheelSpeeds.triggered.connect(partial(openWheelSpeed, mainWnd))
     mainWnd.actionCurrents.triggered.connect(partial(openCurrentConsumption, mainWnd))
 
-#async 
 def main():
     rp.init_node("ui")
     app = QtWidgets.QApplication(sys.argv)
@@ -90,25 +89,17 @@ class BindedFunction(QtCore.QObject):
 class Thread(QtCore.QThread):
     def run(self):
         while True:
-            time.sleep(0.01)
             QtCore.QCoreApplication.processEvents()
             _checkQueueSig.triggered.emit()
             
 
-def printSmth(smth, smthelse):
-    print(smth)
-    print(smthelse)
-    printIdent()
-
 def _checkQueue():
     try:
-        func, args = methodQueue.get(block=False, timeout=0.001)
+        func, args = methodQueue.get(block=False, timeout=0.00001)
         func(*args)
     except Exception as ex:
         pass
 
 
 if __name__ == "__main__":
-    #asyncio.run(main())
-    #foo()
     main()

@@ -1,15 +1,21 @@
 import sys
-import rospy as rp 
+from threading import Thread
+import rospy as rp
+from rospy.topics import Subscriber 
 from std_msgs import *
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import asyncio
 from functools import partial
+import time
 from window_manager import *
 import gui.main_window
 import gui.battery
 import gui.elec.current_consumption
 import gui.elec.wheel_speed
 import signal
+import threading
+import queue
+from config import *
 
 ui: gui.main_window.Ui_MainWindow = None
 
@@ -46,8 +52,8 @@ def setUpMainWindowHandlers(mainWnd : gui.main_window.Ui_MainWindow):
     mainWnd.actionWheelSpeeds.triggered.connect(partial(openWheelSpeed, mainWnd))
     mainWnd.actionCurrents.triggered.connect(partial(openCurrentConsumption, mainWnd))
 
-
-async def main():
+#async 
+def main():
     rp.init_node("ui")
     app = QtWidgets.QApplication(sys.argv)
     wnd = QtWidgets.QMainWindow()
@@ -62,8 +68,47 @@ async def main():
     wnd.show()
     # interrupt handling
     signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    t = Thread()
+    global _checkQueueSig
+    _checkQueueSig = BindedFunction()
+    _checkQueueSig.triggered.connect(_checkQueue)
+    t.start()
+
     app.exec()
+
+def queueMethodForMain(method, *args):
+    methodQueue.put((method, args))
+
+
+class BindedFunction(QtCore.QObject):
+    triggered = QtCore.pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+class Thread(QtCore.QThread):
+    def run(self):
+        while True:
+            time.sleep(0.01)
+            QtCore.QCoreApplication.processEvents()
+            _checkQueueSig.triggered.emit()
+            
+
+def printSmth(smth, smthelse):
+    print(smth)
+    print(smthelse)
+    printIdent()
+
+def _checkQueue():
+    try:
+        func, args = methodQueue.get(block=False, timeout=0.001)
+        func(*args)
+    except Exception as ex:
+        pass
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    #asyncio.run(main())
+    #foo()
+    main()

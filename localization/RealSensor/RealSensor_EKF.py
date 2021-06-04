@@ -15,20 +15,36 @@ from visualization_msgs.msg import MarkerArray
 
 import sys
 import copy
-from std_msgs.msg import Float32
-from geometry_msgs.msg import Pose
+from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import String
 
+import pynmea2
+from geodesy import utm
+
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseWithCovariance
 from tf.transformations import euler_from_quaternion
 
-# Declare distance and pose variables
-distance = 0
-pose = Pose() # automatically sets all values to zero
 
+''' BU353-S4 SENSOR DECLARATIONS '''
+# Variables for UTM point (easting and northing in meters)
+gps_easting = 0
+gps_northing = 0
+
+''' UM7 SENSOR DECLARATIONS '''
 # Create variables for roll, pitch, yaw; initialize in callback
-roll = 0
-pitch = 0
-yaw = 0
+um7_roll = 0
+um7_pitch = 0
+um7_yaw = 0
 
+''' TRACKING CAM T265 DECLARATIONS '''
+# Variables for cam's roll, pitch, yaw, position?
+t265_pose = PoseWithCovariance()
+t265_roll = 0
+t265_pitch = 0
+t265_yaw = 0
+
+''' RVIZ STUFF '''
 # Goal marker topic
 topic = 'visualization_marker'
 publisher = rospy.Publisher(topic, Marker)
@@ -39,41 +55,54 @@ ekfPublisher = rospy.Publisher(ekf_topic, MarkerArray)
 
 ekfArray = MarkerArray()
 
+''' INIT ROS NODE AND CALLBACKS '''
 # Initialize ekf node to appear in rosnode list
 rospy.init_node("ekf_node")
 
-#Callback function for extracting data from the ultrasonic sensor and assigning it to distance variable
-def ultraCall(distData):
-    global distance 
-    distance = distData.data
+### (UM7 IMU) ###   
+# Callback for UM7 IMU sensor (pose contains position for x y z, and orientation for x y z w)
+def imuCall(um7Data):
+	imu_data = um7Data.data
 
-    # Testing rospy status
-    """
-    if rospy.is_shutdown == True:
-	print("shut")
-    else:
-	print("running")
-    """
+    # assigns array values to um7 roll, pitch and yaw variables
+	global um7_roll, um7_pitch, um7_yaw
+	um7_roll, um7_pitch, um7_yaw = imu_data[0], imu_data[1], imu_data[2]
 
-# Subscribes to distReader topic (ultrasonic sensor)
-def ultraSub():
-    distanceRead = rospy.Subscriber("distReader", Float32, ultraCall)
-    
-# Callback for simulated IMU sensor (pose contains position for x y z, and orientation for x y z w)
-def imuCall(poseData):
-    global pose
-    pose = poseData
-    
-    # converts quaternion values into euler angles using tf.transformations
-    global roll, pitch, yaw
-    quaternion_list = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
-    (roll, pitch, yaw) = euler_from_quaternion(quaternion_list)
-    
-
-# Subscribes to rover_pose topic (simulated IMU sensor)
+# Subscribes to um7_data topic (UM7 IMU sensor)
 def imuSub():
-    poseRead = rospy.Subscriber("rover_pose", Pose, imuCall)
-    
+    um7Read = rospy.Subscriber("um7_data", Int32MultiArray, imuCall)
+
+### (BU353-S4 GPS) ###
+# Callback for GPS (String parsed and converted to NMEA sentence)
+def gpsCall(buData):
+	gps_msg = pynmea2.parse(buData.data) # stores data in a message
+
+	utmPt = utm.fromLatLong(gps_msg.latitude, gps_msg.longitude, gps_msg.altitude)
+
+	# assigns easting and northing values from UTMPoint object
+	global gps_easting, gps_northing
+	gps_easting, gps_northing = utmPt.easting, utmPt.northing
+	
+def gpsSub():
+	buRead = rospy.Subscriber("bu353_data", String, gpsCall)	
+
+### (Tracking Camera T265) ###
+# Callback for tracking cam (Odometry message published by RealSense)
+# Pose contains position for x y z, and orientation for x y z w; might have to change frame
+def camCall(t265Data):
+	global t265_pose
+	t265_pose = t265Data.pose # pose with covariance object (has a float64 array and Pose() object)
+
+	# potentially add stuff for position here
+
+	# assign roll, pitch and yaw given
+	global t265_roll, t265_pitch, t265_yaw
+	quaternion_list = [t265_pose.pose.orientation.x, t265_pose.pose.orientation.y, t265_pose.pose.orientation.z, t265_pose.pose.orientation.w]
+	(t265_roll, t265_pitch, t265_yaw) = euler_from_quaternion(quaternion_list) # convert to euler angles
+
+def camSub():
+	t265Read = rospy.Subscriber("camera/odom/sample", Odometry, camCall)
+
 class RobotEKF(EKF):
     # initializes motion model with standard dev. of velocity and time step
     def __init__(self, dt, std_vel):
@@ -144,9 +173,9 @@ def residual(a, b):
 # pose variable contains Pose() given by IMU sensor, takes x and y positions; *** 
 def get_sensor_reading():
     # obtains current x position; distance measured is the same value
-    z = [[pose.position.x],
-         [pose.position.y],
-	 [yaw]]
+    z = [[um7_roll],
+         [um7_pitch],
+	 [um7_yaw]]
     return z
 
 # verify whether wall/goal is reached (*tested, works*); *** will need to change for IMU (talk to Kieran about how it should look)
@@ -184,14 +213,15 @@ def run_navigation(start_state, init_var, std_vel, std_range, std_bearing):
         ekf.update(z, HJacobian = Hj, Hx=Hx, residual=residual)		# update function
         
 	# keep track of the EKF path
-	ekf_track.append(ekf.x)
-	rospy.loginfo(ekf.x) # for debugging purposes 
+	# ekf_track.append(ekf.x)
+	# rospy.loginfo(ekf.x) # for debugging purposes 
+	print(t265_pitch)
 
-	# calls subscriber to get distance readings
-        ultraSub()
+	# calls subscriber to get imu, gps and tracking cam readings
 	imuSub()
+	gpsSub()
+	camSub()
 
-	
 	# RVIZ sim (needs improvement, still displays old markers)
 	#Define values for the visualized goal state
 	goal = Marker()

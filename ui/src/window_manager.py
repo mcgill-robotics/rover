@@ -24,6 +24,10 @@ def _clearWindowOpenStatus(T):
     _windowOpenStatus[T] = None
 
 
+def _setText(component: QtWidgets.QPlainTextEdit, text: str):
+    component.setPlainText(text)
+
+
 # BATTERY INFO
 
 def _batteryInfoOnClose(self, T, wnd: gui.battery.Ui_BatteryInfo, event):
@@ -31,13 +35,9 @@ def _batteryInfoOnClose(self, T, wnd: gui.battery.Ui_BatteryInfo, event):
     _clearWindowOpenStatus(T)
 
 
-def _setText(component: QtWidgets.QPlainTextEdit, text: str):
-    component.setPlainText(text)
-
-
 def _batteryInfoOnMsgReceived(self: gui.battery.Ui_BatteryInfo, arr: msg.Float32MultiArray):
-    voltage = str(arr.data[0])
-    current = str(arr.data[1])
+    voltage = str(round(arr.data[0], 2))
+    current = str(round(arr.data[1], 2))
     queueMethodForMain(_setText, self.txtVoltage, voltage)
     queueMethodForMain(_setText, self.txtCurrent, current)
 
@@ -48,13 +48,23 @@ def _batteryInfoOnOpen(self: gui.battery.Ui_BatteryInfo):
 
 # WHEELS
 
+def _wheelsOnMsgReceived(self: gui.elec.wheel_speed.Ui_WheelSpeed, arr: msg.Float32MultiArray):
+    frontLeft = str(round(arr.data[0], 1))
+    rearLeft = str(round(arr.data[1], 1))
+    frontRight = str(round(arr.data[2], 1))
+    rearRight = str(round(arr.data[3], 1))
+    queueMethodForMain(_setText, self.txtFL, frontLeft)
+    queueMethodForMain(_setText, self.txtRL, rearLeft)
+    queueMethodForMain(_setText, self.txtFR, frontRight)
+    queueMethodForMain(_setText, self.txtRR, rearRight)
 
-def _wheelSpeedOnClose(self, T, event):
+def _wheelSpeedOnClose(self, T, wnd, event):
+    wnd.wheelSub.unregister()
     _clearWindowOpenStatus(T)
 
 
 def _wheelSpeedOnOpen(self):
-    pass
+    self.wheelSub = rp.Subscriber("wheels", msg.Float32MultiArray, partial(_wheelsOnMsgReceived, self))
 
 
 # CURRENT

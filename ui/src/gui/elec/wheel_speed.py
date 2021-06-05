@@ -64,7 +64,7 @@ class Ui_WheelSpeed(object):
     def retranslateUi(self, WheelSpeed):
         _translate = QtCore.QCoreApplication.translate
         WheelSpeed.setWindowTitle(_translate("WheelSpeed", "Wheel Speed"))
-        self.lblWheelSpeed.setText(_translate("WheelSpeed", "Wheel Speed (%)"))
+        self.lblWheelSpeed.setText(_translate("WheelSpeed", "Wheel Speed (rpm)"))
         self.lblFR.setText(_translate("WheelSpeed", "FR"))
         self.lblFL.setText(_translate("WheelSpeed", "FL"))
         self.lblRR.setText(_translate("WheelSpeed", "RR"))

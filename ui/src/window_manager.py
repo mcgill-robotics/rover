@@ -70,12 +70,19 @@ def _wheelSpeedOnOpen(self):
 # CURRENT
 
 
-def _currentConsumptionOnClose(self, T, event):
+def _currentConsumptionOnClose(self, T, wnd, event):
+    wnd.currentSub.unregister()
     _clearWindowOpenStatus(T)
+
+def _currentOnMsgReceived(self: gui.elec.current_consumption.Ui_CurrentConsumption, arr: msg.Float32MultiArray):
+    cpu = str(round(arr.data[0], 2))
+    motor = str(round(arr.data[1], 2))
+    queueMethodForMain(_setText, self.txtCpu, cpu)
+    queueMethodForMain(_setText, self.txtMotor, motor)
 
 
 def _currentConsumptionOnOpen(self):
-    pass
+    self.currentSub = rp.Subscriber("current", msg.Float32MultiArray, partial(_currentOnMsgReceived, self))
 
 
 def closeAllWindows():

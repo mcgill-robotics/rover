@@ -11,6 +11,7 @@ import gui.main_window
 import gui.battery
 import gui.elec.current_consumption
 import gui.elec.wheel_speed
+import gui.status
 import std_msgs
 
 from main import queueMethodForMain
@@ -85,6 +86,15 @@ def _currentConsumptionOnOpen(self):
     self.currentSub = rp.Subscriber("current", msg.Float32MultiArray, partial(_currentOnMsgReceived, self))
 
 
+# status
+
+def _statusOnOpen(self):
+    pass
+
+def _statusOnClose(self, T, wnd, event):
+    _clearWindowOpenStatus(T)
+
+
 def closeAllWindows():
     for _, wid in _windowOpenStatus.items():
         wid: QtWidgets.QWidget = wid
@@ -119,3 +129,6 @@ def openWheelSpeed(parent):
 
 def openCurrentConsumption(parent):
     _openWindow(gui.elec.current_consumption.Ui_CurrentConsumption, parent, _currentConsumptionOnOpen, _currentConsumptionOnClose)
+
+def openStatus(parent):
+    _openWindow(gui.status.Ui_Status, parent, _statusOnOpen, _statusOnClose)

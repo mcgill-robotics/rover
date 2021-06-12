@@ -51,6 +51,7 @@
       </property>
       <addaction name="actionArm"/>
      </widget>
+     <addaction name="actionStatus"/>
      <addaction name="menuElectrical"/>
      <addaction name="menuMechanical"/>
      <addaction name="actionScience"/>
@@ -134,6 +135,11 @@
    </property>
    <property name="shortcutContext">
     <enum>Qt::ApplicationShortcut</enum>
+   </property>
+  </action>
+  <action name="actionStatus">
+   <property name="text">
+    <string>Status</string>
    </property>
   </action>
  </widget>

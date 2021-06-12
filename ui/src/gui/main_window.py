@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '../qt_ui/main.ui'
+# Form implementation generated from reading ui file 'main.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -60,11 +60,14 @@ class Ui_MainWindow(object):
         self.actionReset = QtWidgets.QAction(MainWindow)
         self.actionReset.setShortcutContext(QtCore.Qt.ApplicationShortcut)
         self.actionReset.setObjectName("actionReset")
+        self.actionStatus = QtWidgets.QAction(MainWindow)
+        self.actionStatus.setObjectName("actionStatus")
         self.menuFile.addAction(self.actionExit)
         self.menuElectrical.addAction(self.actionPowerInfo)
         self.menuElectrical.addAction(self.actionCurrents)
         self.menuElectrical.addAction(self.actionWheelSpeeds)
         self.menuMechanical.addAction(self.actionArm)
+        self.menuWindows.addAction(self.actionStatus)
         self.menuWindows.addAction(self.menuElectrical.menuAction())
         self.menuWindows.addAction(self.menuMechanical.menuAction())
         self.menuWindows.addAction(self.actionScience)
@@ -100,3 +103,4 @@ class Ui_MainWindow(object):
         self.actionWheelSpeeds.setText(_translate("MainWindow", "Wheels"))
         self.actionReset.setText(_translate("MainWindow", "Reset"))
         self.actionReset.setShortcut(_translate("MainWindow", "Ctrl+R"))
+        self.actionStatus.setText(_translate("MainWindow", "Status"))

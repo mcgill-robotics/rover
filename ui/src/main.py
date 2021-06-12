@@ -51,6 +51,8 @@ def setUpMainWindowHandlers(mainWnd : gui.main_window.Ui_MainWindow):
     mainWnd.actionPowerInfo.triggered.connect(partial(openBatteryInfo, mainWnd))
     mainWnd.actionWheelSpeeds.triggered.connect(partial(openWheelSpeed, mainWnd))
     mainWnd.actionCurrents.triggered.connect(partial(openCurrentConsumption, mainWnd))
+    mainWnd.actionStatus.triggered.connect(partial(openStatus, mainWnd))
+
 
 def main():
     rp.init_node("ui")

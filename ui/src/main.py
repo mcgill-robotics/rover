@@ -16,6 +16,7 @@ import signal
 import threading
 import queue
 from config import *
+from gui.video_feed import SingleVideoScreen
 
 ui: gui.main_window.Ui_MainWindow = None
 
@@ -75,6 +76,11 @@ def main():
     _checkQueueSig = BindedFunction()
     _checkQueueSig.triggered.connect(_checkQueue)
     t.start()
+
+    vid = SingleVideoScreen()
+    vid.show()
+    vid.add_feed_entry("Test")
+    vid.setWindowTitle("Video feed")
 
     app.exec()
 

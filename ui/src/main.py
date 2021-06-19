@@ -24,14 +24,6 @@ ui: gui.main_window.Ui_MainWindow = None
 def pbClicked(self):
     openBatteryInfo(self)
 
-
-def showMain():
-    wnd = QtWidgets.QMainWindow()
-    ui = gui.main_window.Ui_MainWindow()
-    ui.setupUi(wnd)
-    wnd.show()
-
-
 def onTestReceived(data: msg.String):
     data: str = str(data)
     print(data)

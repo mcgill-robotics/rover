@@ -28,7 +28,6 @@ def onTestReceived(data: msg.String):
     data: str = str(data)
     print(data)
 
-
 def mainWindowOnClose(event):
     exitProgram()
 
@@ -36,7 +35,6 @@ def mainWindowOnClose(event):
 def exitProgram(code=0):
     closeAllWindows()
     exit(code)
-
 
 def setUpMainWindowHandlers(mainWnd : gui.main_window.Ui_MainWindow):
     mainWnd.actionExit.triggered.connect(exitProgram)

@@ -53,6 +53,7 @@ def setUpMainWindowHandlers(mainWnd : gui.main_window.Ui_MainWindow):
     mainWnd.actionWheelSpeeds.triggered.connect(partial(openWheelSpeed, mainWnd))
     mainWnd.actionCurrents.triggered.connect(partial(openCurrentConsumption, mainWnd))
     mainWnd.actionStatus.triggered.connect(partial(openStatus, mainWnd))
+    mainWnd.actionVideoFeeds.triggered.connect(partial(openVideoFeeds, mainWnd))
 
 
 def main():
@@ -76,11 +77,6 @@ def main():
     _checkQueueSig = BindedFunction()
     _checkQueueSig.triggered.connect(_checkQueue)
     t.start()
-
-    vid = SingleVideoScreen()
-    vid.show()
-    vid.add_feed_entry("Test")
-    vid.setWindowTitle("Video feed")
 
     app.exec()
 

@@ -12,6 +12,7 @@ import gui.battery
 import gui.elec.current_consumption
 import gui.elec.wheel_speed
 import gui.status
+import gui.video_feed
 import std_msgs
 
 from main import queueMethodForMain
@@ -94,6 +95,12 @@ def _statusOnOpen(self):
 def _statusOnClose(self, T, wnd, event):
     _clearWindowOpenStatus(T)
 
+def _videoFeedsOnOpen(self):
+    pass
+
+def _videoFeedsOnClose(self, T, wnd, event):
+    _clearWindowOpenStatus(T)
+
 
 def closeAllWindows():
     for _, wid in _windowOpenStatus.items():
@@ -118,6 +125,19 @@ def _openWindow(T, parent, onOpen, onClose):
     wid.show()
     _windowOpenStatus[T] = wid
 
+def _openCustomWindow(T, parent, onOpen, onClose):
+    if T in _windowOpenStatus.keys():
+        if _windowOpenStatus[T] is not None:
+            theWidget: QtWidgets.QWidget = _windowOpenStatus[T]
+            theWidget.activateWindow()
+            return
+    wid = T()
+    parent.windows.append(wid)
+    onOpen(wid)
+    wid.closeEvent = partial(onClose, wid, T, None)
+    wid.show()
+    _windowOpenStatus[T] = wid
+
 
 def openBatteryInfo(parent):
     _openWindow(gui.battery.Ui_BatteryInfo, parent, _batteryInfoOnOpen, _batteryInfoOnClose)
@@ -129,6 +149,9 @@ def openWheelSpeed(parent):
 
 def openCurrentConsumption(parent):
     _openWindow(gui.elec.current_consumption.Ui_CurrentConsumption, parent, _currentConsumptionOnOpen, _currentConsumptionOnClose)
+
+def openVideoFeeds(parent):
+    _openCustomWindow(gui.video_feed.SingleVideoScreen, parent, _videoFeedsOnOpen, _videoFeedsOnClose)
 
 def openStatus(parent):
     _openWindow(gui.status.Ui_Status, parent, _statusOnOpen, _statusOnClose)

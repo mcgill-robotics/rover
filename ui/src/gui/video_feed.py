@@ -99,7 +99,7 @@ class SingleVideoScreen(QWidget):
         super(SingleVideoScreen, self).__init__(parent)
 
         self._image_display = QLabel(self)
-        self._image_display.setMinimumSize(100, 100)
+        self._image_display.setMinimumSize(400, 300)
         self._topic_selector = QComboBox(self)
         self._angle_selector = AngleSelection(angle, self)
         self._angle = angle
@@ -118,6 +118,8 @@ class SingleVideoScreen(QWidget):
         self._angle_selector.turnAngle.connect(self.set_angle)
         self._topic_selector.activated.connect(self._topic_sel_callback)
         self._active_topic = ""
+
+        self.setWindowTitle("Video Feeds")
 
     def get_active_topic(self):
         """!@brief Get the currently selected topic
@@ -144,6 +146,7 @@ class SingleVideoScreen(QWidget):
             self._image_display.setText("No Image")
             return
 
+        # TODO : remove
         if self._angle != 0:
             image_rotated = image.transformed(QTransform().rotate(self._angle), Qt.SmoothTransformation)
         else:

@@ -147,10 +147,10 @@ class SingleVideoScreen(QWidget):
             return
 
         # TODO : remove
-        if self._angle != 0:
-            image_rotated = image.transformed(QTransform().rotate(self._angle), Qt.SmoothTransformation)
-        else:
-            image_rotated = image
+        #if self._angle != 0:
+        #    image_rotated = image.transformed(QTransform().rotate(self._angle), Qt.SmoothTransformation)
+        #else:
+        image_rotated = image
         image_rotated = image_rotated.scaled(self.width(), self.height(), Qt.KeepAspectRatio)
         pixmap = QPixmap.fromImage(image_rotated)
         self._image_display.setPixmap(pixmap)

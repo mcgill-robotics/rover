@@ -120,6 +120,11 @@ class SingleVideoScreen(QWidget):
         self._active_topic = ""
 
         self.setWindowTitle("Video Feeds")
+        # f = open("/home/nanjingchj/Downloads/download.jpeg", "rb")
+        # imageBytes = f.read()
+        # img = QImage()
+        # img.loadFromData(imageBytes)
+        # self.new_sample(img)
 
     def get_active_topic(self):
         """!@brief Get the currently selected topic
@@ -146,7 +151,6 @@ class SingleVideoScreen(QWidget):
             self._image_display.setText("No Image")
             return
 
-        # TODO : remove
         #if self._angle != 0:
         #    image_rotated = image.transformed(QTransform().rotate(self._angle), Qt.SmoothTransformation)
         #else:

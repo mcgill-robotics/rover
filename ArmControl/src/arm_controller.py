@@ -4,8 +4,7 @@ import arm_kinematics
 import numpy as np
 import time
 import rospy
-from arm_control.msg import ProcessedControllerInput, ArmMotorCommand
-from arm_control.msg import ArmStatusFeedback
+from arm_control.msg import ProcessedControllerInput, ArmMotorCommand, ArmStatusFeedback
 
 class Node_ArmControl():
 
@@ -20,14 +19,14 @@ class Node_ArmControl():
         self.torq = [0] * self.nbJoints
         self.x    = [0] * self.nbCart
         self.dx   = [0] * self.nbCart
-        self.ee   = 0                   # End-effector (EE) : active/inactive
+        self.ee   = False                   # End-effector (EE) : active/inactive
 
         # Desired Arm State
         self.q_d  = [0] * self.nbJoints
         self.dq_d = [0] * self.nbJoints
         self.x_d  = [0] * self.nbCart
         self.dx_d = [0] * self.nbCart
-        self.ee_d = 0
+        self.ee_d = False
 
         # Control mode
         self.mode = 'Cartesian'     # default cartesian mode
@@ -54,7 +53,7 @@ class Node_ArmControl():
         cmds = ArmMotorCommand()
         while not rospy.is_shutdown():
             cmds.MotorVel = self.dq_d
-            cmds.ClawState = int(self.ee_d)
+            cmds.ClawState = self.ee_d
 
             self.armControlPublisher.publish(cmds)
 
@@ -85,10 +84,7 @@ class Node_ArmControl():
             
             self.dq_d[i] = ctrlInput.Y_dir * self.jointVelLimits[i]
         
-        try:
-            self.ee_d = int(ctrlInput.ClawOpen)
-        except ValueError as error:
-                rospy.logerr(str(error))
+        self.ee_d = ctrlInput.ClawOpen
 
         # Check Joint Limits
         for i in range(len(self.q)):
@@ -104,17 +100,16 @@ class Node_ArmControl():
                     self.dq_d[i] = 0
                 
 
-
     def updateArmState(self, state):
         self.q      = state.MotorPos
-        self.dq     = state.MotorVel
-        self.torq   = state.MotorTorq
-        self.ee     = int(state.ClawMode)
+        # self.dq     = state.MotorVel
+        # self.torq   = state.MotorTorq
+        self.ee     = state.ClawMode
 
         self.x = arm_kinematics.forwardKinematics(self.q)
 
-        J, Jv, Jw = arm_kinematics.Jacobian(self.q)
-        self.dx = arm_kinematics.forwardVelocity(self.q, self.dq)
+        # J, Jv, Jw = arm_kinematics.Jacobian(self.q)
+        # self.dx = arm_kinematics.forwardVelocity(self.q, self.dq)
 
 
     def changeControlMode(self):

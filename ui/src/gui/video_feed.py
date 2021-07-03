@@ -1,3 +1,4 @@
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
@@ -13,6 +14,9 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QRadioButton
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QWidget
+import window_manager
+from functools import partial
+import cv2
 
 class AngleSelection(QWidget):
     """!@brief Widget offers a series of angles to chose from.
@@ -120,11 +124,25 @@ class SingleVideoScreen(QWidget):
         self._active_topic = ""
 
         self.setWindowTitle("Video Feeds")
-        # f = open("/home/nanjingchj/Downloads/download.jpeg", "rb")
-        # imageBytes = f.read()
-        # img = QImage()
-        # img.loadFromData(imageBytes)
-        # self.new_sample(img)
+
+        self.cam = cv2.VideoCapture(0)
+
+        class DefaultCameraFeedThread(QtCore.QThread):
+            def __init__(self, parent, cam, new_sample_fn):
+                super().__init__()
+                self.parent = parent
+                self.cam = cam
+                self.new_sample_fn = new_sample_fn
+
+            def run(self):
+                while True:
+                    rval, frame = self.cam.read()
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    qimage = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+                    self.new_sample_fn(qimage)
+
+        self.cam_feed_thread = DefaultCameraFeedThread(self, self.cam, partial(self.new_sample))
+        self.cam_feed_thread.start()
 
     def get_active_topic(self):
         """!@brief Get the currently selected topic

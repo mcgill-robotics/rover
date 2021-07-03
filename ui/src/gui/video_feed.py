@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QRadioButton
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QWidget
 import window_manager
+import time
 from functools import partial
 import cv2
 
@@ -136,6 +137,7 @@ class SingleVideoScreen(QWidget):
 
             def run(self):
                 while True:
+                    time.sleep(1.0 / 60.0)
                     rval, frame = self.cam.read()
                     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     qimage = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)

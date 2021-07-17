@@ -18,6 +18,8 @@ import window_manager
 import time
 from functools import partial
 import cv2
+import rospy as rp
+from sensor_msgs.msg._Image import Image
 
 class AngleSelection(QWidget):
     """!@brief Widget offers a series of angles to chose from.
@@ -51,6 +53,10 @@ class SingleVideoScreen(QWidget):
     ## Requests a new topic to be played through this screen
     playTopic = pyqtSignal(str)
 
+    def handle_image(self, _, image: Image):
+        qimage = QImage(image.data, image.width, image.height, QImage.Format_RGB16)
+        self.new_sample(qimage)
+
     def __init__(self, angle=0, parent=None):
         """!@brief Constructor
         @param self Python object pointer
@@ -81,25 +87,29 @@ class SingleVideoScreen(QWidget):
 
         self.setWindowTitle("Video Feeds")
 
-        self.cam = cv2.VideoCapture(0)
+        # subscribe to image stream
+        self.cameraSub = rp.Subscriber("/webcam/image_raw", Image, partial(self.handle_image, self))
 
-        class DefaultCameraFeedThread(QtCore.QThread):
-            def __init__(self, parent, cam, new_sample_fn):
-                super().__init__()
-                self.parent = parent
-                self.cam = cam
-                self.new_sample_fn = new_sample_fn
 
-            def run(self):
-                while True:
-                    time.sleep(1.0 / 60.0)
-                    rval, frame = self.cam.read()
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    qimage = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
-                    self.new_sample_fn(qimage)
+        # self.cam = cv2.VideoCapture(0)
 
-        self.cam_feed_thread = DefaultCameraFeedThread(self, self.cam, partial(self.new_sample))
-        self.cam_feed_thread.start()
+        # class DefaultCameraFeedThread(QtCore.QThread):
+        #     def __init__(self, parent, cam, new_sample_fn):
+        #         super().__init__()
+        #         self.parent = parent
+        #         self.cam = cam
+        #         self.new_sample_fn = new_sample_fn
+
+        #     def run(self):
+        #         while True:
+        #             time.sleep(1.0 / 60.0)
+        #             rval, frame = self.cam.read()
+        #             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #             qimage = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+        #             self.new_sample_fn(qimage)
+
+        # self.cam_feed_thread = DefaultCameraFeedThread(self, self.cam, partial(self.new_sample))
+        # self.cam_feed_thread.start()
 
     def get_active_topic(self):
         """!@brief Get the currently selected topic

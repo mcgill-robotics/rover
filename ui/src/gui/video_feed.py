@@ -54,7 +54,7 @@ class SingleVideoScreen(QWidget):
     playTopic = pyqtSignal(str)
 
     def handle_image(self, _, image: Image):
-        qimage = QImage(image.data, image.width, image.height, QImage.Format_RGB16)
+        qimage = QImage(image.data, image.width, image.height, QImage.Format_RGB888)
         self.new_sample(qimage)
 
     def __init__(self, angle=0, parent=None):

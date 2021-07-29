@@ -5,7 +5,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QImage
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtGui import QTransform
-from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QComboBox, QPushButton
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtWidgets import QVBoxLayout
@@ -76,10 +76,21 @@ class SingleVideoScreen(QWidget):
 
         hbox = QVBoxLayout()
         self.setLayout(hbox)
+        self._button_row = QWidget()
+        self._button_row_layout = QHBoxLayout()
+        self._button_row.setLayout(self._button_row_layout)
+        self._cycle_forward = QPushButton(">>")
+        self._cycle_backward = QPushButton("<<")
+        self._button_row_layout.addWidget(self._cycle_backward)
+        self._button_row_layout.addWidget(self._cycle_forward)
 
         hbox.addWidget(self._image_display)
         hbox.addWidget(self._topic_selector)
         hbox.addWidget(self._angle_selector)
+        hbox.addWidget(self._button_row)
+
+        self._cycle_forward.clicked.connect(self._cycle_video_stream_forward)
+        self._cycle_backward.clicked.connect(self._cycle_video_stream_backward)
 
         self._angle_selector.turnAngle.connect(self.set_angle)
         self._topic_selector.activated.connect(self._topic_sel_callback)
@@ -110,6 +121,12 @@ class SingleVideoScreen(QWidget):
 
         # self.cam_feed_thread = DefaultCameraFeedThread(self, self.cam, partial(self.new_sample))
         # self.cam_feed_thread.start()
+
+    def _cycle_video_stream_forward(self):
+        print("Forward")
+
+    def _cycle_video_stream_backward(self):
+        print("Backward")
 
     def get_active_topic(self):
         """!@brief Get the currently selected topic

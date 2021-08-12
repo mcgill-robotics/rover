@@ -14,6 +14,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QRadioButton
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QWidget
+import std_msgs
 import window_manager
 import time
 from functools import partial
@@ -100,7 +101,8 @@ class SingleVideoScreen(QWidget):
 
         # subscribe to image stream
         self.cameraSub = rp.Subscriber("/webcam/image_raw", Image, partial(self.handle_image, self))
-
+        self.forwardPub = rp.Publisher("/cam_control/forward", std_msgs.msg.Int32, queue_size=1)
+        self.backwardPub = rp.Publisher("/cam_control/backward", std_msgs.msg.Int32, queue_size=1)
 
         # self.cam = cv2.VideoCapture(0)
 
@@ -123,10 +125,10 @@ class SingleVideoScreen(QWidget):
         # self.cam_feed_thread.start()
 
     def _cycle_video_stream_forward(self):
-        print("Forward")
+        self.forwardPub.publish(std_msgs.msg.Int32(0))
 
     def _cycle_video_stream_backward(self):
-        print("Backward")
+        self.backwardPub.publish(std_msgs.msg.Int32(0))
 
     def get_active_topic(self):
         """!@brief Get the currently selected topic

@@ -1,9 +1,13 @@
 from __future__ import annotations
 import rospy as rp
-import std_msgs
+import std_msgs.msg
+import rospy.numpy_msg
+import numpy as np
+import sensor_msgs.msg
 import cv2
 from functools import *
 from typing import TypeVar, Generic
+from cv_bridge import CvBridge
 
 def get_cameras(maxNum: int):
     index = 0
@@ -27,8 +31,9 @@ class Node(Generic[T]):
 class CameraManager:
     def __init__(self):
         rp.init_node("rover_camera")
-        self.active_camera_index = 0
-        cam_indices = get_cameras(100)
+        self.cv_bridge = CvBridge()
+        cam_indices = get_cameras(20)
+        print(f"Found {len(cam_indices)} cameras")
         self.active_cam = Node[cv2.VideoCapture]()
         start = self.active_cam
         for index in cam_indices:
@@ -38,6 +43,7 @@ class CameraManager:
             self.active_cam = self.active_cam.next
 
         self.active_cam.next = start
+        self.active_cam = start
 
         head = start
         while True:
@@ -54,13 +60,20 @@ class CameraManager:
             head = head.next
             if head is start:
                 break
+
+
+        self.start = head.element
         
         self.forward_sub = rp.Subscriber("/cam_control/forward", std_msgs.msg.Int32, partial(self.handle_forward, self))
         self.backard_sub = rp.Subscriber("/cam_control/backward", std_msgs.msg.Int32, partial(self.handle_backward, self))
+        self.cam_pub = rp.Publisher("/cam_feed", sensor_msgs.msg.Image, queue_size=1)
+        #self.cam_pub = rp.Publisher("/cam_feed", rospy.numpy_msg.numpy_msg(std_msgs.msg.ByteMultiArray), queue_size=1)
 
     def update(self):
-        rval, frame = self.cameras[0].read()
+        rval, frame = self.start.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        image_message = self.cv_bridge.cv2_to_imgmsg(frame, encoding="passthrough")
+        self.cam_pub.publish(image_message)
 
     def handle_forward(self, _1, _2):
         print("forward")
@@ -72,7 +85,9 @@ class CameraManager:
 
 def main():
     camera_manager = CameraManager()
-    rp.spin()
+    while True:
+        camera_manager.update()
+    #rp.spin()
 
 
 if __name__ == "__main__":

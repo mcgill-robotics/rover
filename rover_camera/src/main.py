@@ -70,7 +70,7 @@ class CameraManager:
         #self.cam_pub = rp.Publisher("/cam_feed", rospy.numpy_msg.numpy_msg(std_msgs.msg.ByteMultiArray), queue_size=1)
 
     def update(self):
-        rval, frame = self.start.read()
+        rval, frame = self.active_cam.element.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image_message = self.cv_bridge.cv2_to_imgmsg(frame, encoding="passthrough")
         self.cam_pub.publish(image_message)

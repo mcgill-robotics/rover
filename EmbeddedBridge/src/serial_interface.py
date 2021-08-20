@@ -435,4 +435,3 @@ g_pui8Crc8CCITT = [
 
 if __name__ == "__main__":
     s = SerialInterface('/dev/ttyUSB0', 115200, 0.01)
-    # s.start_link()

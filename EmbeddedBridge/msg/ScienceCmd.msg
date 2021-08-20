@@ -1,0 +1,9 @@
+bool LedState
+bool LaserState
+bool SolenoidState
+bool PeltierState
+bool CcdSensorSnap
+bool Shutdown
+float32 MotorSpeed
+float32 Stepper1IncAng
+float32 Stepper2IncAng

@@ -5,7 +5,7 @@ import serial_interface as serialInt
 from std_msgs.msg import Int32
 from arm_control.msg import ArmMotorCommand, ArmStatusFeedback
 from DriveControl.msg import WheelSpeed
-from embedded_bridge.msg import PowerFeedback
+from embedded_bridge.msg import DriveFeedback, PowerFeedback, ScienceCmd, ScienceFeedback, CcdData
 import time
 
 class Node_EmbeddedBridge():
@@ -41,18 +41,19 @@ class Node_EmbeddedBridge():
         }
 
         # Drive System
-        self.drive_state_publisher      = rospy.Publisher("drive_state_data", WheelSpeed, queue_size=1)
-        self.drive_control_subscriber   = rospy.Subscriber("drive_control_data", WheelSpeed, None)
+        self.drive_state_publisher      = rospy.Publisher("drive_state_data", DriveFeedback, queue_size=1)
+        self.drive_control_subscriber   = rospy.Subscriber("drive_control_data", WheelSpeed, writeDriveCommand)
         self.drive_state = WheelSpeed()
 
         # Arm System
         self.arm_state_publisher        = rospy.Publisher("arm_state_data", ArmStatusFeedback, queue_size=1)
-        self.arm_control_subscriber     = rospy.Subscriber("arm_control_data", ArmMotorCommand, None)
+        self.arm_control_subscriber     = rospy.Subscriber("arm_control_data", ArmMotorCommand, writeArmCommand)
         self.arm_state = ArmStatusFeedback()
 
         # Science System
-        self.science_state_publisher    = rospy.Publisher("science_state_data", Int32, queue_size=1)
-        self.science_control_subscriber = rospy.Subscriber("science_control_data", Int32, None)
+        self.science_state_publisher    = rospy.Publisher("science_state_data", ScienceFeedback, queue_size=1)
+        self.science_ccd_data_publisher = rospy.Publisher("science_ccd_data", CcdData)
+        self.science_control_subscriber = rospy.Subscriber("science_control_data", ScienceCmd, None)
 
         # Power System
         self.power_state_publisher      = rospy.Publisher("power_state_data", PowerFeedback, queue_size=1)
@@ -214,10 +215,136 @@ class Node_EmbeddedBridge():
         self.mapping["drive_right"].put_packet('1', data_right)
 
     def writeScienceCommand(self, control):
-        pass
+        # Send State Request
+        state = 0
+        state += int(control.LedState)
+        state += int(control.LaserState) << 1
+        state += int(control.SolenoidState) << 2
+        state += int(control.PeltierState) << 3
+        state += int(control.CcdSensorSnap) << 4
+        state += int(control.Shutdown) << 5
+        state_msg = f"{state}"
+
+        self.mapping["science"].put_packet('2', state_msg)
+
+        # Send Motor Control
+        motor_msg = f"{control.MotorSpeed:.3f}"
+        self.mapping["science"].put_packet('1', motor_msg)
+
+        # Send Stepper Commands
+        step1_msg = f"1,{control.Stepper1IncAng:.4f}"
+        self.mapping["science"].put_packet('3', step1_msg)
+        step2_msg = f"2,{control.Stepper2IncAng:.4f}"
+        self.mapping["science"].put_packet('3', step2_msg)
+
 
     def writePowerCommand(self, control):
         pass
+
+    def run(self):
+        drv_fb = DriveFeedback()
+        arm_fb = ArmStatusFeedback()
+        pwr_fb = PowerFeedback()
+        sci_fb = ScienceFeedback()
+        ccd_data = CcdData()
+
+        new_drv_data = False
+        new_arm_data = False
+        new_pwr_data = False
+        new_sci_data = False
+        new_ccd_data = False
+
+        while not rospy.is_shutdown():
+            
+            for key in self.mapping:
+                msg = self.mapping[key].get_packet()
+                if msg is not None:
+                    sys_id, frame_id, frame_type, payload = msg
+
+                    # Parse Incoming data based on Serial Communication Documentation
+                    data = []
+                    if frame_id in [0, 1, 6]:
+                        data_str = payload.split(",")
+                        data = [float(x) for x in data_str]
+
+                    elif frame_id == 2:
+                        data_bits = ord(payload)
+                        num_bits = 6
+                        for i in range(0, num_bits):
+                            bit = bool(data_bits & 1)
+                            data.insert(0, bit)
+                            data_bits = data_bits >> 1
+                    
+                    elif frame_id == 3:
+                        data_str = payload.split(",")
+                        data = [int(data_str[0]), float(data_str[1])]
+
+                    elif frame_id == 4:
+                        data.append(int(payload))
+
+                    elif frame_id == 5:
+                        for i in range(0, len(payload), 2):
+                            Msb = ord(payload[i])
+                            Lsb = ord(payload[i+1])
+                            val = (Msb << 8) + Lsb
+                            data.append(val)
+
+
+                    # Generate System ROS message
+                    if key == "drive_left":
+                        drv_fb.LeftWheelSpeed[0] = data[0]
+                        drv_fb.LeftWheelSpeed[1] = data[1]
+                        new_drv_data = True
+
+                    elif key == "drive_right":
+                        drv_fb.RightWheelSpeed[0] = data[0]
+                        drv_fb.RightWheelSpeed[1] = data[1]
+                        new_drv_data = True
+
+                    elif key == "arm_shoulder":
+                        arm_fb.MotorPos[0] = data[0]
+                        arm_fb.MotorPos[1] = data[1]
+                        arm_fb.MotorPos[2] = data[2]
+                        new_arm_data = True
+
+                    elif key == "arm_forearm":
+                        arm_fb.MotorPos[3] = data[0]
+                        arm_fb.MotorPos[4] = data[1]
+                        arm_fb.ClawMode = bool(data[2])
+                        new_arm_data = True
+
+                    elif key == "power":
+                        pwr_fb.VoltageBattery1 = data[0]
+                        pwr_fb.CurrentBattery1 = data[1]
+                        pwr_fb.VoltageBattery2 = data[2]
+                        pwr_fb.CurrentBattery2 = data[3]
+                        self.power_state_publisher.publish(pwr_fb)
+                    
+                    elif key == "science":
+                        if frame_id == 2:
+                            sci_fb.LedState = data[0]
+                            sci_fb.LaserState = data[1]
+                            sci_fb.SolenoidState = data[2]
+                            sci_fb.PeltierState = data[3]
+                            sci_fb.Stepper1Fault = data[4]
+                            sci_fb.Stepper2Fault = data[5]
+                            self.science_state_publisher.publish(sci_fb)
+                        elif frame_id == 5:
+                            ccd_data.CcdData = data
+                            self.science_ccd_data_publisher.publish(ccd_data)
+
+            # Publish new data if applicable
+            if new_drv_data:
+                self.drive_state_publisher.publish(drv_fb)
+            if new_arm_data:
+                self.arm_state_publisher.publish(arm_fb)
+
+            # Reset Flags
+            new_drv_data = False
+            new_arm_data = False
+            new_pwr_data = False
+            new_sci_data = False
+            new_ccd_data = False
 
 
 if __name__ == "__main__":

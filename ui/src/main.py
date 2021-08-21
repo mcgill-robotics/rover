@@ -44,6 +44,7 @@ def setUpMainWindowHandlers(mainWnd : gui.main_window.Ui_MainWindow):
     mainWnd.actionCurrents.triggered.connect(partial(openCurrentConsumption, mainWnd))
     mainWnd.actionStatus.triggered.connect(partial(openStatus, mainWnd))
     mainWnd.actionVideoFeeds.triggered.connect(partial(openVideoFeeds, mainWnd))
+    mainWnd.actionScience.triggered.connect(partial(openScience, mainWnd))
 
 
 def main():

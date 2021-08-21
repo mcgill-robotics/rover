@@ -67,6 +67,10 @@ class SingleVideoScreen(QWidget):
         """
         super(SingleVideoScreen, self).__init__(parent)
 
+        self.counter = 1
+
+        self.current_image: QImage = None
+
         self._image_display = QLabel(self)
         self._image_display.setMinimumSize(400, 300)
         #self._topic_selector = QComboBox(self)
@@ -84,8 +88,10 @@ class SingleVideoScreen(QWidget):
         self._button_row.setLayout(self._button_row_layout)
         self._cycle_forward = QPushButton(">>")
         self._cycle_backward = QPushButton("<<")
+        self._capture = QPushButton("Capture")
         self._button_row_layout.addWidget(self._cycle_backward)
         self._button_row_layout.addWidget(self._cycle_forward)
+        self._button_row_layout.addWidget(self._capture)
 
         hbox.addWidget(self._image_display)
         #hbox.addWidget(self._topic_selector)
@@ -94,6 +100,7 @@ class SingleVideoScreen(QWidget):
 
         self._cycle_forward.clicked.connect(self._cycle_video_stream_forward)
         self._cycle_backward.clicked.connect(self._cycle_video_stream_backward)
+        self._capture.clicked.connect(self._capture_image)
 
         self._angle_selector.turnAngle.connect(self.set_angle)
         #self._topic_selector.activated.connect(self._topic_sel_callback)
@@ -129,11 +136,19 @@ class SingleVideoScreen(QWidget):
         # self.cam_feed_thread = DefaultCameraFeedThread(self, partial(self.new_sample))
         # self.cam_feed_thread.start()
 
+    def _capture_image(self):
+        if self.current_image is not None:
+            self.current_image.save(f"~/captures/image.png{self.counter}", "png")
+            self.counter += 1
+        else:
+            print("No image")
+
     def _on_frame_received(self, _, image):
         frame = self.cv_bridge.imgmsg_to_cv2(image)
         #print(type(frame))
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         qimage = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+        self.current_image = qimage
         self.new_sample(qimage)
 
     def _cycle_video_stream_forward(self):

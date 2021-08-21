@@ -17,6 +17,7 @@ import std_msgs
 
 from main import queueMethodForMain
 from config import *
+import gui.science.science_main
 
 
 _windowOpenStatus = {}
@@ -138,6 +139,8 @@ def _openCustomWindow(T, parent, onOpen, onClose):
     wid.show()
     _windowOpenStatus[T] = wid
 
+def _openScience(parent):
+    _openCustomWindow(gui.science.science_main.Ui_ScienceMain, parent, _videoFeedsOnOpen, _videoFeedsOnClose)
 
 def openBatteryInfo(parent):
     _openWindow(gui.battery.Ui_BatteryInfo, parent, _batteryInfoOnOpen, _batteryInfoOnClose)
@@ -155,3 +158,6 @@ def openVideoFeeds(parent):
 
 def openStatus(parent):
     _openWindow(gui.status.Ui_Status, parent, _statusOnOpen, _statusOnClose)
+
+def openScience(parent):
+    _openScience(parent)

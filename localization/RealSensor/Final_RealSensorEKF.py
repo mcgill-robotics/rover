@@ -7,7 +7,7 @@ import math
 import rospy
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
-from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import Int32MultiArray, Float32MultiArray
 from std_msgs.msg import String
 
 import pynmea2
@@ -33,7 +33,7 @@ um7_pitch = 0
 um7_yaw = 0
 
 ''' TRACKING CAM T265 DECLARATIONS '''
-# Variables for cam's roll, pitch, yaw, position?
+# Variables for cam's roll, pitch, yaw, position
 t265_pose = PoseWithCovariance()
 t265_roll = 0
 t265_pitch = 0
@@ -43,19 +43,31 @@ t265_x = 0
 t265_y = 0
 t265_z = 0
 
-''' RVIZ STUFF '''
-# Goal marker topic
-topic = 'visualization_marker'
-publisher = rospy.Publisher(topic, Marker)
+''' AR TAG DECLARATIONS '''
+# Variables for ar tag's pos. and orientation
+ar_x = 0
+ar_y = 0
+ar_z = 0
 
+ar_yaw = 0
+ar_pitch = 0
+ar_roll = 0     
+
+''' RVIZ STUFF '''
 # Ekf track topic
 ekf_topic = 'visualization_marker_array'
 ekfPublisher = rospy.Publisher(ekf_topic, MarkerArray)
 
 ekfArray = MarkerArray()
 
+# Tag track topic
+tag_topic = 'visualization_marker_array'
+tagPublisher = rospy.Publisher(tag_topic, MarkerArray)
+
+tagArray = MarkerArray()
+
 ''' INIT ROS NODE AND CALLBACKS '''
-# Initialize ekf node to appear in rosnode list
+# Initialize rover_ekf node to appear in rosnode list
 rospy.init_node("ekf_node")
 
 ### (UM7 IMU) ###   
@@ -67,10 +79,10 @@ def imuCall(um7Data):
     global um7_roll, um7_pitch, um7_yaw
     um7_roll, um7_pitch, um7_yaw = imu_data[0]/91.02222, imu_data[1]/91.02222, imu_data[2]/91.02222
 
-    # sets them within range of 0 to 360 deg.
+    # # sets them within range of 0 to 360 deg.
     if um7_yaw < 0: um7_yaw += 360.0
-    if um7_roll < 0: um7_roll += 360.0
-    if um7_pitch < 0: um7_pitch += 360.0
+    # if um7_roll < 0: um7_roll += 360.0
+    # if um7_pitch < 0: um7_pitch += 360.0
 
 # Subscribes to um7_data topic (UM7 IMU sensor)
 def imuSub():
@@ -123,10 +135,10 @@ def camCall(t265Data):
     t265_roll = math.atan2(2.0 * (w*x + y*z), w*w - x*x - y*y + z*z) * 180.0 / math.pi
     t265_yaw = math.atan2(2.0 * (w*z + x*y), w*w + x*x - y*y - z*z) * 180.0 / math.pi
 
-    # sets them within range of 0 to 360 deg.
+    # # sets them within range of 0 to 360 deg.
     if t265_yaw < 0: t265_yaw += 360.0
-    if t265_roll < 0: t265_roll += 360.0
-    if t265_pitch < 0: t265_pitch += 360.0
+    # if t265_roll < 0: t265_roll += 360.0
+    # if t265_pitch < 0: t265_pitch += 360.0
 
     # print("RPY [deg]: Roll: {0:.7f}, Pitch: {1:.7f}, Yaw: {2:.7f}".format(t265_roll, t265_pitch, t265_yaw))
 
@@ -134,6 +146,27 @@ def camCall(t265Data):
 def camSub():
 	t265Read = rospy.Subscriber("camera/odom/sample", Odometry, camCall)
 
+### AR Tag Detection ###
+def arTransCall(arTData):
+    arTranslation = arTData.data
+
+    global ar_x, ar_y, ar_z
+    ar_x = arTranslation[0]
+    ar_y = arTranslation[1]
+    ar_z = arTranslation[2]
+
+def arRotCall(arRData):
+    arRotation = arRData.data
+
+    global ar_yaw, ar_pitch, ar_roll # note OpenCv's axis is different than the one I'm using
+    ar_yaw, ar_pitch, ar_roll = arRotation[1], arRotation[0], arRotation[2]
+
+    if ar_yaw < 0: ar_yaw += 360.0
+
+
+def arTSub():
+    arTRead = rospy.Subscriber("arTrans_data", Float32MultiArray, arTransCall)
+    arRRead = rospy.Subscriber("arRot_data", Float32MultiArray, arRotCall) 
 
 class RobotEKF():
     # initializes motion model with standard dev. of velocity and time step
@@ -223,7 +256,7 @@ class RobotEKF():
         firstS_k = firstS_k.astype('float')
         firstK_k = np.matmul(np.matmul(P_pred,H.T),inv(firstS_k)) # initial Kalman gain
         
-        init_state_est = state_pred + np.matmul(firstK_k, first_y_res) # first updated state estimate (ekf.x)
+        init_state_est = state_pred + np.matmul(firstK_k, first_y_res) # first updated state estimate (rover_ekf.x)
         init_P = np.matmul((np.eye(3) - np.matmul(firstK_k, H)),P_pred) # first updated covariance estimate
 
         ################################
@@ -238,54 +271,122 @@ class RobotEKF():
         self.state_est = init_state_est + np.matmul(secondK_k, second_y_res) # updated + final state estimate
         self.P = np.matmul((np.eye(3) - np.matmul(secondK_k, H)), init_P) # updated + final covariance estimate
 
+class TagEKF(RobotEKF):
+    def __init__(self, state_init, std_vel, std_rot): 
+        # redefine init function for tag's state
+        # create a three-dimensional state with 3 measurements (for x, y and theta; yaw) => state_init
+        self.std_vel = std_vel # standard dev. of velocity and rotation
+        self.std_rot = std_rot
 
+        self.R_tag = np.array([[0.5, 0, 0],
+                               [0, 0.5, 0],
+                               [0, 0, 0.5]])
 
-def run_localization(start_state, std_vel, std_rot):
-    ekf = RobotEKF(start_state, std_vel, std_rot) # creates new EKF object with defined variables
+        self.Q = np.array([[self.std_vel**2,0,0], # covariance for process noise (i.e. states)
+                           [0,self.std_vel**2,0],
+                           [0,0,self.std_rot**2]])
+        self.P = self.Q
+        
+        self.state_est = state_init # initialize estimated state with parameter
+        self.time_prev = time.time() # current time
+    
+    def get_tag_measurement(self):
+        z = np.array([[ar_x + current_roverX], # add to rover's pos. for abs. position, otherwise we just get the distance from cam to tag
+                      [ar_z + current_roverY],
+                      [ar_yaw]])
+        return z
+    
+    def predict_update(self, u=[0,0]):
+        # Same as superclass except uses only one update step
+        # Predict step for tag
+        dt = time.time() - self.time_prev
+        self.time_prev = time.time()
+        state_pred = self.get_predict_state(x_prev = self.state_est[0], y_prev = self.state_est[1], theta_prev = self.state_est[2], dt = dt, v = u[0], omega = u[1]) # predicted state estimate
 
-    markerCount = 0
+        F = self.get_F(theta_prev = self.state_est[2], dt = dt, v = u[0]) # state transition matrix
+        H = self.get_H() # observation matrix
+
+        P_pred = np.matmul(np.matmul(F,self.P),F.T) + self.Q
+
+        # Update step
+        state_meas = self.get_tag_measurement()
+        y_res = state_meas - np.matmul(H,state_pred)
+
+        S_k = np.matmul(np.matmul(H, P_pred), H.T) + self.R_tag
+        S_k = S_k.astype('float')
+        K_k = np.matmul(P_pred, np.matmul(H.T, inv(S_k)))
+
+        self.state_est = state_pred + np.matmul(K_k,y_res)
+        self.P = np.matmul((np.eye(3) - np.matmul(K_k, H)), P_pred)
+
+current_roverX = 0
+current_roverY = 0
+
+def run_localization(rover_startState, rover_stdVel, rover_stdRot, tag_startState, tag_stdVel, tag_stdRot):
+    rover_ekf = RobotEKF(rover_startState, rover_stdVel, rover_stdRot) # creates new EKF object with defined variables
+    tag_ekf = TagEKF(tag_startState, tag_stdVel, tag_stdRot)
+
+    ekfCount = 0
+    tagCount = 0
 
     # calls subscribers to get measurements from sensor nodes
     imuSub()
     gpsSub()
     camSub()
+    arTSub()
 
     while not rospy.is_shutdown():
-        u = np.array([0.00, 0.00]) # steering commands (linear x and angular velocity; v and omega)
-        ekf.predict_update(u=u)
+        global current_roverX, current_roverY # keep track of the current rover x and y pos. to get accurate positions for AR tags
+        current_roverX = rover_ekf.state_est[0]
+        current_roverY = rover_ekf.state_est[1]
 
-        rospy.loginfo(ekf.state_est)
+        u_rover = np.array([0.00, 0.00]) # steering commands (linear x and angular velocity; v and omega)
+        u_tag = np.array([0.00, 0.00]) # tag commands
+
+        rover_ekf.predict_update(u=u_rover)
+        tag_ekf.predict_update(u=u_tag)
+
+        rospy.loginfo(tag_ekf.state_est)
 
         # RVIZ sim 
-        #Define values for the visualized goal state
-        goal = Marker()
-        goal.header.frame_id = "/ekf"
-        goal.type = goal.CUBE	
-        goal.action = goal.ADD
+        # Define AR tag location
+        tagMarker = Marker()
+        tagMarker.header.frame_id = "/rover_ekf"
+        tagMarker.ns = "tag_space"
+        tagMarker.type = tagMarker.SPHERE
+        tagMarker.action = tagMarker.ADD
+        tagMarker.scale.x = 0.5
+        tagMarker.scale.y = 0.5
+        tagMarker.scale.z = 0.4
+        tagMarker.color.a = 1
+        tagMarker.color.r = 0
+        tagMarker.color.g = 0.1
+        tagMarker.color.b = 0.5
+        tagMarker.pose.orientation.w = 1.0
+                    
+        tagMarker.pose.position.x = tag_ekf.state_est[0]
+        tagMarker.pose.position.y = tag_ekf.state_est[1]
+        tagMarker.pose.position.z = 0
 
-        goal.scale.x = 0.7
-        goal.scale.y = 0.7
-        goal.scale.z = 0.65
+        # Should remove the first entry in array after count reaches past 5
+        if (tagCount > 10):
+            tagArray.markers.pop(0)
 
-        goal.pose.position.x = 0.0
-        goal.pose.position.y = 0.0
-        goal.pose.position.z = 0.0
+        tagArray.markers.append(tagMarker)
 
-        goal.color.a = 1.0
-        goal.color.r = 1.0
-        goal.color.g = 1.0
-        goal.color.b = 0.0
+        # Renumber id to remove old markers
+        id = 0
+        for e in tagArray.markers:
+            e.id = id
+            id += 1	
+        
+        tagPublisher.publish(tagArray)
+        tagCount += 1
+        rospy.sleep(0.01)
 
-        goal.pose.orientation.x = 0.0
-        goal.pose.orientation.y = 0.0
-        goal.pose.orientation.z = 0.0
-        goal.pose.orientation.w = 1.0
-
-        publisher.publish(goal)
-
-        # Define trajectory for ekf track
+        # Define trajectory for rover_ekf track
         ekfMarker = Marker()
-        ekfMarker.header.frame_id = "/ekf"
+        ekfMarker.header.frame_id = "/rover_ekf"
         ekfMarker.ns = "ekf_space"
         ekfMarker.type = ekfMarker.SPHERE
         ekfMarker.action = ekfMarker.ADD
@@ -298,12 +399,12 @@ def run_localization(start_state, std_vel, std_rot):
         ekfMarker.color.b = 0
         ekfMarker.pose.orientation.w = 1.0
                     
-        ekfMarker.pose.position.x = ekf.state_est[0]
-        ekfMarker.pose.position.y = ekf.state_est[1]
+        ekfMarker.pose.position.x = rover_ekf.state_est[0]
+        ekfMarker.pose.position.y = rover_ekf.state_est[1]
         ekfMarker.pose.position.z = 0
 
         # Should remove the first entry in array after count reaches past 5
-        if (markerCount > 10):
+        if (ekfCount > 10):
             ekfArray.markers.pop(0)
 
         ekfArray.markers.append(ekfMarker)
@@ -315,12 +416,13 @@ def run_localization(start_state, std_vel, std_rot):
             id += 1	
 
         ekfPublisher.publish(ekfArray)
-        markerCount += 1	
+        ekfCount += 1	
 
         rospy.sleep(0.02)
 
-start_state = np.array([[0, 0, 0]]).T
-ekf = run_localization(start_state = start_state, std_vel = 0.99, std_rot = 0.99)
+rover_startState = np.array([[0, 0, 0]]).T
+tag_startState = np.array([[0, 50, 0]]).T # set to 50 as y to get a better view in simulation; would probably change to ar_y or ar_z
+
+ekf = run_localization(rover_startState=rover_startState, rover_stdVel = 0.99, rover_stdRot = 0.99, tag_startState=tag_startState, tag_stdVel = 0.45, tag_stdRot = 0.45)
 
         
-

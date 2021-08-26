@@ -5,6 +5,9 @@ import rospy
 from cv2 import aruco
 import glob
 import numpy as np
+import math
+
+from std_msgs.msg import Float32MultiArray
 
 # define names of each possible ArUco tag OpenCV supports (just for personal reference)
 ARUCO_DICT = {
@@ -31,15 +34,23 @@ ARUCO_DICT = {
 	"DICT_APRILTAG_36h11": cv2.aruco.DICT_APRILTAG_36h11
 }
 
+rospy.init_node("AR_Readings")
+
+# publishers for each set of data
+arTPublisher = rospy.Publisher("arTrans_data", Float32MultiArray)
+arRPublisher = rospy.Publisher("arRot_data", Float32MultiArray)
+
 webcam = cv2.VideoCapture(0) # captures webcam feed (or whatever camera we end up using)
 
 global cameraMatrix # creates variables for camera matrix and distortion coefficients
 global distCoeffs
+global yaw, pitch, roll # variables for the AR tag's orientation
+global distX, distY, distZ # variables for the AR tag's translation w.r.t camera
 
 # Using a ChAruco Board to calibrate my webcam; will have to take images from diff. viewpoints using whatever cam we're using
 def camera_calibration():
 	chAruco_dict = cv2.aruco.Dictionary_get(ARUCO_DICT["DICT_4X4_50"])
-	chAruco_board = cv2.aruco.CharucoBoard_create(squaresX = 7, squaresY = 9, squareLength = 0.024, markerLength = 0.019,
+	chAruco_board = cv2.aruco.CharucoBoard_create(squaresX = 7, squaresY = 9, squareLength = 0.024, markerLength = 0.015875,
 												 dictionary = chAruco_dict)
 	chAruco_params = cv2.aruco.DetectorParameters_create()
 
@@ -73,8 +84,8 @@ def camera_calibration():
         charucoIds=board_ids,
         board=chAruco_board,
         imageSize=image_size,
-        cameraMatrix=None,
-        distCoeffs=None)
+		cameraMatrix = None,
+		distCoeffs = None)
 
 # Function for estimating the pose of aruco marker	
 def estimateTagPose():
@@ -93,13 +104,43 @@ def estimateTagPose():
 				ids = ids.flatten() # puts ids in the same list (1d array)
 				cv2.aruco.drawDetectedMarkers(newFrame, corners) # draws box of detection and top left dot
 
-				rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners, 0.02, cameraMatrix, distCoeffs) # obtain pose and assign to rotation vector (rvec) and translation vector (tvec)
+				rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners, 0.058, cameraMatrix, distCoeffs) # obtain pose and assign to rotation vector (rvec) and translation vector (tvec)
 				newFrame = cv2.aruco.drawAxis(newFrame, cameraMatrix, distCoeffs, rvec, tvec, 0.02) # draws axes
 				
-				print(type(rvec))
+				rotMtx = cv2.Rodrigues(rvec)[0] # convert rotation vector to matrix
+
+				# Note attitude angles (rpy) are in the frame of OpenCv's pose function (e.g. this pitch is the yaw I need)
+				yaw = math.atan2((rotMtx[1][0]), (rotMtx[0][0])) # angle along z axis
+				pitch = math.atan2(-(rotMtx[2][0]), (math.sqrt(rotMtx[2][1]**2 + rotMtx[2][2]**2))) # angle along y axis
+				roll = math.atan2((rotMtx[2][1]), (rotMtx[2][2])) # angle along x axis
+
+				# convert from radians to degrees
+				yaw = math.degrees(yaw) # -180 to 180 deg
+				pitch = math.degrees(pitch) # -90 to 90 deg
+				roll = math.degrees(roll) # -180 to 180 deg
+
+				# assign to variables
+				distX = tvec[0][0][0]
+				distY = tvec[0][0][1]
+				distZ = tvec[0][0][2]
+
+				# arrays for both angles and trans. vector
+				eulerAngles = [yaw, pitch, roll]
+				translation = [distX, distY, distZ]
+
+				arT_msg = Float32MultiArray()
+				arR_msg = Float32MultiArray()
+
+				# assigns each message's data to those arrays (T for translation, R for rotation)
+				arT_msg.data = translation
+				arR_msg.data = eulerAngles
+
+				# publish those messages
+				arTPublisher.publish(arT_msg)
+				arRPublisher.publish(arR_msg) 
 
 		cv2.imshow('AR DETECTOR', newFrame)
-
+		
 		if cv2.waitKey(1) & 0xFF == ord('q'): # when 'q' is pressed, exit loop and close window
 			break
 
@@ -107,4 +148,3 @@ def estimateTagPose():
 	cv2.destroyAllWindows()
 
 estimateTagPose()
-

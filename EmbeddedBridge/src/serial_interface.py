@@ -25,14 +25,26 @@ class SerialInterface:
     sync_id = 0
     connected = False
 
-    def __init__(self, port, baudRate):
+    def __init__(self, port, baudRate, timeout):
+        # Port Information
         self.port = port
         self.baudRate = baudRate
-        self.mcu = None
+        self.mcu = serial.Serial()
+        self.mcu.baudrate = baudRate
+        self.mcu.port = port
+        self.mcu.timeout = timeout
+        
+        # Thread information
         self.send_queue = queue.Queue()
         self.priority_send_queue = queue.Queue()
         self.receive_queue = queue.Queue()
-        self.stop = threading.Event()
+        self.send_stop = threading.Event()
+        self.receive_stop = threading.Event()
+        self.send_thread = None
+        self.receive_thread = None
+        self.connected = False
+
+        # Communication Protocol Info
         self.window = ['']*self.WINDOW_SIZE
         self.SYS_ID = 'P'
         self.peer_sys = ''
@@ -46,15 +58,16 @@ class SerialInterface:
             Status of the establishment of the link
         """
         # Initialize port connection
-        try:
-            self.mcu = serial.Serial(self.port, self.baudRate, timeout=1)
-        except serial.SerialException:
+        self.mcu.open()
+        if not self.mcu.isOpen():
+            print("Failed to open port")
             return False
         # Establish threads
-        self.stop.clear()
-        self.send_thread = threading.Thread(target=self.send_manager)
+        self.send_stop.clear()
+        self.send_thread = threading.Thread(target=self.send_manager, args=(self.send_stop,))
         self.send_thread.start()
-        self.receive_thread = threading.Thread(target=self.receive_manager)
+        self.receive_stop.clear()
+        self.receive_thread = threading.Thread(target=self.receive_manager, args=(self.receive_stop,))
         self.receive_thread.start()
 
         # Clear buffers
@@ -77,14 +90,21 @@ class SerialInterface:
     def stop_link(self):
         """Close connection with the paired device
         """
-        #TODO Add frames to Stop communication exchange with MCU
+        #End Communications
+        ack = package_frame(self.SYS_ID, self.next_frame_id, 'F', '')
+        self.next_frame_id = (self.next_frame_id +1)%32
+        self.priority_send_queue.put(ack)
 
-        #Stop threads
-        self.stop.set()
-        self.send_thread.join()
-        self.receive_thread.join()
+        if self.send_thread is not None:
+            #Stop thread
+            self.send_stop.set()
 
-        self.mcu.close()
+        if self.receive_thread is not None:
+            #Stop thread
+            self.receive_stop.set()
+
+        print("Disconnecting")
+        self.connected = False
 
     def _send_frame(self, frame):
         """Sends out frame byte by byte to the paired device
@@ -142,18 +162,18 @@ class SerialInterface:
             raise ValueError            # Raise error if CRCs don't match
         return frame
 
-    def send_manager(self):
+    def send_manager(self, stop):
         """Thread loop for grabbing frames from the queue 
         """
         current_frame = None
         priority_frame = None
         timeout = 0
         timeout_count = 0
-        while not self.stop.is_set():
+        while not stop.is_set():
             if(current_frame is not None and self.connected):      # We are trying to send the head but window is blocking
                 sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(current_frame)
                 if(self.window[frame_id]==''):
-                    print(f'Sent : {current_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
+                    # print(f'Sent : {current_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                     self._send_frame(current_frame)
                     self.window[frame_id]=current_frame
                     self.last_sent_frame_id = frame_id
@@ -169,7 +189,7 @@ class SerialInterface:
                         timeout = timeout + 1
             elif(priority_frame is not None):
                 sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(priority_frame)
-                print(f'Sent : {priority_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
+                # print(f'Sent : {priority_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                 self._send_frame(priority_frame)
                 if(frame_type_str=='S'):
                     self.sync_id = frame_id
@@ -178,18 +198,19 @@ class SerialInterface:
                 priority_frame = self.priority_send_queue.get() 
             elif not self.send_queue.empty():   # Send the next available frame to send
                 current_frame = self.send_queue.get()
+        print("Send Thread killed")
 
-    def receive_manager(self):
+    def receive_manager(self, stop):
         """Thread for placing received frames into a queue for processing
         """
         previous_frame_id = 0
         requesting_frame = False
-        while(not self.stop.is_set()):
+        while(not stop.is_set()):
             if(self.mcu.in_waiting):
                 try:
                     received_frame = self._receive_frame()
                     sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(received_frame)
-                    print(f'Received : {received_frame}, SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
+                    # print(f'Received : {received_frame}, SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
                     # Preprocess Protocol specific frames
                     if(frame_type_str == 'A'):          # Acknowledge case
                         self.window[frame_id]=''
@@ -220,6 +241,12 @@ class SerialInterface:
                 except ValueError:
                     frame = package_frame(self.SYS_ID, (previous_frame_id+1)%self.WINDOW_SIZE, 'R', '')
                     self.priority_send_queue.put(frame)
+                except serial.SerialException as e:
+                    print(str(e))
+                    self.stop_link()
+                    break
+        print("Receive Thread killed")
+        self.mcu.close()
 
     def put_packet(self, frame_type, packet):
         """Add packet to send to the output frame queue after packaging
@@ -404,3 +431,7 @@ g_pui8Crc8CCITT = [
     b'\xDE', b'\xD9', b'\xD0', b'\xD7', b'\xC2', b'\xC5', b'\xCC', b'\xCB',
     b'\xE6', b'\xE1', b'\xE8', b'\xEF', b'\xFA', b'\xFD', b'\xF4', b'\xF3'
 ]
+
+
+if __name__ == "__main__":
+    s = SerialInterface('/dev/ttyUSB0', 115200, 0.01)

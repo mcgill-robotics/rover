@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
 import rospy
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentdir)
 import serial_interface as serialInt 
 from std_msgs.msg import Int32
 from arm_control.msg import ArmMotorCommand, ArmStatusFeedback
 from DriveControl.msg import WheelSpeed
-from embedded_bridge.msg import DriveFeedback, PowerFeedback, ScienceCmd, ScienceFeedback, CcdData
+from embedded_bridge.msg import DriveFeedback, PowerFeedback
+from science_module.msg import ScienceCmd, ScienceFeedback, CcdData
 import time
 
 class Node_EmbeddedBridge():

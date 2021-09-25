@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(embedded_bridge)
+project(science_module)
 
 
 ## Find catkin macros and libraries
@@ -18,8 +18,9 @@ catkin_python_setup()
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  DriveFeedback.msg
-  PowerFeedback.msg
+  ScienceCmd.msg
+  ScienceFeedback.msg
+  CcdData.msg
 )
 
 generate_messages(
@@ -32,11 +33,11 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
-    LIBRARIES EmbeddedBridge
+    LIBRARIES ScienceModule
     CATKIN_DEPENDS message_runtime
 )
 
 catkin_install_python(PROGRAMS
-  src/serial_node.py
+  src/science_module_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -21,6 +21,7 @@ add_message_files(
   ScienceCmd.msg
   ScienceFeedback.msg
   CcdData.msg
+  SciencePilot.msg
 )
 
 generate_messages(

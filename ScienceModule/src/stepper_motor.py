@@ -10,7 +10,7 @@ class StepperMotor:
         if self.mode!=1:
             raise RuntimeError("mode set to " + str(self.mode) + ", but should be 1")
         else:
-            return speed*time
+            return speed*self.time
        
 
     def PositionModeControl(self, angle):    # Angle (+/-)(degrees)

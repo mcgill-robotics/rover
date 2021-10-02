@@ -32,7 +32,7 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
-    LIBRARIES EmbeddedBridge
+    LIBRARIES embedded_bridge
     CATKIN_DEPENDS message_runtime
 )
 

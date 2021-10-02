@@ -35,7 +35,7 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
-    LIBRARIES ArmControl
+    LIBRARIES arm_control
     CATKIN_DEPENDS message_runtime
 )
 

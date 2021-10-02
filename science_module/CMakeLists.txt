@@ -33,7 +33,7 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
-    LIBRARIES ScienceModule
+    LIBRARIES science_module
     CATKIN_DEPENDS message_runtime
 )
 

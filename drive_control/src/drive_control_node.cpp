@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
-#include <DriveControl/WheelSpeed.h>
+#include <drive_control/WheelSpeed.h>
 
 
 class drive_control

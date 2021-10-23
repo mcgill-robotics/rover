@@ -19,7 +19,7 @@ class Node_ArmSim():
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.loadURDF("plane.urdf", [0, 0, -0.1])
 
-    self.robotId = p.loadURDF("ArmControl/model/MR_arm.urdf", [0, 0, 0], useFixedBase=1)
+    self.robotId = p.loadURDF("arm_control/model/MR_arm.urdf", [0, 0, 0], useFixedBase=1)
 
     p.resetBasePositionAndOrientation(self.robotId, [0, 0, 0], [0, 0, 0, 1])
     self.numJoints = p.getNumJoints(self.robotId)

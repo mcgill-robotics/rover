@@ -20,9 +20,6 @@ add_message_files(
   FILES
   DriveFeedback.msg
   PowerFeedback.msg
-  ScienceCmd.msg
-  ScienceFeedback.msg
-  CcdData.msg
 )
 
 generate_messages(
@@ -35,7 +32,7 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
-    LIBRARIES EmbeddedBridge
+    LIBRARIES embedded_bridge
     CATKIN_DEPENDS message_runtime
 )
 

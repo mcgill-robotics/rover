@@ -4,6 +4,7 @@ Created on Sun Nov 14 13:35:35 2021
 
 @author: Salim
 """
+#import 
 import math
 import numpy as np
 import time
@@ -12,7 +13,7 @@ from numpy.linalg import inv
 """
 PLEASE READ ME: 
     This code is divided into two sections: 
-        1.An "adapter" that allows for the import of data
+        1.An "adapter" that allows for data to be imported 
         2.The original, unchanged, code 
 
     Through this approach, I wish to decouple the EKF code from ROS. 

@@ -34,5 +34,5 @@ Needed files are all found in RealSensor with the exceptions of ar_detector.py w
   * OpenCV Aruco Marker Detection [documentation](https://docs.opencv.org/4.5.2/d5/dae/tutorial_aruco_detection.html)
 
 ## How to run
-After setting up sensors and cameras, simply run gpsSerialNode.py, imuSerialNode.py and launch rs_t265.launch using this command: roslaunch realsense2_camera rs_t265.launch. Finally, run Final_RealSensorEKF.py; can verify that it works properly by seeing output in the terminal.
+After setting up sensors and cameras, simply run gpsSerialNode.py, imuSerialNode.py and launch rs_t265.launch using this command: roslaunch realsense2_camera rs_t265.launch. Finally, run Final_RealSensorEKF.py; can verify that it works properly by seeing output in the terminal or viewing the RVIZ sim.
 

@@ -22,8 +22,9 @@ PLEASE READ ME:
 
 """
 
-#ADAPTER CODE 
-#these fields are set to 0 for now 
+#ADAPTER CODE ------------------------------------------------------------------------
+#The sensors we use are the IMU, GPS, and camera
+#these fields are set to 0 for now (until I find an appropriate dataset)
 t265_x = 0
 t265_y = 0
 t265_yaw = 0 
@@ -33,7 +34,7 @@ gps_northing = 0
 um7_yaw = 0
 
 
-#ORIGINAL UNMODIFIED CODE  
+#ORIGINAL UNMODIFIED CODE-------------------------------------------------------------
 class RobotEKF():
     # initializes motion model with standard dev. of velocity and time step
     def __init__(self, state_init, std_vel, std_rot): 

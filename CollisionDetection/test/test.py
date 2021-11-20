@@ -9,7 +9,7 @@ import sys
 import pygame
 from pygame.locals import *
 
-sys.path.insert(0, '..\src')
+sys.path.insert(0, '../src')
 import gjk
 
 

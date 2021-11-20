@@ -19,6 +19,9 @@ catkin_package(
 catkin_install_python(PROGRAMS 
   src/Controller/Joystick.py
   src/Controller/Gamepad.py
+  src/pyqt/talker.py
+  src/pyqt/listener.py
+  src/pyqt/pyqt_test.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import numpy as np
 from numpy.linalg import inv
@@ -346,12 +346,12 @@ def run_localization(rover_startState, rover_stdVel, rover_stdRot, tag_startStat
         rover_ekf.predict_update(u=u_rover)
         tag_ekf.predict_update(u=u_tag)
 
-        rospy.loginfo(tag_ekf.state_est)
+        rospy.loginfo(um7_yaw)
 
         # RVIZ sim 
         # Define AR tag location
         tagMarker = Marker()
-        tagMarker.header.frame_id = "/rover_ekf"
+        tagMarker.header.frame_id = "rover_ekf"
         tagMarker.ns = "tag_space"
         tagMarker.type = tagMarker.SPHERE
         tagMarker.action = tagMarker.ADD
@@ -386,7 +386,7 @@ def run_localization(rover_startState, rover_stdVel, rover_stdRot, tag_startStat
 
         # Define trajectory for rover_ekf track
         ekfMarker = Marker()
-        ekfMarker.header.frame_id = "/rover_ekf"
+        ekfMarker.header.frame_id = "rover_ekf"
         ekfMarker.ns = "ekf_space"
         ekfMarker.type = ekfMarker.SPHERE
         ekfMarker.action = ekfMarker.ADD

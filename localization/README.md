@@ -11,7 +11,7 @@
   * Used to obtain the current yaw of the rover.
   * Plug in and set up Arduino with the IMU;
   * Packet converted and sent to Arduino serial monitor, array containing roll, pitch and yaw then published to ROS
-  * Connections: Black => Ground, Red => 5V, Orange => 3.3V, 
+  * Connections: Black => Ground, Red => 5V, Orange => 3.3V, Yellow => TX, White => RX
 
 * BU-353S4 GPS
   * __Data provided__: GPS data in NMEA formats (GGA, GSA, GSV, and RMC)

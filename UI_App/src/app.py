@@ -3,7 +3,7 @@ import PyQt5.QtWidgets as qtw
 
 class MainWindow(qtw.QWidget):
     def __init__(self):
-        super.__init__()
+        super().__init__()
 
         # Title
         self.setWindowTitle("Rover UI")
@@ -14,6 +14,6 @@ class MainWindow(qtw.QWidget):
 
 
 app = qtw.QApplication([])
-mw = MainWindow()
+win = MainWindow()
 
 app.exec_()

@@ -1,4 +1,5 @@
 from math import sqrt
+import numpy as np
 
 #The logic for manipulating vectors
 def add(v1, v2):
@@ -26,6 +27,7 @@ def aXbXa(v1, v2):
     x1y0 = x1 * v2[0]
     x0y1 = x0 * v2[1]
     return (x1 * (x1y0 - x0y1), x0 * (x0y1 - x1y0))
+
 
 def supportPoly(polygon, direction):
     bestPoint = polygon[0]
@@ -70,14 +72,16 @@ def doSimplexLine(simplex, d):
     a0 = neg(a)
     ab = sub(b, a)
     
-    if dot(ab, a0) >= 0:
+    if dot(ab, a0) >= 0: #check is ab and a0 are in same direction
         cross = aXbXa(ab, a0)
         d[0] = cross[0]
         d[1] = cross[1]
     else:
-        simplex.pop(0)
+        simplex.pop(0) # remove b from simplex
         d[0] = a0[0]
-        d[1] = a0[1]    
+        d[1] = a0[1] 
+
+    return False   
 
 def doSimplexTriangle(simplex, d):
     c = simplex[0]
@@ -87,7 +91,7 @@ def doSimplexTriangle(simplex, d):
     ab = sub(b, a)
     ac = sub(c, a)
 
-    if dot(ab, a0) >= 0:
+    if dot(ab, a0) >= 0: #if ab and a0 are in the same direction
         cross = aXbXa(ab, a0)
 
         if dot(ac, cross) >= 0:
@@ -118,6 +122,41 @@ def doSimplexTriangle(simplex, d):
             simplex.pop(0)
             d[0] = a0[0]
             d[1] = a0[1]
+    
+    return False
+
+def doSimplexTetrahedron(simplex, d):
+    d = simplex[0]
+    c = simplex[1]
+    b = simplex[2]
+    a = simplex[3]
+    a0 = neg(a)
+    ab = sub(b, a)
+    ac = sub(c, a)
+    ad = sub(d, a)
+
+    abc = np.cross(ab , ac)
+    acd = np.cross(ac, ad)
+    adb = np.cross(ad, ab)
+
+    #if abc is the same direction as a0 then
+    if dot(abc, a0) >= 0:
+        newSimplex = [ c, b, a]
+        return doSimplexTriangle(newSimplex, d)
+
+    #if acd is the same direction as a0 then
+    if dot(acd, a0) >= 0:
+        newSimplex = [ d, c, a]
+        return doSimplexTriangle(newSimplex, d)
+
+    #if adb is the same direction as a0 then
+    if dot(adb, a0) >= 0:
+        newSimplex = [ d, b, a]
+        return doSimplexTriangle(newSimplex, d)
+    
+    return True
+
+
 
 def doSimplex(simplex, d):
     l = len(simplex)
@@ -125,9 +164,14 @@ def doSimplex(simplex, d):
     #LINE CASE -- 2 POINTS IN THE SIMPLEX
     if l == 2:
         return doSimplexLine(simplex, d)
+    
     #TRIANGLE CASE -- 3 POINTS IN THE SIMPLEX
     elif l == 3:
         return doSimplexTriangle(simplex, d)
+    
+    #TETRAHEDRON CASE -- 4 POINTS IN THE SIMPLEX
+    else:
+        return doSimplexTetrahedron(simplex, d)
 
-    return False
+    
     

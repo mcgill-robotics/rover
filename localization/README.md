@@ -4,12 +4,14 @@
   * __Data provided__: x, y, z relative to start + roll, pitch and yaw
   * Used to obtain the x, y and yaw values relative to the start position of the camera; localization node subscribes to camera/odom/sample for info.
   * USB plug-in
+  * ![Coordinate System](https://user-images.githubusercontent.com/6543766/64158631-20303a00-ce39-11e9-9c63-fe0baa8135ff.png)
   
 * UM7 IMU
   * __Data provided__: Binary data that is parsed using this [library](https://github.com/mikehoyer/UM7-Arduino)
   * Used to obtain the current yaw of the rover.
   * Plug in and set up Arduino with the IMU;
   * Packet converted and sent to Arduino serial monitor, array containing roll, pitch and yaw then published to ROS
+  * Connections: Black => Ground, Red => 5V, Orange => 3.3V, Yellow => TX, White => RX
 
 * BU-353S4 GPS
   * __Data provided__: GPS data in NMEA formats (GGA, GSA, GSV, and RMC)

@@ -16,6 +16,7 @@ import gjk
 pygame.init()
 SCREEN = pygame.display.set_mode((800, 600))
 CLOCK = pygame.time.Clock()
+font = pygame.font.Font('freesansbold.ttf', 32)
 
 BLACK = (  0,   0,   0)
 WHITE = (255, 255, 255)
@@ -49,16 +50,15 @@ def run():
                     pass
 
 
-
+        
         SCREEN.fill(WHITE)
         poly2 = makePolyFromMouse()
+        
 
-        #collide = gjk.collidePolyPoly(poly2, poly1)
-        #polygon(poly1)
+        collide = gjk.collide(poly2, poly1)
+        polygon(poly1)
 
-        collide = gjk.collidePolyCircle(poly2, circle1)
-        circle(circle1)
-
+        show_dist(4)
         polygon(poly2, GREEN if collide else RED)
         pygame.display.flip()
         CLOCK.tick(60)
@@ -95,6 +95,10 @@ def line(start, end, color=BLACK, camera=(0, 0)):
 
 def add(p1, p2):
     return p1[0] + p2[0], p1[1] + p2[1]
+
+def show_dist(d):
+    dist = font.render("Distance:  " + str(d), True, (123,133,232))
+    SCREEN.blit(dist, (10,10))
 
 if __name__ == '__main__':
     run()

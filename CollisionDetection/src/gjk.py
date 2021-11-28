@@ -41,28 +41,18 @@ def supportPoly(polygon, direction):
 
     return bestPoint
 
-def supportCircle(circle, direction):
-    mag = sqrt(dot(direction, direction))
-    s = circle[1] / mag
-    center = circle[0]
-    return (center[0] + s * direction[0], center[1] + s * direction[1])
+#finds the furtherst point in the polygon in a given direction
+def support(poly1, poly2, direction):
+    return sub(supportPoly(poly1, direction), supportPoly(poly2, neg(direction)))
 
-def support(poly1, poly2, support1, support2, direction):
-    return sub(support1(poly1, direction), support2(poly2, neg(direction)))
 
-def collidePolyPoly(poly1, poly2):
-    return collide(poly1, poly2, supportPoly, supportPoly)
-
-def collidePolyCircle(poly, circle):
-    return collide(poly, circle, supportPoly, supportCircle)
-
-def collide(shape1, shape2, support1, support2):
-    s = support(shape1, shape2, support1, support2, (-1, -1))
+def collide(shape1, shape2):
+    s = support(shape1, shape2, (-1, -1))
     simplex = [s]
     d = list(neg(s))
 
     for i in range(100):
-        a = support(shape1, shape2, support1, support2, d)
+        a = support(shape1, shape2, d)
 
         if dot(a, d) < 0:
             return False
@@ -74,61 +64,70 @@ def collide(shape1, shape2, support1, support2):
 
     raise RuntimeError("infinite loop in GJK algorithm")
 
-def doSimplex(simplex, d):
-    l = len(simplex)
-
-    if l == 2:
-        b = simplex[0]
-        a = simplex[1]
-        a0 = neg(a)
-        ab = sub(b, a)
-
-        if dot(ab, a0) >= 0:
-            cross = aXbXa(ab, a0)
-            d[0] = cross[0]
-            d[1] = cross[1]
-        else:
-            simplex.pop(0)
-            d[0] = a0[0]
-            d[1] = a0[1]
+def doSimplexLine(simplex, d):
+    b = simplex[0]
+    a = simplex[1]
+    a0 = neg(a)
+    ab = sub(b, a)
+    
+    if dot(ab, a0) >= 0:
+        cross = aXbXa(ab, a0)
+        d[0] = cross[0]
+        d[1] = cross[1]
     else:
-        c = simplex[0]
-        b = simplex[1]
-        a = simplex[2]
-        a0 = neg(a)
-        ab = sub(b, a)
-        ac = sub(c, a)
+        simplex.pop(0)
+        d[0] = a0[0]
+        d[1] = a0[1]    
 
-        if dot(ab, a0) >= 0:
-            cross = aXbXa(ab, a0)
+def doSimplexTriangle(simplex, d):
+    c = simplex[0]
+    b = simplex[1]
+    a = simplex[2]
+    a0 = neg(a)
+    ab = sub(b, a)
+    ac = sub(c, a)
 
-            if dot(ac, cross) >= 0:
-                cross = aXbXa(ac, a0)
+    if dot(ab, a0) >= 0:
+        cross = aXbXa(ab, a0)
 
-                if dot(ab, cross) >= 0:
-                    return True
-                else:
-                    simplex.pop(1)
-                    d[0] = cross[0]
-                    d[1] = cross[1]
+        if dot(ac, cross) >= 0:
+            cross = aXbXa(ac, a0)
+
+            if dot(ab, cross) >= 0:
+                return True
             else:
-                simplex.pop(0)
+                simplex.pop(1)
                 d[0] = cross[0]
                 d[1] = cross[1]
         else:
-            if dot(ac, a0) >= 0:
-                cross = aXbXa(ac, a0)
+            simplex.pop(0)
+            d[0] = cross[0]
+            d[1] = cross[1]
+    else:
+        if dot(ac, a0) >= 0:
+            cross = aXbXa(ac, a0)
 
-                if dot(ab, cross) >= 0:
-                    return True
-                else:
-                    simplex.pop(1)
-                    d[0] = cross[0]
-                    d[1] = cross[1]
+            if dot(ab, cross) >= 0:
+                return True
             else:
                 simplex.pop(1)
-                simplex.pop(0)
-                d[0] = a0[0]
-                d[1] = a0[1]
+                d[0] = cross[0]
+                d[1] = cross[1]
+        else:
+            simplex.pop(1)
+            simplex.pop(0)
+            d[0] = a0[0]
+            d[1] = a0[1]
+
+def doSimplex(simplex, d):
+    l = len(simplex)
+
+    #LINE CASE -- 2 POINTS IN THE SIMPLEX
+    if l == 2:
+        return doSimplexLine(simplex, d)
+    #TRIANGLE CASE -- 3 POINTS IN THE SIMPLEX
+    elif l == 3:
+        return doSimplexTriangle(simplex, d)
 
     return False
+    

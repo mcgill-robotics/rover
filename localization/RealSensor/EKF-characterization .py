@@ -9,6 +9,8 @@ import math
 import numpy as np
 import time
 from numpy.linalg import inv
+import pandas as pd
+import matplotlib as plt
 
 """
 PLEASE READ ME: 
@@ -25,14 +27,30 @@ PLEASE READ ME:
 #ADAPTER CODE ------------------------------------------------------------------------
 #The sensors we use are the IMU, GPS, and camera
 #these fields are set to 0 for now (until I find an appropriate dataset)
-t265_x = 0
+#tracking camera (Intel Realsense2 T265)
+t265_x = 0 
 t265_y = 0
 t265_yaw = 0 
 
+#GPS (BU-353S4 GPS)
 gps_easting = 0
 gps_northing = 0
+
+# IMU (UM7)
 um7_yaw = 0
 
+#IMPORT DATASET -------------------------------------------------------------------------
+df = pd.read_csv('C:/Users/Dell/Desktop/static_data.csv', encoding= 'utf-8') #static
+
+df.to_numpy()
+#selecting columns
+v1_m = df[['v1_dyn_meas']].to_numpy() #velocity estimate 
+r1_m = df[['r1_dyn_meas']].to_numpy() #position extimate 
+r1_t = df[['r1_dyn_gt']].to_numpy() #position truth x 
+t_static = df[['t_dyn']].to_numpy() #time
+res_mean = []
+res_truth = []
+res_error = []
 
 #ORIGINAL UNMODIFIED CODE-------------------------------------------------------------
 class RobotEKF():
@@ -137,3 +155,38 @@ class RobotEKF():
 
         self.state_est = init_state_est + np.matmul(secondK_k, second_y_res) # updated + final state estimate
         self.P = np.matmul((np.eye(3) - np.matmul(secondK_k, H)), init_P) # updated + final covariance estimate
+        
+ #RUN EKF --------------------------------------------------------------------------------
+KF_instance = RobotEKF(0, 0 ,0) #create EKF object with 0 state, velocity, and angle
+
+#loop 
+i = 0
+while (i < t_static.size ):   
+    measurement_v1 = np.array(v1_m[i]) #fetch velocity estimate 
+    correction_r1 = np.array(r1_m[i]) #fetch position estimate 
+    "predict"
+    KF_instance.kf_predict(measurement_v1)
+    "correct"
+    KF_instance.kf_correct(correction_r1)
+    "appending results"
+    res_mean.append(KF_instance.x) #estimate 
+    res_truth.append(r1_t[i])  #truth 
+    res_error.append(r1_t[i]-KF_instance.x) #error=truth-estimate 
+    i += 1 
+
+def PlotKF(time, position, ylabel, col): #Plots KF
+    plt.scatter(time, position, color=col, linestyle='--', linewidths=0.1, 
+                marker='o', label=ylabel)
+    plt.xlabel('time')
+    plt.ylabel(ylabel)
+    plt.legend(loc='upper right')    
+
+"Plot results"
+print("done calculating")
+PlotKF(t_static, res_mean, "position-mean", "green")
+PlotKF(t_static, res_truth, "position-truth", "orange")
+plt.show()
+
+"Plot error"
+PlotKF(t_static, res_error, "error", "blue")
+plt.show()       

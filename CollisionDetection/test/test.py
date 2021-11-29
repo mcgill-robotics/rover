@@ -8,6 +8,9 @@ import sys
 
 import pygame
 from pygame.locals import *
+import pygame.draw
+import pygame.time
+from math import sin, cos
 
 sys.path.insert(0, '..\src')
 import gjk

@@ -31,21 +31,21 @@ def aXbXa(v1, v2):
 
 def supportPoly(polygon, direction):
     bestPoint = polygon[0]
-    bestDot = dot(bestPoint, direction)
+    bestDot = np.dot(bestPoint, direction)
 
     for i in range(1, len(polygon)):
         p = polygon[i]
-        d = dot(p, direction)
+        distance = np.dot(p, direction)
 
-        if d > bestDot:
-            bestDot = d
+        if distance > bestDot:
+            bestDot = distance
             bestPoint = p
 
     return bestPoint
 
 #finds the furtherst point in the polygon in a given direction
 def support(poly1, poly2, direction):
-    return sub(supportPoly(poly1, direction), supportPoly(poly2, neg(direction)))
+    return np.subtract(supportPoly(poly1, direction), supportPoly(poly2, np.negative(direction)))
 
 
 def collide(shape1, shape2):
@@ -56,7 +56,7 @@ def collide(shape1, shape2):
     for i in range(100):
         a = support(shape1, shape2, d)
 
-        if dot(a, d) < 0:
+        if np.dot(a, d) < 0:
             return False
 
         simplex.append(a)
@@ -72,7 +72,7 @@ def doSimplexLine(simplex, d):
     a0 = neg(a)
     ab = sub(b, a)
     
-    if dot(ab, a0) >= 0: #check is ab and a0 are in same direction
+    if np.dot(ab, a0) >= 0: #check is ab and a0 are in same direction
         cross = aXbXa(ab, a0)
         d[0] = cross[0]
         d[1] = cross[1]
@@ -91,13 +91,13 @@ def doSimplexTriangle(simplex, d):
     ab = sub(b, a)
     ac = sub(c, a)
 
-    if dot(ab, a0) >= 0: #if ab and a0 are in the same direction
+    if np.dot(ab, a0) >= 0: #if ab and a0 are in the same direction
         cross = aXbXa(ab, a0)
 
-        if dot(ac, cross) >= 0:
+        if np.dot(ac, cross) >= 0:
             cross = aXbXa(ac, a0)
 
-            if dot(ab, cross) >= 0:
+            if np.dot(ab, cross) >= 0:
                 return True
             else:
                 simplex.pop(1)
@@ -108,10 +108,10 @@ def doSimplexTriangle(simplex, d):
             d[0] = cross[0]
             d[1] = cross[1]
     else:
-        if dot(ac, a0) >= 0:
+        if np.dot(ac, a0) >= 0:
             cross = aXbXa(ac, a0)
 
-            if dot(ab, cross) >= 0:
+            if np.dot(ab, cross) >= 0:
                 return True
             else:
                 simplex.pop(1)
@@ -140,17 +140,17 @@ def doSimplexTetrahedron(simplex, d):
     adb = np.cross(ad, ab)
 
     #if abc is the same direction as a0 then
-    if dot(abc, a0) >= 0:
+    if np.dot(abc, a0) >= 0:
         newSimplex = [ c, b, a]
         return doSimplexTriangle(newSimplex, d)
 
     #if acd is the same direction as a0 then
-    if dot(acd, a0) >= 0:
+    if np.dot(acd, a0) >= 0:
         newSimplex = [ d, c, a]
         return doSimplexTriangle(newSimplex, d)
 
     #if adb is the same direction as a0 then
-    if dot(adb, a0) >= 0:
+    if np.dot(adb, a0) >= 0:
         newSimplex = [ d, b, a]
         return doSimplexTriangle(newSimplex, d)
     

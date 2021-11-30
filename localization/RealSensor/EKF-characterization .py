@@ -10,7 +10,7 @@ import numpy as np
 import time
 from numpy.linalg import inv
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 """
 PLEASE READ ME: 
@@ -40,7 +40,7 @@ gps_northing = 0
 um7_yaw = 0
 
 #IMPORT DATASET -------------------------------------------------------------------------
-df = pd.read_csv('C:/Users/Dell/Desktop/static_data.csv', encoding= 'utf-8') #static
+df = pd.read_csv('C:/Users/Dell/Desktop/dynamic_data.csv', encoding= 'utf-8') #dynamic
 
 df.to_numpy()
 #selecting columns
@@ -165,13 +165,15 @@ while (i < t_static.size ):
     measurement_v1 = np.array(v1_m[i]) #fetch velocity estimate 
     correction_r1 = np.array(r1_m[i]) #fetch position estimate 
     "predict"
-    KF_instance.kf_predict(measurement_v1)
+    # 
+    KF_instance.get_predict_state(KF_instance.state_est , 0, 0, 0.1, measurement_v1, 0)
+    #KF_instance.get_predict_state(x_prev, y_prev, theta_prev, dt, v, omega)
     "correct"
-    KF_instance.kf_correct(correction_r1)
+    
     "appending results"
-    res_mean.append(KF_instance.x) #estimate 
+    res_mean.append(KF_instance.state_est) #estimate 
     res_truth.append(r1_t[i])  #truth 
-    res_error.append(r1_t[i]-KF_instance.x) #error=truth-estimate 
+    res_error.append(r1_t[i]-KF_instance.state_est) #error=truth-estimate 
     i += 1 
 
 def PlotKF(time, position, ylabel, col): #Plots KF

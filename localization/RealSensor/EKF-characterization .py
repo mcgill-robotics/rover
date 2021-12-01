@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 14 13:35:35 2021
+#!/usr/bin/env python3
 
-@author: Salim
-"""
+# """
+# Created on Sun Nov 14 13:35:35 2021
+
+# @author: Salim
+# """
 #import 
 import math
 import numpy as np
@@ -12,17 +13,17 @@ from numpy.linalg import inv
 import pandas as pd
 import matplotlib.pyplot as plt
 
-"""
-PLEASE READ ME: 
-    This code is divided into two sections: 
-        1.An "adapter" that allows for data to be imported 
-        2.The original, unchanged, code 
+# """
+# PLEASE READ ME: 
+#     This code is divided into two sections: 
+#         1.An "adapter" that allows for data to be imported 
+#         2.The original, unchanged, code 
 
-    Through this approach, I wish to decouple the EKF code from ROS. 
-    The data will be fed into the EKF from csv files.
-    This should make characterization and testing much easier. 
+#     Through this approach, I wish to decouple the EKF code from ROS. 
+#     The data will be fed into the EKF from csv files.
+#     This should make characterization and testing much easier. 
 
-"""
+# """
 
 #ADAPTER CODE ------------------------------------------------------------------------
 #The sensors we use are the IMU, GPS, and camera
@@ -164,13 +165,13 @@ i = 0
 while (i < t_static.size ):   
     measurement_v1 = np.array(v1_m[i]) #fetch velocity estimate 
     correction_r1 = np.array(r1_m[i]) #fetch position estimate 
-    "predict"
+    #"predict"
     # 
     KF_instance.get_predict_state(KF_instance.state_est , 0, 0, 0.1, measurement_v1, 0)
     #KF_instance.get_predict_state(x_prev, y_prev, theta_prev, dt, v, omega)
-    "correct"
+    #"correct"
     
-    "appending results"
+    #"appending results"
     res_mean.append(KF_instance.state_est) #estimate 
     res_truth.append(r1_t[i])  #truth 
     res_error.append(r1_t[i]-KF_instance.state_est) #error=truth-estimate 
@@ -183,12 +184,12 @@ def PlotKF(time, position, ylabel, col): #Plots KF
     plt.ylabel(ylabel)
     plt.legend(loc='upper right')    
 
-"Plot results"
+#"Plot results"
 print("done calculating")
 PlotKF(t_static, res_mean, "position-mean", "green")
 PlotKF(t_static, res_truth, "position-truth", "orange")
 plt.show()
 
-"Plot error"
+#"Plot error"
 PlotKF(t_static, res_error, "error", "blue")
 plt.show()       

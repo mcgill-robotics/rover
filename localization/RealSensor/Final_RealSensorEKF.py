@@ -80,7 +80,7 @@ def imuCall(um7Data):
     um7_roll, um7_pitch, um7_yaw = imu_data[0]/91.02222, imu_data[1]/91.02222, imu_data[2]/91.02222
 
     # # sets them within range of 0 to 360 deg.
-    if um7_yaw < 0: um7_yaw += 360.0
+    # if um7_yaw < 0: um7_yaw += 360.0
     # if um7_roll < 0: um7_roll += 360.0
     # if um7_pitch < 0: um7_pitch += 360.0
 
@@ -133,10 +133,14 @@ def camCall(t265Data):
     # calculates pitch, roll and yaw based on cam's reference frame (obtained from t265_rpy.py)
     t265_pitch = -math.asin(2.0 * (x*z - w*y)) * 180.0 / math.pi
     t265_roll = math.atan2(2.0 * (w*x + y*z), w*w - x*x - y*y + z*z) * 180.0 / math.pi
-    t265_yaw = math.atan2(2.0 * (w*z + x*y), w*w + x*x - y*y - z*z) * 180.0 / math.pi
+    t265_yaw = math.atan2(2.0 * (w*z + x*y), w*w + x*x - y*y - z*z) * 180.0 / math.pi # range is between -180 to 180 deg.; bottom code is not needed to change angle
+    # atan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z);
+    # Improvements:
+    # When working with yaw, we can use the change in yaw rather than the absolute value (camera has its own defined system)
+    # Subscriber to do the above^
 
     # # sets them within range of 0 to 360 deg.
-    if t265_yaw < 0: t265_yaw += 360.0
+    # if t265_yaw < 0: t265_yaw += 360.0
     # if t265_roll < 0: t265_roll += 360.0
     # if t265_pitch < 0: t265_pitch += 360.0
 
@@ -175,13 +179,13 @@ class RobotEKF():
         self.std_vel = std_vel # standard dev. of velocity and rotation
         self.std_rot = std_rot
         
-        self.R_cam = np.array([[0.4,0,0], # covariance matrix for measurement noise of the tracking camera
+        self.R_cam = np.array([[0.4,0,0], # covariance matrix for measurement noise of the tracking camera (covariance set to 0.0 for yaw while testing without UM7)
                              [0,0.4,0],
-                             [0,0,0.9]])
+                             [0,0,0.0]])
         
         self.R_gpIMU = np.array([[1.5, 0, 0], # covariance matrix for measurement noise of the gps and IMU readings
                                  [0, 1.5, 0],
-                                 [0, 0, 0.4]])
+                                 [0, 0, 0.9]])
 
         self.Q = np.array([[self.std_vel**2,0,0], # covariance for process noise (i.e. states)
                            [0,self.std_vel**2,0],
@@ -346,6 +350,8 @@ def run_localization(rover_startState, rover_stdVel, rover_stdRot, tag_startStat
         rover_ekf.predict_update(u=u_rover)
         tag_ekf.predict_update(u=u_tag)
 
+        # imu_list = [um7_roll, um7_pitch, um7_yaw]
+        # cam_list = [t265_roll, t265_pitch, t265_yaw]
         rospy.loginfo(um7_yaw)
 
         # RVIZ sim 

@@ -1,35 +1,6 @@
-from math import sqrt
 import numpy as np
 
-#The logic for manipulating vectors
-def add(v1, v2):
-    return (v1[0] + v2[0], v1[1] + v2[1])
-
-def sub(v1, v2):
-    return (v1[0] - v2[0], v1[1] - v2[1])
-
-def neg(v):
-    return (-v[0], -v[1])
-
-def dot(v1, v2):
-    return v1[0] * v2[0] + v1[1] * v2[1]
-
-def aXbXa(v1, v2):
-    """
-    Performs v1 X v2 X v1 where X is the cross product. The
-    input vectors are (x, y) and the cross products are
-    performed in 3D with z=0. The output is the (x, y)
-    component of the 3D cross product.
-    """
-
-    x0 = v1[0]
-    x1 = v1[1]
-    x1y0 = x1 * v2[0]
-    x0y1 = x0 * v2[1]
-    return (x1 * (x1y0 - x0y1), x0 * (x0y1 - x1y0))
-
-
-def supportPoly(polygon, direction):
+def findFurthest(polygon, direction):
     bestPoint = polygon[0]
     bestDot = np.dot(bestPoint, direction)
 
@@ -43,120 +14,105 @@ def supportPoly(polygon, direction):
 
     return bestPoint
 
-#finds the furtherst point in the polygon in a given direction
 def support(poly1, poly2, direction):
-    return np.subtract(supportPoly(poly1, direction), supportPoly(poly2, np.negative(direction)))
+    return np.subtract(findFurthest(poly1, direction), findFurthest(poly2, np.negative(direction)))
 
 
 def collide(shape1, shape2):
-    s = support(shape1, shape2, (-1, -1))
+    s = support(shape1, shape2, (1, 0, 0))
     simplex = [s]
-    d = list(neg(s))
-
-    for i in range(100):
+    d = list(np.negative(s))
+    count = 0
+    while (True) :
+        count = count + 1
+        if count == 100: return False
         a = support(shape1, shape2, d)
 
-        if np.dot(a, d) < 0:
-            return False
+        if(np.dot(a, d) <= 0):
+            return False; # no collision
 
         simplex.append(a)
 
         if doSimplex(simplex, d):
-            return True
+            return True 
 
-    raise RuntimeError("infinite loop in GJK algorithm")
+def sameDirection(v1, v2):
+    return np.dot(v1, v2) > 0
 
 def doSimplexLine(simplex, d):
-    b = simplex[0]
-    a = simplex[1]
-    a0 = neg(a)
-    ab = sub(b, a)
+    a = simplex[0]
+    b = simplex[1]
+    a0 = np.negative(a)
+    ab = np.subtract(b, a)
     
-    if np.dot(ab, a0) >= 0: #check is ab and a0 are in same direction
-        cross = aXbXa(ab, a0)
-        d[0] = cross[0]
-        d[1] = cross[1]
+    if sameDirection(ab, a0) : #check is ab and a0 are in same direction
+        d = np.cross(np.cross(ab, a0), ab) #abXa0Xab
+
     else:
-        simplex.pop(0) # remove b from simplex
-        d[0] = a0[0]
-        d[1] = a0[1] 
+        simplex = [a] # remove b from simplex
+        d = a0
 
     return False   
 
 def doSimplexTriangle(simplex, d):
-    c = simplex[0]
+    a = simplex[0]
     b = simplex[1]
-    a = simplex[2]
-    a0 = neg(a)
-    ab = sub(b, a)
-    ac = sub(c, a)
+    c = simplex[2]
+    a0 = np.negative(a)
+    ab = np.subtract(b, a)
+    ac = np.subtract(c, a)
+    abc = np.cross(ab, ac)
 
-    if np.dot(ab, a0) >= 0: #if ab and a0 are in the same direction
-        cross = aXbXa(ab, a0)
-
-        if np.dot(ac, cross) >= 0:
-            cross = aXbXa(ac, a0)
-
-            if np.dot(ab, cross) >= 0:
-                return True
-            else:
-                simplex.pop(1)
-                d[0] = cross[0]
-                d[1] = cross[1]
+    if sameDirection(np.cross(abc, ac), a0):
+        if sameDirection(ac, a0):
+            simplex = [a, c]
+            d = np.cross(np.cross(ac, a0), ac) # acXa0Xac
+        
         else:
-            simplex.pop(0)
-            d[0] = cross[0]
-            d[1] = cross[1]
-    else:
-        if np.dot(ac, a0) >= 0:
-            cross = aXbXa(ac, a0)
-
-            if np.dot(ab, cross) >= 0:
-                return True
-            else:
-                simplex.pop(1)
-                d[0] = cross[0]
-                d[1] = cross[1]
-        else:
-            simplex.pop(1)
-            simplex.pop(0)
-            d[0] = a0[0]
-            d[1] = a0[1]
+            return doSimplexLine([a, b], d)
     
+    else:
+        if sameDirection(np.cross(ab, abc), a0):
+            return doSimplexLine([a, b], d)
+        
+        else:
+            if(sameDirection(abc, a0)):
+                d = abc
+            else:
+                simplex = [a, c, b]
+                d = np.negative(abc)
     return False
 
 def doSimplexTetrahedron(simplex, d):
-    d = simplex[0]
-    c = simplex[1]
-    b = simplex[2]
-    a = simplex[3]
-    a0 = neg(a)
-    ab = sub(b, a)
-    ac = sub(c, a)
-    ad = sub(d, a)
+    a = simplex[0]
+    b = simplex[1]
+    c = simplex[2]
+    d = simplex[3]
+    a0 = np.negative(a)
+    ab = np.subtract(b, a)
+    ac = np.subtract(c, a)
+    ad = np.subtract(d, a)
 
     abc = np.cross(ab , ac)
     acd = np.cross(ac, ad)
     adb = np.cross(ad, ab)
 
     #if abc is the same direction as a0 then
-    if np.dot(abc, a0) >= 0:
-        newSimplex = [ c, b, a]
+    if sameDirection(abc, a0):
+        newSimplex = [ a,b,c]
         return doSimplexTriangle(newSimplex, d)
 
     #if acd is the same direction as a0 then
-    if np.dot(acd, a0) >= 0:
-        newSimplex = [ d, c, a]
+    if sameDirection(acd, a0):
+        newSimplex = [ a, c, d]
         return doSimplexTriangle(newSimplex, d)
 
     #if adb is the same direction as a0 then
-    if np.dot(adb, a0) >= 0:
-        newSimplex = [ d, b, a]
+    if sameDirection(adb, a0):
+        newSimplex = [ a,d,b]
         return doSimplexTriangle(newSimplex, d)
     
     return True
-
-
 
 def doSimplex(simplex, d):
     l = len(simplex)
@@ -172,6 +128,4 @@ def doSimplex(simplex, d):
     #TETRAHEDRON CASE -- 4 POINTS IN THE SIMPLEX
     else:
         return doSimplexTetrahedron(simplex, d)
-
-    
-    
+   

@@ -22,10 +22,8 @@ def collide(shape1, shape2):
     s = support(shape1, shape2, (1, 0, 0))
     simplex = [s]
     d = list(np.negative(s))
-    count = 0
+
     while (True) :
-        count = count + 1
-        if count == 100: return False
         a = support(shape1, shape2, d)
 
         if(np.dot(a, d) <= 0):

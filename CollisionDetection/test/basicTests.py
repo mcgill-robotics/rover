@@ -2,7 +2,7 @@
 
 import sys
 sys.path.insert(0, '..\src')
-import gjk
+import gjk_boolean as gjk
 
 #the shapes below are all corner points from cubes or rectangular prisms
 shape1 = [(0,0,1), (0,1,1), (1,1,1), (1,0,1), (0,0,0), (1,0,0), (0,1,0), (1,1,0)]

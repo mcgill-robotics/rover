@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<robot  xmlns:xacro="http://ros.org/wiki/xacro"
+        name="rover" >
+
+    <xacro:include filename="$(find rover_gazebo)/urdf/caster.urdf.xacro" />
+    <xacro:include filename="$(find rover_gazebo)/urdf/wheel.urdf.xacro" />
+    <xacro:arg name="mesh_enabled" default="false" />
+    <xacro:arg name="robot_namespace" default="/"/> 
+        
+    <link   name = "base_link">
+        <inertial>
+            <origin xyz="-0.108 0 -0.02579" rpy="0 0 0"/>
+            <mass value="3.978"/>
+            <inertia ixx="0.021858680" ixy="0.0" ixz="0.010020353"
+                    iyy="0.078572349" iyz="-0.0"
+                    izz="0.091971324"/>
+        </inertial>
+        <visual>
+            <xacro:if value="$(arg mesh_enabled)">
+                <origin xyz="0 0 0" rpy="0 0 0" />
+                <geometry>
+                    <mesh filename="package://onebot_description/meshes/base_link.dae" />
+                </geometry>
+            </xacro:if>
+            <xacro:unless value="$(arg mesh_enabled)">
+                <origin xyz="-0.125 0 -0.01" rpy="0 0 0" />
+                <geometry>
+                    <box size="0.25 0.25 0.02" />
+                </geometry>
+                <material name="Blue" />    
+            </xacro:unless>
+        </visual>
+        <collision>
+            <origin xyz="-0.125 0 -0.01" rpy="0 0 0" />
+            <geometry>
+                <box size="0.25 0.25 0.02" />
+            </geometry>
+        </collision>
+    </link>
+
+    <link   name =  "base_footprint"/>
+        
+    <joint name = "base_joint"  type = "fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link"/>
+        <origin xyz="0.0 0.0 0.09188" rpy="0 0 0" />
+        <axis xyz="0 1 0" rpy="0 0 0" />
+    </joint>
+
+
+    <xacro:wheel wheel_prefix="left" parent_link="base_link" >
+        <origin xyz="-0.04 0.14 -0.045" rpy="0 0 0" />
+    </xacro:wheel>
+
+    <xacro:wheel wheel_prefix="right" parent_link="base_link" >
+        <origin xyz="-0.04 -0.14 -0.045" rpy="0 0 0" />
+    </xacro:wheel>
+
+    <xacro:wheel wheel_prefix="rear_left" parent_link="base_link" >
+        <origin xyz="-0.20 0.14 -0.02533" rpy="0 0 0" />
+    </xacro:wheel>
+
+    <xacro:wheel wheel_prefix="rear_right" parent_link="base_link" >
+        <origin xyz="-0.20 -0.14 -0.02533" rpy="0 0 0" />
+    </xacro:wheel>
+
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>$(arg robot_namespace)</robotNamespace>
+        <legacyModeNS>true</legacyModeNS>
+        </plugin>
+    </gazebo>
+
+</robot>

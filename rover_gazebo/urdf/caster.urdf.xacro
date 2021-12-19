@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro" >
+
+
+	<!-- Caster Dimensions -->
+	<!-- These Dimensions are directly taken from the Solidworks model-->
+    <xacro:property name="caster_wheel_length" value="0.02333" />
+    <xacro:property name="caster_wheel_radius" value="0.024165" />
+    <xacro:property name="caster_base_length" value="0.015" />
+    <xacro:property name="caster_base_radius" value="0.015" />
+    <xacro:property name="caster_base_joint_x" value="-0.02626" />
+    <xacro:property name="caster_base_joint_z" value="-0.042385" />
+    <xacro:property name="caster_base_link_z" value="-0.05615" />
+    <xacro:property name="M_PI" value="3.14" />
+
+
+
+
+
+	<xacro:property name="wheel_kp" value="600000" />
+    <xacro:property name="wheel_kd" value="3" />
+    <xacro:property name="wheel_mu1" value="10000000" />
+    <xacro:property name="wheel_mu2" value="10000000" />
+
+	<xacro:macro name="caster" params="caster_prefix parent_link *joint_pose">
+		<!-- Caster Wheel Link -->
+		<link name="${caster_prefix}_caster_link">
+			<!--  These values are taken from the mass properties tool of Solidworks			 -->
+			<inertial>
+				<mass value="0.03837" />
+				<origin xyz="0 0 0" />
+				<inertia  ixx="0.000008221" ixy="0" ixz="0" iyy="0.000013003" iyz="0" izz="0.000008221" />
+			</inertial>
+			<!-- Here we included visual mesh generated from Blender as 
+  				 the visual geometry of the caster wheel link-->
+			<visual>
+                <origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
+				<geometry>
+					<cylinder>
+                      <radius>.1</radius>
+                      <length>.05</length>
+                    </cylinder>
+				</geometry>
+			</visual>
+			<!--  A simplified cylinder is used as the collision geometry -->
+			<collision>
+				<origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
+				<geometry>
+					<cylinder>
+                      <radius>.1</radius>
+                      <length>.05</length>
+                    </cylinder>
+				</geometry>
+			</collision>
+		</link>
+
+		<!-- Caster Base Link -->
+        <link name="${caster_prefix}_caster_base">
+			<inertial>
+				<mass value="0.06597" />
+				<origin xyz="-0.01204 0 -0.01454" />
+				<inertia  ixx="0.000039912" ixy="0" ixz="0.000017794" iyy="0.000050728" iyz="0" izz="0.000035261" />
+			</inertial>
+			<visual>
+				<!-- Here the xacro arguments have been used. If the argument is true the visual mesh is used as
+	 				 the visual geometry otherwise a simple cylinder is used as the visual geometry-->
+				<xacro:if value="$(arg mesh_enabled)">
+					<origin xyz="0 0 0" rpy="0 0 0" />
+					<geometry>
+						<mesh filename="package://rover_gazebo/meshes/caster_base2.dae" />
+					</geometry>
+				</xacro:if>
+				<xacro:unless value="$(arg mesh_enabled)">
+					<origin xyz="0 0 ${-caster_base_length/2}" rpy="0 0 0" />
+					<geometry>
+						<cylinder length="${caster_base_length}" radius="${caster_base_radius}" />
+					</geometry>
+				</xacro:unless>
+			</visual>
+			<collision>
+				<origin xyz="0 0 ${-caster_base_length/2}" rpy="0 0 0" />
+				<geometry>
+					<cylinder length="${caster_base_length}" radius="${caster_base_radius}" />
+				</geometry>
+			</collision>
+		</link>
+
+		<!-- Caster Base Link and Wheel Link Joint 
+			 This joint is defined as a continuous type which enables the continuous movement in the joint. -->
+        <joint name="${caster_prefix}_cwheel" type="continuous">
+			<parent link="${caster_prefix}_caster_base"/>
+			<child link="${caster_prefix}_caster_link"/>
+			<origin xyz="${caster_base_joint_x} 0 ${caster_base_joint_z}" rpy="0 0 0" />
+			<axis xyz="0 1 0" rpy="0 0 0" />				
+		</joint>
+
+		<!-- Caster base and parent joint 
+			 This joint is also defined as continuous. A friction tag is added to model the friction 
+			 in the actual casters. Change the values and find which suits the best-->
+		<joint name="${caster_prefix}_caster" type="continuous">
+			<parent link="${parent_link}"/>
+			<child link="${caster_prefix}_caster_base"/>
+			<xacro:insert_block name="joint_pose"/>
+			<axis xyz="0 0 1" rpy="0 0 0" />       
+			<dynamics friction="0.100" />
+		</joint>
+		
+		<!-- The Gazebo physics engine ODE parameters are defined --> 
+		<gazebo reference="${caster_prefix}_caster_link">
+			<mu1 value="${wheel_mu1}"/>
+			<mu2 value="${wheel_mu2}"/>
+			<kp>${wheel_kp}</kp>
+    		<kd>${wheel_kd}</kd>
+			<dampingFactor>0.05</dampingFactor>
+			<fdir1 value="1 0 0"/>
+		</gazebo>
+		
+        <gazebo reference="${caster_prefix}_caster_base">
+			<mu1 value="${wheel_mu1}"/>
+			<mu2 value="${wheel_mu2}"/>
+			<kp>${wheel_kp}</kp>
+    		<kd>${wheel_kd}</kd>
+			<fdir1 value="1 0 0"/>
+		</gazebo>
+
+		
+
+		<!-- A transmission tag is added to visualize the motion of the caster in Rviz through
+			 the joint state controller --> 
+		<transmission name="${caster_prefix}_caster_trans" type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${caster_prefix}_caster_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${caster_prefix}_caster">
+				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+			</joint>
+		</transmission>
+
+
+		<transmission name="${caster_prefix}_casterbase_trans" type="SimpleTransmission">
+			<type>transmission_interface/SimpleTransmission</type>
+			<actuator name="${caster_prefix}_casterbase_motor">
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+			<joint name="${caster_prefix}_cwheel">
+				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+			</joint>
+		</transmission>
+
+	</xacro:macro>
+
+</robot>

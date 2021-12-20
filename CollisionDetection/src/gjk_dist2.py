@@ -33,9 +33,6 @@ def collide(shape1, shape2):
         updatedDistance = doSimplex(simplex, d)[1]
         dist = np.linalg.norm(updatedDistance)
 
-        print(f"Simplex: {simplex}")
-        print(f"Distance: {dist}")
-
         if dist < distOrig:
             distOrig = dist
         else:
@@ -65,7 +62,7 @@ def doSimplexLine(simplex, d):
         # Triple product doesn't give info about distance, so we use vector rejection for the line case
         proj = projection(a0, ab)
 
-
+      
         d = np.subtract(a0, proj)       # Closest point to O
 
     else:
@@ -83,14 +80,18 @@ def doSimplexTriangle(simplex, d):
     ac = np.subtract(c, a)
     abc = np.cross(ab, ac)
 
+ 
     if abc.all() == 0:
         if np.array_equal(a, b):
+        
             simplex = [a, c]
             return doSimplexLine(simplex, d)
         elif np.array_equal(b, c):
+           
             simplex = [a, b]
             return doSimplexLine(simplex, d)
         else:
+      
             simplex = [a, c]
             return doSimplexLine(simplex, d)
 
@@ -158,15 +159,15 @@ def doSimplex(simplex, d):
 
     #LINE CASE -- 2 POINTS IN THE SIMPLEX
     if l == 2:
-        doSimplexLine(simplex, d)
+        d = doSimplexLine(simplex, d)
     
     #TRIANGLE CASE -- 3 POINTS IN THE SIMPLEX
     elif l == 3:
-        doSimplexTriangle(simplex, d)
+        d = doSimplexTriangle(simplex, d)
     
     #TETRAHEDRON CASE -- 4 POINTS IN THE SIMPLEX
     else:
-        doSimplexTetrahedron(simplex, d)
+        d = doSimplexTetrahedron(simplex, d)
     
     
     if np.array_equal(d, 0):

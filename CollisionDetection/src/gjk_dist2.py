@@ -22,27 +22,37 @@ def collide(shape1, shape2):
     s = support(shape1, shape2, (1, 0, 0))
     simplex = [s]
     d = list(np.negative(s))
+    distOrig =  float("inf")
 
     while (True) :
         a = support(shape1, shape2, d)
 
-        if(np.dot(a, d) <= 0):
-            return [False, d] # no collision
 
         simplex.append(a)
 
-        if doSimplex(simplex, d)[0]:
-            return [True, 0] 
+        updatedDistance = doSimplex(simplex, d)[1]
+        dist = np.linalg.norm(updatedDistance)
+
+        print(f"Simplex: {simplex}")
+        print(f"Distance: {dist}")
+
+        if dist < distOrig:
+            distOrig = dist
+        else:
+            return dist
+        
 
 def sameDirection(v1, v2):
     return np.dot(v1, v2) > 0
+
+
+
 
 def projection(v1, v2):
     '''Gives projection of v1 onto v2'''
     m = 0           
     for val in v2:
         m += val*val
-
     return np.multiply(np.divide(np.dot(v2, v1), m), v2)
 
 def doSimplexLine(simplex, d):
@@ -50,11 +60,12 @@ def doSimplexLine(simplex, d):
     b = simplex[1]
     a0 = np.negative(a)
     ab = np.subtract(b, a)
-    
     if sameDirection(ab, a0) : 
 
         # Triple product doesn't give info about distance, so we use vector rejection for the line case
         proj = projection(a0, ab)
+
+
         d = np.subtract(a0, proj)       # Closest point to O
 
     else:
@@ -72,20 +83,41 @@ def doSimplexTriangle(simplex, d):
     ac = np.subtract(c, a)
     abc = np.cross(ab, ac)
 
+    if abc.all() == 0:
+        if np.array_equal(a, b):
+            simplex = [a, c]
+            return doSimplexLine(simplex, d)
+        elif np.array_equal(b, c):
+            simplex = [a, b]
+            return doSimplexLine(simplex, d)
+        else:
+            simplex = [a, c]
+            return doSimplexLine(simplex, d)
+
     # REGION 1
     if sameDirection(np.cross(abc, ac), a0) and sameDirection(ac, a0):
-        return doSimplexLine([a, c], d)
+        simplex = [a, c]
+        return doSimplexLine(simplex, d)
 
     # REGION 4
     elif sameDirection(np.cross(abc, ac), a0) and sameDirection(ab, a0):
-        return doSimplexLine([a, b], d)
+        simplex = [a, b]
+        return doSimplexLine(simplex, d)
     elif sameDirection(np.cross(ab, abc), a0) and sameDirection(ab, a0):
-        return doSimplexLine([a, b], d)
+        simplex = [a, b]
+        return doSimplexLine(simplex, d)
     
     # REGIONS 2 and 3
-    elif not sameDirection(np.cross(abc, ac), a0) or not sameDirection(np.cross(ab, abc), a0):
+    elif not sameDirection(np.cross(abc, ac), a0) and not sameDirection(np.cross(ab, abc), a0):
         d = projection(a0, abc)
-        return d
+        if sameDirection(d, abc):
+            simplex = [a, b, c]
+        else:
+            simplex = [a, c, b]
+    else:
+        simplex = [a]
+        d = a0
+        
 
 
 
@@ -119,7 +151,7 @@ def doSimplexTetrahedron(simplex, d):
         newSimplex = [ a,d,b]
         return doSimplexTriangle(newSimplex, d)
     
-    return d
+    return np.zeros(3)
 
 def doSimplex(simplex, d):
     l = len(simplex)
@@ -135,9 +167,10 @@ def doSimplex(simplex, d):
     #TETRAHEDRON CASE -- 4 POINTS IN THE SIMPLEX
     else:
         doSimplexTetrahedron(simplex, d)
-
-    if d == 0:
-        return [True, 0]
+    
+    
+    if np.array_equal(d, 0):
+        return np.zeros(3)
     else:
         return [False, d]
    

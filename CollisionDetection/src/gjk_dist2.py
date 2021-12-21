@@ -1,9 +1,18 @@
 import numpy as np
 
+
 def findFurthest(polygon, direction):
+    '''
+    Takes in a polygon and direction vector and finds the point that is furthest in that direction
+    from the center of the polygon
+    '''
+
     bestPoint = polygon[0]
     bestDot = np.dot(bestPoint, direction)
 
+    # Loop through all the points and compute dot products as you go
+    # The one which results in the greatest dot product with the direction vector is the furthest point in
+    # that direction
     for i in range(1, len(polygon)):
         p = polygon[i]
         distance = np.dot(p, direction)
@@ -14,25 +23,43 @@ def findFurthest(polygon, direction):
 
     return bestPoint
 
+
 def support(poly1, poly2, direction):
+    '''
+    Finds the furthest point given a search direction for the shape described by the 
+    minkowski difference of the two polygons
+    '''
     return np.subtract(findFurthest(poly1, direction), findFurthest(poly2, np.negative(direction)))
 
 
 def collide(shape1, shape2):
-    s = support(shape1, shape2, (1, 0, 0))
-    simplex = [s]
-    d = list(np.negative(s))
-    distOrig =  float("inf")
+    '''
+    Main loop of the program. Constructs the minkowski difference iteratively and returns the distance between 
+    the two convex shapes.
+    '''
+    s = support(shape1, shape2, (0, 0, 0))
+
+    # The first point calculated by the support is the first point of the simplex described by the minkowski differenc
+    simplex = [s]      
+
+
+    d = list(np.negative(s))          # Search direction 
+    distOrig =  float("inf")          # Distance variable that is going to be updates as new distances are found by the loop
 
     while (True) :
-        a = support(shape1, shape2, d)
+        a = support(shape1, shape2, d)          # Get a new support point in the direction d
 
 
-        simplex.append(a)
+        simplex.insert(0, a)           # Insert at front of the simplex so that we use this point 
 
-        updatedDistance = doSimplex(simplex, d)[1]
-        dist = np.linalg.norm(updatedDistance)
 
+        # Gets the new direction as well as updates our simplex
+        x, d, simplex = doSimplex(simplex, d)       
+
+        # Get the norm of d which is the new distance found by constructing the simplex
+        # If the new distance is less than our previous distance, we update and keep the loop running
+        # Otherwise, we have found the shortest distance between the two shapes and we return that distance
+        dist = np.linalg.norm(d)        
         if dist < distOrig:
             distOrig = dist
         else:
@@ -41,8 +68,6 @@ def collide(shape1, shape2):
 
 def sameDirection(v1, v2):
     return np.dot(v1, v2) > 0
-
-
 
 
 def projection(v1, v2):
@@ -69,7 +94,8 @@ def doSimplexLine(simplex, d):
         simplex = [a] # remove b from simplex
         d = a0
 
-    return d   
+    return d, simplex 
+
 
 def doSimplexTriangle(simplex, d):
     a = simplex[0]
@@ -81,19 +107,16 @@ def doSimplexTriangle(simplex, d):
     abc = np.cross(ab, ac)
 
  
-    if abc.all() == 0:
-        if np.array_equal(a, b):
-        
+    if (abc[0] == 0 and abc[1] == 0 and abc[2] == 0):
+        if sameDirection(ac, a0):
             simplex = [a, c]
             return doSimplexLine(simplex, d)
-        elif np.array_equal(b, c):
-           
+        elif sameDirection(ab, a0):
             simplex = [a, b]
             return doSimplexLine(simplex, d)
         else:
-      
-            simplex = [a, c]
-            return doSimplexLine(simplex, d)
+            simplex = [a]
+            return a0
 
     # REGION 1
     if sameDirection(np.cross(abc, ac), a0) and sameDirection(ac, a0):
@@ -115,13 +138,12 @@ def doSimplexTriangle(simplex, d):
             simplex = [a, b, c]
         else:
             simplex = [a, c, b]
+        return d, simplex
     else:
         simplex = [a]
         d = a0
+        return d, simplex
         
-
-
-
 
 def doSimplexTetrahedron(simplex, d):
     a = simplex[0]
@@ -152,26 +174,26 @@ def doSimplexTetrahedron(simplex, d):
         newSimplex = [ a,d,b]
         return doSimplexTriangle(newSimplex, d)
     
-    return np.zeros(3)
+    return np.zeros(3), simplex
 
 def doSimplex(simplex, d):
     l = len(simplex)
 
     #LINE CASE -- 2 POINTS IN THE SIMPLEX
     if l == 2:
-        d = doSimplexLine(simplex, d)
+        d, simplex = doSimplexLine(simplex, d)
     
     #TRIANGLE CASE -- 3 POINTS IN THE SIMPLEX
     elif l == 3:
-        d = doSimplexTriangle(simplex, d)
+        d, simplex = doSimplexTriangle(simplex, d)
     
     #TETRAHEDRON CASE -- 4 POINTS IN THE SIMPLEX
     else:
-        d = doSimplexTetrahedron(simplex, d)
+        d, simplex = doSimplexTetrahedron(simplex, d)
     
     
     if np.array_equal(d, 0):
-        return np.zeros(3)
+        return [True, np.zeros(3), simplex]
     else:
-        return [False, d]
+        return [False, d, simplex]
    

@@ -16,9 +16,8 @@ shape6 = [(0,0,6), (0,1,6), (1,1,6), (1,0,6), (0,0,1), (1,0,1), (0,1,1), (1,1,1)
 shape7 = [(3, 1, 1), (2, 5, -3), (0, 0, 0)]
 shape8 = [(3, 3, -3), (1, 2, -2), (1, 3, 1)]
 
-# print(gjk.collide(shape1, shape2)) #should intersect
-# print(gjk.collide(shape1, shape3)) #should not intersect
-# print(gjk.collide(shape1, shape4)) #should not intersect
+print(gjk.collide(shape1, shape2)) #should intersect
+print(gjk.collide(shape1, shape3)) #should not intersect
+print(gjk.collide(shape1, shape4)) #should not intersect
 print(gjk.collide(shape5, shape6)) #should intersect
-
-# print(gjk.collide(shape7, shape8)) # Should intersect
+print(gjk.collide(shape7, shape8)) # Should intersect

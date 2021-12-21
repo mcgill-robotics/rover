@@ -2,7 +2,7 @@
 
 import sys
 sys.path.insert(0, '../src')
-import gjk_dist2 as gjk
+import gjk_distance_final as gjk
 
 #the shapes below are all corner points from cubes or rectangular prisms
 

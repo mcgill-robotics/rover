@@ -1,5 +1,6 @@
 import numpy as np
 
+# REFERENCE: https://www.youtube.com/watch?v=ajv46BSqcK4&t=634s 
 
 def findFurthest(polygon, direction):
     '''
@@ -72,32 +73,47 @@ def sameDirection(v1, v2):
 
 def projection(v1, v2):
     '''Gives projection of v1 onto v2'''
+
     m = 0           
     for val in v2:
         m += val*val
     return np.multiply(np.divide(np.dot(v2, v1), m), v2)
 
+
 def doSimplexLine(simplex, d):
+    '''
+    Handles the line case as described in the video. A line is a simplex with two points in it.
+    There are three regions where the origin can be but we only need to check two. If AB dot AO > 0, then 
+    we use vector rejection to find the closest point 'd' which also gives us the next search direction.  
+    '''
+
     a = simplex[0]
     b = simplex[1]
     a0 = np.negative(a)
     ab = np.subtract(b, a)
+
     if sameDirection(ab, a0) : 
-
-        # Triple product doesn't give info about distance, so we use vector rejection for the line case
+        # Vector rejection if the dot product is greater than 0
         proj = projection(a0, ab)
+        d = np.subtract(a0, proj)       # Closest point to the origin as well as the search direction
 
-      
-        d = np.subtract(a0, proj)       # Closest point to O
-
+    # Otherwise the dot product is less than 0, so we remove point B from the simplex since A will be closer to
+    # the origin
     else:
-        simplex = [a] # remove b from simplex
+        simplex = [a] 
         d = a0
 
     return d, simplex 
 
 
 def doSimplexTriangle(simplex, d):
+    '''
+    Handles the triangle simplex as described in the video. Only 5 regions need to be verified and
+    they all reduce down to line cases. The general idea i.e find points in the search direction of the origin remains 
+    the same. 
+    '''
+
+    # The three points in the simplex and their respective vectors 
     a = simplex[0]
     b = simplex[1]
     c = simplex[2]
@@ -106,7 +122,8 @@ def doSimplexTriangle(simplex, d):
     ac = np.subtract(c, a)
     abc = np.cross(ab, ac)
 
- 
+    # This is done to handle the edge ase where vector ABC is 0 so that the line case does not perform 
+    # a vector rejection on a 0 vector
     if (abc[0] == 0 and abc[1] == 0 and abc[2] == 0):
         if sameDirection(ac, a0):
             simplex = [a, c]
@@ -146,6 +163,11 @@ def doSimplexTriangle(simplex, d):
         
 
 def doSimplexTetrahedron(simplex, d):
+    '''
+    This helps to extend the algorithm to 3D. The same idea follows as the triangle case i.e all cases reduce down
+    to triangle cases. 
+    '''
+
     a = simplex[0]
     b = simplex[1]
     c = simplex[2]
@@ -176,7 +198,12 @@ def doSimplexTetrahedron(simplex, d):
     
     return np.zeros(3), simplex
 
+
 def doSimplex(simplex, d):
+    '''
+    Chooses which simplex case to perform based on the number of points in the simplex
+    '''
+    
     l = len(simplex)
 
     #LINE CASE -- 2 POINTS IN THE SIMPLEX
@@ -192,8 +219,8 @@ def doSimplex(simplex, d):
         d, simplex = doSimplexTetrahedron(simplex, d)
     
     
-    if np.array_equal(d, 0):
-        return [True, np.zeros(3), simplex]
+    if np.array_equal(d, 0):        # If the shapes intersect, then the closest distance between them is 0
+        return [True, np.zeros(3), simplex]     # Return the 0 vector
     else:
-        return [False, d, simplex]
+        return [False, d, simplex]      # Otherwise return the closest distance between the shapes
    

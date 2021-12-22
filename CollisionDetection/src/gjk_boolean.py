@@ -1,3 +1,6 @@
+# Boolean version of the GJK: it only checks whether two convex shapes are colliding with each other or not
+# Similar code to the distance version, but only returns a boolean value 
+
 import numpy as np
 
 def findFurthest(polygon, direction):

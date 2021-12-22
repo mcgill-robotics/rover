@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# TESTING FILE
+
 import sys
 sys.path.insert(0, '../src')
 import gjk_distance as gjk

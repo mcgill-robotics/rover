@@ -114,7 +114,8 @@ def doSimplexTriangle(simplex, d):
     '''
     Handles the triangle simplex as described in the video. Only 5 regions need to be verified and
     they all reduce down to line cases. The general idea i.e find points in the search direction of the origin remains 
-    the same. 
+    the same. Returns true if no line cases can be formed meaning that the origin must be in the triangle and we have
+    found an intersection.
     '''
 
     # The three points in the simplex and their respective vectors 
@@ -170,7 +171,8 @@ def doSimplexTetrahedron(simplex, d):
     '''
     Takes in a simplex with 4 points and search direction d. The tetrahedron case helps to extend the algorithm 
     to 3D. 15 regions require checking but we only need to check 8. All these cases can be broken down into 
-    triangle cases.
+    triangle cases. Returns true if no triangle cases can be formed i.e the origin is in our tetrahedron and we have found
+    an intersection.
     '''
 
     # Get the 4 points and their respective vectors

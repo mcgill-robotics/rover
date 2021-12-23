@@ -5,7 +5,7 @@ import numpy as np
 def findFurthest(polygon, direction):
     '''
     Takes in a polygon and direction vector and finds the point that is furthest in that direction
-    from the center of the polygon
+    from the center of the polygon.
     '''
 
     bestPoint = polygon[0]
@@ -13,7 +13,7 @@ def findFurthest(polygon, direction):
 
     # Loop through all the points and compute dot products as you go
     # The one which results in the greatest dot product with the direction vector is the furthest point in
-    # that direction
+    # that direction.
     for i in range(1, len(polygon)):
         p = polygon[i]
         distance = np.dot(p, direction)
@@ -28,19 +28,20 @@ def findFurthest(polygon, direction):
 def support(poly1, poly2, direction):
     '''
     Finds the furthest point given a search direction for the shape described by the 
-    minkowski difference of the two polygons
+    minkowski difference of poly1 and poly2.
     '''
     return np.subtract(findFurthest(poly1, direction), findFurthest(poly2, np.negative(direction)))
 
 
 def collide(shape1, shape2):
     '''
-    Main loop of the program. Constructs the minkowski difference iteratively and returns the distance between 
-    the two convex shapes.
+    Main loop of the program. Takes in two convex shapes: shape1 and shape2 and iteratively
+    constructs the minkowski difference between them. The simplex variable will hold the current convex hull.
+    Returns the shortest distance (dist) between the shapes.
     '''
     s = support(shape1, shape2, (0, 0, 0))
 
-    # The first point calculated by the support is the first point of the simplex described by the minkowski differenc
+    # The first point calculated by the support is the first point of the simplex described by the minkowski difference.
     simplex = [s]      
 
 
@@ -68,6 +69,9 @@ def collide(shape1, shape2):
         
 
 def sameDirection(v1, v2):
+    '''Returns if vectors v1 and v2 more or less lie in the same direction. In other words,
+    return true if v1 dot v2 > 0, otherwise return false.'''
+
     return np.dot(v1, v2) > 0
 
 
@@ -82,26 +86,26 @@ def projection(v1, v2):
 
 def doSimplexLine(simplex, d):
     '''
-    Handles the line case as described in the video. A line is a simplex with two points in it.
-    There are three regions where the origin can be but we only need to check two. If AB dot AO > 0, then 
+    Takes in a simplex which contains two points with search direction d. Handles the line case as described in the video.
+    There are three regions where the origin can be but we only need to check two. If ab dot ao > 0, then 
     we use vector rejection to find the closest point 'd' which also gives us the next search direction.  
     '''
 
     a = simplex[0]
     b = simplex[1]
-    a0 = np.negative(a)
+    ao = np.negative(a)
     ab = np.subtract(b, a)
 
-    if sameDirection(ab, a0) : 
+    if sameDirection(ab, ao) : 
         # Vector rejection if the dot product is greater than 0
-        proj = projection(a0, ab)
-        d = np.subtract(a0, proj)       # Closest point to the origin as well as the search direction
+        proj = projection(ao, ab)
+        d = np.subtract(ao, proj)       # Closest point to the origin as well as the search direction
 
     # Otherwise the dot product is less than 0, so we remove point B from the simplex since A will be closer to
     # the origin
     else:
         simplex = [a] 
-        d = a0
+        d = ao
 
     return d, simplex 
 
@@ -117,7 +121,7 @@ def doSimplexTriangle(simplex, d):
     a = simplex[0]
     b = simplex[1]
     c = simplex[2]
-    a0 = np.negative(a)
+    ao = np.negative(a)
     ab = np.subtract(b, a)
     ac = np.subtract(c, a)
     abc = np.cross(ab, ac)
@@ -125,32 +129,32 @@ def doSimplexTriangle(simplex, d):
     # This is done to handle the edge ase where vector ABC is 0 so that the line case does not perform 
     # a vector rejection on a 0 vector
     if (abc[0] == 0 and abc[1] == 0 and abc[2] == 0):
-        if sameDirection(ac, a0):
+        if sameDirection(ac, ao):
             simplex = [a, c]
             return doSimplexLine(simplex, d)
-        elif sameDirection(ab, a0):
+        elif sameDirection(ab, ao):
             simplex = [a, b]
             return doSimplexLine(simplex, d)
         else:
             simplex = [a]
-            return a0
+            return ao
 
     # REGION 1
-    if sameDirection(np.cross(abc, ac), a0) and sameDirection(ac, a0):
+    if sameDirection(np.cross(abc, ac), ao) and sameDirection(ac, ao):
         simplex = [a, c]
         return doSimplexLine(simplex, d)
 
     # REGION 4
-    elif sameDirection(np.cross(abc, ac), a0) and sameDirection(ab, a0):
+    elif sameDirection(np.cross(abc, ac), ao) and sameDirection(ab, ao):
         simplex = [a, b]
         return doSimplexLine(simplex, d)
-    elif sameDirection(np.cross(ab, abc), a0) and sameDirection(ab, a0):
+    elif sameDirection(np.cross(ab, abc), ao) and sameDirection(ab, ao):
         simplex = [a, b]
         return doSimplexLine(simplex, d)
     
     # REGIONS 2 and 3
-    elif not sameDirection(np.cross(abc, ac), a0) and not sameDirection(np.cross(ab, abc), a0):
-        d = projection(a0, abc)
+    elif not sameDirection(np.cross(abc, ac), ao) and not sameDirection(np.cross(ab, abc), ao):
+        d = projection(ao, abc)
         if sameDirection(d, abc):
             simplex = [a, b, c]
         else:
@@ -158,21 +162,23 @@ def doSimplexTriangle(simplex, d):
         return d, simplex
     else:
         simplex = [a]
-        d = a0
+        d = ao
         return d, simplex
         
 
 def doSimplexTetrahedron(simplex, d):
     '''
-    This helps to extend the algorithm to 3D. The same idea follows as the triangle case i.e all cases reduce down
-    to triangle cases. 
+    Takes in a simplex with 4 points and search direction d. The tetrahedron case helps to extend the algorithm 
+    to 3D. 15 regions require checking but we only need to check 8. All these cases can be broken down into 
+    triangle cases.
     '''
 
+    # Get the 4 points and their respective vectors
     a = simplex[0]
     b = simplex[1]
     c = simplex[2]
     d = simplex[3]
-    a0 = np.negative(a)
+    ao = np.negative(a)
     ab = np.subtract(b, a)
     ac = np.subtract(c, a)
     ad = np.subtract(d, a)
@@ -181,18 +187,18 @@ def doSimplexTetrahedron(simplex, d):
     acd = np.cross(ac, ad)
     adb = np.cross(ad, ab)
 
-    #if abc is the same direction as a0 then
-    if sameDirection(abc, a0):
+    #if abc is the same direction as ao then
+    if sameDirection(abc, ao):
         newSimplex = [ a,b,c]
         return doSimplexTriangle(newSimplex, d)
 
-    #if acd is the same direction as a0 then
-    if sameDirection(acd, a0):
+    #if acd is the same direction as ao then
+    if sameDirection(acd, ao):
         newSimplex = [ a, c, d]
         return doSimplexTriangle(newSimplex, d)
 
-    #if adb is the same direction as a0 then
-    if sameDirection(adb, a0):
+    #if adb is the same direction as ao then
+    if sameDirection(adb, ao):
         newSimplex = [ a,d,b]
         return doSimplexTriangle(newSimplex, d)
     
@@ -201,7 +207,8 @@ def doSimplexTetrahedron(simplex, d):
 
 def doSimplex(simplex, d):
     '''
-    Chooses which simplex case to perform based on the number of points in the simplex
+    Chooses which simplex case to perform based on the number of points in the simplex. Takes in the simplex given by the 
+    collide() method with an initial search direction d.
     '''
     
     l = len(simplex)

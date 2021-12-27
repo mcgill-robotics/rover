@@ -4,6 +4,7 @@ import pygame
 import time
 import rospy
 from custom_msgs.msg import Joystick_input
+from arm_control.msg import ProcessedControllerInput
 
 class Node_Joystick():
     """Gets joystick data and publishes the data to the joystick_data topic
@@ -41,6 +42,12 @@ class Node_Joystick():
         # Initialize ROS
         rospy.init_node("joystick", anonymous=False)
         self.joystick_publisher = rospy.Publisher("joystick_data", Joystick_input, queue_size=1)
+        self.arm_publisher = rospy.Publisher("processed_arm_controller_input", ProcessedControllerInput, queue_size=1)
+
+        self.prevB3 = 0
+        self.prevB4 = 0
+        self.modeState = False
+        self.clawState = False
 
         # Start Node
         self.run()
@@ -76,10 +83,47 @@ class Node_Joystick():
                 msg.Hat_Y = self.joystick.data.hat_y
 
                 self.joystick_publisher.publish(msg)
+
+                arm_ctrl = ProcessedControllerInput()
+                arm_ctrl.X_dir = msg.A2**2
+                if msg.A2 < 0:
+                    arm_ctrl.X_dir = -1 * arm_ctrl.X_dir
+                arm_ctrl.Y_dir = msg.A1**2
+                if msg.A1 > 0:
+                    arm_ctrl.Y_dir = -1 * arm_ctrl.Y_dir
+                arm_ctrl.Z_dir = msg.A3**2
+                if msg.A3 < 0:
+                    arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
+
+                if self.risingEdge(msg.B3, self.prevB3):
+                    self.modeState = True
+                else:
+                    self.modeState = False
+
+                if self.risingEdge(msg.B4, self.prevB4):
+                    self.clawState = True
+                else:
+                    self.clawState = False
+
+                arm_ctrl.ModeChange = self.modeState
+                arm_ctrl.ClawOpen   = self.clawState
+
+                self.prevB3 = msg.B3
+                self.prevB4 = msg.B4
+
+                self.arm_publisher.publish(arm_ctrl)
+
                 time.sleep(0.01)
             except Exception as error:
                 rospy.logerr(str(error))
         exit()
+
+    def risingEdge(self, prevSignal, nextSignal):
+        if prevSignal < nextSignal:
+            return True
+        else: 
+            return False
+
 
 class Joystick():
     """Driver to get the event inputs from the Logitech Extreme 3D Pro Joystick

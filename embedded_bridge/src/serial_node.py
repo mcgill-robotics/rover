@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
 import rospy
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentdir)
 import serial_interface as serialInt 
 from std_msgs.msg import Int32
 from arm_control.msg import ArmMotorCommand, ArmStatusFeedback
 from DriveControl.msg import WheelSpeed
-from embedded_bridge.msg import DriveFeedback, PowerFeedback, ScienceCmd, ScienceFeedback, CcdData
+from embedded_bridge.msg import DriveFeedback, PowerFeedback
+from science_module.msg import ScienceCmd, ScienceFeedback, CcdData
 import time
 
 class Node_EmbeddedBridge():
@@ -53,7 +57,7 @@ class Node_EmbeddedBridge():
         # Science System
         self.science_state_publisher    = rospy.Publisher("science_state_data", ScienceFeedback, queue_size=1)
         self.science_ccd_data_publisher = rospy.Publisher("science_ccd_data", CcdData)
-        self.science_control_subscriber = rospy.Subscriber("science_control_data", ScienceCmd, None)
+        self.science_control_subscriber = rospy.Subscriber("science_control_data", ScienceCmd, writeScienceCommand)
 
         # Power System
         self.power_state_publisher      = rospy.Publisher("power_state_data", PowerFeedback, queue_size=1)
@@ -232,9 +236,9 @@ class Node_EmbeddedBridge():
         self.mapping["science"].put_packet('1', motor_msg)
 
         # Send Stepper Commands
-        step1_msg = f"1,{control.Stepper1IncAng:.4f}"
+        step1_msg = f"0,{control.Stepper1IncAng:.4f}"
         self.mapping["science"].put_packet('3', step1_msg)
-        step2_msg = f"2,{control.Stepper2IncAng:.4f}"
+        step2_msg = f"1,{control.Stepper2IncAng:.4f}"
         self.mapping["science"].put_packet('3', step2_msg)
 
 

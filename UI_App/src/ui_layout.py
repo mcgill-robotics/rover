@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'base_layout.ui'
+# Form implementation generated from reading ui file 'qt_ui_files/base_layout.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -86,13 +86,3 @@ class Ui_MainWindow(object):
         self.comboBox.setItemText(5, _translate("MainWindow", "Cam 6"))
         self.Camera.setText(_translate("MainWindow", "Camera (add pixmap)"))
         self.label.setText(_translate("MainWindow", "Overall Feedback"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())

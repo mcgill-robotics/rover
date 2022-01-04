@@ -14,6 +14,9 @@ Qt Designer which is a part of `pyqt5-tools` does not work on M1 macs. If anyone
 1. `pip3 install pyqt5`
 > Sometimes pip3 won't install pyqt5 properly on Ubuntu so we run the next command to ensure that PyQt5 gets installed properly
 
+2. `sudo apt-get install python3-pyqt5`  
+3. `sudo apt-get install pyqt5-dev-tools`
+4. `sudo apt-get install qttools5-dev-tools`
 
 ## Running the app
 1. Make sure to have PyQt5 installed before trying to run the app.

@@ -1,4 +1,4 @@
-# Imports 
+# Imports
 from ui_layout import Ui_MainWindow
 
 
@@ -15,11 +15,11 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         # Setup the UI from Ui_MainWindow
         super().__init__(*args, **kwargs)
-        self.setupUi(self)     
+        self.setupUi(self)
 
         # Listeners
-        self.control_selector.currentTextChanged.connect(self.on_control_changed)
-
+        self.control_selector.currentTextChanged.connect(
+            self.on_control_changed)
 
     def on_control_changed(self, value):
         '''
@@ -28,7 +28,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         #TODO: Waiting for system controls to be implemented so that this selector can 
         select the control system.
         '''
-        
+
         if value == "Arm-Cartesian Control":
             pass
             # return arm file
@@ -44,7 +44,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         else:
             pass
             # Return self for autonomy
-        
+
 
 def main():
     app = qtw.QApplication([])
@@ -57,4 +57,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

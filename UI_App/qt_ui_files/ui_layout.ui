@@ -47,7 +47,7 @@
      </attribute>
     </widget>
    </widget>
-   <widget class="QComboBox" name="comboBox">
+   <widget class="QComboBox" name="camera_selector">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -141,6 +141,41 @@
     <property name="text">
      <string>Overall Feedback</string>
     </property>
+   </widget>
+   <widget class="QComboBox" name="control_selector">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>290</y>
+      <width>181</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>Arm-Joint Control</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Arm-Cartesian Control</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Drive</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Science</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Autonomy</string>
+     </property>
+    </item>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

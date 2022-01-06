@@ -1,17 +1,26 @@
-
 import cv2
+import sys
+import os
 
-vids = [cv2.VideoCapture(i) for i in [0, 1, 2, 3]]
-ids = [0, 1, 2, 3]
+# gets location of getCameraFeeds to be recognized as a module
+dir = os.path.dirname(__file__)
+filename = os.path.join(dir, '../src')
+sys.path.insert(0,filename)
 
+import getCameraFeeds as gcf
+
+# Runnable for displaying camera feeds
+camHandler = gcf.CameraHandler()
 while True:
-    retAndFrame = [(vids[i].read()[0], vids[i].read()[1], i) for i in range(len(vids))]
+    retAndFrame = camHandler.get_all_feeds()
+    # display each frame (camera feed) in the list
     for ret, frame, index in retAndFrame:
         cv2.imshow(f"frame {index}", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
 
-for i in vids:
-    i.release()
-    cv2.destroyAllWindows()
+    # press 'q' to stop displaying
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        for vid in camHandler.vids:
+            vid.release()
+            cv2.destroyAllWindows()
+        break
 

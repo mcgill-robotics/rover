@@ -5,21 +5,15 @@ class CameraHandler:
     vids = []  # available cameras
 
     def __init__(self):
-        # counter for init method
-        index = 0
+        # Loop 10 times and collect all found cameras
+        # Assumes sequential indices
+        for i in range (10):
+            newCap = cv2.VideoCapture(i)
 
-        # Loop until invalid cam is found
-        # Maybe not the most efficient way; assumes sequential indices
-        while True:
-            newCap = cv2.VideoCapture(index)
-
-            # Check if camera object created is not null or unable to be opened
-            if newCap.isOpened():
+            # check if object is not
+            if newCap is not None and newCap.isOpened():
                 # add the camera found
                 self.vids.append(newCap)
-                index += 1
-            else:  # stop searching otherwise
-                break
 
     def get_all_feeds(self):
         retAndFrame = []
@@ -45,4 +39,3 @@ if __name__ == '__main__':
                 vid.release()
                 cv2.destroyAllWindows()
             break
-

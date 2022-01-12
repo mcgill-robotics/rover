@@ -4,7 +4,7 @@ import os
 
 # gets location of getCameraFeeds to be recognized as a module
 dir = os.path.dirname(__file__)
-filename = os.path.join(dir, '../src')
+filename = os.path.join(dir, '../../src/camera_feed_view')
 sys.path.insert(0,filename)
 
 import getCameraFeeds as gcf

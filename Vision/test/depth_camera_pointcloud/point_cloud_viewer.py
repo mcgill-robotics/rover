@@ -5,7 +5,7 @@ import os
 import sys
 
 dir = os.path.dirname(__file__)
-filename = os.path.join(dir, '../src')
+filename = os.path.join(dir, '../../src/depth_camera_pointcloud')
 sys.path.insert(0,filename)
 
 import render_camera_data as rcdPy

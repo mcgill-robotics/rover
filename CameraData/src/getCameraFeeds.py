@@ -5,12 +5,12 @@ class CameraHandler:
     vids = []  # available cameras
 
     def __init__(self):
-        # Loop 10 times and collect all found cameras
+        # Loop 25 times and collect all found cameras
         # Assumes sequential indices
-        for i in range (10):
-            newCap = cv2.VideoCapture(i)
+        for i in range (25):
+            newCap = cv2.VideoCapture(i, cv2.CAP_V4L2)
 
-            # check if object is not
+            # check if object is not null
             if newCap is not None and newCap.isOpened():
                 # add the camera found
                 self.vids.append(newCap)
@@ -31,7 +31,8 @@ if __name__ == '__main__':
         retAndFrame = camHandler.get_all_feeds()
         # display each frame (camera feed) in the list
         for ret, frame, index in retAndFrame:
-            cv2.imshow(f"frame {index}", frame)
+            if ret:
+                cv2.imshow(f"frame {index}", frame)
 
         # press 'q' to stop displaying
         if cv2.waitKey(1) & 0xFF == ord('q'):

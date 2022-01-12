@@ -4,55 +4,88 @@ import numpy as np
 import cv2
 import pyrealsense2 as rs
 
+# Code used was provided as an example for the librealsense package and then turned into a module; can be found here:
+# https://github.com/IntelRealSense/librealsense/blob/development/wrappers/python/examples/opencv_pointcloud_viewer.py
+class AppState:
+    def __init__(self, *args, **kwargs):
+        self.WIN_NAME = 'RealSense'
+        self.pitch, self.yaw = math.radians(-10), math.radians(-15)
+        self.translation = np.array([0, 0, -1], dtype=np.float32)
+        self.distance = 2
+        self.prev_mouse = 0, 0
+        self.mouse_btns = [False, False, False]
+        self.paused = False
+        self.decimate = 1
+        self.scale = True
+        self.color = True
+
+    def reset(self):
+        self.pitch, self.yaw, self.distance = 0, 0, 2
+        self.translation[:] = 0, 0, -1
+
+    @property
+    def rotation(self):
+        Rx, _ = cv2.Rodrigues((self.pitch, 0, 0))
+        Ry, _ = cv2.Rodrigues((0, self.yaw, 0))
+        return np.dot(Ry, Rx).astype(np.float32)
+
+    @property
+    def pivot(self):
+        return self.translation + np.array((0, 0, self.distance), dtype=np.float32)
+
 class RenderCameraData:
-    def mouse_cb(event, x, y, flags, state, out):
+    def __init__(self, state, out):
+        self.state = state
+        self.out = out
+
+    def mouse_cb(self, event, x, y, flags, param):
 
         if event == cv2.EVENT_LBUTTONDOWN:
-            state.mouse_btns[0] = True
+            self.state.mouse_btns[0] = True
 
         if event == cv2.EVENT_LBUTTONUP:
-            state.mouse_btns[0] = False
+            self.state.mouse_btns[0] = False
 
         if event == cv2.EVENT_RBUTTONDOWN:
-            state.mouse_btns[1] = True
+            self.state.mouse_btns[1] = True
 
         if event == cv2.EVENT_RBUTTONUP:
-            state.mouse_btns[1] = False
+            self.state.mouse_btns[1] = False
 
         if event == cv2.EVENT_MBUTTONDOWN:
-            state.mouse_btns[2] = True
+            self.state.mouse_btns[2] = True
 
         if event == cv2.EVENT_MBUTTONUP:
-            state.mouse_btns[2] = False
+            self.state.mouse_btns[2] = False
 
         if event == cv2.EVENT_MOUSEMOVE:
 
-            h, w = out.shape[:2]
-            dx, dy = x - state.prev_mouse[0], y - state.prev_mouse[1]
+            h, w = self.out.shape[:2]
+            dx, dy = x - self.state.prev_mouse[0], y - self.state.prev_mouse[1]
 
-            if state.mouse_btns[0]:
-                state.yaw += float(dx) / w * 2
-                state.pitch -= float(dy) / h * 2
+            if self.state.mouse_btns[0]:
+                self.state.yaw += float(dx) / w * 2
+                self.state.pitch -= float(dy) / h * 2
 
-            elif state.mouse_btns[1]:
+            elif self.state.mouse_btns[1]:
                 dp = np.array((dx / w, dy / h, 0), dtype=np.float32)
-                state.translation -= np.dot(state.rotation, dp)
+                self.state.translation -= np.dot(self.state.rotation, dp)
 
-            elif state.mouse_btns[2]:
+            elif self.state.mouse_btns[2]:
                 dz = math.sqrt(dx**2 + dy**2) * math.copysign(0.01, -dy)
-                state.translation[2] += dz
-                state.distance -= dz
+                self.state.translation[2] += dz
+                self.state.distance -= dz
 
         if event == cv2.EVENT_MOUSEWHEEL:
             dz = math.copysign(0.1, flags)
-            state.translation[2] += dz
-            state.distance -= dz
+            self.state.translation[2] += dz
+            self.state.distance -= dz
 
-        state.prev_mouse = (x, y)
+        self.state.prev_mouse = (x, y)
 
-    def project(v, out):
+    def project(self, v):
         """project 3d vector array to 2d"""
-        h, w = out.shape[:2]
+        h, w = self.out.shape[:2]
         view_aspect = float(h)/w
 
         # ignore divide by zero for invalid depth
@@ -66,16 +99,16 @@ class RenderCameraData:
         return proj
 
 
-    def view(v, state):
+    def view(self, v):
         """apply view transformation on vector array"""
-        return np.dot(v - state.pivot, state.rotation) + state.pivot - state.translation
+        return np.dot(v - self.state.pivot, self.state.rotation) + self.state.pivot - self.state.translation
 
 
     def line3d(self, out, pt1, pt2, color=(0x80, 0x80, 0x80), thickness=1):
         """draw a 3d line from pt1 to pt2"""
 
-        p0 = self.project(pt1.reshape(-1, 3), out)[0]
-        p1 = self.project(pt2.reshape(-1, 3), out)[0]
+        p0 = self.project(pt1.reshape(-1, 3))[0]
+        p1 = self.project(pt2.reshape(-1, 3))[0]
         if np.isnan(p0).any() or np.isnan(p1).any():
             return
         p0 = tuple(p0.astype(int))
@@ -133,7 +166,7 @@ class RenderCameraData:
             self.line3d(out, self.view(bottom_left), self.view(top_left), color)
 
 
-    def pointcloud(self, state, out, verts, texcoords, color, painter=True):
+    def pointcloud(self, out, verts, texcoords, color, painter=True):
         """draw point cloud with optional painter's algorithm"""
         if painter:
             # Painter's algo, sort points from back to front
@@ -146,8 +179,8 @@ class RenderCameraData:
         else:
             proj = self.project(self.view(verts))
 
-        if state.scale:
-            proj *= 0.5**state.decimate
+        if self.state.scale:
+            proj *= 0.5**self.state.decimate
 
         h, w = out.shape[:2]
 
@@ -174,29 +207,3 @@ class RenderCameraData:
         # perform uv-mapping
         out[i[m], j[m]] = color[u[m], v[m]]
 
-class AppState:
-    def __init__(self, *args, **kwargs):
-        self.WIN_NAME = 'RealSense'
-        self.pitch, self.yaw = math.radians(-10), math.radians(-15)
-        self.translation = np.array([0, 0, -1], dtype=np.float32)
-        self.distance = 2
-        self.prev_mouse = 0, 0
-        self.mouse_btns = [False, False, False]
-        self.paused = False
-        self.decimate = 1
-        self.scale = True
-        self.color = True
-
-    def reset(self):
-        self.pitch, self.yaw, self.distance = 0, 0, 2
-        self.translation[:] = 0, 0, -1
-
-    @property
-    def rotation(self):
-        Rx, _ = cv2.Rodrigues((self.pitch, 0, 0))
-        Ry, _ = cv2.Rodrigues((0, self.yaw, 0))
-        return np.dot(Ry, Rx).astype(np.float32)
-
-    @property
-    def pivot(self):
-        return self.translation + np.array((0, 0, self.distance), dtype=np.float32)

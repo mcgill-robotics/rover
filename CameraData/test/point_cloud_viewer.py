@@ -1,11 +1,26 @@
-import math
 import time
 import cv2
 import numpy as np
-import CameraData.src.render_camera_data as rcd
+import os
+import sys
+
+dir = os.path.dirname(__file__)
+filename = os.path.join(dir, '../src')
+sys.path.insert(0,filename)
+
+import render_camera_data as rcdPy
 import pyrealsense2 as rs
 
-state = rcd.AppState()
+# Majority of code was taken from an example provided by librealsense; found here:
+# https://github.com/IntelRealSense/librealsense/blob/development/wrappers/python/examples/opencv_pointcloud_viewer.py
+
+state = rcdPy.AppState()
+
+# reset camera before rest of script launches
+ctx = rs.context()
+devices = ctx.query_devices()
+for dev in devices:
+    dev.hardware_reset()
 
 # Configure depth and color streams
 pipeline = rs.pipeline()
@@ -42,11 +57,13 @@ decimate = rs.decimation_filter()
 decimate.set_option(rs.option.filter_magnitude, 2 ** state.decimate)
 colorizer = rs.colorizer()
 
+out = np.empty((h, w, 3), dtype=np.uint8)
+
+rcd = rcdPy.RenderCameraData(state, out)
+
 cv2.namedWindow(state.WIN_NAME, cv2.WINDOW_AUTOSIZE)
 cv2.resizeWindow(state.WIN_NAME, w, h)
 cv2.setMouseCallback(state.WIN_NAME, rcd.mouse_cb)
-
-out = np.empty((h, w, 3), dtype=np.uint8)  
 
 while True:
     # Grab camera data

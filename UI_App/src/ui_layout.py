@@ -11,6 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from drive_layout import Ui_DriveTab, Ui_DriveTab
+from arm_layout import Ui_Arm
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -21,11 +22,18 @@ class Ui_MainWindow(object):
         self.Systemsview = QtWidgets.QTabWidget(self.centralwidget)
         self.Systemsview.setGeometry(QtCore.QRect(470, 10, 301, 531))
         self.Systemsview.setObjectName("Systemsview")
-        self.Arm = QtWidgets.QWidget()
-        self.Arm.setObjectName("Arm")
+        
+        #
+        self.Arm = Ui_Arm()
+        self.Arm.setupUi(self.Arm)
+        #
+
         self.Systemsview.addTab(self.Arm, "")
+
+        #
         self.Drive = Ui_DriveTab()
         self.Drive.setupUi(self.Drive)
+        #
         self.Systemsview.addTab(self.Drive, "")
         self.Science = QtWidgets.QWidget()
         self.Science.setObjectName("Science")

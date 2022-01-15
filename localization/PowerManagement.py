@@ -18,13 +18,6 @@ How to use:
         you want 
 
 """
-#imports 
-import time
-
-#constants or ROS dependant variables 
-I_amp = 0.2 #current measured by sensor (A)
-V_V = 22.2 #Initial voltage 
-
 """ Info about the battery
     https://www.genstattu.com/ta-p2-25c-22000-6s1p-as150.html
     configuration : 6S1P 
@@ -32,6 +25,13 @@ V_V = 22.2 #Initial voltage
     peak discharge : 50C
     
 """
+
+#imports 
+import time
+
+#constants or ROS dependant variables 
+I_amp = 0.2 #current measured by sensor (A)
+V_V = 22.2 #Initial voltage 
 
 battery_1 = 22.0 * 3600.0 # Ahr/3600 = Q, charge of battery_1
 
@@ -63,7 +63,7 @@ class PowerManagement():
             raise ValueError('More charge drawn than total battery capacity')
             
         #if Discharge rate > 25C, raise an error 
-        if (I_amp * self.dt > 25):
+        if (I_amp > 25):
             raise ValueError('Discharge rate too high! Limit is 25C/s')
         
         return self.charge_drawn
@@ -76,10 +76,15 @@ class PowerManagement():
         self.seconds_remain = self.charge_remain/I_amp 
         return self.seconds_remain
     
-    #The voltage discharge curve IS NOT PROVIDED IN THE DATASHEET.
-    #Lipo batteries have a fairly flat voltage curve.
-    #https://www.mpoweruk.com/performance.htm
-    #https://www.dnkpower.com/lithium-polymer-battery-guide/
+    """The voltage discharge curve IS NOT PROVIDED IN THE DATASHEET.
+        Lipo batteries have a fairly flat voltage curve.
+        But, this value varies with load, temperature, internal impedance. 
+        Readings on the subject:
+        https://www.mpoweruk.com/performance.htm
+        https://www.dnkpower.com/lithium-polymer-battery-guide/ 
+        State of Charge estimation (SoC):
+            https://www.mpoweruk.com/soc.htm
+        """
     def getVoltageCurve(self):
         if (V_V <= 20):
             raise ValueError('Voltage Critically Low. Recharge battery!')

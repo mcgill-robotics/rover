@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QLCDNumber" name="right_speed_label">
+  <widget class="QLCDNumber" name="right_speed_data">
    <property name="geometry">
     <rect>
      <x>120</x>
@@ -23,7 +23,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="right_speed_label">
    <property name="geometry">
     <rect>
      <x>140</x>
@@ -36,7 +36,7 @@
     <string>Right</string>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="rear_left_speed_label">
+  <widget class="QLCDNumber" name="rear_left_speed_data">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -46,7 +46,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
+  <widget class="QLabel" name="left_speed_label">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -59,7 +59,7 @@
     <string>Left</string>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="left_speed_label">
+  <widget class="QLCDNumber" name="left_speed_data">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -69,7 +69,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_3">
+  <widget class="QLabel" name="rear_right_speed_label">
    <property name="geometry">
     <rect>
      <x>130</x>
@@ -82,7 +82,7 @@
     <string>Rear_Right</string>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="rear_right_speed_label">
+  <widget class="QLCDNumber" name="rear_right_speed_data">
    <property name="geometry">
     <rect>
      <x>120</x>
@@ -92,7 +92,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_4">
+  <widget class="QLabel" name="rear_left_speed_label">
    <property name="geometry">
     <rect>
      <x>30</x>
@@ -105,7 +105,7 @@
     <string>Rear_Left</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_5">
+  <widget class="QLabel" name="wheel_velocity_label">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -123,7 +123,7 @@
     <string>Wheel Velocities</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_6">
+  <widget class="QLabel" name="twist_label">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -161,7 +161,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_7">
+  <widget class="QLabel" name="twist_linear_velocity_label">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -174,7 +174,7 @@
     <string>Linear</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_8">
+  <widget class="QLabel" name="twist_angular_velocity_label">
    <property name="geometry">
     <rect>
      <x>110</x>
@@ -220,7 +220,7 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="label_9">
+  <widget class="QLabel" name="current_robot_location_label">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -274,7 +274,7 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff1723;&quot;&gt;TextLabel&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="lcdNumber">
+  <widget class="QLCDNumber" name="robot_location_x">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -284,7 +284,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="lcdNumber_2">
+  <widget class="QLCDNumber" name="robot_location_y">
    <property name="geometry">
     <rect>
      <x>100</x>
@@ -294,7 +294,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_10">
+  <widget class="QLabel" name="robot_location_x_label">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -307,7 +307,7 @@
     <string>x</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_11">
+  <widget class="QLabel" name="robot_location_y_label">
    <property name="geometry">
     <rect>
      <x>130</x>
@@ -320,7 +320,7 @@
     <string>y</string>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="lcdNumber_3">
+  <widget class="QLCDNumber" name="robot_location_yaw">
    <property name="geometry">
     <rect>
      <x>180</x>
@@ -330,7 +330,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_12">
+  <widget class="QLabel" name="robot_location_yaw_label">
    <property name="geometry">
     <rect>
      <x>200</x>

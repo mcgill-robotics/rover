@@ -23,6 +23,7 @@ import time
 
 #constants or ROS dependant variables 
 I_amp = 0.2 #current measured by sensor (A)
+V_V = 22.2 #Initial voltage 
 
 battery_1 = 22.0 * 3600.0 # Ahr/3600 = Q, charge of battery_1
 
@@ -62,12 +63,21 @@ class PowerManagement():
         #Find nbr seconds remaining at this rate
         self.seconds_remain = self.charge_remain/I_amp 
         return self.seconds_remain
+    
+    #The voltage discharge curve IS NOT PROVIDED IN THE DATASHEET.
+    #Lipo batteries have a fairly flat voltage curve.
+    #https://www.mpoweruk.com/performance.htm
+    def getVoltageCurve(self):
+        if (V_V <= 4.5):
+            raise ValueError('Voltage Critically Low. Recharge battery!')
+        
         
 #Unit Testing 
 
 M1 = PowerManagement(battery_1) #create a PowerManagement object
 while(1):
     M1.getTotalChargeDrawn()
+    M1.getVoltageCurve()
     print(M1.getPredictedBatteryLife())
     time.sleep(1) #pause for 1s
 

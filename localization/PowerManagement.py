@@ -25,6 +25,14 @@ import time
 I_amp = 0.2 #current measured by sensor (A)
 V_V = 22.2 #Initial voltage 
 
+""" Info about the battery
+    https://www.genstattu.com/ta-p2-25c-22000-6s1p-as150.html
+    configuration : 6S1P 
+    discharge : 25C
+    peak discharge : 50C
+    
+"""
+
 battery_1 = 22.0 * 3600.0 # Ahr/3600 = Q, charge of battery_1
 
 #objects    
@@ -53,6 +61,10 @@ class PowerManagement():
         #if more charge drawn than total capacity, raise error
         if (self.total_charge <= self.charge_drawn):
             raise ValueError('More charge drawn than total battery capacity')
+            
+        #if Discharge rate > 25C, raise an error 
+        if (I_amp * self.dt > 25):
+            raise ValueError('Discharge rate too high! Limit is 25C/s')
         
         return self.charge_drawn
         
@@ -67,8 +79,9 @@ class PowerManagement():
     #The voltage discharge curve IS NOT PROVIDED IN THE DATASHEET.
     #Lipo batteries have a fairly flat voltage curve.
     #https://www.mpoweruk.com/performance.htm
+    #https://www.dnkpower.com/lithium-polymer-battery-guide/
     def getVoltageCurve(self):
-        if (V_V <= 4.5):
+        if (V_V <= 20):
             raise ValueError('Voltage Critically Low. Recharge battery!')
         
         

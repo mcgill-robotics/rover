@@ -7,6 +7,7 @@
     <xacro:property name="wheel_kd" value="3" />
     <xacro:property name="wheel_mu1" value="10000000" />
     <xacro:property name="wheel_mu2" value="10000000" />
+	<xacro:property name="M_PI" value="3.14159265" />
 
 <xacro:macro name="wheel" params="wheel_prefix parent_link *joint_pose">
 
@@ -15,7 +16,7 @@
 			<inertial>
 				<mass value="0.144" />
 				<origin xyz="0 0 0" />
-				<inertia  ixx="0.00008929863" ixy="0" ixz="0" iyy="0.000168983" iyz="0" izz="0.00008929863" />
+				<inertia  ixx="0.00108333333333" ixy="0" ixz="0" iyy="0.00108333333333" iyz="0" izz="0.002" />
 			</inertial>
 			<visual>
 				<xacro:if value="$(arg mesh_enabled)">
@@ -45,7 +46,7 @@
 			<child link="${wheel_prefix}_wheel_link"/>
 			<xacro:insert_block name="joint_pose"/>
 			<axis xyz="0 1 0" rpy="0 0 0" />
-			<dynamics damping="0.5" friction="100.0" />
+			<dynamics damping="1" friction="100.0" />
 		</joint>
   
 		<gazebo reference="${wheel_prefix}_wheel_link">

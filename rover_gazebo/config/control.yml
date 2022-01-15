@@ -1,9 +1,9 @@
-joint_state_controller:
+rover_joint_state_controller:
   type: joint_state_controller/JointStateController
   publish_rate: 50
 
  
-velocity_controller:
+rover_velocity_controller:
     type        : "diff_drive_controller/DiffDriveController"
     left_wheel  : 'left_wheel'
     right_wheel : 'right_wheel'

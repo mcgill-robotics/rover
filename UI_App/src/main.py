@@ -20,6 +20,19 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # Listeners
         self.control_selector.currentTextChanged.connect(
             self.on_control_changed)
+        
+
+    def arm_error_toggle(self, signal):
+        '''
+        Takes in a boolean value for signal. If the signal is true, it changes error to red
+        otherwise it makes it green.
+        '''
+        
+        if signal == True:
+            self.Arm.error_label.setStyleSheet("QLabel {background:red}\n""")
+        else:
+            self.Arm.error_label.setStyleSheet("QLabel {background:green}\n""")
+
 
     def on_control_changed(self, value):
         '''
@@ -50,6 +63,7 @@ def main():
     app = qtw.QApplication([])
 
     window = UI()
+    window.arm_error_toggle(False)      # No errors in arm system at the start
     window.show()
 
 

@@ -11,7 +11,7 @@ class ScienceSystem:
         rospy.init_node("science_module_node")
 
         # default system attributes to true (i.e. on); based off ScienceFeedback.msg
-        self.SolenoidState = False
+        self.GripperState = False
         self.LedState = False
         self.PeltierState = False
         self.LaserState = False
@@ -23,8 +23,9 @@ class ScienceSystem:
         self.Stepper2Fault = False
 
         # stepper motor positions, speeds and modes
-        self.Stepper1 = StepperMotor()
-        self.Stepper2 = StepperMotor()
+        dt = 0.01
+        self.Stepper1 = StepperMotor(dt)
+        self.Stepper2 = StepperMotor(dt)
 
         self.StepperMotor1Pos = 0
         self.StepperMotor2Pos = 0
@@ -51,7 +52,7 @@ class ScienceSystem:
 
     def uiCall(self, msg):
         # bool states
-        self.SolenoidState = msg.SolenoidState
+        self.GripperState = msg.GripperState
         self.LedState = msg.LedState
         self.PeltierState = msg.PeltierState
         self.LaserState = msg.LaserState
@@ -129,7 +130,7 @@ class ScienceSystem:
 
             # create a new ScienceCmd msg and map with instance values
             newCmd = ScienceCmd()
-            newCmd.SolenoidState = self.SolenoidState
+            newCmd.GripperState = self.GripperState
             newCmd.LedState = self.LedState 
             newCmd.PeltierState = self.PeltierState 
             newCmd.LaserState = self.LaserState 

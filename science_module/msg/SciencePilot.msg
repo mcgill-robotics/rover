@@ -1,13 +1,13 @@
 bool LedState
 bool LaserState
-bool SolenoidState
+bool GripperState
 bool PeltierState
 bool CcdSensorSnap
 bool Shutdown
 float32 ContMotorSpeed
-int8 Stepper1ControlMode
-int8 Stepper2ControlMode
 float32 StepperMotor1Pos
 float32 StepperMotor2Pos
 float32 StepperMotor1Speed
 float32 StepperMotor2Speed
+uint32 Stepper1ControlMode
+uint32 Stepper2ControlMode

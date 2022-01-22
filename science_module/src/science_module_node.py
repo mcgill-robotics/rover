@@ -2,6 +2,9 @@
 
 # will need to publish a ScienceCmd msg to ROS
 import rospy
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentdir)
 from stepper_motor import StepperMotor
 from science_module.msg import ScienceCmd, ScienceFeedback, SciencePilot
 
@@ -23,7 +26,7 @@ class ScienceSystem:
         self.Stepper2Fault = False
 
         # stepper motor positions, speeds and modes
-        dt = 0.01
+        dt = 0.001
         self.Stepper1 = StepperMotor(dt)
         self.Stepper2 = StepperMotor(dt)
 
@@ -39,7 +42,7 @@ class ScienceSystem:
         self.ContMotorSpeed = 0
 
         # ROS publisher and subscribers from serial_node.py
-        self.science_control_publisher = rospy.Publisher("science_control_data", ScienceCmd)
+        self.science_control_publisher = rospy.Publisher("science_control_data", ScienceCmd, queue_size=1)
 
         # two subscribers (Science Pilot, science feedback)
         self.science_state_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.feedbackCall)
@@ -105,7 +108,7 @@ class ScienceSystem:
             
             # agitation mode
             elif self.Stepper1.mode == 3:
-                angle_stepper1 = self.Stepper1.AgitationModeControl(self.StepperMotor1Pos, self.StepperMotor1Speed)
+                angle_stepper1 = self.Stepper1.AgitationModeControl()
             
             # unsupported
             else:
@@ -122,7 +125,7 @@ class ScienceSystem:
             
             # agitation mode
             elif self.Stepper2.mode == 3:
-                angle_stepper2 = self.Stepper2.AgitationModeControl(self.StepperMotor2Pos, self.StepperMotor2Speed)
+                angle_stepper2 = self.Stepper2.AgitationModeControl()
             
             # unsupported
             else:

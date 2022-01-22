@@ -20,6 +20,7 @@ add_message_files(
   FILES
   ScienceCmd.msg
   ScienceFeedback.msg
+  SciencePilot.msg
   CcdData.msg
 )
 

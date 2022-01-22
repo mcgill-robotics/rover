@@ -15,11 +15,13 @@ class Node_ScienceSim():
     self.scienceCmdSubscriber = rospy.Subscriber("science_control_data", ScienceCmd, self.updateSim)
     self.scienceStatePublisher = rospy.Publisher("science_state_data", ScienceFeedback, queue_size=1)
 
-    # Filter carousel
-    self.filter_disk_center = (0,0)
-    self.tube_disk_center = (2,2)
-    self.filter_disk_radius = 1
-    self.tube_disk_radius = 1
+    # Carousel dimensions and info
+    self.filter_disk_center = (105,0)
+    self.tube_disk_center = (0,0)
+    self.filter_disk_radius = 60
+    self.tube_disk_radius = 60
+    self.tube_neighbor_offset = 14.4 * np.pi / 180
+    self.group_offset = np.pi/2
 
     # Control signals
     self.led_state = False
@@ -33,21 +35,21 @@ class Node_ScienceSim():
     self.tube_target_angle = 0
 
     # Control Light locations
-    self.led_light_pos      = (-1.5, 3)
-    self.laser_light_pos    = (-1.5, 2.6)
-    self.gripper_light_pos  = (-1.5, 2.2)
-    self.snapshot_light_pos = (-1.5, 1.8)
-    self.shutdown_light_pos = (-1.5, 1.4)
+    self.led_light_pos      = (-60, 110)
+    self.laser_light_pos    = (-20, 110)
+    self.gripper_light_pos  = (25, 110)
+    self.snapshot_light_pos = (70, 110)
+    self.shutdown_light_pos = (115, 110)
 
     # Simulation plot boundaries
-    self.x_max = 4
-    self.x_min = -2
-    self.y_max = 4
-    self.y_min = -2
+    self.x_max = 170
+    self.x_min = -70
+    self.y_max = 120
+    self.y_min = -120
 
     # Text displacement
-    self.text_x_adjust = 0.1
-    self.text_y_adjust = -0.1
+    self.text_x_adjust = 5
+    self.text_y_adjust = -5
 
     self.run()
 
@@ -59,8 +61,8 @@ class Node_ScienceSim():
     self.snapshot_state = cmd.CcdSensorSnap
     self.shutdown_state = cmd.Shutdown
     self.motor_speed = cmd.MotorSpeed
-    self.filter_target_angle = cmd.Stepper1IncAng
-    self.tube_target_angle = cmd.Stepper2IncAng
+    self.filter_target_angle = self.filter_target_angle + cmd.Stepper1IncAng
+    self.tube_target_angle = self.tube_target_angle + cmd.Stepper2IncAng
 
   
   def run(self):
@@ -75,18 +77,66 @@ class Node_ScienceSim():
       state_msg = ScienceFeedback()
 
       # Plot circle
-      filter_disk = plt.Circle(self.filter_disk_center, self.filter_disk_radius, color='blue')
-      tube_disk = plt.Circle(self.tube_disk_center, self.tube_disk_radius, color='green')
+      filter_disk = plt.Circle(self.filter_disk_center, self.filter_disk_radius, color='blue', alpha=0.2)
+      tube_disk = plt.Circle(self.tube_disk_center, self.tube_disk_radius, color='green', alpha=0.2)
 
-      # Plot angle indicator
-      x_filter = self.filter_disk_radius*np.cos(self.filter_target_angle)
-      y_filter = self.filter_disk_radius*np.sin(self.filter_target_angle)
+      # Plot angle indicators for 
+      x_filter_0 = self.filter_disk_radius*np.cos(self.filter_target_angle) + self.filter_disk_center[0]
+      y_filter_0 = self.filter_disk_radius*np.sin(self.filter_target_angle) + self.filter_disk_center[1]
+      
+      x_filter_90 = self.filter_disk_radius*np.cos(self.filter_target_angle + self.group_offset) + self.filter_disk_center[0]
+      y_filter_90 = self.filter_disk_radius*np.sin(self.filter_target_angle + self.group_offset) + self.filter_disk_center[1]
+      
+      x_filter_180 = self.filter_disk_radius*np.cos(self.filter_target_angle + 2*self.group_offset) + self.filter_disk_center[0]
+      y_filter_180 = self.filter_disk_radius*np.sin(self.filter_target_angle + 2*self.group_offset) + self.filter_disk_center[1]
+      
+      x_filter_270 = self.filter_disk_radius*np.cos(self.filter_target_angle + 3*self.group_offset) + self.filter_disk_center[0]
+      y_filter_270 = self.filter_disk_radius*np.sin(self.filter_target_angle + 3*self.group_offset) + self.filter_disk_center[1]
 
-      x_tube = self.filter_disk_radius*np.cos(self.tube_target_angle)
-      y_tube = self.filter_disk_radius*np.sin(self.tube_target_angle)
+      x_tube_0 = self.filter_disk_radius*np.cos(self.tube_target_angle) + self.tube_disk_center[0]
+      y_tube_0 = self.filter_disk_radius*np.sin(self.tube_target_angle) + self.tube_disk_center[1]
+      x_tube_0_left = self.filter_disk_radius*np.cos(self.tube_target_angle + self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_0_left = self.filter_disk_radius*np.sin(self.tube_target_angle + self.tube_neighbor_offset) + self.tube_disk_center[1]
+      x_tube_0_right = self.filter_disk_radius*np.cos(self.tube_target_angle - self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_0_right = self.filter_disk_radius*np.sin(self.tube_target_angle - self.tube_neighbor_offset) + self.tube_disk_center[1]
 
-      ax.plot(x_filter, y_filter, color='black', marker='o', markersize=10)
-      ax.plot(x_tube, y_tube, color='black', marker='o', markersize=10)
+      x_tube_90 = self.filter_disk_radius*np.cos(self.tube_target_angle + self.group_offset) + self.tube_disk_center[0]
+      y_tube_90 = self.filter_disk_radius*np.sin(self.tube_target_angle + self.group_offset) + self.tube_disk_center[1]
+      x_tube_90_left = self.filter_disk_radius*np.cos(self.tube_target_angle + self.group_offset + self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_90_left = self.filter_disk_radius*np.sin(self.tube_target_angle + self.group_offset + self.tube_neighbor_offset) + self.tube_disk_center[1]
+      x_tube_90_right = self.filter_disk_radius*np.cos(self.tube_target_angle + self.group_offset - self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_90_right = self.filter_disk_radius*np.sin(self.tube_target_angle + self.group_offset - self.tube_neighbor_offset) + self.tube_disk_center[1]
+
+      x_tube_180 = self.filter_disk_radius*np.cos(self.tube_target_angle + 2*self.group_offset) + self.tube_disk_center[0]
+      y_tube_180 = self.filter_disk_radius*np.sin(self.tube_target_angle + 2*self.group_offset) + self.tube_disk_center[1]
+      x_tube_180_left = self.filter_disk_radius*np.cos(self.tube_target_angle + 2*self.group_offset + self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_180_left = self.filter_disk_radius*np.sin(self.tube_target_angle + 2*self.group_offset + self.tube_neighbor_offset) + self.tube_disk_center[1]
+      x_tube_180_right = self.filter_disk_radius*np.cos(self.tube_target_angle + 2*self.group_offset - self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_180_right = self.filter_disk_radius*np.sin(self.tube_target_angle + 2*self.group_offset - self.tube_neighbor_offset) + self.tube_disk_center[1]
+
+      x_tube_270 = self.filter_disk_radius*np.cos(self.tube_target_angle + 3*self.group_offset) + self.tube_disk_center[0]
+      y_tube_270 = self.filter_disk_radius*np.sin(self.tube_target_angle + 3*self.group_offset) + self.tube_disk_center[1]
+      x_tube_270_left = self.filter_disk_radius*np.cos(self.tube_target_angle + 3*self.group_offset + self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_270_left = self.filter_disk_radius*np.sin(self.tube_target_angle + 3*self.group_offset + self.tube_neighbor_offset) + self.tube_disk_center[1]
+      x_tube_270_right = self.filter_disk_radius*np.cos(self.tube_target_angle + 3*self.group_offset - self.tube_neighbor_offset) + self.tube_disk_center[0]
+      y_tube_270_right = self.filter_disk_radius*np.sin(self.tube_target_angle + 3*self.group_offset - self.tube_neighbor_offset) + self.tube_disk_center[1]
+
+      ax.plot(x_filter_0, y_filter_0, color='blue', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_filter_90, y_filter_90, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_filter_180, y_filter_180, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_filter_270, y_filter_270, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_0, y_tube_0, color='green', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_0_left, y_tube_0_left, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_0_right, y_tube_0_right, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_90, y_tube_90, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_90_left, y_tube_90_left, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_90_right, y_tube_90_right, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_180, y_tube_180, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_180_left, y_tube_180_left, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_180_right, y_tube_180_right, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_270, y_tube_270, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_270_left, y_tube_270_left, color='black', marker='o', markersize=10, alpha=0.5)
+      ax.plot(x_tube_270_right, y_tube_270_right, color='black', marker='o', markersize=10, alpha=0.5)
 
       # Add carousels
       ax.add_patch(filter_disk)

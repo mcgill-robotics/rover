@@ -34,10 +34,19 @@
 
 #define ID 'a'
 
-bool syn2master(HardwareSerial Serial);
+
+//Will make a lib for that
+typedef struct {
+    float b[SERIAL_RX_BUFFER_SIZE/sizeof(float)];
+    size_t count;
+} FloatBuffer;
+FloatBuffer fbuf;
+
+void AddFloatToBuffer(FloatBuffer fb, float val);
+
 
 static char buffer[SERIAL_RX_BUFFER_SIZE];
-static float fbuffer[SERIAL_RX_BUFFER_SIZE];
+static float fbuff[SERIAL_RX_BUFFER_SIZE];
 
 
 void setup() {
@@ -47,31 +56,65 @@ void setup() {
 
 void loop() {
 
-  memset(fbuffer,0,SERIAL_RX_BUFFER_SIZE);
-  fbuffer[0]=(float) 5.23;
-  SerialAPI::send_bytes('0',fbuffer,sizeof(fbuffer[0]));
-
-
   /*
-   if(Serial.available() > 0) {
-      memset(buffer, 0,SERIAL_RX_BUFFER_SIZE);
+  //Ask permission to write (SYN request)
+  SerialAPI::send_bytes('S',"",0);
+
+  //Wait for answer
+  int tmp = Serial.available();
+  while(Serial.available()==tmp){delay(6000);}
+  //while(!SerialAPI::update()) delay(1000); //Doesn't take into account the bytes that we sent but don't want to clear buffer
+
+  //Read the answer
+  char buffer[SERIAL_RX_BUFFER_SIZE];
+  SerialAPI::read_data(buffer,sizeof(buffer));
+
+  Serial.write(buffer);
+
+  while(!(buffer[1] == 'Y')){
+    //Ask for a retransmit of wrong ID
+    SerialAPI::send_retransmit();
+
+    //Wait for answer
+    while(!SerialAPI::update()) delay(1000);
+
+    SerialAPI::read_data(buffer,sizeof(buffer));
+  }
+  
+
+  for(int i=0;i<5;i++){
+    SerialAPI::send_bytes('0',"YOO C MALADE",0);
+    digitalWrite(ob,LOW);
+    delay(1500);
+    digitalWrite(ob,HIGH);
+    delay(1500);
+  }
+
+  */
+
+   if(Serial.available() > 0)
+  {
+      memset(fbuff, 0,SERIAL_RX_BUFFER_SIZE);
+      memset(fbuf.b,0,SERIAL_RX_BUFFER_SIZE);
       //SerialAPI::update();
       //SerialAPI::read_data(buffer,sizeof(buffer));
 
       //const size_t bytes_read = Serial.readBytes(buffer, Serial.available());
 
+      AddFloatToBuffer(fbuf,939.69582);
+      AddFloatToBuffer(fbuf,410);
+      AddFloatToBuffer(fbuf,2.5);
 
-      delay(3000);
-      fbuffer[0]=(float) 5.23;
-      char str[6];
-      sprintf(str,"%.3f", fbuffer[0]);
-      Serial.println(str);
-      SerialAPI::send_bytes('1',fbuffer,sizeof(fbuffer[0]));
+      fbuff[0]=939.6958;
+      fbuff[1]=410;
+      fbuff[2]=2.5;
+
+      //SerialAPI::send_bytes('0',fbuf.b,fbuf.count*sizeof(float));
+      SerialAPI::send_bytes('4',fbuff,3*sizeof(float));
       
 
       delay(100);
    } 
-   */
    delay(3000);
 }
 
@@ -121,4 +164,15 @@ bool syn2master(HardwareSerial Serial){
   }
   return true;
 
+}
+
+
+//Will make a lib for that
+void AddFloatToBuffer(FloatBuffer fb,float val)
+{
+    if(fb.count < SERIAL_RX_BUFFER_SIZE/sizeof(float))
+    {
+        fb.b[fb.count] = val;
+        fb.count++;
+    }
 }

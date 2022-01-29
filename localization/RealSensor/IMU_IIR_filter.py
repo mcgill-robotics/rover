@@ -10,9 +10,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #Filter coefficients (poles at 3Hz and 60Hz)
-a = 0.05
-b = 12
-c = 9
+a = 900
+b = 1
+c = 190
+d = 900
 
 #Array to store data
 not_filtered_arr = []
@@ -25,12 +26,15 @@ class IIR_IMU():
     def __init__(self, a, b, c):
         self.y = [0, 0, 0] # [y[n], y[n-1], y[n-2]]
         self.x = [0, 0, 0] # [x[n], x[n-1], x[n-2]]
-        self.coeff = [a, b, c] #filter coefficients 
+        self.coeff = [a, b, c, d] #filter coefficients 
         
         
     def filter_IMU(self, x):
-        # y[n] = 1/a* (-b*y[n-1]-c*y[n-2]+x[n-2])
-        self.y[0] = 1/self.coeff[0] * (-self.coeff[1]*self.y[1]-self.coeff[2]*self.y[2]+self.x[2])
+        
+        # H[n] = a/(bs^2 + cs + d)
+        # y[n] = 1/b * ( -cy[n-1] -dy[n-2] + ax[n-2])
+        self.y[0] = 1/self.coeff[1] * (-self.coeff[2]*self.y[1] -self.coeff[3]*self.y[2] 
+                                       /+self.coeff[0]*self.x[2] )
         #push everything by 1 
         self.y = [self.y[0], self.y[0], self.y[1]]
         self.x = [x, self.x[0], self.x[1]]

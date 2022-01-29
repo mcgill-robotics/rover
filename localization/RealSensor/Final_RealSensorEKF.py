@@ -17,6 +17,8 @@ from geodesy import utm
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseWithCovariance
 
+from IMU_IIR_filter import IIR_IMU
+
 ''' BU353-S4 SENSOR DECLARATIONS '''
 # Variables for UTM point (easting and northing in meters)
 gps_easting = 0
@@ -70,6 +72,9 @@ tagArray = MarkerArray()
 # Initialize rover_ekf node to appear in rosnode list
 rospy.init_node("ekf_node")
 
+'''IMU filter INIT'''
+IMU_f = IIR_IMU(1, 100, 100)
+
 ### (UM7 IMU) ###   
 # Callback for UM7 IMU sensor (pose contains position for x y z, and orientation for x y z w)
 def imuCall(um7Data):
@@ -83,6 +88,8 @@ def imuCall(um7Data):
     # if um7_yaw < 0: um7_yaw += 360.0
     # if um7_roll < 0: um7_roll += 360.0
     # if um7_pitch < 0: um7_pitch += 360.0
+    
+    um7_yaw = IMU_f.filter_IMU(um7_yaw)
 
 # Subscribes to um7_data topic (UM7 IMU sensor)
 def imuSub():

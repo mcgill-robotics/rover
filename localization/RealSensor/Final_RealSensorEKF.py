@@ -75,7 +75,7 @@ tagArray = MarkerArray()
 rospy.init_node("ekf_node")
 
 '''IMU filter INIT'''
-IMU_f = IIR_IMU(900, 1, 190, 900)
+IMU_f = IIR_IMU(0.9)
 
 ### (UM7 IMU) ###   
 # Callback for UM7 IMU sensor (pose contains position for x y z, and orientation for x y z w)

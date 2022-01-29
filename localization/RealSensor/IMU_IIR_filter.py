@@ -12,10 +12,7 @@ import math
 import random 
 
 #Filter coefficients 
-a = 9000
-b = 1
-c = 190
-d = 9000
+a = 0.98
 
 #Array to store data
 not_filtered_arr = []
@@ -25,30 +22,23 @@ time = []
 #IIR filter
 class IIR_IMU():
     
-    def __init__(self, a, b, c, d):
-        self.y = [0, 0, 0] # [y[n], y[n-1], y[n-2]]
-        self.x = [0, 0, 0] # [x[n], x[n-1], x[n-2]]
-        self.coeff = [a, b, c, d] #filter coefficients 
+    def __init__(self, a):
+        self.y = 0
+        self.a = 0.9
         
-        
+        #https://fiiir.com/ 
     def filter_IMU(self, x):
-    
-        # H[n] = a/(bs^2 + cs + d)
-        # y[n] = 1/b * ( -cy[n-1] -dy[n-2] + ax[n-2])
-        self.y[0] = -self.coeff[2]*self.y[1] - self.coeff[3]*self.y[2] + self.coeff[0]*self.x[2] 
-        self.y[0] = 1/self.coeff[1] * self.y[0]
-        #push everything by 1 
-        self.y = [self.y[0], self.y[0], self.y[1]]
-        self.x = [x, self.x[0], self.x[1]]
-        return self.y[0]
+        # y[n] = (1-a)*x[n] + a*y[n-1]
+        self.y = (1-self.a)*x + self.a*self.y
+        return self.y
     
     def create_data(self, i):
         #really bad dataset, could be improved
-        return ( 3*math.sin(200*i) + 2*math.sin(100*i) + 100* math.sin(math.radians(20*i) ))
+        return ( 3*math.sin(200*i) + 2*math.sin(100*i) + 10* math.sin(math.radians(20*i) ))
 
 
 #loop 
-IIR_instance = IIR_IMU(a, b, c, d)
+IIR_instance = IIR_IMU(a)
 
 i = 0
 while (i < 400 ):    

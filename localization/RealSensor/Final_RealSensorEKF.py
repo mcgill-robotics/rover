@@ -17,6 +17,9 @@ from geodesy import utm
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import PoseWithCovariance
 
+from EKF_TrajectoryRecording import TrajectoryRec
+
+
 ''' BU353-S4 SENSOR DECLARATIONS '''
 # Variables for UTM point (easting and northing in meters)
 gps_easting = 0
@@ -353,6 +356,8 @@ def run_localization(rover_startState, rover_stdVel, rover_stdRot, tag_startStat
         # imu_list = [um7_roll, um7_pitch, um7_yaw]
         # cam_list = [t265_roll, t265_pitch, t265_yaw]
         rospy.loginfo(um7_yaw)
+
+        TrajectoryRec.recording(current_roverX,current_roverY,rover_ekf.state_est[2])
 
         # RVIZ sim 
         # Define AR tag location

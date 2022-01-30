@@ -28,12 +28,18 @@ How to use:
 
 #imports 
 import time
+import matplotlib.pyplot as plt
 
 #constants or ROS dependant variables 
-I_amp = 0.2 #current measured by sensor (A)
+I_amp = 20000 #current measured by sensor (A)
 V_V = 22.2 #Initial voltage 
 
-battery_1 = 22.0 * 3600.0 # Ahr/3600 = Q, charge of battery_1
+battery_1_Q = 22.0 * 3600.0 # Ahr/3600 = Q, charge of battery_1
+
+predicted_time_remaining = []
+percentage_left_arr_V = []
+percentage_left_arr_C = []
+time_arr = []
 
 #objects    
 class PowerManagement():
@@ -60,11 +66,11 @@ class PowerManagement():
         
         #if more charge drawn than total capacity, raise error
         if (self.total_charge <= self.charge_drawn):
-            raise ValueError('More charge drawn than total battery capacity')
+            print('More charge drawn than total battery capacity')
             
         #if Discharge rate > 25C, raise an error 
         if (I_amp > 25):
-            raise ValueError('Discharge rate too high! Limit is 25C/s')
+            print('Discharge rate too high! Limit is 25C/s')
         
         return self.charge_drawn
         
@@ -76,30 +82,74 @@ class PowerManagement():
         self.seconds_remain = self.charge_remain/I_amp 
         return self.seconds_remain
     
+    #get the percentage of battery life based only on remaining charge 
+    def getPercentageCurrent(self):
+        per = ((self.total_charge - self.charge_drawn)/self.total_charge) * 100
+        if (per < 15):
+            print('Voltage Critically Low (<15%). Recharge battery!')
+        if (per > 15):
+            return per
+    
     """The voltage discharge curve IS NOT PROVIDED IN THE DATASHEET.
         Lipo batteries have a fairly flat voltage curve.
         But, this value varies with load, temperature, internal impedance. 
         Readings on the subject:
         https://www.mpoweruk.com/performance.htm
         https://www.dnkpower.com/lithium-polymer-battery-guide/ 
+        https://blog.ampow.com/lipo-voltage-chart/ #Votlage curve here 
         State of Charge estimation (SoC):
             https://www.mpoweruk.com/soc.htm
         """
-    def getVoltageCurve(self):
-        if (V_V <= 20):
-            raise ValueError('Voltage Critically Low. Recharge battery!')
+        
+    """The voltage curve was calculated by assuming:
+        1.The voltage discharge curve is linear over the 3.75-4.11V range of the cell
+        2.I ignore the effect of temperature 
+    """
+    #get the percentage of battery life based only on voltage readings 
+    def getPercentageVoltage(self, V_V):
+        #if the voltage is really high, say it is >90%
+        if (V_V > 24.66):
+            return 90
+        #if the voltage is critically low, raise an error 
+        if (V_V <= 22.26):
+            print('Voltage Critically Low (<15%). Recharge battery!')
+        #if the voltage is in the right range, calculate the battery %
+        if (V_V <= 24.66 and V_V >= 22.5):
+            return (V_V-21.6693)/0.03323
         
         
+def PlotKF(time, position, ylabel, col): #Plots KF
+    plt.scatter(time, position, color=col, linestyle='--', linewidths=0.1, 
+                marker='o', label=ylabel)
+    plt.xlabel('time')
+    plt.ylabel(ylabel)
+    plt.yscale("linear")
+    plt.legend(loc='upper right')    
+    
+"For the sake of the test, I will generate voltage data to feed into getPercentageVoltage()"
+    
 #Unit Testing 
+M1 = PowerManagement(battery_1_Q) #create a PowerManagement object
+i = 0 #variable only used for plotting 
+while(i < 100):
+    time_arr.append(i) 
+    M1.getTotalChargeDrawn() #update the charge_drawn value 
+    
+    #generate fake data to feed into getPercentVoltage
+    fake_percentage = M1.getPercentageCurrent()
+    percentage_left_arr_C.append(fake_percentage)
+    fake_voltage = 0.03323*fake_percentage + 21.6693
+    #feed said data into function 
+    percentage_left_arr_V.append(M1.getPercentageVoltage(fake_voltage))
+    
+    predicted_time_remaining.append(M1.getPredictedBatteryLife())
+    time.sleep(0.01) #pause for 1s
+    i += 1
 
-M1 = PowerManagement(battery_1) #create a PowerManagement object
-while(1):
-    M1.getTotalChargeDrawn()
-    M1.getVoltageCurve()
-    print(M1.getPredictedBatteryLife())
-    time.sleep(1) #pause for 1s
-
-        
-
+PlotKF(time_arr, predicted_time_remaining, "predicted battery life (s)", "blue")  
+plt.show() 
+PlotKF(time_arr, percentage_left_arr_C, "percentage battery left (%) - Current", "blue")
+PlotKF(time_arr, percentage_left_arr_V, "percentage battery left (%) - Voltage", "green")     
+print("done calculating")
 
 

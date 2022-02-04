@@ -1,6 +1,7 @@
 #https://stackoverflow.com/questions/24074914/python-to-arduino-serial-read-write
 
 #!/usr/bin/python
+import sys
 import warnings
 import serial
 import serial.tools.list_ports
@@ -8,6 +9,7 @@ import time
 import struct
 
 START_OF_PACKET = '~'
+MAX_PACKET_SIZE = 255
 
 
 def main():
@@ -23,14 +25,12 @@ def main():
 
     #TEST
     while 1:
-        #msg = f'{}'.encode()
-        ba = bytearray(struct.pack("d", 5.23))
-        SERIAL.write(ba)
+        send_bytes(SERIAL, '0', [5.23, 9.6, 10.334])
         time.sleep(2)
         if SERIAL.inWaiting() > 0:
-            msg = read_serial(SERIAL)
+            formatted_msg, msg = read_bytes(SERIAL)
             time.sleep(2)
-            print("Message from arduino: " + msg)
+            print(f"Message from arduino: {formatted_msg} received as {msg}")
 
 
     print("This is main.py in SerialAPI")
@@ -51,10 +51,10 @@ def main():
         while not msg[1]=='F':
             while not SERIAL.inWaiting() > 0:
                 time.sleep(1)
-            msg = read_serial(SERIAL)  # read everything in the input buffer
+            formatted_msg, msg = read_bytes(SERIAL)  # read everything in the input buffer
 
             # Send ack for received message
-            print("Message from arduino: " + msg)
+            print(f"Message from arduino: {msg} received as {formatted_msg}")
             send_ack(SERIAL)
 
         send_finishAck(SERIAL)
@@ -65,10 +65,12 @@ def findArduinoPort():
     arduino_ports = [
         p.device
         for p in serial.tools.list_ports.comports()
-        if 'Arduino' in p.description  # may need tweaking to match new arduinos
+        if 'Arduino' or 'CH340' in p.description  # may need tweaking to match new arduinos
     ]
+    for p in serial.tools.list_ports.comports():
+        print(p)
     if not arduino_ports:
-        #raise IOError("No Arduino found")
+        raise IOError("No Arduino found")
         return False, None
     if len(arduino_ports) > 1:
         warnings.warn('Multiple Arduinos found - using the first')
@@ -94,71 +96,105 @@ def send_finishAck(SERIAL):
     return
 
 
-def read_serial(SERIAL):
+def read_bytes(SERIAL):
     msg = SERIAL.read(SERIAL.inWaiting())
-    if not (chr(msg[0])==START_OF_PACKET) and (chr(msg[1]) in ('0', '1','2','3','4','5','6','A','R','S','Y','F','Q')):
+    if not (chr(msg[0]) == START_OF_PACKET) or (chr(msg[1]) not in ('0', '1','2','3','4','5','6','A','R','S','Y','F','Q')):
         print(f"No frame detected: {msg}")
         return msg
 
+    print(msg)
+
     ID = chr(msg[1])
-    len = msg[2]
+    payload_len = msg[2]
+    sys_id = msg[3]
 
     #https://stackoverflow.com/questions/6999737/convert-from-hex-character-to-unicode-character-in-python
-    str_in = str(chr(msg[0]))+"ID:"+str(chr(msg[1]))+"  PayloadSize:"+str(msg[2])
+    str_in = str(chr(msg[0]))+"ID:"+chr(msg[1])+"  PayloadSize:"+str(payload_len)+"  SysID:"+chr(sys_id)
 
     #Conversion of payload based on ID
 
-    if ID in ('0', '1', '6'):
+    if ID in ('0', '1'):
         str_in+=" Floats:"
-        for i in range(3, 3+len, 4): #For each float (4 byte each starting at the third byte of the msg)
+        for i in range(3, 3+payload_len, 4): #For each float (4 byte each starting at the third byte of the msg)
             str_in+="'"
-            hexArray = ''
-            for j in range(4):
-                hexB = hex(msg[i+(3-j)])[2:] #Convert each int to hex and remove the 0x (in a reverse order because it's little endian)
-                                            # Example: 5.231 gives Zd\xa7@_ (5A 64 A7 40) which needs to be (40 A7 64 5A)
-                if hexB=='0':
-                    hexB+='0' #If the float is 0 the fromhex function doesn't  understand because it's only 1 byte
-                hexArray += hexB
-            raw_float = struct.unpack('!f', bytes.fromhex(hexArray))[0] #Unpack the raw float from the hex array
-            formatted_float = float("{:.3f}".format(raw_float)) #Format the float to be precise to 3 digits
+            byte_array = b''+ msg[i+3].to_bytes(1,'big') + msg[i+2].to_bytes(1,'big') + msg[i+1].to_bytes(1,'big') + msg[i].to_bytes(1,'big')
+            raw_float = struct.unpack('!f', byte_array)
+            formatted_float = float("{:.3f}".format(raw_float[0])) #Format the float to be precise to 3 digits
             str_in += str(formatted_float)
             str_in+="'"
-        str_in+="  Checksum:"+str(msg[2+len+1])
+        str_in+="  Checksum:"+str(msg[2+payload_len+1])
 
     if ID=='2':
+        #3691 int16(pixels)
         pass
 
     if ID=='3':
-        pass
+        str_in += " Int:"
+        str_in += "'"
+        byte_array = b'' + msg[6].to_bytes(1, 'big') + msg[5].to_bytes(1, 'big') + msg[4].to_bytes(1, 'big') + msg[3].to_bytes(1, 'big')
+        raw_int = struct.unpack('!i', byte_array)
+        str_in += str(raw_int[0])
+        str_in += "'"
+
+        str_in += " Float:"
+        str_in += "'"
+        byte_array = b'' + msg[10].to_bytes(1, 'big') + msg[9].to_bytes(1, 'big') + msg[8].to_bytes(1,'big') + msg[7].to_bytes(1, 'big')
+        raw_float = struct.unpack('!f', byte_array)
+        formatted_float = float("{:.4f}".format(raw_float[0]))  # Format the float to be precise to 3 digits
+        str_in += str(formatted_float)
+        str_in += "'"
+        str_in += "  Checksum:" + str(msg[2 + payload_len + 1])
 
     if ID=='4':
         str_in+=" Floats:"
-        for i in range(3, 3+len, 4): #For each float (4 byte each starting at the third byte of the msg)
+        for i in range(3, 3+payload_len, 4): #For each float (4 byte each starting at the third byte of the msg)
             str_in+="'"
-            hexArray = ''
-            for j in range(4):
-                hexB = hex(msg[i+(3-j)])[2:] #Convert each int to hex and remove the 0x (in a reverse order because it's little endian)
-                if hexB=='0':
-                    hexB+='0' #If the float is 0 the fromhex function doesn't  understand because it's only 1 byte
-                hexArray += hexB
-            raw_float = struct.unpack('!f', bytes.fromhex(hexArray))[0] #Unpack the raw float from the hex array
-            formatted_float = float("{:.4f}".format(raw_float)) #Format the float to be precise to 4 digits
+            byte_array = b'' + msg[i+3].to_bytes(1,'big') + msg[i+2].to_bytes(1,'big') + msg[i+1].to_bytes(1,'big') + msg[i].to_bytes(1,'big')
+            raw_float = struct.unpack('!f', byte_array)
+            formatted_float = float("{:.4f}".format(raw_float[0])) #Format the float to be precise to 3 digits
             str_in += str(formatted_float)
             str_in+="'"
-        str_in+="  Checksum:"+str(msg[2+len+1])
+        str_in+="  Checksum:"+str(msg[2+payload_len+1])
 
     if ID=='5':
-        pass
+        str_in+=" Bits:"
+        for i in range(3, 3+payload_len):
+            str_in += "'"
+            str_in += msg[i]
+            str_in += "'"
+        str_in += "  Checksum:" + str(msg[2 + payload_len + 1])
 
     if ID in ('A', 'R', 'S', 'Y', 'F', 'Q'):
-        pass
+        str_in += "  Checksum:" + str(msg[3])
 
-    if ID=='STRING':
-        for i in range(3, 3+len):
-            str_in += chr(msg[i])
-        str_in+=str(msg[2+len+1])
+    return str_in, msg
 
-    return str_in
+
+def send_bytes(SERIAL, packet_id, data):
+
+    if packet_id in ('0', '1', '6'):
+        length = len(data)
+
+
+    packet_size = 2*length + 4 #2 character for each float (hex notation) so length * 2 for packet_size
+    if packet_size >= MAX_PACKET_SIZE:
+        return False
+
+
+    #Convert the data to bytes
+    data_hex_array = []
+    for i in range(length):
+        hex_value = str(hex(struct.unpack('<I', struct.pack('<f', data[i]))[0])) #Use [2:] to convert to hex string without the 0x
+        data_hex_array.append(hex_value)
+
+    output_byte_string = ''.join([START_OF_PACKET, packet_id, chr(packet_size)]+data_hex_array)
+
+    #output_buffer[packet_size - 1] = crc8ccitt(output_buffer + DATA_SEGMENT_OFFSET, len);
+
+    byte_array = bytes(output_byte_string, 'unicode_escape')
+    SERIAL.write(byte_array)
+    print(f'Sending {START_OF_PACKET + packet_id + " " + str(packet_size) + " " + str(data)} as {byte_array}')
+    return True
 
 
 
@@ -168,7 +204,7 @@ def synchronisation(SERIAL):
         return False
 
     # Read everything in the input buffer
-    msg = read_serial(SERIAL)
+    msg = read_bytes(SERIAL)
     print("Message from arduino: " + msg)
     if not msg[1] == 'S':
         print("No synchronisation")
@@ -188,7 +224,7 @@ def synchronisation(SERIAL):
         time.sleep(1)
 
     #Read message
-    msg = read_serial(SERIAL)
+    msg = read_bytes(SERIAL)
     print("Message from arduino: " + msg)
     if not msg[1] == 'A':
         print("Message not acknowledged")

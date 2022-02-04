@@ -47,6 +47,7 @@ void AddFloatToBuffer(FloatBuffer fb, float val);
 
 static char buffer[SERIAL_RX_BUFFER_SIZE];
 static float fbuff[SERIAL_RX_BUFFER_SIZE];
+static int ibuff[SERIAL_RX_BUFFER_SIZE];
 
 
 void setup() {
@@ -92,25 +93,65 @@ void loop() {
 
   */
 
+      char* s = "0x40a75c29";
+      uint32_t num;
+      float f;
+      sscanf(s, "%x", &num);  // assuming you checked input
+      f = *((float*)&num);
+
+      char* buf;
+      sprintf(buf, "%.3f", f);
+      Serial.println(buf);
+      Serial.println(num);
+      Serial.println(f);
+      delay(1000);
+
+
    if(Serial.available() > 0)
   {
       memset(fbuff, 0,SERIAL_RX_BUFFER_SIZE);
       memset(fbuf.b,0,SERIAL_RX_BUFFER_SIZE);
-      //SerialAPI::update();
+
+      memset(buffer, 0, SERIAL_RX_BUFFER_SIZE);
+      //while(!SerialAPI::update()) delay(10);
       //SerialAPI::read_data(buffer,sizeof(buffer));
 
-      //const size_t bytes_read = Serial.readBytes(buffer, Serial.available());
+      const size_t bytes_read = Serial.readBytes(buffer, Serial.available());
 
-      AddFloatToBuffer(fbuf,939.69582);
-      AddFloatToBuffer(fbuf,410);
-      AddFloatToBuffer(fbuf,2.5);
+      /*
+      CONVERT THE VALUE RECEIVED TO HEX / DECODE WHAT WAS SENT BY PYTHON
+      OR
+      MAKE PYTHON SEND HEX FORMATTED DATA
+      */  
+
+      //char* msg;
+      //memcpy(msg, buffer+2, bytes_read-3);
 
       fbuff[0]=939.6958;
       fbuff[1]=410;
-      fbuff[2]=2.5;
-
+      fbuff[2]=50;
       //SerialAPI::send_bytes('0',fbuf.b,fbuf.count*sizeof(float));
-      SerialAPI::send_bytes('4',fbuff,3*sizeof(float));
+      //SerialAPI::send_bytes('4',fbuff,3*sizeof(float));
+
+      SerialAPI::send_bytes('1', buffer, bytes_read);
+
+      for (int i=0; i<buffer[2]-3; i++){
+        
+      }
+
+      delay(100);
+
+      //if (bytes_read>0)
+      if (buffer[0]=='~')
+      {
+        for (int i=0;i<5;i++)
+        {
+        digitalWrite(ob,1);           
+        delay(100);                                      
+        digitalWrite(ob,0);          
+        delay(100);
+        }
+      }
       
 
       delay(100);
@@ -175,4 +216,12 @@ void AddFloatToBuffer(FloatBuffer fb,float val)
         fb.b[fb.count] = val;
         fb.count++;
     }
+}
+
+
+
+
+
+void decode_msg(char* buffer){
+
 }

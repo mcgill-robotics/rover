@@ -37,6 +37,11 @@ class CamFeed(QWidget):
         super().__init__()
         self.setWindowTitle("Camera Feed")
 
+        # intialize thread + connect signal received from thread (video data) to update image function
+        newThread = Thread(self)
+        newThread.pixmapSignal.connect(self.updateImage)
+        newThread.start()
+
         # label that will hold the OpenCv video data
         self.img_label = QLabel(self)
         self.txt_label = QLabel("Displaying camera feed...")
@@ -47,15 +52,11 @@ class CamFeed(QWidget):
         layout.addWidget(self.txt_label)
 
         self.setLayout(layout)
-
-        # intialize thread + connect signal received from thread (video data) to update image function
-        newThread = Thread(self)
-        newThread.pixmapSignal.connect(self.updateImage)
-        newThread.start()
         
         # display widget
         self.show()
 
-app = QApplication(sys.argv)
-feed = CamFeed()
-sys.exit(app.exec_())
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    feed = CamFeed()
+    sys.exit(app.exec_())

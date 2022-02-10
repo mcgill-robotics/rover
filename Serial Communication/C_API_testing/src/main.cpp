@@ -2,6 +2,19 @@
 #include <Rover_SerialAPI.h>
 #include <stdio.h>
 
+
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0') 
+
+
 //https://www.google.com/search?q=upload+code+to+arduino+with+platform+io&rlz=1C1SQJL_frCA922CA922&oq=upload+code+to+arduino+with+plat&aqs=chrome.1.69i57j33i22i29i30l2.7350j1j7&sourceid=chrome&ie=UTF-8#kpvalbx=_f9vpYdOvCf-ZptQP14KwgAI14
 
   /*
@@ -42,13 +55,13 @@ typedef struct {
 } FloatBuffer;
 FloatBuffer fbuf;
 
+
 void AddFloatToBuffer(FloatBuffer fb, float val);
+void print_byte_array(byte* byte_array, size_t size);
+void char_to_float(char* str_byte, float* f);
 
 
 static char buffer[SERIAL_RX_BUFFER_SIZE];
-static float fbuff[SERIAL_RX_BUFFER_SIZE];
-static int ibuff[SERIAL_RX_BUFFER_SIZE];
-
 
 void setup() {
   pinMode(ob, OUTPUT);
@@ -57,106 +70,23 @@ void setup() {
 
 void loop() {
 
-  /*
-  //Ask permission to write (SYN request)
-  SerialAPI::send_bytes('S',"",0);
-
-  //Wait for answer
-  int tmp = Serial.available();
-  while(Serial.available()==tmp){delay(6000);}
-  //while(!SerialAPI::update()) delay(1000); //Doesn't take into account the bytes that we sent but don't want to clear buffer
-
-  //Read the answer
-  char buffer[SERIAL_RX_BUFFER_SIZE];
-  SerialAPI::read_data(buffer,sizeof(buffer));
-
-  Serial.write(buffer);
-
-  while(!(buffer[1] == 'Y')){
-    //Ask for a retransmit of wrong ID
-    SerialAPI::send_retransmit();
-
-    //Wait for answer
-    while(!SerialAPI::update()) delay(1000);
-
-    SerialAPI::read_data(buffer,sizeof(buffer));
-  }
-  
-
-  for(int i=0;i<5;i++){
-    SerialAPI::send_bytes('0',"YOO C MALADE",0);
-    digitalWrite(ob,LOW);
-    delay(1500);
-    digitalWrite(ob,HIGH);
-    delay(1500);
-  }
-
-  */
-
-      char* s = "0x40a75c29";
-      uint32_t num;
-      float f;
-      sscanf(s, "%x", &num);  // assuming you checked input
-      f = *((float*)&num);
-
-      char* buf;
-      sprintf(buf, "%.3f", f);
-      Serial.println(buf);
-      Serial.println(num);
-      Serial.println(f);
-      delay(1000);
 
 
    if(Serial.available() > 0)
   {
-      memset(fbuff, 0,SERIAL_RX_BUFFER_SIZE);
-      memset(fbuf.b,0,SERIAL_RX_BUFFER_SIZE);
-
       memset(buffer, 0, SERIAL_RX_BUFFER_SIZE);
-      //while(!SerialAPI::update()) delay(10);
-      //SerialAPI::read_data(buffer,sizeof(buffer));
-
-      const size_t bytes_read = Serial.readBytes(buffer, Serial.available());
-
-      /*
-      CONVERT THE VALUE RECEIVED TO HEX / DECODE WHAT WAS SENT BY PYTHON
-      OR
-      MAKE PYTHON SEND HEX FORMATTED DATA
-      */  
-
-      //char* msg;
-      //memcpy(msg, buffer+2, bytes_read-3);
-
-      fbuff[0]=939.6958;
-      fbuff[1]=410;
-      fbuff[2]=50;
-      //SerialAPI::send_bytes('0',fbuf.b,fbuf.count*sizeof(float));
-      //SerialAPI::send_bytes('4',fbuff,3*sizeof(float));
-
-      SerialAPI::send_bytes('1', buffer, bytes_read);
-
-      for (int i=0; i<buffer[2]-3; i++){
-        
-      }
-
-      delay(100);
-
-      //if (bytes_read>0)
-      if (buffer[0]=='~')
-      {
-        for (int i=0;i<5;i++)
-        {
-        digitalWrite(ob,1);           
-        delay(100);                                      
-        digitalWrite(ob,0);          
-        delay(100);
-        }
-      }
       
+      
+      while(!SerialAPI::update()) delay(10);
+      int cur_pack_id = SerialAPI::read_data(buffer,sizeof(buffer));
+      const size_t payload_size = strlen(buffer);
+
+      SerialAPI::send_bytes('1', buffer, payload_size);
 
       delay(100);
    } 
-   delay(3000);
+
+     delay(10);
 }
 
 
@@ -176,37 +106,6 @@ void serialEvent()
 
 
 
-bool syn2master(HardwareSerial Serial){
-   //Ask permission to write (SYN request)
-  SerialAPI::send_bytes('S',"",0);
-
-  //Wait for answer
-  int tmp = Serial.available();
-  while(Serial.available()==tmp) delay(1000);
-  //while(!SerialAPI::update()) delay(1000); //Doesn't take into account the bytes that we sent but don't want to clear buffer
-
-  //Read the answer
-  char buffer[SERIAL_RX_BUFFER_SIZE];
-  SerialAPI::read_data(buffer,sizeof(buffer));
-
-  Serial.write(buffer);
-
-  while(!(buffer[1] == 'Y')){
-    char buffer[SERIAL_RX_BUFFER_SIZE];
-
-    //Ask for a retransmit of wrong ID
-    SerialAPI::send_retransmit();
-
-    //Wait for answer
-    int tmp = Serial.available();
-    while(Serial.available()==tmp) delay(1000);
-
-    SerialAPI::read_data(buffer,sizeof(buffer));
-  }
-  return true;
-
-}
-
 
 //Will make a lib for that
 void AddFloatToBuffer(FloatBuffer fb,float val)
@@ -224,4 +123,76 @@ void AddFloatToBuffer(FloatBuffer fb,float val)
 
 void decode_msg(char* buffer){
 
+}
+
+
+
+void sync(void){
+  //Ask permission to write (SYN request)
+  SerialAPI::send_bytes('S',"",0);
+
+  //Wait for answer
+  int tmp = Serial.available();
+  while(Serial.available()==tmp){delay(6000);}
+  //while(!SerialAPI::update()) delay(1000); //Doesn't take into account the bytes that we sent but don't want to clear buffer
+
+  //Read the answer
+  char buffer[SERIAL_RX_BUFFER_SIZE];
+  SerialAPI::read_data(buffer,sizeof(buffer));
+
+  Serial.write(buffer);
+
+  while(!(buffer[1] == 'Y')){
+    memset(buffer,0,SERIAL_RX_BUFFER_SIZE);
+
+    //Ask for a retransmit of wrong ID
+    SerialAPI::send_retransmit();
+
+    //Wait for answer
+    while(!SerialAPI::update()) delay(1000);
+
+    //int tmp = Serial.available();
+    //while(Serial.available()==tmp) delay(1000);
+
+    SerialAPI::read_data(buffer,sizeof(buffer));
+  }
+  
+
+  //External validation
+  for(int i=0;i<5;i++){
+    digitalWrite(ob,LOW);
+    delay(200);
+    digitalWrite(ob,HIGH);
+    delay(200);
+  }
+}
+
+
+
+void print_byte_array(byte* byte_array, size_t size){
+  char buffer[1];
+  memset(buffer,0,1);
+  for (int i = 0; i<size;i++){
+    sprintf(buffer, BYTE_TO_BINARY_PATTERN" ", BYTE_TO_BINARY(byte(byte_array[i])));
+    Serial.print(buffer);
+  }
+}
+
+
+void char_to_float(char* str_byte, float* f){
+  char array[4];
+
+  #ifdef BIGENDIAN
+  array[0] = byte(str_byte[3]);
+  array[1] = byte(str_byte[2]);
+  array[2] = byte(str_byte[1]);
+  array[3] = byte(str_byte[0]);
+  #else 
+  array[0] = byte(str_byte[0]);
+  array[1] = byte(str_byte[1]);
+  array[2] = byte(str_byte[2]);
+  array[3] = byte(str_byte[3]);
+  #endif
+
+  memcpy(f,array,4);
 }

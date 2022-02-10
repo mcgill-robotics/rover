@@ -28,7 +28,7 @@ def main():
         send_bytes(SERIAL, '0', [5.23, 9.6, 10.334])
         time.sleep(2)
         if SERIAL.inWaiting() > 0:
-            formatted_msg, msg = read_bytes(SERIAL)
+            formatted_msg, msg = read_serial_bytes(SERIAL)
             time.sleep(2)
             print(f"Message from arduino: {formatted_msg} received as {msg}")
 
@@ -51,7 +51,7 @@ def main():
         while not msg[1]=='F':
             while not SERIAL.inWaiting() > 0:
                 time.sleep(1)
-            formatted_msg, msg = read_bytes(SERIAL)  # read everything in the input buffer
+            formatted_msg, msg = read_serial_bytes(SERIAL)  # read everything in the input buffer
 
             # Send ack for received message
             print(f"Message from arduino: {msg} received as {formatted_msg}")
@@ -96,26 +96,31 @@ def send_finishAck(SERIAL):
     return
 
 
-def read_bytes(SERIAL):
+def read_serial_bytes(SERIAL: serial.serialwin32.Serial):
     msg = SERIAL.read(SERIAL.inWaiting())
-    if not (chr(msg[0]) == START_OF_PACKET) or (chr(msg[1]) not in ('0', '1','2','3','4','5','6','A','R','S','Y','F','Q')):
+    if not (chr(msg[0]) == START_OF_PACKET) or (chr(msg[1]) not in ('0','1','2','A','R','S','Y','F','Q')):
         print(f"No frame detected: {msg}")
-        return msg
-
-    print(msg)
+        return "", msg
 
     ID = chr(msg[1])
     payload_len = msg[2]
-    sys_id = msg[3]
 
-    #https://stackoverflow.com/questions/6999737/convert-from-hex-character-to-unicode-character-in-python
-    str_in = str(chr(msg[0]))+"ID:"+chr(msg[1])+"  PayloadSize:"+str(payload_len)+"  SysID:"+chr(sys_id)
+    str_in = str(chr(msg[0]))+"ID:"+chr(msg[1])+"  PayloadSize:"+str(payload_len)
+
 
     #Conversion of payload based on ID
 
-    if ID in ('0', '1'):
-        str_in+=" Floats:"
-        for i in range(3, 3+payload_len, 4): #For each float (4 byte each starting at the third byte of the msg)
+    if ID in ('A', 'R', 'S', 'Y', 'F', 'Q'):
+        print(f"Arduino sent: {ID}")
+
+        #If more byte on the serial
+        if len(msg) > 2:
+            return read_string_bytes(msg[2:])
+
+    elif ID in ('0', '1'):
+        sys_id = msg[3]
+        str_in+= "  SysID:" + chr(sys_id) + " Floats:"
+        for i in range(4, 4+payload_len, 4): #For each float (4 byte each starting at the third byte of the msg)
             str_in+="'"
             byte_array = b''+ msg[i+3].to_bytes(1,'big') + msg[i+2].to_bytes(1,'big') + msg[i+1].to_bytes(1,'big') + msg[i].to_bytes(1,'big')
             raw_float = struct.unpack('!f', byte_array)
@@ -124,10 +129,14 @@ def read_bytes(SERIAL):
             str_in+="'"
         str_in+="  Checksum:"+str(msg[2+payload_len+1])
 
-    if ID=='2':
+    elif ID=='2':
         #3691 int16(pixels)
         pass
 
+    return str_in, msg
+
+    #Keeping this because it might be useful if we rework the serial api
+    """
     if ID=='3':
         str_in += " Int:"
         str_in += "'"
@@ -163,37 +172,110 @@ def read_bytes(SERIAL):
             str_in += msg[i]
             str_in += "'"
         str_in += "  Checksum:" + str(msg[2 + payload_len + 1])
+    """
 
-    if ID in ('A', 'R', 'S', 'Y', 'F', 'Q'):
-        str_in += "  Checksum:" + str(msg[3])
+
+
+def read_string_bytes(msg: str):
+    if not (chr(msg[0]) == START_OF_PACKET) or (chr(msg[1]) not in ('0','1','2','A','R','S','Y','F','Q')):
+        print(f"No frame detected: {msg}")
+        return "", msg
+
+    ID = chr(msg[1])
+    payload_len = msg[2]
+    sys_id = msg[3]
+
+    str_in = str(chr(msg[0]))+"ID:"+chr(msg[1])+"  PayloadSize:"+str(payload_len)+"  SysID:"+chr(sys_id)
+
+
+    #Conversion of payload based on ID
+
+    if ID in ('0', '1'):
+        str_in+=" Floats:"
+        for i in range(4, 4+payload_len-1, 4): #For each float (4 byte each starting at the third byte of the msg)
+            str_in+="'"
+            byte_array = b''+ msg[i+3].to_bytes(1,'big') + msg[i+2].to_bytes(1,'big') + msg[i+1].to_bytes(1,'big') + msg[i].to_bytes(1,'big')
+            raw_float = struct.unpack('!f', byte_array)
+            formatted_float = float("{:.3f}".format(raw_float[0])) #Format the float to be precise to 3 digits
+            str_in += str(formatted_float)
+            str_in+="'"
+        str_in+="  Checksum:"+str(msg[2+payload_len+1])
+
+    elif ID=='2':
+        #3691 int16(pixels)
+        pass
 
     return str_in, msg
 
 
-def send_bytes(SERIAL, packet_id, data):
-
-    if packet_id in ('0', '1', '6'):
-        length = len(data)
 
 
-    packet_size = 2*length + 4 #2 character for each float (hex notation) so length * 2 for packet_size
+
+#https://stackoverflow.com/questions/8751653/how-to-convert-a-binary-string-into-a-float-value
+#For the next three functions
+def bin_to_float(b):
+    """ Convert binary string to a float. """
+    bf = int_to_bytes(int(b, 2), 8)  # 8 bytes needed for IEEE 754 binary64.
+    return struct.unpack('>d', bf)[0]
+
+
+def int_to_bytes(n, length):  # Helper function
+    """ Int/long to byte string.
+
+        Python 3.2+ has a built-in int.to_bytes() method that could be used
+        instead, but the following works in earlier versions including 2.x.
+    """
+    return decode('%%0%dx' % (length << 1) % n, 'hex')[-length:]
+
+
+def float_to_bin(value):  # For testing.
+    """ Convert float to 64-bit binary string. """
+    #[d] = struct.unpack(">Q", struct.pack(">d", value))
+    #return '{:064b}'.format(d)
+    """ Convert float to 32-bit binary string. """
+    [f] = struct.unpack(">L", struct.pack(">f", value))
+    return struct.pack("i",f) #pack the in as 4 bytes
+    #return bin(f)
+    #return '{:032b}'.format(f)
+
+
+
+
+def send_bytes(SERIAL, packet_id, data, system_id='N'):
+
+    length = len(data)
+
+    if packet_id in ('0', '1'):
+        payload_size = 4 * length + 1 #Add system ID to payload size (assuming it is not in the data array)
+
+    if packet_id in ('2'):
+        payload_size = 2 * length #Pixels are two bytes
+
+    packet_size = 3 + payload_size + 1
+
     if packet_size >= MAX_PACKET_SIZE:
         return False
 
+    checksum = 19 #write function to calculate it
 
-    #Convert the data to bytes
-    data_hex_array = []
-    for i in range(length):
-        hex_value = str(hex(struct.unpack('<I', struct.pack('<f', data[i]))[0])) #Use [2:] to convert to hex string without the 0x
-        data_hex_array.append(hex_value)
+    # Convert the data to bytes
 
-    output_byte_string = ''.join([START_OF_PACKET, packet_id, chr(packet_size)]+data_hex_array)
+    byte_array = struct.pack("ccc",
+                             START_OF_PACKET.encode('ascii'),
+                             packet_id.encode('ascii'),
+                             payload_size.to_bytes(1,'big'))
 
-    #output_buffer[packet_size - 1] = crc8ccitt(output_buffer + DATA_SEGMENT_OFFSET, len);
+    if packet_id in ('0', '1'):
+        byte_array += system_id.encode('ascii')
+        for float_value in data:
+            byte_array += float_to_bin(float_value)
 
-    byte_array = bytes(output_byte_string, 'unicode_escape')
+
+
+    byte_array += struct.pack("c",checksum.to_bytes(1,'big'))
+
     SERIAL.write(byte_array)
-    print(f'Sending {START_OF_PACKET + packet_id + " " + str(packet_size) + " " + str(data)} as {byte_array}')
+    print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {data} {checksum} as {byte_array}')
     return True
 
 
@@ -204,7 +286,7 @@ def synchronisation(SERIAL):
         return False
 
     # Read everything in the input buffer
-    msg = read_bytes(SERIAL)
+    msg = read_serial_bytes(SERIAL)
     print("Message from arduino: " + msg)
     if not msg[1] == 'S':
         print("No synchronisation")
@@ -224,7 +306,7 @@ def synchronisation(SERIAL):
         time.sleep(1)
 
     #Read message
-    msg = read_bytes(SERIAL)
+    msg = read_serial_bytes(SERIAL)
     print("Message from arduino: " + msg)
     if not msg[1] == 'A':
         print("Message not acknowledged")
@@ -250,3 +332,4 @@ if __name__=="__main__":
 # print("Python value sent: ")
 # print(f"{speed} = {struct.unpack('f',data)}")
 # SERIAL.write(data)
+

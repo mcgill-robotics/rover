@@ -4,12 +4,17 @@ import numpy as np
 import os
 import sys
 
+
 dir = os.path.dirname(__file__)
 filename = os.path.join(dir, '../../src/depth_camera_pointcloud')
 sys.path.insert(0,filename)
 
 import render_camera_data as rcdPy
 import pyrealsense2 as rs
+import csv
+
+f = open('./points.csv','w')
+writer = csv.writer(f)
 
 # Majority of code was taken from an example provided by librealsense; found here:
 # https://github.com/IntelRealSense/librealsense/blob/development/wrappers/python/examples/opencv_pointcloud_viewer.py
@@ -99,6 +104,9 @@ while True:
         v, t = points.get_vertices(), points.get_texture_coordinates()
         verts = np.asanyarray(v).view(np.float32).reshape(-1, 3)  # xyz
         texcoords = np.asanyarray(t).view(np.float32).reshape(-1, 2)  # uv
+        writer.writerow(verts)
+        break
+
 
     # Render
     now = time.time()
@@ -157,3 +165,4 @@ while True:
 
 # Stop streaming
 pipeline.stop()
+f.close()

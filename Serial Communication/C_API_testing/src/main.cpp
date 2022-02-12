@@ -133,8 +133,7 @@ void sync(void){
 
   //Wait for answer
   int tmp = Serial.available();
-  while(Serial.available()==tmp){delay(6000);}
-  //while(!SerialAPI::update()) delay(1000); //Doesn't take into account the bytes that we sent but don't want to clear buffer
+  while(!SerialAPI::update()) delay(1000);
 
   //Read the answer
   char buffer[SERIAL_RX_BUFFER_SIZE];

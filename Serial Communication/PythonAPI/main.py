@@ -24,7 +24,7 @@ def main():
 
 
     #TEST
-    while 1:
+    while 0:
         send_bytes(SERIAL, '0', [5.23, 9.6, 10.334])
         time.sleep(2)
         if SERIAL.inWaiting() > 0:
@@ -135,53 +135,13 @@ def read_serial_bytes(SERIAL: serial.serialwin32.Serial):
 
     return str_in, msg
 
-    #Keeping this because it might be useful if we rework the serial api
-    """
-    if ID=='3':
-        str_in += " Int:"
-        str_in += "'"
-        byte_array = b'' + msg[6].to_bytes(1, 'big') + msg[5].to_bytes(1, 'big') + msg[4].to_bytes(1, 'big') + msg[3].to_bytes(1, 'big')
-        raw_int = struct.unpack('!i', byte_array)
-        str_in += str(raw_int[0])
-        str_in += "'"
-
-        str_in += " Float:"
-        str_in += "'"
-        byte_array = b'' + msg[10].to_bytes(1, 'big') + msg[9].to_bytes(1, 'big') + msg[8].to_bytes(1,'big') + msg[7].to_bytes(1, 'big')
-        raw_float = struct.unpack('!f', byte_array)
-        formatted_float = float("{:.4f}".format(raw_float[0]))  # Format the float to be precise to 3 digits
-        str_in += str(formatted_float)
-        str_in += "'"
-        str_in += "  Checksum:" + str(msg[2 + payload_len + 1])
-
-    if ID=='4':
-        str_in+=" Floats:"
-        for i in range(3, 3+payload_len, 4): #For each float (4 byte each starting at the third byte of the msg)
-            str_in+="'"
-            byte_array = b'' + msg[i+3].to_bytes(1,'big') + msg[i+2].to_bytes(1,'big') + msg[i+1].to_bytes(1,'big') + msg[i].to_bytes(1,'big')
-            raw_float = struct.unpack('!f', byte_array)
-            formatted_float = float("{:.4f}".format(raw_float[0])) #Format the float to be precise to 3 digits
-            str_in += str(formatted_float)
-            str_in+="'"
-        str_in+="  Checksum:"+str(msg[2+payload_len+1])
-
-    if ID=='5':
-        str_in+=" Bits:"
-        for i in range(3, 3+payload_len):
-            str_in += "'"
-            str_in += msg[i]
-            str_in += "'"
-        str_in += "  Checksum:" + str(msg[2 + payload_len + 1])
-    """
-
-
 
 def read_string_bytes(msg: str):
     if not (chr(msg[0]) == START_OF_PACKET) or (chr(msg[1]) not in ('0','1','2','A','R','S','Y','F','Q')):
         print(f"No frame detected: {msg}")
         return "", msg
 
-    ID = chr(msg[1])
+    ID = chr(msg[1])#
     payload_len = msg[2]
     sys_id = msg[3]
 
@@ -259,7 +219,6 @@ def send_bytes(SERIAL, packet_id, data, system_id='N'):
     checksum = 19 #write function to calculate it
 
     # Convert the data to bytes
-
     byte_array = struct.pack("ccc",
                              START_OF_PACKET.encode('ascii'),
                              packet_id.encode('ascii'),
@@ -269,8 +228,6 @@ def send_bytes(SERIAL, packet_id, data, system_id='N'):
         byte_array += system_id.encode('ascii')
         for float_value in data:
             byte_array += float_to_bin(float_value)
-
-
 
     byte_array += struct.pack("c",checksum.to_bytes(1,'big'))
 

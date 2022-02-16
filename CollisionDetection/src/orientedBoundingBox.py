@@ -3,14 +3,12 @@ import matplotlib.pyplot as plt
 
 
 def pointGenerator(n):  # generates n points with random coordinates
-    pts = np.random.randint(0, 100, (n, 3))
-    return pts
+    return np.random.randint(0, 100, (n, 3))
 
 
 def generateOrientedBB(points):  # Generates an oriented bounding box for an nx3 np.array
     V = np.linalg.svd(points)[2]
     B = np.dot(points, V)
-    print(B)
 
     mins = np.min(B, axis=0)
     maxs = np.max(B, axis=0)
@@ -26,7 +24,7 @@ def generateOrientedBB(points):  # Generates an oriented bounding box for an nx3
     return np.dot(vertices, V.transpose())  # return an 8x3 np.array which are the oriented bounding box vertices
 
 
-def main():  # Plots the points and their bounding box
+if __name__ == '__main__':  # Plots the points and their bounding box
     pts = pointGenerator(100)
     vertices = generateOrientedBB(pts)
 
@@ -39,5 +37,4 @@ def main():  # Plots the points and their bounding box
     plt.show()
 
 
-if __name__ == '__main__':
-    main()
+

@@ -1,45 +1,42 @@
+#!/usr/bin/env python3
+
 import rospy
 from human_control_interface.msg import Gamepad_input
 from geometry_msgs.msg import Twist
+import numpy as np
 
 class Node_GamepadProcessing:
-    def __init__(self, wMax, rW, baseLength):
+    def __init__(self, v_max, w_max):
         # initialize ROS node
         rospy.init_node("gamepad_process_node")
 
         # initialize variables for velocity
-        self.roverLinearVelocity = 10
-        self.roverAngularVelocity = 10
-
-        # change these later, once you get actual values
-        self.wMax = wMax
-        self.rW = rW
-        self.baseLength = baseLength
-
-        # initialize variables for gamepad positioning
-        self.xVal = 0
-        self.yVal = 0
-        self.zVal = 0
+        self.roverLinearVelocity = 0
+        self.roverAngularVelocity = 0
 
         # initialize variables for rover's max linear and angular velocities
-        self.maxLinearVelocity = 0
-        self.maxAngularVelocity = 0
+        self.maxLinearVelocity = v_max
+        self.maxAngularVelocity = w_max
 
         # initialize a subscriber for grabbing data from gamepad
-        self.processSub = rospy.Subscriber("gamepad_data", Gamepad_input, gamepadProcessCall)
-        self.processPub = rospy.Publisher("processGamepad_data", Twist, queue_size=1)
+        self.processSub = rospy.Subscriber("gamepad_data", Gamepad_input, self.gamepadProcessCall)
+        self.processPub = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
 
     def gamepadProcessCall(self, msg):
         # assign axis values
-        self.xVal = msg.A2
-        self.yVal = msg.A1
-        self.zVal = msg.A6
+        steering = msg.A1
+        lt = msg.A3
+        rt = msg.A6
+
+        # normalize to [0, 1] range
+        backward_vel = (lt + 1)/2
+        forward_vel = (rt + 1)/2        
 
         # calc. for linear velocity
-        self.roverLinearVelocity = self.wMax * self.rW * self.zVal * self.xVal
+        self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel - backward_vel)
 
         # calc. for angular velocity
-        self.roverAngularVelocity = (2 / self.baseLength) * ((self.wMax * self.rW) - self.roverLinearVelocity) * self.zVal * self.yVal
+        self.roverAngularVelocity = -self.maxAngularVelocity * np.tanh(steering)
 
         # assigns values to a Twist msg, then publish it to ROS
         roverTwist = Twist()
@@ -49,4 +46,5 @@ class Node_GamepadProcessing:
         self.processPub.publish(roverTwist)
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(10, 10, 5)
+    gamepadProcess = Node_GamepadProcessing(1, 5)
+    rospy.spin()

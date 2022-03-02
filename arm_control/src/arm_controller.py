@@ -46,7 +46,7 @@ class Node_ArmControl():
         # Initialize ROS
         rospy.init_node("arm_control", anonymous=False)
         self.armControlPublisher = rospy.Publisher("arm_control_data", ArmMotorCommand, queue_size=1)
-        self.uiSubscriber        = rospy.Subscriber("processed_arm_controller_input", ProcessedControllerInput, self.controlLoop)
+        self.uiSubscriber        = rospy.Subscriber("arm_controller_input", ProcessedControllerInput, self.controlLoop)
         self.armStateSubscriber  = rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.updateArmState)
 
         self.run()

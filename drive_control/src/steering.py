@@ -4,7 +4,7 @@ class Steering:
         self.L=L # wheel base length
         
         
-    def SteeringControl(vR, wR): # R = rover
+    def steering_control(vR, wR): # R = rover
         temp=wR*self.L/2
         wLeft=(vR+temp)/self.rWheel
         wRight=(vR-temp)/self.rWheel                        

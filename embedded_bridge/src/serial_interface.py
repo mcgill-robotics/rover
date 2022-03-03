@@ -1,8 +1,16 @@
+import struct
+
 import serial
-import queue
-import threading
 import sys
+import serial.tools.list_ports
+import struct
 import time
+
+START_OF_PACKET = '~'
+MAX_PACKET_SIZE = 255
+NO_MSG_FRAME = ('N', -1, 'N', [], -1)
+FRAME_TYPES = ('0', '1', '2', 'A', 'R', 'S', 'Y', 'F', 'Q')
+
 
 class SerialInterface:
     """Serial Interface to establish connection and communicate
@@ -25,359 +33,295 @@ class SerialInterface:
     sync_id = 0
     connected = False
 
-    def __init__(self, port, baudRate, timeout):
+    def __init__(self, port, baud_rate=9600, timeout=5, prints=True):
         # Port Information
         self.port = port
-        self.baudRate = baudRate
-        self.mcu = serial.Serial()
-        self.mcu.baudrate = baudRate
-        self.mcu.port = port
-        self.mcu.timeout = timeout
-        
-        # Thread information
-        self.send_queue = queue.Queue()
-        self.priority_send_queue = queue.Queue()
-        self.receive_queue = queue.Queue()
-        self.send_stop = threading.Event()
-        self.receive_stop = threading.Event()
-        self.send_thread = None
-        self.receive_thread = None
-        self.connected = False
+        self.baud_rate = baud_rate
+        self.serial = serial.Serial(port, baud_rate, timeout=timeout)
 
         # Communication Protocol Info
-        self.window = ['']*self.WINDOW_SIZE
+        self.window = [''] * self.WINDOW_SIZE
         self.SYS_ID = 'P'
         self.peer_sys = ''
 
-    def start_link(self):
-        """Start connection with the paired device
+        # Others
+        self.prints = prints
 
-        Return
-        --------
-        bool
-            Status of the establishment of the link
+    def send_ack(self):
+        msg = '~A'.encode('unicode_escape')
+        if self.prints:
+            print(f'Sending {msg}')
+        self.serial.write(msg)
+
+    def send_retransmit(self):
+        msg = '~R'.encode('unicode_escape')
+        if self.prints:
+            print(f'Sending {msg}')
+        self.serial.write(msg)
+
+    def send_finishAck(self):
+        msg = '~Q'.encode('unicode_escape')
+        if self.prints:
+            print(f'Sending {msg}')
+        self.serial.write(msg)
+
+    def wait_for_answer(self, timeout=5):
+        for i in range(timeout):
+            if s.serial.inWaiting() > 0:
+                return self.read_bytes()
+            time.sleep(1)
+        return False, (), ''
+
+    def read_bytes(self):
         """
-        # Initialize port connection
-        self.mcu.open()
-        if not self.mcu.isOpen():
-            print("Failed to open port")
+         Parameters
+          --------
+
+         Returns
+          --------
+          valid : boolean
+              if the message is a valid message
+
+          packet : tuple
+              Tuple containing the packet's data (frame_type, payload_len, system_id, payload, checksum)
+
+                      frame_type : char
+                          the frame type
+                          'N' returned if not valid
+
+                      payload_len : int
+                          length of the payload (counting the system_id). 0 is returned in other cases
+                          -1 returned when not valid
+
+                      system_id : char
+                          ID of the system
+                          'N' returned if not valid
+
+                      payload : bytes
+                          payload of the message
+                          [] returned if not valid or a no payload frame type
+
+                      checksum : int
+                          checksum of the message received to compare to what's calculated
+                          -1 returned when not valid packet
+
+          rest_of_msg : bytes
+              The rest of the bytes to be read. The original message if no valid packet found.
+        """
+        msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
+
+        valid, packet, rest_of_msg = decode_bytes(msg)
+
+        if valid:
+            self.send_ack()
+            return valid, packet, rest_of_msg
+
+        else:
+            self.send_retransmit()
+            return valid, packet, rest_of_msg
+
+    def send_bytes(self, packet_id, payload=[], system_id='N'):
+
+        length = len(payload)
+        payload_size = 0
+
+        if packet_id in ('0', '1'):
+            payload_size = 4 * length + 1  # Add system ID to payload size (assuming it is not in the data array)
+
+        if packet_id in '2':
+            payload_size = 2 * length + 1  # Pixels are two bytes + sys id
+
+        packet_size = 3 + payload_size + 1
+
+        if packet_size >= MAX_PACKET_SIZE:
             return False
-        # Establish threads
-        self.send_stop.clear()
-        self.send_thread = threading.Thread(target=self.send_manager, args=(self.send_stop,))
-        self.send_thread.start()
-        self.receive_stop.clear()
-        self.receive_thread = threading.Thread(target=self.receive_manager, args=(self.receive_stop,))
-        self.receive_thread.start()
 
-        # Clear buffers
-        self.mcu.reset_input_buffer()
-        self.mcu.reset_output_buffer()
+        # Convert the data to bytes
+        byte_array = struct.pack("cc",
+                                 START_OF_PACKET.encode('ascii'),
+                                 packet_id.encode('ascii'))
 
-        # Frame exchange to sync with other device and allow exchange to begin
-        timeout = 0
-        while(not self.connected and timeout < self.TIMEOUT):
-            sync_frame = package_frame(self.SYS_ID, self.next_frame_id, 'S','')
-            self.priority_send_queue.put(sync_frame)
-            timeout = timeout + 1
-            time.sleep(0.1)
-        if(timeout>=self.TIMEOUT):
-            self.stop_link()
-            return False
+        if packet_id in ('0', '1'):
+            byte_array += payload_size.to_bytes(1, 'big')
+            byte_array += system_id.encode('ascii')
+            for float_value in payload:
+                byte_array += float_to_bin(float_value)
 
+        if packet_id in '2':
+            byte_array += payload_size.to_bytes(1, 'big')
+            byte_array += system_id.encode('ascii')
+            for pixel in payload:
+                pass
+                # TODO byte_array += 2_bytes_to_bin(pixel)
+
+        if packet_id in ('0', '1', '2'):
+            # Compute crc8ccitt
+            crc = 0
+            # crc = compute_crc8ccitt(crc, ord(packet_id)) Now matches the Arduino algorithm
+            for char in byte_array[3:]:
+                crc = compute_crc8ccitt(crc, char)  # compute for entire payload
+            byte_array += struct.pack("c", crc.to_bytes(1, 'big'))
+
+        self.serial.write(byte_array)
+        if self.prints:
+            print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
         return True
 
-    def stop_link(self):
-        """Close connection with the paired device
-        """
-        #End Communications
-        ack = package_frame(self.SYS_ID, self.next_frame_id, 'F', '')
-        self.next_frame_id = (self.next_frame_id +1)%32
-        self.priority_send_queue.put(ack)
 
-        if self.send_thread is not None:
-            #Stop thread
-            self.send_stop.set()
-
-        if self.receive_thread is not None:
-            #Stop thread
-            self.receive_stop.set()
-
-        print("Disconnecting")
-        self.connected = False
-
-    def _send_frame(self, frame):
-        """Sends out frame byte by byte to the paired device
-
-        Parameters
-        --------
-        frame : str
-            frame with data of all fields of the frame ready and already parsed for sending
-        
-        Returns
-        --------
-        bool
-            whether frame has been properly sent out
-        """
-        counter = 0
-        for char in frame:
-            while(self.mcu.out_waiting): pass
-            try:
-                sent = self.mcu.write((ord(char)).to_bytes(1,byteorder='big'))
-                if(sent<1):
-                    raise serial.SerialException
-            except (serial.SerialException, serial.SerialTimeoutException) as e:
-                    #TODO Establish way of dealing with write timeout
-                    pass
-            counter = counter + 1
-        return (counter == len(frame))
-
-    def _receive_frame(self):
-        """Receive frame from paired device byte by byte if available
-
-        Returns
-        --------
-        str
-            valid frame received 
-        
-        Raises
-        --------
-        ValueError
-            Raised when the CRC8-CCITT of the frame doesn't match the computed one
-            Argument is the frame ID of the received frame
-        """
-        read_byte = ''
-        while(read_byte != '~'):
-            read_byte = chr(int.from_bytes(self.mcu.read(1),"big"))
-        frame = f'{read_byte}'                          # Should be ~ or it shouldn't get here...
-        while(read_byte != '#' or len(frame)==4):       # Read until end delimiter/second condition if CRC is #
-            read_byte = chr(int.from_bytes(self.mcu.read(1),"big"))
-            frame = f'{frame}{read_byte}'
-        # Check CRC8
-        crc = 0
-        for char in frame[4:-1]:            
-            crc = compute_crc8ccitt(crc,ord(char))      #compute for entire payload
-        msg_crc = ord(frame[3])
-        if(crc != msg_crc):
-            raise ValueError            # Raise error if CRCs don't match
-        return frame
-
-    def send_manager(self, stop):
-        """Thread loop for grabbing frames from the queue 
-        """
-        current_frame = None
-        priority_frame = None
-        timeout = 0
-        timeout_count = 0
-        while not stop.is_set():
-            if(current_frame is not None and self.connected):      # We are trying to send the head but window is blocking
-                sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(current_frame)
-                if(self.window[frame_id]==''):
-                    # print(f'Sent : {current_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
-                    self._send_frame(current_frame)
-                    self.window[frame_id]=current_frame
-                    self.last_sent_frame_id = frame_id
-                    current_frame = None
-                    timeout = 0
-                elif(self.window[frame_id] != '' and timeout > self.TIMEOUT):
-                    if(timeout_count > 10):                     # Try 10 times to get acknowledge
-                        self._send_frame(self.window[frame_id])
-                        timeout = 0
-                    else:                                       # Assume that the peer device is not able to communicate
-                        self.connected = False
-                        self.stop.set()                         # Terminate connection
-                        timeout = timeout + 1
-            elif(priority_frame is not None):
-                sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(priority_frame)
-                # print(f'Sent : {priority_frame},  SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
-                self._send_frame(priority_frame)
-                if(frame_type_str=='S'):
-                    self.sync_id = frame_id
-                priority_frame = None
-            elif not self.priority_send_queue.empty():   # Send the next available frame to send
-                priority_frame = self.priority_send_queue.get() 
-            elif not self.send_queue.empty():   # Send the next available frame to send
-                current_frame = self.send_queue.get()
-        print("Send Thread killed")
-
-    def receive_manager(self, stop):
-        """Thread for placing received frames into a queue for processing
-        """
-        previous_frame_id = 0
-        requesting_frame = False
-        while(not stop.is_set()):
-            if(self.mcu.in_waiting):
-                try:
-                    received_frame = self._receive_frame()
-                    sys_id_str, frame_id, frame_type_str, payload_str = unpackage_frame(received_frame)
-                    # print(f'Received : {received_frame}, SYS_ID: {sys_id_str}, Frame ID: {frame_id}, Frame Type: {frame_type_str}, Payload: {payload_str}')
-                    # Preprocess Protocol specific frames
-                    if(frame_type_str == 'A'):          # Acknowledge case
-                        self.window[frame_id]=''
-                    elif(frame_type_str == 'R'):        # Request case
-                        for i in range(frame_id, self.last_sent_frame_id):
-                            self.priority_send_queue.put(self.window[i])
-                    elif(frame_type_str == 'Y' and frame_id == self.sync_id):    # Sync-Ack case
-                        previous_frame_id = int(payload_str)-1
-                        ack = package_frame(self.SYS_ID, previous_frame_id+1, 'A', '')
-                        self.peer_sys = sys_id_str
-                        self.priority_send_queue.put(ack)
-                        self.connected = True
-                    else:                               # Data case
-                        # Check if frames were lost
-                        if(not (((previous_frame_id+1)%self.WINDOW_SIZE)==frame_id)):
-                            if not requesting_frame:
-                                #Request first lost frames
-                                frame = package_frame(self.SYS_ID, (previous_frame_id+1)%self.WINDOW_SIZE, 'R', '')
-                                self.priority_send_queue.put(frame)
-                                requesting_frame = True
-                        # ACK and place frame in receive queue
-                        else:
-                            ack = package_frame(self.SYS_ID, frame_id, 'A', '')
-                            self.priority_send_queue.put(ack)
-                            self.receive_queue.put(received_frame)
-                            previous_frame_id = frame_id
-                            requesting_frame = False
-                except ValueError:
-                    frame = package_frame(self.SYS_ID, (previous_frame_id+1)%self.WINDOW_SIZE, 'R', '')
-                    self.priority_send_queue.put(frame)
-                except serial.SerialException as e:
-                    print(str(e))
-                    self.stop_link()
-                    break
-        print("Receive Thread killed")
-        self.mcu.close()
-
-    def put_packet(self, frame_type, packet):
-        """Add packet to send to the output frame queue after packaging
-        the packet into the frame
-        """
-        frame = package_frame(self.SYS_ID, self.next_frame_id, frame_type, packet)
-        self.next_frame_id = (self.next_frame_id +1)%32
-        self.send_queue.put(frame)
-
-    def get_packet(self):
-        """Receive packet from oldest available non-processed frame
-
-        Returns
-        --------
-        str or None
-            valid frame packet 
-        """
-        if(not self.receive_queue.empty()):
-            frame = self.receive_queue.get()
-            return unpackage_frame(frame)
-        return None
-
-    def __del__(self):
-        """Deconstructor of object
-        Closes open serial port
-        """
-        self.stop_link()
-        self.mcu = None
-
-def find_ports():
-    """Finds all ports available for connection
-
-    Returns
-    --------
-    list(str)
-        all ports available for conneciton
+def decode_bytes(msg: str, prints=True):
     """
-    port_list = []
-    if(sys.platform == "win32" or sys.platform == "win64"):
-        for i in range(0,128):
-            port = "COM"+str(i)
-            if(port_is_valid(port)):
-                port_list.append(port)
-        
-    elif(sys.platform == "linux" or sys.platform == "linux2"):
-        for i in range(0,128):
-            port = "/dev/ttyUSB"+str(i)
-            if(port_is_valid(port)):
-                port_list.append(port)
-            else: 
-                break
-   
-        for i in range(0,128):
-            port = "/dev/ttyACM"+str(i)
-            if(port_is_valid(port)):
-                port_list.append(port)
-            else:
-                break
+     Parameters
+      --------
+      msg : str
+          message to decode
 
-    return port_list
+      prints : bool
+          if printing is wanted
 
-def port_is_valid(port):
-    """Verifies if a port is valid 
-    Performs trial connection,fails if port doesn't exist
+      Returns
+      --------
+      correct : boolean
+          if the message is a valid message
 
-    Returns
-    --------
-    bool
-        whether port is valid or not
+      packet : tuple
+          Tuple containing the packet's data (frame_type, payload_len, system_id, payload, checksum)
+
+                  frame_type : char
+                      the frame type
+                      'N' returned if not valid
+
+                  payload_len : int
+                      length of the payload (counting the system_id). 0 is returned in other cases
+                      -1 returned when not valid
+
+                  system_id : char
+                      ID of the system
+                      'N' returned if not valid
+
+                  payload : bytes
+                      payload of the message
+                      [] returned if not valid or a no payload frame type
+
+                  checksum : int
+                      checksum of the message received to compare to what's calculated
+                      -1 returned when not valid packet
+
+      rest_of_msg : bytes
+          The rest of the bytes to be read. The rest of the message if no valid packet found.
     """
+
+    # Filter the message:
+    # No Message Frame : False, ('N', -1, 'N', [], -1), rest_of_msg
+    # If the message is too short (length < 2) return No Message Frame
+    # If the frame_type isn't valid in return No Message Frame
+    # If the frame is valid and in ('A', 'R', 'S', 'Y', 'F', 'Q') return valid and the rest of the message if there is, "" otherwise
+    # If the frame type is valid but the payload length isn't valid or doesn't match the length of the message, return No Message Frame
+    # If the given checksum doesn't match the calculated checksum, return No Message Frame
+    # If the frame is valid return True, Frame, rest_of_msg
+
+    # Start of filtering
+    if len(msg) < 2:
+        if prints:
+            print(f"No frame detected: {msg}")
+        return False, NO_MSG_FRAME, msg
+
     try:
-        s = serial.Serial(port)
-        s.close()
-        return True
-    except serial.SerialException:
-        return False
+        frame_type = chr(msg[1])
+    except:
+        if prints:
+            print(f"No frame detected: {msg}")
+        return False, NO_MSG_FRAME, msg
 
-def package_frame(sys_id, frame_id, frame_type, payload=''):
-    """Builds the frame following the protocol standard
+    if frame_type not in FRAME_TYPES:
+        if prints:
+            print(f"No frame detected: {msg}")
+        return False, NO_MSG_FRAME, ''.join(msg[1:].partition(START_OF_PACKET)[1:])
 
-    Parameters
-    --------
-    sys_id : str
-        system ID field of the frame
-    frame_id : int
-        frame ID field of the frame
-    frame_type : str
-        frame type field to decode the payload
-    payload : str
-        payload field of the frame
+    # Valid frames
+    if frame_type in FRAME_TYPES[3:]:
+        if prints:
+            print(f"Arduino sent: {frame_type}")
 
-    Returns
-    --------
-    frame : bytes
-        frame of proper form following the standard
-    """
-    frame_id_str = chr(frame_id)
+        # If more byte on the serial
+        if len(msg) > 2:
+            return True, (frame_type, -1, 'N', -1, []), b''.join(msg[2:].partition(START_OF_PACKET.encode('ascii'))[1:])
+        return True, (frame_type, -1, 'N', -1, []), ""
+
+    try:
+        payload_len = msg[2]
+        if len(msg) < (3 + payload_len + 1):
+            if prints:
+                print(f"Message too short {msg}")
+            return False, ('N', -1, 'N', [], -1), ''
+    except:
+        if prints:
+            print(f"No valid payload length {msg}")
+        return False, NO_MSG_FRAME, b''.join(msg[1:].partition(START_OF_PACKET.encode('ascii'))[1:])
+
+    payload = []
     crc = 0
-    crc = compute_crc8ccitt(crc, ord(frame_type))
-    for char in payload:
-        crc = compute_crc8ccitt(crc, ord(char))      #compute for entire payload
-    crc_str = chr(crc)
-    frame = f"~{sys_id}{frame_id_str}{crc_str}{frame_type}{payload}#"
-    return frame
 
-def unpackage_frame(frame):
-    """Separates fields of the frame to be easily used
+    # Conversion of payload based on frame type
+    if frame_type in ('0', '1'):
+        system_id = chr(msg[3])
+        crc = compute_crc8ccitt(crc, ord(system_id))  # For sys id (part of payload)
+        for i in range(4, 4 + payload_len - 1,
+                       4):  # For each float (4 byte each starting at the fourth byte of the msg)
+            byte_array = b'' + msg[i + 3].to_bytes(1, 'big') \
+                         + msg[i + 2].to_bytes(1, 'big') \
+                         + msg[i + 1].to_bytes(1, 'big') \
+                         + msg[i].to_bytes(1, 'big')
 
-    Parameters
-    --------
-    frame : str
-        valid frame to unpackage
-    
-    Returns
-    --------
-    sys_id : str
-        system ID field of the frame
-    frame_id : int
-        frame ID field of the frame
-    frame_type : str
-        frame type field to decode the payload
-    payload : str
-        payload field of the frame
+            for byte in byte_array[::-1]:
+                crc = compute_crc8ccitt(crc, byte)  # compute for entire payload
+
+            raw_float = struct.unpack('!f', byte_array)
+            formatted_float = float("{:.3f}".format(raw_float[0]))  # Format the float to be precise to 3 digits
+            payload.append(formatted_float)
+        checksum = msg[2 + payload_len + 1]
+
+    elif frame_type in '2':
+        # 3691 int16(pixels)
+        checksum = msg[2 + payload_len + 1]
+        pass
+
+    # Checksum validation
+    if crc != checksum:
+        if prints:
+            print(f"No valid checksum {msg}")
+        return False, NO_MSG_FRAME, ""
+
+    return True, (frame_type, payload_len, system_id, payload, checksum), \
+           b''.join(msg[(3 + payload_len + 1):].partition(START_OF_PACKET.encode('ascii'))[1:])
+
+
+# https://stackoverflow.com/questions/8751653/how-to-convert-a-binary-string-into-a-float-value
+# For the next three functions
+def bin_to_float(b):
+    """ Convert binary string to a float. """
+    bf = int_to_bytes(int(b, 2), 8)  # 8 bytes needed for IEEE 754 binary64.
+    return struct.unpack('>d', bf)[0]
+
+
+def int_to_bytes(n, length):  # Helper function
+    """ Int/long to byte string.
+
+        Python 3.2+ has a built-in int.to_bytes() method that could be used
+        instead, but the following works in earlier versions including 2.x.
     """
-    sys_id = frame[1]
-    frame_id = ord(frame[2])
-    frame_type = frame[4]
-    payload = ''
-    if len(frame)>5:
-        payload = frame[5:-1]
-    return sys_id, frame_id, frame_type, payload
+    return decode('%%0%dx' % (length << 1) % n, 'hex')[-length:]
+
+
+def float_to_bin(value):  # For testing.
+    """ Convert float to 64-bit binary string. """
+    # [d] = struct.unpack(">Q", struct.pack(">d", value))
+    # return '{:064b}'.format(d)
+    """ Convert float to 32-bit binary string. """
+    [f] = struct.unpack(">L", struct.pack(">f", value))
+    return struct.pack("i", f)  # Pack the int as 4 bytes
+    # return bin(f)
+    # return '{:032b}'.format(f)
+
 
 def compute_crc8ccitt(crc, data):
     """Compute the CRC8-CCITT of the data for Error Flow
@@ -388,14 +332,15 @@ def compute_crc8ccitt(crc, data):
         Current value of the CRC8-CCITT
     data : int
         next value in the payload
-    
+
     Returns
     --------
-    int 
+    int
         new computed crc value
     """
     index = crc ^ data
     return int.from_bytes(g_pui8Crc8CCITT[index], byteorder='big')
+
 
 g_pui8Crc8CCITT = [
     b'\x00', b'\x07', b'\x0E', b'\x09', b'\x1C', b'\x1B', b'\x12', b'\x15',
@@ -433,5 +378,126 @@ g_pui8Crc8CCITT = [
 ]
 
 
+def find_ports():
+    """Finds all ports available for connection
+
+    Returns
+    --------
+    list(str)
+        all ports available for connection
+    """
+    port_list = []
+    if sys.platform == "win32" or sys.platform == "win64":
+        for i in range(0, 128):
+            port = "COM" + str(i)
+            if port_is_valid(port):
+                port_list.append(port)
+
+    elif sys.platform == "linux" or sys.platform == "linux2":
+        for i in range(0, 128):
+            port = "/dev/ttyUSB" + str(i)
+            if port_is_valid(port):
+                port_list.append(port)
+            else:
+                break
+
+        for i in range(0, 128):
+            port = "/dev/ttyACM" + str(i)
+            if port_is_valid(port):
+                port_list.append(port)
+            else:
+                break
+
+    return port_list
+
+
+def find_arduino_ports():
+    arduino_ports = [
+        p.device
+        for p in serial.tools.list_ports.comports()
+        if 'Arduino' or 'CH340' in p.description  # may need tweaking to match new arduinos
+    ]
+    for p in serial.tools.list_ports.comports():
+        print(p)
+    if not arduino_ports:
+        raise IOError("No Arduino found")
+        return False, None
+    if len(arduino_ports) > 1:
+        print('Multiple Arduinos found')
+    else:
+        print("Arduino Found!")
+
+    return True, arduino_ports
+
+
+def port_is_valid(port):
+    """Verifies if a port is valid
+    Performs trial connection,fails if port doesn't exist
+
+    Returns
+    --------
+    bool
+        whether port is valid or not
+    """
+    try:
+        p = serial.Serial(port)
+        p.close()
+        return True
+    except serial.SerialException:
+        return False
+
+
 if __name__ == "__main__":
-    s = SerialInterface('/dev/ttyUSB0', 115200, 0.01)
+    # s = SerialInterface('/dev/ttyUSB0', 115200, 0.01)
+
+    """
+    ports = []
+    for port in find_ports():
+        print(port)
+        ports.append(port)
+    """
+    # Find the Arduino Serial
+    found = False
+    while not found:
+        found, ports = find_arduino_ports()
+
+    s = SerialInterface(ports[0], 9600, timeout=5)
+
+    while 1:
+        frame_type = '0'
+        payload = [5.23, 9.6, 10.334]
+
+        valid = False
+
+        """
+        while not valid:
+            s.send_bytes(frame_type, payload)
+            valid, packet, rest_of_msg = s.wait_for_answer(5)
+            print(packet)
+        """
+        s.send_bytes(frame_type, payload)
+        time.sleep(3)
+
+        if s.serial.inWaiting() > 0:
+            valid, packet, rest_of_msg = s.read_bytes()
+            print(packet)
+            str_packet = [str(i) for i in packet]
+            formatted_msg = ' '.join(str_packet)
+            print(f"Message from arduino: {formatted_msg}")
+
+            while len(rest_of_msg) > 0 and valid is True:
+                valid, packet, rest_of_msg = decode_bytes(rest_of_msg)
+                str_packet = [str(i) for i in packet]
+                formatted_msg = ' '.join(str_packet)
+                print(f"Message from arduino: {formatted_msg}")
+        time.sleep(2)
+
+
+
+
+
+
+
+
+
+

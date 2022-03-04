@@ -20,7 +20,7 @@
       <enum>QTabWidget::West</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="Control">
       <attribute name="title">
@@ -44,7 +44,7 @@
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="0">
             <layout class="QGridLayout" name="gridLayout_2">
-             <item row="1" column="1">
+             <item row="2" column="2">
               <layout class="QGridLayout" name="gridLayout_8">
                <item row="0" column="1">
                 <widget class="QLabel" name="ledState_state_label">
@@ -76,7 +76,21 @@
                </item>
               </layout>
              </item>
-             <item row="2" column="0">
+             <item row="6" column="0">
+              <layout class="QGridLayout" name="gridLayout_20">
+               <item row="1" column="0">
+                <widget class="QLCDNumber" name="stepper1angle_display_value"/>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="stepper1angle_label">
+                 <property name="text">
+                  <string>Stepper1angle</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="4" column="0">
               <layout class="QGridLayout" name="gridLayout_9">
                <item row="0" column="1">
                 <widget class="QLabel" name="laserState_state_label">
@@ -108,7 +122,28 @@
                </item>
               </layout>
              </item>
-             <item row="2" column="1">
+             <item row="6" column="2">
+              <layout class="QGridLayout" name="gridLayout_22">
+               <item row="1" column="0">
+                <widget class="QLCDNumber" name="stepper2angle_display_value"/>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="stepper2angle_label">
+                 <property name="text">
+                  <string>Stepper2angle</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="1" column="2">
+              <widget class="Line" name="line_24">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
               <layout class="QGridLayout" name="gridLayout_10">
                <item row="0" column="1">
                 <widget class="QLabel" name="gripperState_state_label">
@@ -140,15 +175,15 @@
                </item>
               </layout>
              </item>
-             <item row="5" column="0">
+             <item row="0" column="1">
+              <widget class="Line" name="line">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="0">
               <layout class="QGridLayout" name="gridLayout_17">
-               <item row="0" column="0">
-                <widget class="QLabel" name="stepperMotor1Speed_label">
-                 <property name="text">
-                  <string>StepperMotor1Speed</string>
-                 </property>
-                </widget>
-               </item>
                <item row="1" column="1">
                 <widget class="QPushButton" name="stepperMotor1Speed_sendButton">
                  <property name="text">
@@ -159,9 +194,16 @@
                <item row="1" column="0">
                 <widget class="QDoubleSpinBox" name="stepperMotor1Speed_doubleSpinBox"/>
                </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="stepperMotor1Speed_label">
+                 <property name="text">
+                  <string>StepperMotor1Speed</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
-             <item row="8" column="0">
+             <item row="16" column="0">
               <layout class="QGridLayout" name="gridLayout_11">
                <item row="1" column="1">
                 <widget class="QPushButton" name="ccdSensorSnap_off_button">
@@ -186,7 +228,7 @@
                </item>
               </layout>
              </item>
-             <item row="1" column="0">
+             <item row="2" column="0">
               <layout class="QHBoxLayout" name="horizontalLayout_8">
                <item>
                 <widget class="QLabel" name="coolerState_label">
@@ -204,7 +246,7 @@
                </item>
               </layout>
              </item>
-             <item row="0" column="1">
+             <item row="0" column="2">
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
                 <widget class="QLabel" name="stepper2Fault_label">
@@ -222,7 +264,7 @@
                </item>
               </layout>
              </item>
-             <item row="7" column="1">
+             <item row="14" column="2">
               <layout class="QGridLayout" name="gridLayout_12">
                <item row="1" column="1">
                 <widget class="QPushButton" name="peltierState_off_button">
@@ -247,19 +289,96 @@
                </item>
               </layout>
              </item>
-             <item row="4" column="0">
-              <layout class="QGridLayout" name="gridLayout_16">
+             <item row="7" column="0">
+              <widget class="Line" name="line_17">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="13" column="2">
+              <widget class="Line" name="line_15">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="Line" name="line_19">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="2">
+              <widget class="Line" name="line_18">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="2">
+              <widget class="Line" name="line_20">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="Line" name="line_21">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="Line" name="line_23">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="Line" name="line_22">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="14" column="0">
+              <layout class="QGridLayout" name="gridLayout_15">
                <item row="0" column="0">
-                <widget class="QLabel" name="stepperMotor1Pos_label">
+                <widget class="QLabel" name="contMotorSpeed_label">
                  <property name="text">
-                  <string>StepperMotor1Pos</string>
+                  <string>ContMotorSpeed</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
+                <widget class="QPushButton" name="ContMotorSpeed_send_button">
+                 <property name="text">
+                  <string>Send</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QDoubleSpinBox" name="contMotorSpeed_doubleSpinBox"/>
+               </item>
+              </layout>
+             </item>
+             <item row="8" column="0">
+              <layout class="QGridLayout" name="gridLayout_16">
+               <item row="1" column="1">
                 <widget class="QPushButton" name="stepperMotor1Pos_send_button">
                  <property name="text">
                   <string>Send</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="stepperMotor1Pos_label">
+                 <property name="text">
+                  <string>StepperMotor1Pos</string>
                  </property>
                 </widget>
                </item>
@@ -286,84 +405,14 @@
                </item>
               </layout>
              </item>
-             <item row="6" column="0">
-              <layout class="QGridLayout" name="gridLayout_18">
-               <item row="0" column="0">
-                <widget class="QLabel" name="stepper1ControlMode_label">
-                 <property name="text">
-                  <string>Stepper1ControlMode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QPushButton" name="stepper1ControlMode_send_button">
-                 <property name="text">
-                  <string>Send</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QSpinBox" name="stepper1ControlMode_spinBox"/>
-               </item>
-              </layout>
+             <item row="11" column="0">
+              <widget class="Line" name="line_16">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
              </item>
-             <item row="6" column="1">
-              <layout class="QGridLayout" name="gridLayout_24">
-               <item row="0" column="0">
-                <widget class="QLabel" name="stepper2ControlMode_label">
-                 <property name="text">
-                  <string>Stepper2ControlMode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QPushButton" name="stepper2ControlMode_send_button">
-                 <property name="text">
-                  <string>Send</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QSpinBox" name="stepper2ControlMode_spinBox"/>
-               </item>
-              </layout>
-             </item>
-             <item row="5" column="1">
-              <layout class="QGridLayout" name="gridLayout_23">
-               <item row="0" column="0">
-                <widget class="QLabel" name="stepperMotor2Speed_label">
-                 <property name="text">
-                  <string>StepperMotor2Speed</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QPushButton" name="stepperMotor2Speed_sendButton">
-                 <property name="text">
-                  <string>Send</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QDoubleSpinBox" name="stepperMotor2Speed_doubleSpinBox"/>
-               </item>
-              </layout>
-             </item>
-             <item row="3" column="1">
-              <layout class="QGridLayout" name="gridLayout_22">
-               <item row="1" column="0">
-                <widget class="QLCDNumber" name="stepper2angle_display_value"/>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="stepper2angle_label">
-                 <property name="text">
-                  <string>Stepper2angle</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="4" column="1">
+             <item row="8" column="2">
               <layout class="QGridLayout" name="gridLayout_21">
                <item row="0" column="0">
                 <widget class="QLabel" name="stepperMotor2Pos_label">
@@ -384,42 +433,147 @@
                </item>
               </layout>
              </item>
-             <item row="3" column="0">
-              <layout class="QGridLayout" name="gridLayout_20">
-               <item row="1" column="0">
-                <widget class="QLCDNumber" name="stepper1angle_display_value"/>
-               </item>
+             <item row="12" column="0">
+              <layout class="QGridLayout" name="gridLayout_18">
                <item row="0" column="0">
-                <widget class="QLabel" name="stepper1angle_label">
+                <widget class="QLabel" name="stepper1ControlMode_label">
                  <property name="text">
-                  <string>Stepper1angle</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="7" column="0">
-              <layout class="QGridLayout" name="gridLayout_15">
-               <item row="0" column="0">
-                <widget class="QLabel" name="contMotorSpeed_label">
-                 <property name="text">
-                  <string>ContMotorSpeed</string>
+                  <string>Stepper1ControlMode</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QPushButton" name="ContMotorSpeed_send_button">
+                <widget class="QPushButton" name="stepper1ControlMode_send_button">
                  <property name="text">
                   <string>Send</string>
                  </property>
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="QDoubleSpinBox" name="contMotorSpeed_doubleSpinBox"/>
+                <widget class="QSpinBox" name="stepper1ControlMode_spinBox"/>
+               </item>
+              </layout>
+             </item>
+             <item row="12" column="2">
+              <layout class="QGridLayout" name="gridLayout_24">
+               <item row="0" column="0">
+                <widget class="QLabel" name="stepper2ControlMode_label">
+                 <property name="text">
+                  <string>Stepper2ControlMode</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QPushButton" name="stepper2ControlMode_send_button">
+                 <property name="text">
+                  <string>Send</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QSpinBox" name="stepper2ControlMode_spinBox"/>
                </item>
               </layout>
              </item>
              <item row="8" column="1">
+              <widget class="Line" name="line_5">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="Line" name="line_3">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="Line" name="line_4">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="1">
+              <widget class="Line" name="line_6">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="Line" name="line_2">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="12" column="1">
+              <widget class="Line" name="line_7">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="14" column="1">
+              <widget class="Line" name="line_8">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="16" column="1">
+              <widget class="Line" name="line_9">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="2">
+              <layout class="QGridLayout" name="gridLayout_23">
+               <item row="0" column="0">
+                <widget class="QLabel" name="stepperMotor2Speed_label">
+                 <property name="text">
+                  <string>StepperMotor2Speed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QPushButton" name="stepperMotor2Speed_sendButton">
+                 <property name="text">
+                  <string>Send</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QDoubleSpinBox" name="stepperMotor2Speed_doubleSpinBox"/>
+               </item>
+              </layout>
+             </item>
+             <item row="13" column="0">
+              <widget class="Line" name="line_12">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="15" column="0">
+              <widget class="Line" name="line_10">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="15" column="2">
+              <widget class="Line" name="line_11">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="16" column="2">
               <layout class="QGridLayout" name="gridLayout">
                <item row="0" column="0">
                 <widget class="QLabel" name="io_label">
@@ -436,6 +590,34 @@
                 </widget>
                </item>
               </layout>
+             </item>
+             <item row="11" column="2">
+              <widget class="Line" name="line_13">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="11" column="1">
+              <widget class="Line" name="line_14">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="0">
+              <widget class="Line" name="line_25">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="2">
+              <widget class="Line" name="line_26">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -507,6 +689,13 @@
               </widget>
              </item>
              <item>
+              <widget class="Line" name="line_29">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
               <layout class="QFormLayout" name="ml_classifier_layout">
                <item row="0" column="0">
                 <widget class="QLabel" name="ml_classifier_class1_label1">
@@ -521,6 +710,13 @@
                   <widget class="QLabel" name="ml_classifier_class1_label2">
                    <property name="text">
                     <string>TextLabel</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_27">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
                    </property>
                   </widget>
                  </item>
@@ -542,6 +738,13 @@
                   <widget class="QLabel" name="ml_classifier_class2_label2">
                    <property name="text">
                     <string>TextLabel</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_28">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
                    </property>
                   </widget>
                  </item>

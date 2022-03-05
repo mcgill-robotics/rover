@@ -1,10 +1,18 @@
+#!/usr/bin/env python
 # Imports
+import sys
+
+import rospy
+
 from ui_layout import Ui_MainWindow
 
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 
+# TODO: Directory change
+from embedded_bridge.msg import PowerFeedback
+from science_module.msg import SciencePilot, ScienceFeedback
 
 class UI(qtw.QMainWindow, Ui_MainWindow):
     '''
@@ -17,10 +25,195 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
 
+        rospy.init_node("UINode", anonymous=True)
+
+        # Value Initialization
+        #TODO: can we change one variable in msg file w/o accessing to them all at the same time (changing attributes various times is not so good style)
+        self.ledState = False
+        self.laserState = False
+        self.gripperState = False
+        self.peltierState = False
+        self.ccdSensorSnap = False
+        self.shutdown = False
+        self.contMotorSpeed = float(0)
+        self.stepperMotor1Pos = float(0)
+        self.stepperMotor2Pos = float(0)
+        self.stepperMotor1Speed = float(0)
+        self.stepperMotor2Speed = float(0)
+        self.stepperMotor1ControlMode = int(0)
+        self.stepperMotor2ControlMode = int(0)
+
+        # Rospy subscriber
+        self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
+        self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.science_feedback)
+        #TODO: StepperMotorAngle
+        #TODO: ML, CCD Camera, Microcamera
+
+        # Rospy publisher
+        self.science_module_publisher = rospy.Publisher("science_state_data", SciencePilot)
+        #TODO: KillSwitch Publisher
+
         # Listeners
-        self.control_selector.currentTextChanged.connect(
-            self.on_control_changed)
-        
+        # power
+        self.Autonomy.kill_power_button.clicked.connect(self.on_kill_power)
+
+        # science
+        # LedState
+        self.Science.ledState_on_button.clicked.connect(lambda _: self.on_led_state(True))
+        self.Science.ledState_off_button.clicked.connect(lambda _: self.on_led_state(False))
+
+        # LaserState
+        self.Science.laserState_on_button.clicked.connect(lambda _: self.on_laser_state(True))
+        self.Science.laserState_off_button.clicked.connect(lambda _: self.on_laser_state(False))
+
+        # GripperState
+        self.Science.gripperState_on_button.clicked.connect(lambda _: self.on_gripper_state(True))
+        self.Science.gripperState_off_button.clicked.connect(lambda _: self.on_gripper_state(False))
+
+        # PeltierState
+        self.Science.peltierState_label_on_button.clicked.connect(lambda _: self.on_peltier_state(True))
+        self.Science.peltierState_label_off_button.clicked.connect(lambda _: self.on_peltier_state(False))
+
+        # CcdSensorSnap
+        self.Science.ccdSensorSnap_on_button.clicked.connect(lambda _: self.on_ccd_sensor_snap(True))
+        self.Science.ccdSensorSnap_off_button.clicked.connect(lambda _: self.on_ccd_sensor_snap(False))
+
+        # Shutdown
+        self.Science.io_shutdown_button.clicked.connect(self.on_shutdown)
+
+        # StepperControlMode
+        self.Science.ContMotorSpeed_send_button.clicked.connect(self.on_control_motor_speed)
+
+        # StepperMotorPos
+        self.Science.stepperMotor1Pos_send_button.connect(self.on_stepper_motor1_pos)
+        self.Science.stepperMotor2Pos_send_button.connect(self.on_stepper_motor2_pos)
+
+        # StepperMotorSpeed
+        self.Science.stepperMotor1Speed_sendButton.connect(self.on_stepper_motor1_speed)
+        self.Science.stepperMotor2Speed_sendButton.connect(self.on_stepper_motor2_speed)
+
+        # StepperControlMode
+        self.Science.stepper1ControlMode_send_button.connect(self.on_stepper_motor1_control_mode)
+        self.Science.stepper2ControlMode_send_button.connect(self.on_stepper_motor2_control_mode)
+
+
+        # Control
+        self.control_selector.currentTextChanged.connect(self.on_control_changed)
+
+    ## SCIENCE SECTION
+    # Subscribers
+    def science_feedback(self, msg):
+        self.Science.stepper1Fault_bool.setText("Enabled" if msg.Stepper1Fault else "Disabled")
+        self.Science.stepper2Fault_bool.setText("Enabled" if msg.Stepper2Fault else "Disabled")
+        self.Science.coolerState_bool.setText("Enabled" if msg.PeltierState else "Disabled")
+        self.Science.ledState_state_label.setText("Enabled" if msg.LedState else "Disabled")
+        self.Science.laserState_state_label.setText("Enabled" if msg.LaserState else "Disabled")
+        self.Science.gripperState_state_label.setText("Enabled" if msg.GripperState else "Disabled")
+
+    # Listeners
+    # LedState
+    def on_led_state(self, signal):
+        self.ledState = signal
+        self.send_science_pilot()
+
+    # LaserState
+    def on_laser_state(self, signal):
+        self.laserState = signal
+        self.send_science_pilot()
+
+    def on_gripper_state(self, signal):
+        self.gripperState = signal
+        self.send_science_pilot()
+
+    def on_peltier_state(self, signal):
+        self.peltierState = signal
+        self.send_science_pilot()
+
+    def on_ccd_sensor_snap(self, signal):
+        self.ccdSensorSnap = signal
+        self.send_science_pilot()
+
+    def on_shutdown(self):
+        self.shutdown = True
+        self.send_science_pilot()
+
+    def on_stepper_motor1_pos(self):
+        self.stepperMotor1Pos = self.Science.stepperMotor1Pos_doubleSpinBox.value()
+        self.send_science_pilot()
+
+    def on_stepper_motor2_pos(self):
+        self.stepperMotor2Pos = self.Science.stepperMotor2Pos_doubleSpinBox.value()
+        self.send_science_pilot()
+
+    def on_stepper_motor1_speed(self):
+        self.stepperMotor1Speed = self.Science.stepperMotor1Speed_doubleSpinBox.value()
+        self.send_science_pilot()
+
+    def on_stepper_motor2_speed(self):
+        self.stepperMotor2Speed = self.Science.stepperMotor2Speed_doubleSpinBox.value()
+        self.send_science_pilot()
+
+    def on_stepper_motor1_control_mode(self):
+        self.stepperMotor1ControlMode = self.Science.stepper1ControlMode_spinBox.value()
+        self.send_science_pilot()
+
+    def on_stepper_motor2_control_mode(self):
+        self.stepperMotor2ControlMode = self.Science.stepper2ControlMode_spinBox.value()
+        self.send_science_pilot()
+
+    def on_control_motor_speed(self):
+        self.contMotorSpeed = self.Science.contMotorSpeed_doubleSpinBox.value()
+        self.send_science_pilot()
+
+    # Helper
+    def send_science_pilot(self):
+        msg = SciencePilot()
+
+        # Booleans
+        msg.LedState = self.ledState
+        msg.LaserState = self.laserState
+        msg.GripperState = self.gripperState
+        msg.PeltierState = self.peltierState
+        msg.CcdSensorSnap = self.CcdSensorSnap
+        msg.Shutdown = self.shutdown
+
+        # Float 32
+        msg.ContMotorSpeed = float(self.contMotorSpeed)
+        msg.StepperMotor1Pos = float(self.stepperMotor1Pos)
+        msg.StepperMotor2Pos = float(self.stepperMotor2Pos)
+        msg.StepperMotor1Speed = float(self.stepperMotor1Speed)
+        msg.StepperMotor2Speed = float(self.stepperMotor2Speed)
+
+        # UInt 32
+        msg.StepperMotor1ControlMode = self.stepperMotor1ControlMode    # TODO: uint32 conversion?
+        msg.StepperMotor2ControlMode = self.stepperMotor2ControlMode
+
+        self.science_module_publisher.publish(msg)
+
+    ## POWER SECTION
+    # Subscribers
+    def on_power_feedback(self, msg):
+        self.Autonomy.voltage_value.display("%.2f" % float(msg.VoltageBattery1))
+        self.Autonomy.current_value.display("%.2f" % float(msg.CurrentBattery1))
+        self.Autonomy.power_value.display("%.2f" % (float(msg.CurrentBattery1) * float(msg.VoltageBattery1)))
+
+        self.Autonomy.voltage_value_2.display("%.2f" % float(msg.VoltageBattery2))
+        self.Autonomy.current_value_2.display("%.2f" % float(msg.CurrentBattery2))
+        self.Autonomy.power_value_2.display("%.2f" % (float(msg.CurrentBattery2) * float(msg.VoltageBattery2)))
+        # TODO: Battery lifetime, System enables, kill switch enabled local var?
+
+    # Listeners
+    def on_kill_power(self):
+        self.power_kill_toggle(True)
+        # TODO: send kill power
+
+    # Helpers
+    def power_kill_toggle(self, signal):
+        self.power_killed = signal
+        self.Autonomy.kill_switch_bool.setText("System Killed" if signal else "System Normal")
+        # TODO: Change system enabled?
+
+
 
     def arm_error_toggle(self, signal):
         '''
@@ -38,8 +231,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         '''
         Method takes in the UI and the value of the control_selector combo box. It gets 
         called whenever the ComboBox value gets changed. 
-        #TODO: Waiting for system controls to be implemented so that this selector can 
-        select the control system.
+        TODO: Waiting for system controls to be implemented so that this selector can select the control system.
         '''
 
         if value == "Arm-Cartesian Control":
@@ -66,8 +258,7 @@ def main():
     window.arm_error_toggle(False)      # No errors in arm system at the start
     window.show()
 
-
-    app.exec()
+    sys.exit(app.exec())
 
 
 if __name__ == '__main__':

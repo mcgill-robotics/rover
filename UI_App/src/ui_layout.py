@@ -35,16 +35,21 @@ class Ui_MainWindow(object):
         #
         self.Drive = Ui_DriveTab()
         self.Drive.setupUi(self.Drive)
-        #
         self.Systemsview.addTab(self.Drive, "")
+
+        #
         self.Science = Ui_Science()
         self.Science.setupUi(self.Science)
         self.Science.setObjectName("Science")
         self.Systemsview.addTab(self.Science, "")
+
+        #
         self.Autonomy = Ui_Power()
         self.Autonomy.setupUi(self.Autonomy)
         self.Autonomy.setObjectName("Autonomy")
         self.Systemsview.addTab(self.Autonomy, "")
+
+
         self.camera_selector = QtWidgets.QComboBox(self.centralwidget)
         self.camera_selector.setGeometry(QtCore.QRect(10, 290, 131, 31))
         self.camera_selector.setObjectName("camera_selector")

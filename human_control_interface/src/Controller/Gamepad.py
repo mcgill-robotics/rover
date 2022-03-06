@@ -3,8 +3,7 @@
 import pygame
 import time
 import rospy
-from custom_msgs.msg import Gamepad_input
-from arm_control.msg import ProcessedControllerInput
+from human_control_interface.msg import Gamepad_input
 
 class Node_Gamepad():
     """Gets gamepad data and publishes the data to the gamepad_data topic
@@ -44,12 +43,6 @@ class Node_Gamepad():
         # Initialize ROS
         rospy.init_node("gamepad", anonymous=False)
         self.gamepad_publisher = rospy.Publisher("gamepad_data", Gamepad_input, queue_size=1)
-        self.arm_publisher = rospy.Publisher("processed_arm_controller_input", ProcessedControllerInput, queue_size=1)
-
-        self.prevB1 = 0
-        self.prevB2 = 0
-        self.modeState = False
-        self.clawState = False
 
         # Start Node
         self.run()
@@ -88,45 +81,10 @@ class Node_Gamepad():
 
                 self.gamepad_publisher.publish(msg)
 
-                arm_ctrl = ProcessedControllerInput()
-                arm_ctrl.X_dir = msg.A2**2
-                if msg.A2 < 0:
-                    arm_ctrl.X_dir = -1 * arm_ctrl.X_dir
-                arm_ctrl.Y_dir = msg.A1**2
-                if msg.A1 > 0:
-                    arm_ctrl.Y_dir = -1 * arm_ctrl.Y_dir
-                arm_ctrl.Z_dir = msg.A5**2
-                if msg.A5 < 0:
-                    arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
-
-                if self.risingEdge(msg.B1, self.prevB1):
-                    self.modeState = True
-                else:
-                    self.modeState = False
-
-                if self.risingEdge(msg.B2, self.prevB2):
-                    self.clawState = True
-                else:
-                    self.clawState = False
-
-                arm_ctrl.ModeChange = self.modeState
-                arm_ctrl.ClawOpen   = self.clawState
-
-                self.prevB1 = msg.B1
-                self.prevB2 = msg.B2
-
-                self.arm_publisher.publish(arm_ctrl)
-
-                time.sleep(0.01)
+                time.sleep(0.1)
             except Exception as error:
                 rospy.logerr(str(error))
         exit()
-
-    def risingEdge(self, prevSignal, nextSignal):
-        if prevSignal < nextSignal:
-            return True
-        else: 
-            return False
 
 
 class Gamepad():

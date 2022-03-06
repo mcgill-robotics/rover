@@ -20,7 +20,7 @@ add_message_files(
   FILES
   ArmMotorCommand.msg
   ArmStatusFeedback.msg
-  ProcessedControllerInput.msg
+  ArmControllerInput.msg
 )
 
 

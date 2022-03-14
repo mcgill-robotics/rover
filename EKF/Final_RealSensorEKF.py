@@ -190,10 +190,10 @@ class RobotEKF():
         
         self.R_cam = np.array([[0.4,0,0], # covariance matrix for measurement noise of the tracking camera (covariance set to 0.0 for yaw while testing without UM7)
                              [0,0.4,0],
-                             [0,0,0.0]])
+                             [0,0,0.9]])
         
-        self.R_gpIMU = np.array([[1.5, 0, 0], # covariance matrix for measurement noise of the gps and IMU readings
-                                 [0, 1.5, 0],
+        self.R_gpIMU = np.array([[2.5, 0, 0], # covariance matrix for measurement noise of the gps and IMU readings
+                                 [0, 2.5, 0],
                                  [0, 0, 0.9]])
 
         self.Q = np.array([[self.std_vel**2,0,0], # covariance for process noise (i.e. states)
@@ -359,9 +359,9 @@ def run_localization(rover_startState, rover_stdVel, rover_stdRot, tag_startStat
         rover_ekf.predict_update(u=u_rover)
         tag_ekf.predict_update(u=u_tag)
 
-        # imu_list = [um7_roll, um7_pitch, um7_yaw]
+        imu_list = [um7_roll, um7_pitch, um7_yaw]
         # cam_list = [t265_roll, t265_pitch, t265_yaw]
-        rospy.loginfo(um7_yaw)
+        rospy.loginfo(gps_easting)
 
         TrajectoryRec.recording(current_roverX,current_roverY,rover_ekf.state_est[2])
 

@@ -2,7 +2,7 @@
 #include <SoftwareSerial.h>
 
 UM7 imu;
-SoftwareSerial mySerial(4, 5); // alternate serial port (can't use 0 and 1); RX := 8, TX := 9
+SoftwareSerial mySerial(0, 1); // alternate serial port (can't use 0 and 1); RX := 8, TX := 9
 
 void setup() {
   Serial.begin(115200);

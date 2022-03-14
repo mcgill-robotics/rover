@@ -64,15 +64,15 @@ positions = []
 i = 1
 
 
-while( i < 100  ):
-    position = gen_data(i)
-    positions.append(position)
-    time_stamps.append(i)
-    i += 1
+# while( i < 100  ):
+#     position = gen_data(i)
+#     positions.append(position)
+#     time_stamps.append(i)
+#     i += 1
     
-    TrajectoryRec.recording(position, position)
+#     TrajectoryRec.recording(position, position)
 
-PlotKF(time_stamps, positions, "position", "blue")
+# PlotKF(time_stamps, positions, "position", "blue")
 
 
 

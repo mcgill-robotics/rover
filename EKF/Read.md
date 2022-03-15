@@ -12,6 +12,7 @@
   * Plug in and set up Arduino with the IMU;
   * Packet converted and sent to Arduino serial monitor, array containing roll, pitch and yaw then published to ROS
   * Connections: Black => Ground, Red => 5V, Orange => 3.3V, Yellow => TX, White => RX
+  * **Note:** Keep TX and RX wires disconnected during upload or the process will fail; reconnect once done.
 
 * BU-353S4 GPS
   * __Data provided__: GPS data in NMEA formats (GGA, GSA, GSV, and RMC)

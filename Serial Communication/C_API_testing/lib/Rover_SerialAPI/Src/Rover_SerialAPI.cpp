@@ -106,6 +106,7 @@ namespace SerialAPI
             {
                 memset(data_buffer, 0, MAX_PACKET_SIZE);
                 data_offset = 0;
+                payload_length = 0;
                 return false;
             }
 
@@ -174,7 +175,7 @@ namespace SerialAPI
         // Couldn't manage the crc validate for now
         const size_t packet_length = data_offset;
 
-/*
+
         //if (!crc_validate_packet(data_buffer + DATA_SEGMENT_OFFSET, DATA_SEGMENT_LENGTH(packet_length), data_buffer[packet_length - 2]))
         //Small correction:  data_buffer[packet_length - 1]
         if (!crc_validate_packet(data_buffer + DATA_SEGMENT_OFFSET, DATA_SEGMENT_LENGTH(packet_length), data_buffer[packet_length - 1]))
@@ -182,8 +183,7 @@ namespace SerialAPI
             send_retransmit();
             reset_buffer();
             return -1;
-        }
-        */
+        }   
         
         // By now the packet is valid so we should reply with an ack
         send_acknowledgement();

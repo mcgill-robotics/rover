@@ -5,6 +5,7 @@ import sys
 import serial.tools.list_ports
 import struct
 import time
+import random
 
 START_OF_PACKET = '~'
 MAX_PACKET_SIZE = 255
@@ -113,11 +114,11 @@ class SerialInterface:
         valid, packet, rest_of_msg = decode_bytes(msg)
 
         if valid:
-            self.send_ack()
+            #TODO self.send_ack() might add back
             return valid, packet, rest_of_msg
 
         else:
-            self.send_retransmit()
+            #TODO self.send_retransmit() might add back
             return valid, packet, rest_of_msg
 
     def send_bytes(self, packet_id, payload=[], system_id='N'):
@@ -465,7 +466,7 @@ if __name__ == "__main__":
 
     while 1:
         frame_type = '0'
-        payload = [5.23, 9.6, 10.334]
+        payload = [112.5]
 
         valid = False
 
@@ -475,23 +476,34 @@ if __name__ == "__main__":
             valid, packet, rest_of_msg = s.wait_for_answer(5)
             print(packet)
         """
-        s.send_bytes(frame_type, payload)
+        time.sleep(2)
+
+        #s.send_bytes(frame_type, payload)
+        s.send_bytes(frame_type, [float(random.randint(0, 180))])
+
         time.sleep(3)
 
-        if s.serial.inWaiting() > 0:
-            valid, packet, rest_of_msg = s.read_bytes()
-            print(packet)
-            str_packet = [str(i) for i in packet]
-            formatted_msg = ' '.join(str_packet)
-            print(f"Message from arduino: {formatted_msg}")
-
-            while len(rest_of_msg) > 0 and valid is True:
-                valid, packet, rest_of_msg = decode_bytes(rest_of_msg)
+        read = False
+        for i in range(3):
+            if s.serial.inWaiting() > 0:
+                read = True
+                valid, packet, rest_of_msg = s.read_bytes()
+                print(packet)
                 str_packet = [str(i) for i in packet]
                 formatted_msg = ' '.join(str_packet)
                 print(f"Message from arduino: {formatted_msg}")
-        time.sleep(2)
+                while len(rest_of_msg) > 0 and valid is True:
+                    valid, packet, rest_of_msg = decode_bytes(rest_of_msg)
+                    str_packet = [str(i) for i in packet]
+                    formatted_msg = ' '.join(str_packet)
+                    print(f"Message from arduino: {formatted_msg}")
+                s.serial.flush()
+                break
+            time.sleep(1)
 
+        if not read:
+            s.serial.flush()
+            print("Nothing read")
 
 
 

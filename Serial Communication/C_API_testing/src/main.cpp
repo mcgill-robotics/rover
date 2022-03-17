@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Rover_SerialAPI.h>
 #include <stdio.h>
+#include <Servo.h>
 
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
@@ -44,9 +45,13 @@
 
 
 #define ob 13
-
 #define ID 'a'
 
+#define PWM 9
+Servo serv;
+
+float val = 0;
+int angle = 0;
 
 //Will make a lib for that
 typedef struct {
@@ -61,32 +66,53 @@ void print_byte_array(byte* byte_array, size_t size);
 void char_to_float(char* str_byte, float* f);
 
 
-static char buffer[SERIAL_RX_BUFFER_SIZE];
+uint8_t buffer[SERIAL_RX_BUFFER_SIZE];
 
 void setup() {
   pinMode(ob, OUTPUT);
+  serv.attach(PWM);
   SerialAPI::init(ID, 9600);
+  //Serial.begin(9600);
 }
 
 void loop() {
 
+  float f = 3.56;
+  uint8_t id = 1;
+  //uint8_t buffer[5];
+  //memcpy(buffer+1, &f, 4);
+  //buffer[0] = id;
+  //SerialAPI::send_bytes('1', buffer, 5);
 
 
-   if(Serial.available() > 0)
-  {
+delay(10);
+
+if(SerialAPI::update()){
+      digitalWrite(ob, HIGH);
+
       memset(buffer, 0, SERIAL_RX_BUFFER_SIZE);
-      
-      
-      while(!SerialAPI::update()) delay(10);
       int cur_pack_id = SerialAPI::read_data(buffer,sizeof(buffer));
-      const size_t payload_size = strlen(buffer);
 
-      SerialAPI::send_bytes('1', buffer, payload_size);
+      //const size_t payload_size = strlen(buffer); //DOESN'T WORK IF THERE ARE ZEROs BECAUSE IT'S CONSIDERED A NULL CHARACTER
+
+      memcpy(&val, buffer+1, 4);
+
+      angle = (int) val;
 
       delay(100);
-   } 
 
+      //SerialAPI::send_bytes('1', buffer, payload_size);
+      if (SerialAPI::send_bytes('1', buffer, 5)) digitalWrite(ob, LOW);
+} 
+/*
      delay(10);
+    for (int i = 0; i < 10;i++){
+      serv.write(i*10);
+      delay(1000);
+    }
+*/
+    delay(100);
+     serv.write(angle);
 }
 
 

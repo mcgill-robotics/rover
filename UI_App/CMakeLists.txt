@@ -34,12 +34,12 @@ catkin_package(
     rospy 
     std_msgs
     geometry_msgs
+    visualization_msgs
     LIBRARIES drive_control
     CATKIN_DEPENDS message_runtime
 )
 
 catkin_install_python(PROGRAMS
   src/main.py
-  src/drive_test.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

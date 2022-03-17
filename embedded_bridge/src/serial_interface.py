@@ -504,12 +504,3 @@ if __name__ == "__main__":
         if not read:
             s.serial.flush()
             print("Nothing read")
-
-
-
-
-
-
-
-
-

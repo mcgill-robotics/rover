@@ -22,13 +22,15 @@ if __name__ == '__main__':
         # display each frame (camera feed) in the list
         for ret, frame, index in retAndFrame:
             if ret:
-                cv2.imshow(f"frame {index}", frame)
+                # find the tag corners then overlay on frame of camera
+                bbox, ids = ar.findAruco(frame)
 
-        # detect aruco tags in each camera
-        for cap in camHandler.vids:
-            _,img=cap.read()
-            bbox,ids = ar.findAruco(img)
-            print(bbox)
+                # print the index (camera) where tags are found
+                if len(bbox) != 0:
+                    print(bbox)
+                    print(index)
+                    
+                cv2.imshow(f"frame {index}", frame)
 
         # press 'q' to stop displaying
         if cv2.waitKey(1) & 0xFF == ord('q'):

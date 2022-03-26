@@ -1,6 +1,5 @@
 import cv2
 
-
 class CameraHandler:
     vids = []  # available cameras
 
@@ -8,7 +7,7 @@ class CameraHandler:
         # Loop 25 times and collect all found cameras
         # Assumes sequential indices
         for i in range (25):
-            newCap = cv2.VideoCapture(i, cv2.CAP_V4L2)
+            newCap = cv2.VideoCapture(i)
 
             # check if object is not null
             if newCap is not None and newCap.isOpened():

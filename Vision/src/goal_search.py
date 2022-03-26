@@ -21,22 +21,14 @@ if __name__ == '__main__':
         retAndFrame = camHandler.get_all_feeds()
         # display each frame (camera feed) in the list
         for ret, frame, index in retAndFrame:
-            cv2.imshow(f"frame {index}", frame)
-            
+            if ret:
+                cv2.imshow(f"frame {index}", frame)
+
+        # detect aruco tags in each camera
         for cap in camHandler.vids:
             _,img=cap.read()
             bbox,ids = ar.findAruco(img)
             print(bbox)
-
-        # press 'q' to stop displaying
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            for vid in camHandler.vids:
-                vid.release()
-                cv2.destroyAllWindows()
-            break
-
-
-                
 
         # press 'q' to stop displaying
         if cv2.waitKey(1) & 0xFF == ord('q'):

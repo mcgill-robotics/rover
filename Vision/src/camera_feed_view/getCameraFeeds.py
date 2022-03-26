@@ -6,7 +6,7 @@ class CameraHandler:
     def __init__(self):
         # Loop 25 times and collect all found cameras
         # Assumes sequential indices
-        for i in range (25):
+        for i in range (5):
             newCap = cv2.VideoCapture(i)
 
             # check if object is not null

@@ -22,6 +22,11 @@
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
           <widget class="QLabel" name="battery_lifetime_label">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Battery Lifetime</string>
            </property>
@@ -35,7 +40,13 @@
           </widget>
          </item>
          <item>
-          <widget class="QLCDNumber" name="battery_lifetime_value"/>
+          <widget class="QLCDNumber" name="battery_lifetime_value">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -50,6 +61,11 @@
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
           <widget class="QLabel" name="system_enabled_label">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>System Enabled</string>
            </property>
@@ -64,6 +80,11 @@
          </item>
          <item>
           <widget class="QLabel" name="system_enabled_bool">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>bool</string>
            </property>
@@ -82,6 +103,11 @@
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
           <widget class="QLabel" name="kill_switch_label">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Kill Switch</string>
            </property>
@@ -96,6 +122,11 @@
          </item>
          <item>
           <widget class="QLabel" name="kill_switch_bool">
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>bool</string>
            </property>
@@ -112,6 +143,11 @@
        </item>
        <item>
         <widget class="QPushButton" name="kill_power_button">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
          <property name="text">
           <string>Kill Power</string>
          </property>
@@ -133,7 +169,7 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>8</pointsize>
+             <pointsize>10</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>
@@ -155,13 +191,24 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Voltage</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="voltage_value"/>
+              <widget class="QLCDNumber" name="voltage_value">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -174,6 +221,11 @@
                  <width>50</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
                </property>
                <property name="text">
                 <string>Current</string>
@@ -195,13 +247,24 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Power</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="power_value"/>
+              <widget class="QLCDNumber" name="power_value">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -228,7 +291,7 @@
            </property>
            <property name="font">
             <font>
-             <pointsize>8</pointsize>
+             <pointsize>10</pointsize>
              <weight>75</weight>
              <bold>true</bold>
             </font>
@@ -250,13 +313,24 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Voltage</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="voltage_value_2"/>
+              <widget class="QLCDNumber" name="voltage_value_2">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -270,13 +344,24 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Current</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="current_value_2"/>
+              <widget class="QLCDNumber" name="current_value_2">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -290,13 +375,24 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Power</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="power_value_2"/>
+              <widget class="QLCDNumber" name="power_value_2">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>

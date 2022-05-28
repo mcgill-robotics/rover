@@ -41,9 +41,9 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
-            <width>416</width>
-            <height>733</height>
+            <y>-56</y>
+            <width>418</width>
+            <height>761</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
@@ -89,7 +89,7 @@
                <item row="3" column="0">
                 <layout class="QGridLayout" name="gridLayout_2">
                  <item row="1" column="0" rowspan="2">
-                  <widget class="QLabel" name="stepperMotor1Pos_label">
+                  <widget class="QLabel" name="stepper1Pos_label">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                      <horstretch>0</horstretch>
@@ -108,7 +108,7 @@
                   </widget>
                  </item>
                  <item row="1" column="2">
-                  <widget class="QLCDNumber" name="stepperMotor1Pos_value">
+                  <widget class="QLCDNumber" name="stepper1Pos_value">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                      <horstretch>0</horstretch>
@@ -124,7 +124,7 @@
                   </widget>
                  </item>
                  <item row="2" column="2">
-                  <widget class="QDoubleSpinBox" name="stepperMotor1Pos_doubleSpinBox">
+                  <widget class="QDoubleSpinBox" name="stepper1Pos_doubleSpinBox">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                      <horstretch>0</horstretch>
@@ -186,7 +186,7 @@
                 </spacer>
                </item>
                <item row="7" column="2">
-                <widget class="QLabel" name="stepper2Fault_bool_3">
+                <widget class="QLabel" name="stepper2Fault_boolLabel">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -205,7 +205,7 @@
                 </widget>
                </item>
                <item row="3" column="0">
-                <widget class="QLabel" name="stepperMotor2Speed_label_3">
+                <widget class="QLabel" name="stepper2Speed_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -224,7 +224,7 @@
                 </widget>
                </item>
                <item row="7" column="0">
-                <widget class="QLabel" name="stepper2Fault_label_3">
+                <widget class="QLabel" name="stepper2Fault_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -243,7 +243,7 @@
                 </widget>
                </item>
                <item row="3" column="2">
-                <widget class="QDoubleSpinBox" name="stepperMotor2Speed_doubleSpinBox_3">
+                <widget class="QDoubleSpinBox" name="stepper2Speed_doubleSpinBox">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -253,7 +253,7 @@
                 </widget>
                </item>
                <item row="5" column="2">
-                <widget class="QSpinBox" name="stepper2ControlMode_spinBox_3">
+                <widget class="QSpinBox" name="stepper2ControlMode_spinBox">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -263,7 +263,7 @@
                 </widget>
                </item>
                <item row="5" column="0">
-                <widget class="QLabel" name="stepper2ControlMode_label_3">
+                <widget class="QLabel" name="stepper2ControlMode_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -284,7 +284,7 @@
                <item row="1" column="0" colspan="3">
                 <layout class="QGridLayout" name="gridLayout_6">
                  <item row="1" column="2">
-                  <widget class="QLCDNumber" name="stepperMotor2Pos_value">
+                  <widget class="QLCDNumber" name="stepper2Pos_value">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                      <horstretch>0</horstretch>
@@ -300,7 +300,7 @@
                   </widget>
                  </item>
                  <item row="2" column="2">
-                  <widget class="QDoubleSpinBox" name="stepperMotor2Pos_doubleSpinBox">
+                  <widget class="QDoubleSpinBox" name="stepper2Pos_doubleSpinBox">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                      <horstretch>0</horstretch>
@@ -323,7 +323,7 @@
                   </spacer>
                  </item>
                  <item row="1" column="0" rowspan="2">
-                  <widget class="QLabel" name="stepperMotor2Pos_label">
+                  <widget class="QLabel" name="stepper2Pos_label">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                      <horstretch>0</horstretch>
@@ -377,7 +377,7 @@
              <item row="2" column="0">
               <layout class="QGridLayout" name="gridLayout_22">
                <item row="5" column="2">
-                <widget class="QLabel" name="stepper1Fault_bool_3">
+                <widget class="QLabel" name="stepper1Fault_boolLabel">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -409,7 +409,7 @@
                 </spacer>
                </item>
                <item row="0" column="2">
-                <widget class="QDoubleSpinBox" name="stepperMotor1Speed_doubleSpinBox_2">
+                <widget class="QDoubleSpinBox" name="stepper1Speed_doubleSpinBox">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -419,7 +419,7 @@
                 </widget>
                </item>
                <item row="5" column="0">
-                <widget class="QLabel" name="stepper1Fault_label_3">
+                <widget class="QLabel" name="stepper1Fault_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -438,7 +438,7 @@
                 </widget>
                </item>
                <item row="2" column="0">
-                <widget class="QLabel" name="stepper1ControlMode_label_3">
+                <widget class="QLabel" name="stepper1ControlMode_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -457,7 +457,7 @@
                 </widget>
                </item>
                <item row="2" column="2">
-                <widget class="QSpinBox" name="stepper1ControlMode_spinBox_3">
+                <widget class="QSpinBox" name="stepper1ControlMode_spinBox">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -467,7 +467,7 @@
                 </widget>
                </item>
                <item row="0" column="0">
-                <widget class="QLabel" name="stepperMotor1Speed_label_2">
+                <widget class="QLabel" name="stepper1Speed_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -524,7 +524,7 @@
              <item row="17" column="0">
               <layout class="QHBoxLayout" name="horizontalLayout_11">
                <item>
-                <widget class="QLabel" name="contMotorSpeed_label_2">
+                <widget class="QLabel" name="contMotorSpeed_label">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -550,7 +550,7 @@
                 </spacer>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="contMotorSpeed_doubleSpinBox_2">
+                <widget class="QDoubleSpinBox" name="contMotorSpeed_doubleSpinBox">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -642,7 +642,7 @@ QPushButton:checked{
               </layout>
              </item>
              <item row="20" column="0">
-              <widget class="QPushButton" name="io_shutdown_button_2">
+              <widget class="QPushButton" name="send_button">
                <property name="font">
                 <font>
                  <weight>75</weight>
@@ -1043,8 +1043,8 @@ QPushButton:checked{
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>433</width>
-            <height>703</height>
+            <width>432</width>
+            <height>705</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_9">

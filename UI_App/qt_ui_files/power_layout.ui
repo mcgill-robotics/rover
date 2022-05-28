@@ -184,7 +184,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <item>
-              <widget class="QLabel" name="voltage_label">
+              <widget class="QLabel" name="voltage_label_1">
                <property name="maximumSize">
                 <size>
                  <width>50</width>
@@ -202,7 +202,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="voltage_value">
+              <widget class="QLCDNumber" name="voltage_value_1">
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>
@@ -215,7 +215,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_6">
              <item>
-              <widget class="QLabel" name="current_label">
+              <widget class="QLabel" name="current_label_1">
                <property name="maximumSize">
                 <size>
                  <width>50</width>
@@ -233,14 +233,14 @@
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="current_value"/>
+              <widget class="QLCDNumber" name="current_value_1"/>
              </item>
             </layout>
            </item>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_7">
              <item>
-              <widget class="QLabel" name="power_label">
+              <widget class="QLabel" name="power_label_1">
                <property name="maximumSize">
                 <size>
                  <width>50</width>
@@ -258,7 +258,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="power_value">
+              <widget class="QLCDNumber" name="power_value_1">
                <property name="font">
                 <font>
                  <pointsize>10</pointsize>

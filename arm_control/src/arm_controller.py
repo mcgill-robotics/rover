@@ -79,17 +79,12 @@ class Node_ArmControl():
 
         elif self.mode == 1:
             xyz_ctrl = [
-                ctrlInput.X_dir,
+                0,
                 ctrlInput.Y_dir,
-                ctrlInput.Z_dir
+                0
             ]
-            # J, _, _ = arm_kinematics.Jacobian(self.q)
-            # print(f"{np.linalg.matrix_rank(J)} vs {J.shape[0]}")
-            # if np.linalg.matrix_rank(J) == J.shape[0]:
+
             self.dq_d, self.dx_d = self.computeOrientationJointVel(xyz_ctrl)
-            # else:
-            #     self.dq_d = np.zeros(self.nbJoints)
-            #     self.dx_d = np.zeros(6)
 
         else:
             # Joint Velocity Control

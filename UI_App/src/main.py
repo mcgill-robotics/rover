@@ -1,6 +1,10 @@
 # Imports
 from ui_layout import Ui_MainWindow
-
+import rospy
+from drive import Drive_Backend
+from UI_App.msg import WheelSpeed
+from geometry_msgs.msg import Twist
+from visualization_msgs.msg import MarkerArray
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
@@ -16,12 +20,21 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # Setup the UI from Ui_MainWindow
         super().__init__(*args, **kwargs)
         self.setupUi(self)
+        rospy.init_node("UINode", anonymous=True)
+
 
         # Listeners
-        self.control_selector.currentTextChanged.connect(
-            self.on_control_changed)
+        self.control_selector.currentTextChanged.connect(self.on_control_changed)
         
 
+        #drive setup
+        self.drive_backend = Drive_Backend(self.Drive)
+        self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)
+        self.drive_twist_subscriber = rospy.Subscriber('/robot_twist_cmd', Twist, self.drive_backend.update_twist_data)
+        self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location) 
+
+    
+    
     def arm_error_toggle(self, signal):
         '''
         Takes in a boolean value for signal. If the signal is true, it changes error to red
@@ -72,3 +85,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    rospy.spin()

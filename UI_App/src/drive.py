@@ -16,8 +16,8 @@ class Drive_Backend():
         self.ui.rear_right_speed_data.display(wheel_velocity.right)
 
     def update_twist_data(self, robot_twist):
-        self.ui.twist_angular_velocity.display(robot_twist.angular)
-        self.ui.twist_linear_velocity.display(robot_twist.linear)
+        self.ui.twist_angular_velocity.display(robot_twist.angular.z)
+        self.ui.twist_linear_velocity.display(robot_twist.linear.x)
 
     def update_robot_location(self, location):
         self.ui.robot_location_x.display(location.x)

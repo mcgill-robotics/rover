@@ -10,7 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from drive_layout import Ui_DriveTab, Ui_DriveTab
+from drive_layout import Ui_DriveTab
 from arm_layout import Ui_Arm
 
 class Ui_MainWindow(object):

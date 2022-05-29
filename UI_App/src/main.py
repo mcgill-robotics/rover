@@ -20,6 +20,29 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
     app present in ui_layout.py. Most of the app is controlled from this class.
     '''
 
+    ## READER FUNCTIONS
+    @staticmethod
+    def get_boolean_value(button):
+        return button.isChecked()
+
+    @staticmethod
+    def get_double_spin_box_value(double_spin_box):
+        return float(double_spin_box.value())
+
+    @staticmethod
+    def get_uint_spin_box_value(spin_box):
+        return int(spin_box.value())
+
+    ## UPDATER FUNCTIONS
+    @staticmethod
+    def update_boolean_value(condition, label):
+        label.setText("Enabled" if condition else "Disabled")
+
+    @staticmethod
+    def update_float_value(value, label):
+        label.display("%.2f" % float(value))
+
+
     def __init__(self, *args, **kwargs):
         # Setup the UI from Ui_MainWindow
         super().__init__(*args, **kwargs)
@@ -33,36 +56,45 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         #rospy.init_node("UINode", anonymous=True)
 
         # Rospy subscriber
-        #self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
-        #self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.science_feedback)
-        #TODO: ML, CCD Camera, Microcamera
+        # self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
+        # self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.science_feedback)
+        # TODO: ML, CCD Camera, Microcamera
 
         # Rospy publisher
-        #self.science_module_publisher = rospy.Publisher("science_state_data", SciencePilot)
-        #TODO: KillSwitch Publisher
+        # self.science_module_publisher = rospy.Publisher("science_state_data", SciencePilot)
+        # TODO: KillSwitch Publisher
         pass
 
     ## SCIENCE SECTION
     # Subscribers
     def science_feedback(self, msg):
-        self.Science.stepper1Fault_bool.setText("Enabled" if msg.Stepper1Fault else "Disabled")
-        self.Science.stepper2Fault_bool.setText("Enabled" if msg.Stepper2Fault else "Disabled")
-        self.Science.coolerState_bool.setText("Enabled" if msg.PeltierState else "Disabled")
-        self.Science.ledState_state_label.setText("Enabled" if msg.LedState else "Disabled")
-        self.Science.laserState_state_label.setText("Enabled" if msg.LaserState else "Disabled")
-        self.Science.gripperState_state_label.setText("Enabled" if msg.GripperState else "Disabled")
+        """
+        Callback function when receiving a science message from messaging broker
+
+        :param msg: ScienceFeedback
+        """
+        self.update_boolean_value(msg.Stepper1Fault, self.Science.stepper1Fault_bool)
+        self.update_boolean_value(msg.Stepper2Fault, self.Science.stepper2Fault_bool)
+        self.update_boolean_value(msg.PeltierState, self.Science.coolerState_bool)
+        self.update_boolean_value(msg.LedState, self.Science.ledState_state_label)
+        self.update_boolean_value(msg.LaserState, self.Science.laserState_state_label)
+        self.update_boolean_value(msg.GripperState, self.Science.gripperState_state_label)
 
     # Helper
     def send_science_pilot(self):
+        """
+        Function creating a SciencePilot message and sending request through messaging broker
+        """
         msg = None # SciencePilot()
 
+        self.Science.laserState_toggle.isChecked()
+
         # Booleans
-        msg.LedState = self.ledState
-        msg.LaserState = self.laserState
-        msg.GripperState = self.gripperState
-        msg.PeltierState = self.peltierState
-        msg.CcdSensorSnap = self.CcdSensorSnap
-        msg.Shutdown = self.shutdown
+        msg.LedState = self.get_boolean_value(self.Science.ledState_toggle)
+        msg.LaserState = self.get_boolean_value(self.Science.laserState_toggle)
+        msg.GripperState = self.get_boolean_value(self.Science.gripperState_toggle)
+        msg.PeltierState = self.get_boolean_value(self.Science.peltierState_toggle)
+        msg.CcdSensorSnap = self.get_boolean_value(self.Science.ccdSensorSnap_toggle)
 
         # Float 32
         msg.ContMotorSpeed = self.get_double_spin_box_value(self.Science.contMotorSpeed_doubleSpinBox)

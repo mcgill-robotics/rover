@@ -10,6 +10,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import buttons_rc
 
+
 class Ui_Science(QtWidgets.QWidget):
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -30,7 +31,7 @@ class Ui_Science(QtWidgets.QWidget):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, -56, 418, 761))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 418, 761))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout_7 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_7.setObjectName("gridLayout_7")
@@ -348,6 +349,7 @@ class Ui_Science(QtWidgets.QWidget):
 "}")
         self.laserState_toggle.setText("")
         self.laserState_toggle.setCheckable(True)
+        self.laserState_toggle.setChecked(False)
         self.laserState_toggle.setObjectName("laserState_toggle")
         self.horizontalLayout_5.addWidget(self.laserState_toggle)
         self.gridLayout_3.addLayout(self.horizontalLayout_5, 9, 0, 1, 1)
@@ -405,24 +407,24 @@ class Ui_Science(QtWidgets.QWidget):
         self.horizontalLayout_10.addWidget(self.ccdSensorSnap_label)
         spacerItem7 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem7)
-        self.peltierState_toggle_2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
+        self.ccdSensorSnap_toggle = QtWidgets.QPushButton(self.scrollAreaWidgetContents)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.peltierState_toggle_2.sizePolicy().hasHeightForWidth())
-        self.peltierState_toggle_2.setSizePolicy(sizePolicy)
-        self.peltierState_toggle_2.setMinimumSize(QtCore.QSize(60, 30))
-        self.peltierState_toggle_2.setStyleSheet("QPushButton{\n"
+        sizePolicy.setHeightForWidth(self.ccdSensorSnap_toggle.sizePolicy().hasHeightForWidth())
+        self.ccdSensorSnap_toggle.setSizePolicy(sizePolicy)
+        self.ccdSensorSnap_toggle.setMinimumSize(QtCore.QSize(60, 30))
+        self.ccdSensorSnap_toggle.setStyleSheet("QPushButton{\n"
 "    border-image: url(:/buttons/off.png);\n"
 "}\n"
 "\n"
 "QPushButton:checked{\n"
 "    border-image: url(:/buttons/on.png);\n"
 "}")
-        self.peltierState_toggle_2.setText("")
-        self.peltierState_toggle_2.setCheckable(True)
-        self.peltierState_toggle_2.setObjectName("peltierState_toggle_2")
-        self.horizontalLayout_10.addWidget(self.peltierState_toggle_2)
+        self.ccdSensorSnap_toggle.setText("")
+        self.ccdSensorSnap_toggle.setCheckable(True)
+        self.ccdSensorSnap_toggle.setObjectName("ccdSensorSnap_toggle")
+        self.horizontalLayout_10.addWidget(self.ccdSensorSnap_toggle)
         self.gridLayout_3.addLayout(self.horizontalLayout_10, 14, 0, 1, 1)
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")

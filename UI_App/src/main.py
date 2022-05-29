@@ -65,28 +65,28 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         msg.Shutdown = self.shutdown
 
         # Float 32
-        msg.ContMotorSpeed = float(self.contMotorSpeed)
-        msg.StepperMotor1Pos = float(self.stepperMotor1Pos)
-        msg.StepperMotor2Pos = float(self.stepperMotor2Pos)
-        msg.StepperMotor1Speed = float(self.stepperMotor1Speed)
-        msg.StepperMotor2Speed = float(self.stepperMotor2Speed)
+        msg.ContMotorSpeed = self.get_double_spin_box_value(self.Science.contMotorSpeed_doubleSpinBox)
+        msg.StepperMotor1Pos = self.get_double_spin_box_value(self.Science.stepper1Pos_doubleSpinBox)
+        msg.StepperMotor2Pos = self.get_double_spin_box_value(self.Science.stepper1Pos_doubleSpinBox)
+        msg.StepperMotor1Speed = self.get_double_spin_box_value(self.Science.stepper1Speed_doubleSpinBox)
+        msg.StepperMotor2Speed = self.get_double_spin_box_value(self.Science.stepper2Speed_doubleSpinBox)
 
         # UInt 32
-        msg.StepperMotor1ControlMode = self.stepperMotor1ControlMode    # TODO: uint32 conversion?
-        msg.StepperMotor2ControlMode = self.stepperMotor2ControlMode
+        msg.StepperMotor1ControlMode = self.get_uint_spin_box_value(self.Science.stepper1ControlMode_spinBox)
+        msg.StepperMotor2ControlMode = self.get_uint_spin_box_value(self.Science.stepper2ControlMode_spinBox)
 
         #self.science_module_publisher.publish(msg)
 
     ## POWER SECTION
     # Subscribers
     def on_power_feedback(self, msg):
-        self.Autonomy.voltage_value.display("%.2f" % float(msg.VoltageBattery1))
-        self.Autonomy.current_value.display("%.2f" % float(msg.CurrentBattery1))
-        self.Autonomy.power_value.display("%.2f" % (float(msg.CurrentBattery1) * float(msg.VoltageBattery1)))
+        self.update_float_value(msg.VoltageBattery1, self.Autonomy.voltage_value_1)
+        self.update_float_value(msg.CurrentBattery1, self.Autonomy.current_value_1)
+        self.update_float_value((float(msg.CurrentBattery1) * float(msg.VoltageBattery1)), self.Autonomy.current_value_1)
 
-        self.Autonomy.voltage_value_2.display("%.2f" % float(msg.VoltageBattery2))
-        self.Autonomy.current_value_2.display("%.2f" % float(msg.CurrentBattery2))
-        self.Autonomy.power_value_2.display("%.2f" % (float(msg.CurrentBattery2) * float(msg.VoltageBattery2)))
+        self.update_float_value(msg.VoltageBattery2, self.Autonomy.voltage_value_2)
+        self.update_float_value(msg.CurrentBattery2, self.Autonomy.current_value_2)
+        self.update_float_value((float(msg.CurrentBattery2) * float(msg.VoltageBattery2)), self.Autonomy.current_value_2)
         # TODO: Battery lifetime, System enables, kill switch enabled local var?
 
     # Listeners

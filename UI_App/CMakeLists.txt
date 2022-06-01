@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(arm_control)
+project(UI_App)
+
 
 
 ## Find catkin macros and libraries
@@ -10,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
     message_generation
+    geometry_msgs
 )
 
 
@@ -18,29 +20,26 @@ catkin_python_setup()
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  ArmMotorCommand.msg
-  ArmStatusFeedback.msg
-  ArmControllerInput.msg
+  WheelSpeed.msg
 )
-
 
 generate_messages(
     DEPENDENCIES
     std_msgs
 )
 
-
 catkin_package(
     CATKIN_DEPENDS 
     roscpp
     rospy 
     std_msgs
-    LIBRARIES arm_control
+    geometry_msgs
+    visualization_msgs
+    LIBRARIES drive_control
     CATKIN_DEPENDS message_runtime
 )
 
 catkin_install_python(PROGRAMS
-  src/arm_controller.py
-  sim/arm_sim.py
+  src/main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

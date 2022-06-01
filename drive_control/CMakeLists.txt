@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
     message_generation
+    geometry_msgs
 )
 
 
@@ -31,6 +32,7 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
+    geometry_msgs
     LIBRARIES drive_control
     CATKIN_DEPENDS message_runtime
 )

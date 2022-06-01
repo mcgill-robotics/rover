@@ -279,7 +279,12 @@ def inverseVelocity(q, dx):
     J, Jv, Jw = Jacobian(q)
 
     try:
-        dq = np.linalg.pinv(Jv).dot(dx)
+        if len(dx) == 3:
+            dq = np.linalg.pinv(Jv).dot(dx)
+        elif len(dx) == 6:
+            dq = np.linalg.pinv(J).dot(dx)
+        else:
+            raise ValueError("Dimension Mismatch: dx must be dim 3 or 6")
     except np.linalg.LinAlgError:
         raise ValueError
 

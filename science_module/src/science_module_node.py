@@ -46,7 +46,7 @@ class ScienceSystem:
 
         # two subscribers (Science Pilot, science feedback)
         self.science_state_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.feedback_callback)
-        self.science_ui_subscriber = rospy.Subscriber("science_ui_data", SciencePilot, self.ui_callback)
+        self.science_ui_subscriber = rospy.Subscriber("science_controller_input", SciencePilot, self.ui_callback)
 
     # Callback functions for ScienceFeedback and SciencePilot messages ^^^
     def feedback_callback(self, msg):

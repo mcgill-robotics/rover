@@ -71,19 +71,19 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
 
 
+
         # Rospy subscriber
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
-        self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.science_feedback)
-
+        self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.on_science_feedback)
         # TODO: ML, CCD Camera, Microcamera
 
         # Rospy publisher
-        self.science_module_publisher = rospy.Publisher("science_state_data", SciencePilot)
+        self.science_module_publisher = rospy.Publisher("science_controller_feedback", SciencePilot, queue_size=10)
         # TODO: KillSwitch Publisher
 
     ## SCIENCE SECTION
     # Subscribers
-    def science_feedback(self, msg):
+    def on_science_feedback(self, msg):
         """
         Callback function when receiving a science message from messaging broker
 

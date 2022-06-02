@@ -60,6 +60,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # power
         self.Autonomy.kill_power_button.clicked.connect(self.on_kill_power)
 
+        # science
+        self.Science.send_button.clicked.connect(self.send_science_pilot)
+        self.Science.io_shutdown_button.clicked.connect(self.send_science_shutdown)
+
         #drive setup
         self.drive_backend = Drive_Backend(self.Drive)
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)
@@ -67,14 +71,14 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
 
 
-
         # Rospy subscriber
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
         self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.science_feedback)
+
         # TODO: ML, CCD Camera, Microcamera
 
         # Rospy publisher
-        # self.science_module_publisher = rospy.Publisher("science_state_data", SciencePilot)
+        self.science_module_publisher = rospy.Publisher("science_state_data", SciencePilot)
         # TODO: KillSwitch Publisher
 
     ## SCIENCE SECTION
@@ -92,12 +96,20 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.update_boolean_value(msg.LaserState, self.Science.laserState_state_label)
         self.update_boolean_value(msg.GripperState, self.Science.gripperState_state_label)
 
-    # Helper
+    # Helpers
+    def send_science_shutdown(self):
+        """
+        Function creating a SciencePilot message for shutdown, setting it to true and sending it through messaging broker
+        """
+        msg = SciencePilot()
+        msg.Shutdown = True
+        self.science_module_publisher.publish(msg)
+
     def send_science_pilot(self):
         """
         Function creating a SciencePilot message and sending request through messaging broker
         """
-        msg = None # SciencePilot()
+        msg = SciencePilot()
 
         self.Science.laserState_toggle.isChecked()
 
@@ -116,10 +128,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         msg.StepperMotor2Speed = self.get_double_spin_box_value(self.Science.stepper2Speed_doubleSpinBox)
 
         # UInt 32
-        msg.StepperMotor1ControlMode = self.get_uint_spin_box_value(self.Science.stepper1ControlMode_spinBox)
-        msg.StepperMotor2ControlMode = self.get_uint_spin_box_value(self.Science.stepper2ControlMode_spinBox)
+        msg.Stepper1ControlMode = self.get_uint_spin_box_value(self.Science.stepper1ControlMode_spinBox)
+        msg.Stepper2ControlMode = self.get_uint_spin_box_value(self.Science.stepper2ControlMode_spinBox)
 
-        #self.science_module_publisher.publish(msg)
+        self.science_module_publisher.publish(msg)
 
     ## POWER SECTION
     # Subscribers

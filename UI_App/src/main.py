@@ -8,7 +8,7 @@ sys.path.append(currentdir)
 from ui_layout import Ui_MainWindow
 import rospy
 from drive import Drive_Backend
-from UI_App.msg import WheelSpeed
+from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from visualization_msgs.msg import MarkerArray
 

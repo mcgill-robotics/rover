@@ -34,7 +34,6 @@ class Node_DriveControl():
         self.wheel_speed = self.steering.steering_control(vR, wR)
 
 
-
     def run(self):
         while not rospy.is_shutdown():
             cmd = WheelSpeed()
@@ -51,15 +50,15 @@ class Node_DriveControl():
                 continue
 
             self.angular_velocity_publisher.publish(cmd)
-            
-
 
     
     def set_correction_velocity(self, velocity_feedback):
         self.correction_wheel_speed = WheelSpeed()
 
-        self.right_pid_controller.setpoint = self.wheel_speed.right
-        self.left_pid_controller.setpoint = self.wheel_speed.left
+        self.right_front_pid_controller.setpoint = self.wheel_speed[1]
+        self.left_front_pid_controller.setpoint = self.wheel_speed[0]
+        self.right_rear_pid_controller.setpoint = self.wheel_speed[1]
+        self.left_rear_pid_controller.setpoint = self.wheel_speed[0]
         
         vLeftFront = self.left_front_pid_controller(velocity_feedback.left[0])
         vRightFront = self.right_front_pid_controller(velocity_feedback.right[0])
@@ -70,8 +69,6 @@ class Node_DriveControl():
         self.correction_wheel_speed.right[0] = vRightFront
         self.correction_wheel_speed.left[1] = vLeftRear
         self.correction_wheel_speed.right[1] = vRightRear
-
-
 
 
 if __name__ == "__main__":

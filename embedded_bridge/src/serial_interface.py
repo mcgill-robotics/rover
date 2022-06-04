@@ -318,7 +318,7 @@ def float_to_bin(value):  # For testing.
     # [d] = struct.unpack(">Q", struct.pack(">d", value))
     # return '{:064b}'.format(d)
     """ Convert float to 32-bit binary string. """
-    [f] = struct.unpack(">L", struct.pack(">f", value))
+    [f] = struct.unpack(">l", struct.pack(">f", value))
     return struct.pack("i", f)  # Pack the int as 4 bytes
     # return bin(f)
     # return '{:032b}'.format(f)

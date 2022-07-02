@@ -1,3 +1,4 @@
+from base64 import decode
 import struct
 
 import serial
@@ -46,7 +47,7 @@ class SerialInterface:
         self.peer_sys = ''
 
         # Others
-        self.prints = prints
+        self.prints = None #prints
 
     def send_ack(self):
         msg = '~A'.encode('unicode_escape')
@@ -109,9 +110,12 @@ class SerialInterface:
           rest_of_msg : bytes
               The rest of the bytes to be read. The original message if no valid packet found.
         """
-        msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
+        # msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
+        msg = self.serial.read(self.serial.in_waiting)
 
+        print(msg)
         valid, packet, rest_of_msg = decode_bytes(msg)
+        
 
         if valid:
             #TODO self.send_ack() might add back
@@ -162,14 +166,14 @@ class SerialInterface:
             for char in byte_array[3:]:
                 crc = compute_crc8ccitt(crc, char)  # compute for entire payload
             byte_array += struct.pack("c", crc.to_bytes(1, 'big'))
-
+        print(f"Send: {byte_array}")
         self.serial.write(byte_array)
         if self.prints:
             print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
         return True
 
 
-def decode_bytes(msg: str, prints=True):
+def decode_bytes(msg: str, prints=False):
     """
      Parameters
       --------
@@ -232,11 +236,11 @@ def decode_bytes(msg: str, prints=True):
         if prints:
             print(f"No frame detected: {msg}")
         return False, NO_MSG_FRAME, msg
-
+    print(frame_type)
     if frame_type not in FRAME_TYPES:
         if prints:
             print(f"No frame detected: {msg}")
-        return False, NO_MSG_FRAME, ''.join(msg[1:].partition(START_OF_PACKET)[1:])
+        return False, NO_MSG_FRAME, msg[1:]
 
     # Valid frames
     if frame_type in FRAME_TYPES[3:]:
@@ -245,7 +249,7 @@ def decode_bytes(msg: str, prints=True):
 
         # If more byte on the serial
         if len(msg) > 2:
-            return True, (frame_type, -1, 'N', -1, []), b''.join(msg[2:].partition(START_OF_PACKET.encode('ascii'))[1:])
+            return True, (frame_type, -1, 'N', -1, []), msg[2:]
         return True, (frame_type, -1, 'N', -1, []), ""
 
     try:
@@ -257,7 +261,7 @@ def decode_bytes(msg: str, prints=True):
     except:
         if prints:
             print(f"No valid payload length {msg}")
-        return False, NO_MSG_FRAME, b''.join(msg[1:].partition(START_OF_PACKET.encode('ascii'))[1:])
+        return False, NO_MSG_FRAME, msg[4:]
 
     payload = []
     crc = 0
@@ -293,7 +297,7 @@ def decode_bytes(msg: str, prints=True):
         return False, NO_MSG_FRAME, ""
 
     return True, (frame_type, payload_len, system_id, payload, checksum), \
-           b''.join(msg[(3 + payload_len + 1):].partition(START_OF_PACKET.encode('ascii'))[1:])
+           msg[(3 + payload_len + 1):]
 
 
 # https://stackoverflow.com/questions/8751653/how-to-convert-a-binary-string-into-a-float-value

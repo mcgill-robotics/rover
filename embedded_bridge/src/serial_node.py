@@ -74,6 +74,7 @@ class Node_EmbeddedBridge():
     def run(self):
         """Runs the node loop for getting and updating the Gamepad information for user control
         """
+        
         while not rospy.is_shutdown():
             if rospy.is_shutdown():
                 exit()
@@ -87,6 +88,7 @@ class Node_EmbeddedBridge():
                             frame_type, payload_len, sys_id, payload, crc = packet
                             data = []
                             # print(f"{sys_id}|{frame_id}|{frame_type}|{payload}")
+                            #print(sys)
                             if(
                                 frame_type == '0' or
                                 frame_type == '1' or
@@ -126,10 +128,10 @@ class Node_EmbeddedBridge():
                             if len(data) == 0:
                                 continue
 
-                            # print(f"sys: {sys}\t| data : {data}")
+                            #print(f"sys: {sys}\t| data : {data}")
                             # Get ROS message format
                             if sys == 'drive':
-                                # print("setting drive left data")
+                                #print("setting drive left data")
                                 self.drive_state.left[0] = data[0]
                                 self.drive_state.left[1] = data[1]
                                 self.drive_state.right[0] = data[2]
@@ -174,11 +176,11 @@ class Node_EmbeddedBridge():
         """Maps all embedded systems found 
         """
         # Find the Arduino Serial
-        found = False
-        while not found:
-            found, ports = serialInt.find_arduino_ports()
+        # found = False
+        # while not found:
+        #     found, ports = serialInt.find_arduino_ports()
 
-        s = serialInt.SerialInterface(ports[0], 115200, timeout=5)
+        s = serialInt.SerialInterface("/dev/ttyACM0", 115200, timeout=5)
         self.mapping['drive'] = s
 
         # self.port_list = serialInt.find_ports()
@@ -218,7 +220,7 @@ class Node_EmbeddedBridge():
         self.mapping["arm_forearm"].send_bytes('1', data_forearm)
 
     def writeDriveCommand(self, control):
-        print(control.left+control.right)
+        # print(control.left+control.right)
         self.mapping["drive"].send_bytes('0', control.left + control.right, '0')
         #self.mapping["drive_right"].send_bytes('1', control.right)
 

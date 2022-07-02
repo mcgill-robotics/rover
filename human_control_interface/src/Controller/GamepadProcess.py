@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import time
 import rospy
 from human_control_interface.msg import Gamepad_input
 from arm_control.msg import ArmControllerInput
@@ -71,6 +71,7 @@ class Node_GamepadProcessing:
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
 
+        time.sleep(0.1)
         self.drive_publisher.publish(roverTwist)
 
     def armProcessCall(self, msg):

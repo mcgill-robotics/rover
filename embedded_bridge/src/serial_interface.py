@@ -49,6 +49,9 @@ class SerialInterface:
         # Others
         self.prints = None #prints
 
+        #Remainder of msg
+        self.remainder = bytes()
+
     def send_ack(self):
         msg = '~A'.encode('unicode_escape')
         if self.prints:
@@ -110,16 +113,35 @@ class SerialInterface:
           rest_of_msg : bytes
               The rest of the bytes to be read. The original message if no valid packet found.
         """
-        # msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
-        msg = self.serial.read(self.serial.in_waiting)
+        #msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
+        
+        msg = bytearray(self.serial.read(self.serial.in_waiting))
+        packet_list = []
 
-        print(msg)
+        for i in range(0, len(msg)):
+            self.remainder.append(msg[i])
+        msg = self.remainder
+        self.remainder = bytes()
+
+        for i in range(0, len(msg)):
+            if (i>0 and msg[i]==START_OF_PACKET):
+                new_packet = self.remainder
+                self.remainder = bytes()
+                packet_list.append(new_packet)
+                self.remainder.append(msg[i])
+            else:
+                self.remainder.append(msg[i])
+
+        #what to do with packet_list ???
+        
+        print(f"msg: {msg}")
         valid, packet, rest_of_msg = decode_bytes(msg)
         
 
         if valid:
             #TODO self.send_ack() might add back
             return valid, packet, rest_of_msg
+        
 
         else:
             #TODO self.send_retransmit() might add back

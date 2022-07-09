@@ -1,11 +1,13 @@
 import serial_interface as serialInt
+import random
+import time
 
 
 if __name__ == "__main__":
     s = serialInt.SerialInterface("/dev/ttyACM0", 9600, timeout=5)
     while True:
-        s.send_bytes('0', [34, 54,23,66])
+        time.sleep(2)
+        s.send_bytes('0', [2])
         data = s.read_bytes()
-        print(data)
-
+        print(f"Received: {data}")
     

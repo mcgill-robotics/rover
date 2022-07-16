@@ -7,10 +7,11 @@ sys.path.append(currentdir)
 import serial_interface as serialInt 
 from std_msgs.msg import Int32
 from arm_control.msg import ArmMotorCommand, ArmStatusFeedback
-from DriveControl.msg import WheelSpeed
-from embedded_bridge.msg import DriveFeedback, PowerFeedback
+from drive_control.msg import WheelSpeed
+from embedded_bridge.msg import PowerFeedback
 from science_module.msg import ScienceCmd, ScienceFeedback, CcdData
 import time
+import struct
 
 class Node_EmbeddedBridge():
     """Serial ROS Node for exchanging data with the embedded systems on the 
@@ -36,8 +37,7 @@ class Node_EmbeddedBridge():
         self.timeout = 0.01
         self.port_list = []
         self.mapping = {
-            "drive_left"    : None,
-            "drive_right"   : None,
+            "drive"         : None,
             "arm_shoulder"  : None,
             "arm_forearm"   : None,
             "power"         : None,
@@ -45,19 +45,19 @@ class Node_EmbeddedBridge():
         }
 
         # Drive System
-        self.drive_state_publisher      = rospy.Publisher("drive_state_data", DriveFeedback, queue_size=1)
-        self.drive_control_subscriber   = rospy.Subscriber("drive_control_data", WheelSpeed, writeDriveCommand)
+        self.drive_state_publisher      = rospy.Publisher("/feedback_velocity", WheelSpeed, queue_size=1)
+        self.drive_control_subscriber   = rospy.Subscriber("/wheel_velocity_cmd", WheelSpeed, self.writeDriveCommand)
         self.drive_state = WheelSpeed()
 
         # Arm System
         self.arm_state_publisher        = rospy.Publisher("arm_state_data", ArmStatusFeedback, queue_size=1)
-        self.arm_control_subscriber     = rospy.Subscriber("arm_control_data", ArmMotorCommand, writeArmCommand)
+        self.arm_control_subscriber     = rospy.Subscriber("arm_control_data", ArmMotorCommand, self.writeArmCommand)
         self.arm_state = ArmStatusFeedback()
 
         # Science System
         self.science_state_publisher    = rospy.Publisher("science_state_data", ScienceFeedback, queue_size=1)
         self.science_ccd_data_publisher = rospy.Publisher("science_ccd_data", CcdData)
-        self.science_control_subscriber = rospy.Subscriber("science_control_data", ScienceCmd, writeScienceCommand)
+        self.science_control_subscriber = rospy.Subscriber("science_control_data", ScienceCmd, self.writeScienceCommand)
 
         # Power System
         self.power_state_publisher      = rospy.Publisher("power_state_data", PowerFeedback, queue_size=1)
@@ -74,6 +74,7 @@ class Node_EmbeddedBridge():
     def run(self):
         """Runs the node loop for getting and updating the Gamepad information for user control
         """
+        
         while not rospy.is_shutdown():
             if rospy.is_shutdown():
                 exit()
@@ -81,21 +82,22 @@ class Node_EmbeddedBridge():
                 # Acquire latest messages from embedded systems
                 for sys in self.mapping:
                     if self.mapping[sys] is not None:
-                        msg = self.mapping[sys].get_packet()
-                        if msg is not None:
+                        valid, packet, _ = self.mapping[sys].read_bytes()
+                        if valid:
                             # Interpret embedded system data
-                            sys_id, frame_id, frame_type, payload = msg
+                            frame_type, payload_len, sys_id, payload, crc = packet
                             data = []
                             # print(f"{sys_id}|{frame_id}|{frame_type}|{payload}")
+                            #print(sys)
                             if(
                                 frame_type == '0' or
                                 frame_type == '1' or
                                 frame_type == '6'
                             ):
                                 # Floats seperated by commas
-                                payload_values_str = payload.split(',')
-                                for val_str in payload_values_str:
-                                    data.append(float(val_str))
+                                #payload_values_str = payload.split(',')
+                                for byte_data in payload:
+                                    data.append(struct.unpack('f', byte_data))
 
                             elif frame_type == '2':
                                 # Bits representing booleans
@@ -126,16 +128,15 @@ class Node_EmbeddedBridge():
                             if len(data) == 0:
                                 continue
 
-                            # print(f"sys: {sys}\t| data : {data}")
+                            #print(f"sys: {sys}\t| data : {data}")
                             # Get ROS message format
-                            if sys == 'drive_left':
-                                # print("setting drive left data")
-                                self.drive_state.wheel_speed[0] = sum(data)/len(data)
-
-                            elif sys == 'drive_right':
-                                # print("setting drive right data")
-                                self.drive_state.wheel_speed[1] = sum(data)/len(data)
-
+                            if sys == 'drive':
+                                #print("setting drive left data")
+                                self.drive_state.left[0] = data[0]
+                                self.drive_state.left[1] = data[1]
+                                self.drive_state.right[0] = data[2]
+                                self.drive_state.right[1] = data[3]
+                                
                             elif sys == 'arm_shoulder':
                                 # print("setting arm shoulder data")
                                 self.arm_state.MotorPos[0] = data[0]
@@ -174,25 +175,31 @@ class Node_EmbeddedBridge():
     def mapPorts(self):
         """Maps all embedded systems found 
         """
-        self.port_list = serialInt.find_ports()
+        # Find the Arduino Serial
+        # found = False
+        # while not found:
+        #     found, ports = serialInt.find_arduino_ports()
 
-        for port in self.port_list:
-            sys = serialInt.SerialInterface(port, self.baud, self.timeout)
-            connected = sys.start_link()
-            if connected:
-                # Map system
-                if sys.peer_sys == '0':
-                    self.mapping['drive_left'] = sys
-                elif sys.peer_sys == '1':
-                    self.mapping['drive_right'] = sys
-                elif sys.peer_sys == '2':
-                    self.mapping['arm_shoulder'] = sys
-                elif sys.peer_sys == '3':
-                    self.mapping['arm_forearm'] = sys
-                elif sys.peer_sys == '4':
-                    self.mapping['power'] = sys
-                elif sys.peer_sys == '5':
-                    self.mapping['science'] = sys
+        s = serialInt.SerialInterface("/dev/ttyACM0", 115200, timeout=5)
+        self.mapping['drive'] = s
+
+        # self.port_list = serialInt.find_ports()
+
+        # for port in self.port_list:
+        #     sys = serialInt.SerialInterface(port, self.baud, self.timeout)
+            # # Map system
+            # if sys.peer_sys == '0':
+                # self.mapping['drive'] = sys
+            # #elif sys.peer_sys == '1':
+            # #    self.mapping['drive_right'] = sys
+            # elif sys.peer_sys == '2':
+            #     self.mapping['arm_shoulder'] = sys
+            # elif sys.peer_sys == '3':
+            #     self.mapping['arm_forearm'] = sys
+            # elif sys.peer_sys == '4':
+            #     self.mapping['power'] = sys
+            # elif sys.peer_sys == '5':
+            #     self.mapping['science'] = sys
 
         print(self.port_list)
         print(self.mapping)
@@ -209,14 +216,13 @@ class Node_EmbeddedBridge():
     def writeArmCommand(self, control):
         data_shoulder = f"{control.MotorVel[0]},{control.MotorVel[1]},{control.MotorVel[2]}"
         data_forearm  = f"{control.MotorVel[3]},{control.MotorVel[4]},{int(control.ClawState)}"
-        self.mapping["arm_shoulder"].put_packet('1', data_shoulder)
-        self.mapping["arm_forearm"].put_packet('1', data_forearm)
+        self.mapping["arm_shoulder"].send_bytes('1', data_shoulder)
+        self.mapping["arm_forearm"].send_bytes('1', data_forearm)
 
     def writeDriveCommand(self, control):
-        data_left = f"{control.wheel_speed[0]},{control.wheel_speed[0]}"
-        data_right = f"{control.wheel_speed[1]},{control.wheel_speed[1]}"
-        self.mapping["drive_left"].put_packet('1', data_left)
-        self.mapping["drive_right"].put_packet('1', data_right)
+        # print(control.left+control.right)
+        self.mapping["drive"].send_bytes('0', control.left + control.right, '0')
+        #self.mapping["drive_right"].send_bytes('1', control.right)
 
     def writeScienceCommand(self, control):
         # Send State Request
@@ -229,127 +235,21 @@ class Node_EmbeddedBridge():
         state += int(control.Shutdown) << 5
         state_msg = f"{state}"
 
-        self.mapping["science"].put_packet('2', state_msg)
+        self.mapping["science"].send_bytes('2', state_msg)
 
         # Send Motor Control
         motor_msg = f"{control.MotorSpeed:.3f}"
-        self.mapping["science"].put_packet('1', motor_msg)
+        self.mapping["science"].send_bytes('1', motor_msg)
 
         # Send Stepper Commands
         step1_msg = f"0,{control.Stepper1IncAng:.4f}"
-        self.mapping["science"].put_packet('3', step1_msg)
+        self.mapping["science"].send_bytes('3', step1_msg)
         step2_msg = f"1,{control.Stepper2IncAng:.4f}"
-        self.mapping["science"].put_packet('3', step2_msg)
+        self.mapping["science"].send_bytes('3', step2_msg)
 
 
     def writePowerCommand(self, control):
         pass
-
-    def run(self):
-        drv_fb = DriveFeedback()
-        arm_fb = ArmStatusFeedback()
-        pwr_fb = PowerFeedback()
-        sci_fb = ScienceFeedback()
-        ccd_data = CcdData()
-
-        new_drv_data = False
-        new_arm_data = False
-        new_pwr_data = False
-        new_sci_data = False
-        new_ccd_data = False
-
-        while not rospy.is_shutdown():
-            
-            for key in self.mapping:
-                msg = self.mapping[key].get_packet()
-                if msg is not None:
-                    sys_id, frame_id, frame_type, payload = msg
-
-                    # Parse Incoming data based on Serial Communication Documentation
-                    data = []
-                    if frame_id in [0, 1, 6]:
-                        data_str = payload.split(",")
-                        data = [float(x) for x in data_str]
-
-                    elif frame_id == 2:
-                        data_bits = ord(payload)
-                        num_bits = 6
-                        for i in range(0, num_bits):
-                            bit = bool(data_bits & 1)
-                            data.insert(0, bit)
-                            data_bits = data_bits >> 1
-                    
-                    elif frame_id == 3:
-                        data_str = payload.split(",")
-                        data = [int(data_str[0]), float(data_str[1])]
-
-                    elif frame_id == 4:
-                        data.append(int(payload))
-
-                    elif frame_id == 5:
-                        for i in range(0, len(payload), 2):
-                            Msb = ord(payload[i])
-                            Lsb = ord(payload[i+1])
-                            val = (Msb << 8) + Lsb
-                            data.append(val)
-
-
-                    # Generate System ROS message
-                    if key == "drive_left":
-                        drv_fb.LeftWheelSpeed[0] = data[0]
-                        drv_fb.LeftWheelSpeed[1] = data[1]
-                        new_drv_data = True
-
-                    elif key == "drive_right":
-                        drv_fb.RightWheelSpeed[0] = data[0]
-                        drv_fb.RightWheelSpeed[1] = data[1]
-                        new_drv_data = True
-
-                    elif key == "arm_shoulder":
-                        arm_fb.MotorPos[0] = data[0]
-                        arm_fb.MotorPos[1] = data[1]
-                        arm_fb.MotorPos[2] = data[2]
-                        new_arm_data = True
-
-                    elif key == "arm_forearm":
-                        arm_fb.MotorPos[3] = data[0]
-                        arm_fb.MotorPos[4] = data[1]
-                        arm_fb.ClawMode = bool(data[2])
-                        new_arm_data = True
-
-                    elif key == "power":
-                        pwr_fb.VoltageBattery1 = data[0]
-                        pwr_fb.CurrentBattery1 = data[1]
-                        pwr_fb.VoltageBattery2 = data[2]
-                        pwr_fb.CurrentBattery2 = data[3]
-                        self.power_state_publisher.publish(pwr_fb)
-                    
-                    elif key == "science":
-                        if frame_id == 2:
-                            sci_fb.LedState = data[0]
-                            sci_fb.LaserState = data[1]
-                            sci_fb.SolenoidState = data[2]
-                            sci_fb.PeltierState = data[3]
-                            sci_fb.Stepper1Fault = data[4]
-                            sci_fb.Stepper2Fault = data[5]
-                            self.science_state_publisher.publish(sci_fb)
-                        elif frame_id == 5:
-                            ccd_data.CcdData = data
-                            self.science_ccd_data_publisher.publish(ccd_data)
-
-            # Publish new data if applicable
-            if new_drv_data:
-                self.drive_state_publisher.publish(drv_fb)
-            if new_arm_data:
-                self.arm_state_publisher.publish(arm_fb)
-
-            # Reset Flags
-            new_drv_data = False
-            new_arm_data = False
-            new_pwr_data = False
-            new_sci_data = False
-            new_ccd_data = False
-
 
 if __name__ == "__main__":
     bridge = Node_EmbeddedBridge()

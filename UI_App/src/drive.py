@@ -10,10 +10,10 @@ class Drive_Backend():
 
 
     def update_wheel_velocities(self, wheel_velocity):
-        self.ui.left_speed_data.display(wheel_velocity.left)
-        self.ui.right_speed_data.display(wheel_velocity.right)
-        self.ui.rear_left_speed_data.display(wheel_velocity.left)
-        self.ui.rear_right_speed_data.display(wheel_velocity.right)
+        self.ui.left_speed_data.display(wheel_velocity.left[0])
+        self.ui.right_speed_data.display(wheel_velocity.right[0])
+        self.ui.rear_left_speed_data.display(wheel_velocity.left[1])
+        self.ui.rear_right_speed_data.display(wheel_velocity.right[1])
 
     def update_twist_data(self, robot_twist):
         self.ui.twist_angular_velocity.display(robot_twist.angular.z)

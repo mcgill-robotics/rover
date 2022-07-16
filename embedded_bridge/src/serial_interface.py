@@ -1,3 +1,4 @@
+from base64 import decode
 import struct
 
 import serial
@@ -46,22 +47,25 @@ class SerialInterface:
         self.peer_sys = ''
 
         # Others
-        self.prints = prints
+        self.prints = None #prints
+
+        #Remainder of msg
+        self.remainder = bytes()
 
     def send_ack(self):
-        msg = '~A'.encode('unicode_escape')
+        msg = '~A'.encode('utf-8_escape')
         if self.prints:
             print(f'Sending {msg}')
         self.serial.write(msg)
 
     def send_retransmit(self):
-        msg = '~R'.encode('unicode_escape')
+        msg = '~R'.encode('utf-8_escape')
         if self.prints:
             print(f'Sending {msg}')
         self.serial.write(msg)
 
     def send_finishAck(self):
-        msg = '~Q'.encode('unicode_escape')
+        msg = '~Q'.encode('utf-8_escape')
         if self.prints:
             print(f'Sending {msg}')
         self.serial.write(msg)
@@ -108,19 +112,60 @@ class SerialInterface:
 
           rest_of_msg : bytes
               The rest of the bytes to be read. The original message if no valid packet found.
-        """
-        msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
+        """       
+        msg = bytearray(self.serial.read(self.serial.in_waiting))
+        packet_list = []
 
-        valid, packet, rest_of_msg = decode_bytes(msg)
+        msg = self.remainder + msg
+        self.remainder = bytes()    #set to empty bytearray
 
-        if valid:
+        decoded_packets = []
+        print(f"msg: {msg}")
+
+        byte_msg = bytes()
+        for i in range(0, len(msg)):
+            if(i>0 and msg[i]==ord(START_OF_PACKET)):
+                new_packet = byte_msg
+                byte_msg = bytes()
+                packet_list.append(new_packet)
+                byte_msg = byte_msg + msg[i].to_bytes(1, 'big')
+            else:
+                byte_msg = byte_msg + msg[i].to_bytes(1, 'big')
+        packet_list.append(byte_msg)
+
+        print(packet_list)
+        for i in range(0, len(packet_list)):
+            packet = packet_list[i]
+            if(self.check_valid_packet(packet)):
+                valid, decoded_packet, rest_of_msg = decode_bytes(packet)
+                # print(f"valid: {valid} packet: {decoded_packet} rest: {rest_of_msg}")
+                if valid:
+                    decoded_packets.append(decoded_packet)
+                elif(i == len(packet_list)-1):
+                    self.remainder = packet
+            
+        #valid, packet, rest_of_msg = decode_bytes(packet)
+        return decoded_packets
+
+        #if valid:
             #TODO self.send_ack() might add back
-            return valid, packet, rest_of_msg
+            #return valid, packet, rest_of_msg
+        
 
-        else:
+        #else:
             #TODO self.send_retransmit() might add back
-            return valid, packet, rest_of_msg
+            #return valid, packet, rest_of_msg
 
+    
+    def check_valid_packet(self, packet):
+        #packet is bytearray
+        
+        if(packet is None or len(packet) < 4):
+            return False
+        expected_length = packet[2] + 4
+        return len(packet) == expected_length
+
+    
     def send_bytes(self, packet_id, payload=[], system_id='N'):
 
         length = len(payload)
@@ -139,18 +184,18 @@ class SerialInterface:
 
         # Convert the data to bytes
         byte_array = struct.pack("cc",
-                                 START_OF_PACKET.encode('ascii'),
-                                 packet_id.encode('ascii'))
+                                 START_OF_PACKET.encode('utf-8'),
+                                 packet_id.encode('utf-8'))
 
         if packet_id in ('0', '1'):
             byte_array += payload_size.to_bytes(1, 'big')
-            byte_array += system_id.encode('ascii')
+            byte_array += system_id.encode('utf-8')
             for float_value in payload:
                 byte_array += float_to_bin(float_value)
 
         if packet_id in '2':
             byte_array += payload_size.to_bytes(1, 'big')
-            byte_array += system_id.encode('ascii')
+            byte_array += system_id.encode('utf-8')
             for pixel in payload:
                 pass
                 # TODO byte_array += 2_bytes_to_bin(pixel)
@@ -162,7 +207,7 @@ class SerialInterface:
             for char in byte_array[3:]:
                 crc = compute_crc8ccitt(crc, char)  # compute for entire payload
             byte_array += struct.pack("c", crc.to_bytes(1, 'big'))
-
+        print(f"Send: {byte_array}")
         self.serial.write(byte_array)
         if self.prints:
             print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
@@ -234,9 +279,10 @@ def decode_bytes(msg: str, prints=True):
         return False, NO_MSG_FRAME, msg
 
     if frame_type not in FRAME_TYPES:
+        print("Invalid frame type")
         if prints:
             print(f"No frame detected: {msg}")
-        return False, NO_MSG_FRAME, ''.join(msg[1:].partition(START_OF_PACKET)[1:])
+        return False, NO_MSG_FRAME, msg[1:]
 
     # Valid frames
     if frame_type in FRAME_TYPES[3:]:
@@ -245,7 +291,7 @@ def decode_bytes(msg: str, prints=True):
 
         # If more byte on the serial
         if len(msg) > 2:
-            return True, (frame_type, -1, 'N', -1, []), b''.join(msg[2:].partition(START_OF_PACKET.encode('ascii'))[1:])
+            return True, (frame_type, -1, 'N', -1, []), msg[2:]
         return True, (frame_type, -1, 'N', -1, []), ""
 
     try:
@@ -257,7 +303,7 @@ def decode_bytes(msg: str, prints=True):
     except:
         if prints:
             print(f"No valid payload length {msg}")
-        return False, NO_MSG_FRAME, b''.join(msg[1:].partition(START_OF_PACKET.encode('ascii'))[1:])
+        return False, NO_MSG_FRAME, msg[4:]
 
     payload = []
     crc = 0
@@ -268,17 +314,11 @@ def decode_bytes(msg: str, prints=True):
         crc = compute_crc8ccitt(crc, ord(system_id))  # For sys id (part of payload)
         for i in range(4, 4 + payload_len - 1,
                        4):  # For each float (4 byte each starting at the fourth byte of the msg)
-            byte_array = b'' + msg[i + 3].to_bytes(1, 'big') \
-                         + msg[i + 2].to_bytes(1, 'big') \
-                         + msg[i + 1].to_bytes(1, 'big') \
-                         + msg[i].to_bytes(1, 'big')
-
-            for byte in byte_array[::-1]:
-                crc = compute_crc8ccitt(crc, byte)  # compute for entire payload
-
-            raw_float = struct.unpack('!f', byte_array)
-            formatted_float = float("{:.3f}".format(raw_float[0]))  # Format the float to be precise to 3 digits
+            formatted_float = bin_to_float(msg[i:i+4])
             payload.append(formatted_float)
+        for j in range(4, len(msg)-1):
+            crc = compute_crc8ccitt(crc, msg[j])
+
         checksum = msg[2 + payload_len + 1]
 
     elif frame_type in '2':
@@ -293,16 +333,14 @@ def decode_bytes(msg: str, prints=True):
         return False, NO_MSG_FRAME, ""
 
     return True, (frame_type, payload_len, system_id, payload, checksum), \
-           b''.join(msg[(3 + payload_len + 1):].partition(START_OF_PACKET.encode('ascii'))[1:])
+           msg[(3 + payload_len + 1):]
 
 
 # https://stackoverflow.com/questions/8751653/how-to-convert-a-binary-string-into-a-float-value
 # For the next three functions
 def bin_to_float(b):
     """ Convert binary string to a float. """
-    bf = int_to_bytes(int(b, 2), 8)  # 8 bytes needed for IEEE 754 binary64.
-    return struct.unpack('>d', bf)[0]
-
+    return struct.unpack(">f", b)[0]
 
 def int_to_bytes(n, length):  # Helper function
     """ Int/long to byte string.
@@ -314,14 +352,8 @@ def int_to_bytes(n, length):  # Helper function
 
 
 def float_to_bin(value):  # For testing.
-    """ Convert float to 64-bit binary string. """
-    # [d] = struct.unpack(">Q", struct.pack(">d", value))
-    # return '{:064b}'.format(d)
     """ Convert float to 32-bit binary string. """
-    [f] = struct.unpack(">L", struct.pack(">f", value))
-    return struct.pack("i", f)  # Pack the int as 4 bytes
-    # return bin(f)
-    # return '{:032b}'.format(f)
+    return struct.pack(">f", value)
 
 
 def compute_crc8ccitt(crc, data):

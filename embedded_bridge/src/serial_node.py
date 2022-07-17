@@ -149,6 +149,7 @@ class Node_EmbeddedBridge():
                                 self.drive_state.right[0] = data[2]
                                 self.drive_state.right[1] = data[3]
                                 
+                                
                             elif sys == 'arm_shoulder':
                                 # print("setting arm shoulder data")
                                 self.arm_state.MotorPos[0] = data[0]
@@ -233,9 +234,9 @@ class Node_EmbeddedBridge():
 
     def writeDriveCommand(self, control):
         # print(control.left+control.right)
-        # self.mapping['drive'].send_bytes('0', control.left + control.right, '1')
-        
-        self.mapping['drive'].send_bytes('0', [50, 50, 50, 50], '1')
+        self.mapping['drive'].send_bytes('0', control.left + control.right, '1')
+        print(f"speeds: {control.left + control.right}")
+        #self.mapping['drive'].send_bytes('0', [100, 100, 100, 100], '1')
         
         time.sleep(15)
         

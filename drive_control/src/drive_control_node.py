@@ -65,15 +65,10 @@ class Node_DriveControl():
         vLeftRear = self.left_rear_pid_controller(velocity_feedback.left[1])
         vRightRear = self.right_rear_pid_controller(velocity_feedback.right[1])
 
-        #self.correction_wheel_speed.left[0] = vLeftFront
-        #self.correction_wheel_speed.right[0] = vRightFront
-        #self.correction_wheel_speed.left[1] = vLeftRear
-        #self.correction_wheel_speed.right[1] = vRightRear
-
-        self.correction_wheel_speed.left[0] = 100
-        self.correction_wheel_speed.right[0] = 100
-        self.correction_wheel_speed.left[1] = 100
-        self.correction_wheel_speed.right[1] = 100
+        self.correction_wheel_speed.left[0] = vLeftFront
+        self.correction_wheel_speed.right[0] = vRightFront
+        self.correction_wheel_speed.left[1] = vLeftRear
+        self.correction_wheel_speed.right[1] = vRightRear
 
 
 if __name__ == "__main__":

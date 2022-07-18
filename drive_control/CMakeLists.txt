@@ -39,5 +39,7 @@ catkin_package(
 
 catkin_install_python(PROGRAMS
   src/drive_control_node.py
+  test/pub.py
+  test/sub.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

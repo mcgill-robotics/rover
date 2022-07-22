@@ -238,7 +238,7 @@ class Node_EmbeddedBridge():
         print(f"speeds: {control.left + control.right}")
         #self.mapping['drive'].send_bytes('0', [100, 100, 100, 100], '1')
         
-        time.sleep(15)
+        time.sleep(1)
         
 
     def writeScienceCommand(self, control):

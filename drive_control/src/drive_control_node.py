@@ -1,4 +1,5 @@
 import os, sys
+import time
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import rospy
@@ -38,10 +39,31 @@ class Node_DriveControl():
         while not rospy.is_shutdown():
             cmd = WheelSpeed()
         
-
+            print(self.wheel_speed)
             if(self.correction_wheel_speed is not None):
-                cmd = self.correction_wheel_speed
+                print("here1")
+                if(self.correction_wheel_speed.left[0] < 1):
+                    print("here")
+                    cmd.left[0] = self.wheel_speed[0]
+                else:
+                    cmd.left[0] = self.correction_wheel_speed.left[0]
+
+                if(self.correction_wheel_speed.left[1] < 1):
+                    cmd.left[1] = self.wheel_speed[0]
+                else:
+                    cmd.left[1] = self.correction_wheel_speed.left[1]
+
+                if(self.correction_wheel_speed.left[0] < 1):
+                    cmd.right[0] = self.wheel_speed[1]
+                else:
+                    cmd.right[0] = self.correction_wheel_speed.right[0]
+
+                if(self.correction_wheel_speed.left[0] < 1):
+                    cmd.right[1] = self.wheel_speed[1]
+                else:
+                    cmd.right[1] = self.correction_wheel_speed.right[1]    
             elif(self.wheel_speed is not None):
+                print("here2")
                 cmd.left[0] = self.wheel_speed[0]
                 cmd.right[0] = self.wheel_speed[1]
                 cmd.left[1] = self.wheel_speed[0]
@@ -50,6 +72,8 @@ class Node_DriveControl():
                 continue
 
             self.angular_velocity_publisher.publish(cmd)
+            time.sleep(0.1)
+            print(cmd)
 
     
     def set_correction_velocity(self, velocity_feedback):

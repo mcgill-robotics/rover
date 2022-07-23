@@ -39,11 +39,10 @@ class Node_DriveControl():
         while not rospy.is_shutdown():
             cmd = WheelSpeed()
         
-            print(self.wheel_speed)
+            print(f"Desired speed: {self.wheel_speed}")
+            
             if(self.correction_wheel_speed is not None):
-                print("here1")
                 if(self.correction_wheel_speed.left[0] < 1):
-                    print("here")
                     cmd.left[0] = self.wheel_speed[0]
                 else:
                     cmd.left[0] = self.correction_wheel_speed.left[0]
@@ -63,7 +62,6 @@ class Node_DriveControl():
                 else:
                     cmd.right[1] = self.correction_wheel_speed.right[1]    
             elif(self.wheel_speed is not None):
-                print("here2")
                 cmd.left[0] = self.wheel_speed[0]
                 cmd.right[0] = self.wheel_speed[1]
                 cmd.left[1] = self.wheel_speed[0]

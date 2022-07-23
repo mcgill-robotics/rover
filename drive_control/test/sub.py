@@ -8,7 +8,7 @@ def sub():
     rospy.spin()
 
 def printValues(values):
-    time.sleep(1)
+    time.sleep(0.1)
     print(values)
 
 if __name__ == "__main__":

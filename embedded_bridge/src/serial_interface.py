@@ -110,7 +110,6 @@ class SerialInterface:
               The rest of the bytes to be read. The original message if no valid packet found.
         """
         msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
-
         valid, packet, rest_of_msg = decode_bytes(msg)
 
         if valid:
@@ -164,7 +163,8 @@ class SerialInterface:
 
         self.serial.write(byte_array)
         if self.prints:
-            print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
+            #print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
+            print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc}')
         return True
 
 
@@ -495,9 +495,6 @@ if __name__ == "__main__":
 
 
         #s.send_bytes(frame_type, payload)
-        s.send_bytes(frame_type, [float(random.randint(0, 100)),
-                                  float(random.randint(0, 100)),
-                                  float(random.randint(0, 100)),
-                                  float(random.randint(0, 100))], '1')
+        s.send_bytes(frame_type, [50,50,50,50])
 
-        time.sleep(15)
+        time.sleep(1)

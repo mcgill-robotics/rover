@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from ctypes import sizeof
+import numpy
 import rospy
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
@@ -12,6 +14,9 @@ from embedded_bridge.msg import PowerFeedback
 from science_module.msg import ScienceCmd, ScienceFeedback, CcdData
 import time
 import struct
+
+
+tx_counter = 0
 
 class Node_EmbeddedBridge():
     """Serial ROS Node for exchanging data with the embedded systems on the 
@@ -83,14 +88,15 @@ class Node_EmbeddedBridge():
                 # Acquire latest messages from embedded systems
                 for sys in self.mapping:
                     if self.mapping[sys] is not None:
-                        time.sleep(0.1)
+                        time.sleep(0.4)
                         if self.mapping['drive'].serial.inWaiting() > 0:
                             valid, packet, rest_of_msg = self.mapping[sys].read_bytes()
                         else:
                             valid = False
 
+
                         # Filter out the rest of the message
-                        while len(rest_of_msg) > 0 and valid is True:
+                        while valid is True and len(rest_of_msg) > 0:
                             valid, packet, rest_of_msg = serialInt.decode_bytes(rest_of_msg)
                             str_packet = [str(i) for i in packet]
                             formatted_msg = ' '.join(str_packet)
@@ -193,7 +199,7 @@ class Node_EmbeddedBridge():
         # while not found:
         #     found, ports = serialInt.find_arduino_ports()
         
-        s = serialInt.SerialInterface("/dev/ttyACM0", baud_rate=self.baud, timeout=self.timeout)
+        s = serialInt.SerialInterface("/dev/ttyACM0", baud_rate=self.baud, timeout=self.timeout, prints=True)
         self.mapping['drive'] = s
 
         # self.port_list = serialInt.find_ports()
@@ -234,11 +240,23 @@ class Node_EmbeddedBridge():
 
     def writeDriveCommand(self, control):
         # print(control.left+control.right)
-        self.mapping['drive'].send_bytes('0', control.left + control.right, '1')
-        print(f"speeds: {control.left + control.right}")
+        #self.mapping['drive'].send_bytes('0', control.left + control.right, '1')
+        #print(f"speeds: {control.left + control.right}")
         #self.mapping['drive'].send_bytes('0', [100, 100, 100, 100], '1')
-        
-        time.sleep(1)
+
+        global tx_counter
+        if tx_counter == 10:
+            tx_counter=0
+            #FILTER FOR ELECTRICAL, from -100 to a 100
+            payload = []
+            payload.append(round(control.left[0]/250,2))
+            payload.append(round(control.left[0]/250,2))
+            payload.append(round(control.right[0]/250,2))
+            payload.append(round(control.right[0]/250,2))
+            self.mapping['drive'].send_bytes('0', payload, '1')
+        tx_counter = tx_counter+1
+
+        time.sleep(0.1)
         
 
     def writeScienceCommand(self, control):

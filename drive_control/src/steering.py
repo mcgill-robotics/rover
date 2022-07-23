@@ -8,7 +8,7 @@ class Steering:
         temp=wR*self.L/2
         wLeft=(vR+temp)/self.rWheel * 1000
         wRight=(vR-temp)/self.rWheel * 1000
-        val = (wLeft, wRight)                       
+        val = [wLeft, wRight]                       
         return val
 
 

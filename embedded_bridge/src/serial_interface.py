@@ -34,7 +34,7 @@ class SerialInterface:
     sync_id = 0
     connected = False
 
-    def __init__(self, port, baud_rate=9600, timeout=5, prints=True):
+    def __init__(self, port, baud_rate=115200, timeout=5, prints=True):
         # Port Information
         self.port = port
         self.baud_rate = baud_rate
@@ -110,7 +110,6 @@ class SerialInterface:
               The rest of the bytes to be read. The original message if no valid packet found.
         """
         msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
-
         valid, packet, rest_of_msg = decode_bytes(msg)
 
         if valid:
@@ -152,8 +151,7 @@ class SerialInterface:
             byte_array += payload_size.to_bytes(1, 'big')
             byte_array += system_id.encode('ascii')
             for pixel in payload:
-                pass
-                # TODO byte_array += 2_bytes_to_bin(pixel)
+                byte_array += two_bytes_to_bin(pixel)
 
         if packet_id in ('0', '1', '2'):
             # Compute crc8ccitt
@@ -165,7 +163,8 @@ class SerialInterface:
 
         self.serial.write(byte_array)
         if self.prints:
-            print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
+            #print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
+            print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc}')
         return True
 
 
@@ -284,7 +283,7 @@ def decode_bytes(msg: str, prints=True):
     elif frame_type in '2':
         # 3691 int16(pixels)
         checksum = msg[2 + payload_len + 1]
-        pass
+        pass #TODO implement
 
     # Checksum validation
     if crc != checksum:
@@ -313,12 +312,22 @@ def int_to_bytes(n, length):  # Helper function
     return decode('%%0%dx' % (length << 1) % n, 'hex')[-length:]
 
 
+"""
+Converts 2 bytes pixel to binary
+"""
+def pixel_to_bin(value):
+    return
+    # TODO implement
+
+"""
+Converts float to bytes
+"""
 def float_to_bin(value):  # For testing.
     """ Convert float to 64-bit binary string. """
     # [d] = struct.unpack(">Q", struct.pack(">d", value))
     # return '{:064b}'.format(d)
     """ Convert float to 32-bit binary string. """
-    [f] = struct.unpack(">L", struct.pack(">f", value))
+    [f] = struct.unpack(">l", struct.pack(">f", value))
     return struct.pack("i", f)  # Pack the int as 4 bytes
     # return bin(f)
     # return '{:032b}'.format(f)
@@ -449,7 +458,7 @@ def port_is_valid(port):
 
 
 if __name__ == "__main__":
-    # s = SerialInterface('/dev/ttyUSB0', 115200, 0.01)
+    s = SerialInterface('/dev/ttyACM0', 9600, 0.01)
 
     """
     ports = []
@@ -458,11 +467,11 @@ if __name__ == "__main__":
         ports.append(port)
     """
     # Find the Arduino Serial
-    found = False
-    while not found:
-        found, ports = find_arduino_ports()
+    #found = False
+    #while not found:
+    #    found, ports = find_arduino_ports()
 
-    s = SerialInterface(ports[0], 9600, timeout=5)
+    #s = SerialInterface(ports[0], 9600, timeout=5)
 
     while 1:
         frame_type = '0'
@@ -470,37 +479,22 @@ if __name__ == "__main__":
 
         valid = False
 
-        """
-        while not valid:
-            s.send_bytes(frame_type, payload)
-            valid, packet, rest_of_msg = s.wait_for_answer(5)
+
+        if s.serial.inWaiting() > 0:
+            read = True
+            valid, packet, rest_of_msg = s.read_bytes()
             print(packet)
-        """
-        time.sleep(2)
-
-        #s.send_bytes(frame_type, payload)
-        s.send_bytes(frame_type, [float(random.randint(0, 180))])
-
-        time.sleep(3)
-
-        read = False
-        for i in range(3):
-            if s.serial.inWaiting() > 0:
-                read = True
-                valid, packet, rest_of_msg = s.read_bytes()
-                print(packet)
+            str_packet = [str(i) for i in packet]
+            formatted_msg = ' '.join(str_packet)
+            print(f"Message from arduino: {formatted_msg}")
+            while len(rest_of_msg) > 0 and valid is True:
+                valid, packet, rest_of_msg = decode_bytes(rest_of_msg)
                 str_packet = [str(i) for i in packet]
                 formatted_msg = ' '.join(str_packet)
                 print(f"Message from arduino: {formatted_msg}")
-                while len(rest_of_msg) > 0 and valid is True:
-                    valid, packet, rest_of_msg = decode_bytes(rest_of_msg)
-                    str_packet = [str(i) for i in packet]
-                    formatted_msg = ' '.join(str_packet)
-                    print(f"Message from arduino: {formatted_msg}")
-                s.serial.flush()
-                break
-            time.sleep(1)
 
-        if not read:
-            s.serial.flush()
-            print("Nothing read")
+
+        #s.send_bytes(frame_type, payload)
+        s.send_bytes(frame_type, [50,50,50,50])
+
+        time.sleep(1)

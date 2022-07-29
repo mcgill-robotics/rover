@@ -43,7 +43,7 @@ class SerialInterface:
         # Communication Protocol Info
         self.window = [''] * self.WINDOW_SIZE
         self.SYS_ID = 'P'
-        self.peer_sys = ''
+        #self.peer_sys = ''
 
         # Others
         self.prints = prints

@@ -12,6 +12,7 @@ from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from visualization_msgs.msg import MarkerArray
 from arm_control.msg import ArmStatusFeedback
+from std_msgs.msg import Int16
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
@@ -73,6 +74,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.drive_backend.update_twist_data)
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
         self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints) 
+        self.system_select_publisher = rospy.Publisher("system_selection", Int16, queue_size=1)
 
         # Rospy subscriber
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
@@ -179,16 +181,20 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         '''
 
         if value == "Arm-Cartesian Control":
-            pass
+            msg = Int16(0)
+            self.system_select_publisher(msg)
             # return arm file
         elif value == "Arm-Joint Control":
-            pass
+            msg = Int16(0)
+            self.system_select_publisher.publish(msg)
             # Return arm file
         elif value == "Science":
-            pass
+            msg = Int16(1)
+            self.system_select_publisher.publish(msg)
             # Return science file
         elif value == "Drive":
-            pass
+            msg = Int16(2)
+            self.system_select_publisher.publish(msg)
             # Return drive file
         else:
             pass

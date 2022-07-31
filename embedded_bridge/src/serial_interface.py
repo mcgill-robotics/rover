@@ -404,19 +404,18 @@ def find_ports():
                 port_list.append(port)
 
     elif sys.platform == "linux" or sys.platform == "linux2":
+    
         for i in range(0, 128):
             port = "/dev/ttyUSB" + str(i)
             if port_is_valid(port):
                 port_list.append(port)
-            else:
-                break
 
         for i in range(0, 128):
             port = "/dev/ttyACM" + str(i)
+            print(f"port: {port}")
             if port_is_valid(port):
                 port_list.append(port)
-            else:
-                break
+            
 
     return port_list
 

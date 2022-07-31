@@ -55,7 +55,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
         rospy.init_node("UINode", anonymous=True)
-
+        print("Started")
 
         # Listeners
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
@@ -82,7 +82,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # TODO: ML, CCD Camera, Microcamera
 
         # Rospy publisher
-        self.science_module_publisher = rospy.Publisher("science_controller_feedback", SciencePilot, queue_size=10)
+        self.science_module_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=10)
         # TODO: KillSwitch Publisher
 
     ## SCIENCE SECTION
@@ -93,12 +93,12 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         :param msg: ScienceFeedback
         """
-        self.update_boolean_value(msg.Stepper1Fault, self.Science.stepper1Fault_bool)
-        self.update_boolean_value(msg.Stepper2Fault, self.Science.stepper2Fault_bool)
+        self.update_boolean_value(msg.Stepper1Fault, self.Science.stepper1Fault_boolLabel)
+        self.update_boolean_value(msg.Stepper2Fault, self.Science.stepper2Fault_boolLabel)
         self.update_boolean_value(msg.PeltierState, self.Science.coolerState_bool)
-        self.update_boolean_value(msg.LedState, self.Science.ledState_state_label)
-        self.update_boolean_value(msg.LaserState, self.Science.laserState_state_label)
-        self.update_boolean_value(msg.GripperState, self.Science.gripperState_state_label)
+        self.update_boolean_value(msg.LedState, self.Science.ledState_label)
+        self.update_boolean_value(msg.LaserState, self.Science.laserState_label)
+        self.update_boolean_value(msg.GripperState, self.Science.gripperState_label)
 
     # Helpers
     def send_science_shutdown(self):
@@ -114,7 +114,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         Function creating a SciencePilot message and sending request through messaging broker
         """
         msg = SciencePilot()
-
+        print("Here")
         self.Science.laserState_toggle.isChecked()
 
         # Booleans
@@ -136,6 +136,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         msg.Stepper2ControlMode = self.get_uint_spin_box_value(self.Science.stepper2ControlMode_spinBox)
 
         self.science_module_publisher.publish(msg)
+        print(msg)
+        print("=====================================")
 
     ## POWER SECTION
     # Subscribers
@@ -180,20 +182,16 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         select the control system.
         '''
 
-        if value == "Arm-Cartesian Control":
+        if value == "Arm":
             msg = Int16(0)
             self.system_select_publisher(msg)
             # return arm file
-        elif value == "Arm-Joint Control":
-            msg = Int16(0)
-            self.system_select_publisher.publish(msg)
-            # Return arm file
         elif value == "Science":
-            msg = Int16(1)
+            msg = Int16(5)
             self.system_select_publisher.publish(msg)
             # Return science file
         elif value == "Drive":
-            msg = Int16(2)
+            msg = Int16(1)
             self.system_select_publisher.publish(msg)
             # Return drive file
         else:

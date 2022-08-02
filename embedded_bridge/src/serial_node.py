@@ -91,8 +91,8 @@ class Node_EmbeddedBridge():
                 # Acquire latest messages from embedded systems
                 for sys in self.mapping:
                     if self.mapping[sys] is not None:
-                        time.sleep(0.4)
-                        if self.mapping['drive'].serial.inWaiting() > 0:
+                        time.sleep(0.5)
+                        if self.mapping[sys].serial.inWaiting() > 0:
                             valid, packet, rest_of_msg = self.mapping[sys].read_bytes()
                         else:
                             valid = False
@@ -203,7 +203,7 @@ class Node_EmbeddedBridge():
         """
         
         # s = serialInt.SerialInterface("/dev/ttyACM0", baud_rate=self.baud, timeout=self.timeout, prints=True)
-        # self.mapping['drive'] = s
+        # self.mapping['science'] = s
 
         self.port_list = serialInt.find_ports()
 
@@ -214,6 +214,7 @@ class Node_EmbeddedBridge():
             bridge.send_bytes('0', [0, 0, 0, 0], '1')
             time.sleep(1)
             if bridge.serial.inWaiting() > 0:
+                print("Reading")
                 valid, packet, rest_of_msg = bridge.read_bytes()
             if valid is True:
                 valid, packet, rest_of_msg = serialInt.decode_bytes(rest_of_msg)
@@ -268,23 +269,29 @@ class Node_EmbeddedBridge():
 
     def writeScienceCommand(self, control):
         # Send State Request
-        state = 0
-        state += int(control.LedState)
-        state += int(control.LaserState) << 1
-        state += int(control.GripperState) << 2
-        state += int(control.PeltierState) << 3
-        state += int(control.CcdSensorSnap) << 4
-        state += int(control.Shutdown) << 5
-        time.sleep(1)
-        msg = [state, control.MotorSpeed, control.Stepper1IncAng, control.Stepper2IncAng]
-        self.mapping["science"].send_bytes('0', msg, '5')
+        # state = 0
+        # state += int(control.LedState)
+        # state += int(control.LaserState) << 1
+        # state += int(control.GripperState) << 2
+        # state += int(control.PeltierState) << 3
+        # state += int(control.CcdSensorSnap) << 4
+        # state += int(control.Shutdown) << 5
+        global tx_counter
+        if tx_counter == 10:
+            tx_counter=0
+            msg = [int(control.GripperState),
+                control.Stepper1IncAng,
+                control.Stepper2IncAng,
+                round(control.MotorSpeed,2)]
+            self.mapping["science"].send_bytes('0', msg, '5')
+        tx_counter = tx_counter+1
+        time.sleep(0.1)
 
 
     def writePowerCommand(self, control):
         pass
 
     def current_system_power(self, sys_id):
-        
         if sys_id.data == 1:   #drive
             self.mapping["power"].send_bytes('0', [1,0,0], '4')
         elif sys_id.data == 0:  #arm

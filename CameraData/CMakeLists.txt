@@ -21,7 +21,7 @@ catkin_package(
   std_msgs
   sensor_msgs
   message_runtime
-  LIBRARIES human_control_interface
+  LIBRARIES CameraData
 )
 
 catkin_install_python(PROGRAMS 

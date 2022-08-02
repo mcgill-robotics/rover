@@ -59,7 +59,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         # Listeners
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
-        
+        self.camera_selector.currentTextChanged.connect(self.on_camera_changed)
         # power
         self.Autonomy.kill_power_button.clicked.connect(self.on_kill_power)
 
@@ -75,7 +75,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
         self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints) 
         self.system_select_publisher = rospy.Publisher("system_selection", Int16, queue_size=1)
-
+        self.camera_select_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
         # Rospy subscriber
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
         self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.on_science_feedback)
@@ -184,7 +184,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         if value == "Arm":
             msg = Int16(0)
-            self.system_select_publisher(msg)
+            self.system_select_publisher.publish(msg)
             # return arm file
         elif value == "Science":
             msg = Int16(5)
@@ -197,6 +197,17 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         else:
             pass
             # Return self for autonomy
+
+    def on_camera_changed(self, value):
+        if value == "Cam 1":
+            msg = Int16(0)
+            self.camera_select_publisher.publish(msg)
+        elif value == "Cam 2":
+            msg = Int16(1)
+            self.camera_select_publisher.publish(msg)
+        elif value == "Cam 3":
+            msg = Int16(2)
+            self.camera_select_publisher.publish(msg)
 
 
 def main():

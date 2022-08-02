@@ -146,7 +146,7 @@ class ScienceSystem:
             self.science_control_publisher.publish(newCmd)
             print(newCmd)
             print("========================================")
-            rospy.sleep(0.001)
+            rospy.sleep(0.1)
 
 if __name__ == "__main__":
     scienceSystem = ScienceSystem()

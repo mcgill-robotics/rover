@@ -7,14 +7,15 @@ sys.path.append(currentdir)
 from ui_layout import Ui_MainWindow
 import rospy
 from drive import Drive_Backend
-from UI_App.msg import WheelSpeed
+from arm_backend import Arm_Backend
+from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from visualization_msgs.msg import MarkerArray
+from arm_control.msg import ArmStatusFeedback
+from std_msgs.msg import Int16
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
-from std_msgs.msg import Int16
-from arm_control.msg import ArmStatusFeedback
 
 
 from embedded_bridge.msg import PowerFeedback
@@ -26,7 +27,28 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
     app present in ui_layout.py. Most of the app is controlled from this class.
     '''
 
-    
+    ## READER FUNCTIONS
+    @staticmethod
+    def get_boolean_value(button):
+        return button.isChecked()
+
+    @staticmethod
+    def get_double_spin_box_value(double_spin_box):
+        return float(double_spin_box.value())
+
+    @staticmethod
+    def get_uint_spin_box_value(spin_box):
+        return int(spin_box.value())
+
+    ## UPDATER FUNCTIONS
+    @staticmethod
+    def update_boolean_value(condition, label):
+        label.setText("Enabled" if condition else "Disabled")
+
+    @staticmethod
+    def update_float_value(value, label):
+        label.display("%.2f" % float(value))
+
 
     def __init__(self, *args, **kwargs):
         # Setup the UI from Ui_MainWindow
@@ -47,13 +69,13 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         #drive setup
         self.drive_backend = Drive_Backend(self.Drive)
+        self.arm_backend = Arm_Backend(self.Arm)
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)
         self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.drive_backend.update_twist_data)
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
         self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints) 
         self.system_select_publisher = rospy.Publisher("system_selection", Int16, queue_size=1)
         self.camera_select_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
-
         # Rospy subscriber
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
         self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.on_science_feedback)
@@ -139,8 +161,6 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.power_killed = signal
         self.Autonomy.kill_switch_bool.setText("System Killed" if signal else "System Normal")
         # TODO: Change system enabled?
-
-
 
     def arm_error_toggle(self, signal):
         '''

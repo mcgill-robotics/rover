@@ -144,7 +144,9 @@ class ScienceSystem:
             newCmd.Stepper2IncAng = angle_stepper2
 
             self.science_control_publisher.publish(newCmd)
-            rospy.sleep(0.001)
+            print(newCmd)
+            print("========================================")
+            rospy.sleep(0.1)
 
 if __name__ == "__main__":
     scienceSystem = ScienceSystem()

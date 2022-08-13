@@ -123,6 +123,7 @@ class SerialInterface:
     def send_bytes(self, packet_id, payload=[], system_id='N'):
 
         length = len(payload)
+        print(length)
         payload_size = 0
 
         if packet_id in ('0', '1'):
@@ -407,6 +408,7 @@ def find_ports():
     
         for i in range(0, 128):
             port = "/dev/ttyUSB" + str(i)
+            print(f"port: {port}")
             if port_is_valid(port):
                 port_list.append(port)
 

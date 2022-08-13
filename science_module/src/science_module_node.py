@@ -86,16 +86,7 @@ class ScienceSystem:
 
         self.stepper1_control_mode = msg.Stepper1ControlMode
         self.stepper2_control_mode = msg.Stepper2ControlMode
-
-        if msg.ContMotorSpeed == 0:     #stop
-            self.excavator_vel = 0
-        elif msg.ContMotorSpeed == 1:   #up
-            self.excavator_vel = 1
-        elif msg.ContMotorSpeed == 2:   #down
-            self.excavator_vel = -1
-        else:
-            print("Unknown excavator state")
-            self.excavator_vel = 0
+        self.excavator_vel = msg.ContMotorSpeed
 
     # run the system; publish control data + subscribe to feedback data
     def run(self):

@@ -12,8 +12,8 @@ from geometry_msgs.msg import Twist
 class Node_DriveControl():
 
     def __init__(self):
-        self.wheel_radius = 10
-        self.wheel_base_length = 20
+        self.wheel_radius = 0.125
+        self.wheel_base_length = 1
         self.wheel_speed = None
         self.same_speed = True
         self.correction_wheel_speed = None

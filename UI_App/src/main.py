@@ -66,6 +66,9 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # science
         self.Science.send_button.clicked.connect(self.send_science_pilot)
         self.Science.io_shutdown_button.clicked.connect(self.send_science_shutdown)
+        self.Science.upButton.clicked.connect(self.send_up_signal)
+        self.Science.stopButton.clicked.connect(self.send_stop_signal)
+        self.Science.downButton.clicked.connect(self.send_down_signal)
 
         #drive setup
         self.drive_backend = Drive_Backend(self.Drive)
@@ -125,7 +128,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         msg.CcdSensorSnap = self.get_boolean_value(self.Science.ccdSensorSnap_toggle)
 
         # Float 32
-        msg.ContMotorSpeed = self.get_double_spin_box_value(self.Science.contMotorSpeed_doubleSpinBox)
+        #msg.ContMotorSpeed = self.get_double_spin_box_value(self.Science.contMotorSpeed_doubleSpinBox)
         msg.StepperMotor1Pos = self.get_double_spin_box_value(self.Science.stepper1Pos_doubleSpinBox)
         msg.StepperMotor2Pos = self.get_double_spin_box_value(self.Science.stepper1Pos_doubleSpinBox)
         msg.StepperMotor1Speed = self.get_double_spin_box_value(self.Science.stepper1Speed_doubleSpinBox)
@@ -197,6 +200,24 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         else:
             pass
             # Return self for autonomy
+
+    def send_up_signal(self):
+        msg = SciencePilot()
+        msg.ContMotorSpeed = 1.0
+        self.science_module_publisher.publish(msg)
+        print(msg)
+
+    def send_stop_signal(self):
+        msg = SciencePilot()
+        msg.ContMotorSpeed = 0.0
+        self.science_module_publisher.publish(msg)
+        print(msg)
+    
+    def send_down_signal(self):
+        msg = SciencePilot()
+        msg.ContMotorSpeed = -1.0
+        self.science_module_publisher.publish(msg)
+        print(msg)
 
     def on_camera_changed(self, value):
         if value == "Cam 1":

@@ -38,9 +38,9 @@ class Node_GamepadProcessing:
         self.sci_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=1)
 
     def gamepadProcessCall(self, msg):
-        if self.active_system == 0:
+        if self.active_system == 1:
             self.driveProcessCall(msg)
-        elif self.active_system == 1:
+        elif self.active_system == 0:
             self.armProcessCall(msg)
         elif self.active_system == 2:
             self.scienceProcessCall(msg)

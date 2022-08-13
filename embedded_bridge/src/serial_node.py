@@ -211,7 +211,7 @@ class Node_EmbeddedBridge():
             print("=========>>>>> port")
             
             bridge = serialInt.SerialInterface(port, self.baud, self.timeout)
-            bridge.send_bytes('0', [0, 0, 0, 0], '1')
+            bridge.send_bytes('0', [0, 0, 0, 0, 0], '1')
             time.sleep(1)
             if bridge.serial.inWaiting() > 0:
                 print("Reading")
@@ -258,10 +258,10 @@ class Node_EmbeddedBridge():
             tx_counter=0
             #FILTER FOR ELECTRICAL, from -100 to a 100
             payload = []
-            payload.append(round(control.left[0]/250,2))
-            payload.append(round(control.left[0]/250,2))
-            payload.append(round(control.right[0]/250,2))
-            payload.append(round(control.right[0]/250,2))
+            payload.append(round(control.left[0]/1,2))
+            payload.append(round(control.left[0]/1,2))
+            payload.append(round(control.right[0]/1,2))
+            payload.append(round(control.right[0]/1,2))
             self.mapping['drive'].send_bytes('0', payload, '1')
         tx_counter = tx_counter+1
         time.sleep(0.1)
@@ -279,7 +279,8 @@ class Node_EmbeddedBridge():
         global tx_counter
         if tx_counter == 10:
             tx_counter=0
-            msg = [int(control.GripperState),
+            msg = [int(control.Shutdown),
+                int(control.GripperState),
                 control.Stepper1IncAng,
                 control.Stepper2IncAng,
                 round(control.MotorSpeed,2)]

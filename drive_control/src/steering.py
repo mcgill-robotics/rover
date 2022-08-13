@@ -6,8 +6,8 @@ class Steering:
         
     def steering_control(self, vR, wR): # R = rover
         temp=wR*self.L/2
-        wLeft=(vR+temp)/self.rWheel * 1000
-        wRight=(vR-temp)/self.rWheel * 1000
+        wLeft=(vR+temp)/self.rWheel
+        wRight=(vR-temp)/self.rWheel
         val = [wLeft, wRight]                       
         return val
 

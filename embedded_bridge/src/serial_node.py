@@ -249,10 +249,10 @@ class Node_EmbeddedBridge():
             tx_counter=0
             #FILTER FOR ELECTRICAL, from -100 to a 100
             payload = []
-            payload.append(round(control.left[0]/250,2))
-            payload.append(round(control.left[0]/250,2))
-            payload.append(round(control.right[0]/250,2))
-            payload.append(round(control.right[0]/250,2))
+            payload.append(round(control.left[0]*100,2))
+            payload.append(round(control.left[1]*100,2))
+            payload.append(round(control.right[0]*100,2))
+            payload.append(round(control.right[1]*100,2))
             self.mapping['drive'].send_bytes('0', payload, '1')
         tx_counter = tx_counter+1
 

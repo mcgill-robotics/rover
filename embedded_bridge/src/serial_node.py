@@ -202,24 +202,6 @@ class Node_EmbeddedBridge():
         s = serialInt.SerialInterface("/dev/ttyACM0", baud_rate=self.baud, timeout=self.timeout, prints=True)
         self.mapping['drive'] = s
 
-        # self.port_list = serialInt.find_ports()
-
-        # for port in self.port_list:
-        #     sys = serialInt.SerialInterface(port, self.baud, self.timeout)
-            # # Map system
-            # if sys.peer_sys == '0':
-                # self.mapping['drive'] = sys
-            # #elif sys.peer_sys == '1':
-            # #    self.mapping['drive_right'] = sys
-            # elif sys.peer_sys == '2':
-            #     self.mapping['arm_shoulder'] = sys
-            # elif sys.peer_sys == '3':
-            #     self.mapping['arm_forearm'] = sys
-            # elif sys.peer_sys == '4':
-            #     self.mapping['power'] = sys
-            # elif sys.peer_sys == '5':
-            #     self.mapping['science'] = sys
-
         print(self.port_list)
         print(self.mapping)
 

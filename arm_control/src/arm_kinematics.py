@@ -2,11 +2,11 @@ import numpy as np
 import math
 
 arm_DH = [
-    [0.0575,               0,     0, -90*math.pi/180],
-    [     0, -90*math.pi/180,   0.5,               0],
-    [     0,  90*math.pi/180,   0.4,               0],
-    [     0,  90*math.pi/180,     0,  90*math.pi/180],
-    [ 0.034,               0,     0,               0]
+    [0.0575,                0,     0, -90*math.pi/180], #vertical offset from base
+    [     0, -90*math.pi/180,   0.5,               0], #first link
+    [     0,  90*math.pi/180,   0.4,               0], #second link
+    [     0,  90*math.pi/180,     0,  90*math.pi/180], 
+    [ 0.034,               0,     0,               0] #hand 
 ]
 
 def Pose2Mat(pose):
@@ -289,3 +289,38 @@ def inverseVelocity(q, dx):
         raise ValueError
 
     return dq
+
+
+def calculate_angles(ee_target):
+        """Calculates the necessary angles of all joints to achieve the target end effector position
+
+        Parameters
+        --------
+            Parameters
+        --------
+            ee_target : list(float)
+                list of the values of the desired coordinates (x, y, z) where x is forward/back,
+                y is up/down, and z is right/left and the hand angles (vertical relative to the x axis,
+                rotational relative to standard frame of reference)
+            
+        Returns
+        --------
+            joint_angles : list(float)
+                list of angles in radians of joints from base to end effector, relative to 
+                the last joint
+        """
+        wrist_coordinates = (ee_target[0] - arm_DH[4][0] * math.cos(ee_target[3]), ee_target[1] - arm_DH[4][0] * math.sin(ee_target[3], ee_target[2]))
+        true_base_coordinates = (0, arm_DH[0][0], 0)
+        d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[1]) ** 2)
+        theta_d = math.atan((wrist_coordinates[1] - true_base_coordinates[1]) / wrist_coordinates[0])
+
+        theta_l1_l2 = theta_d + math.acos((d ** 2 + arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2) / (2 * d * arm_DH[1][2]))
+        theta_b = math.acos((arm_DH[1][2] ** 2 + arm_DH[2][2] ** 2 - d ** 2) / (2 * arm_DH[1][2] * arm_DH[2][2]))
+
+        joint_angles = [math.atan(ee_target[2] / ee_target[0]), #base z
+        theta_b, # base angle relative to x axis
+        theta_l1_l2, # inner angle between L1 and L2
+        ee_target[4], # wrist rotation
+        180 + ee_target[3] + theta_l1_l2 - theta_b] # inner angle between L1 and L2
+
+        return joint_angles

@@ -1,4 +1,5 @@
 import os, sys
+from ssl import _PasswordType
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import kinematics
@@ -8,7 +9,7 @@ class InverseKinematicsController():
 
     def __init__(self, dt, home_state, max_vel) -> None:
         self.goal = None
-        self.dt = dt
+        self.dt = dt 
         self.home_state = home_state
         self.max_vel = max_vel
 

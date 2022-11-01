@@ -41,9 +41,9 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-55</y>
             <width>418</width>
-            <height>761</height>
+            <height>760</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
@@ -537,25 +537,23 @@
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacer_13">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                <widget class="QPushButton" name="upButton">
+                 <property name="text">
+                  <string>Up</string>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
+                </widget>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="contMotorSpeed_doubleSpinBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+                <widget class="QPushButton" name="downButton">
+                 <property name="text">
+                  <string>Down</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="stopButton">
+                 <property name="text">
+                  <string>Stop</string>
                  </property>
                 </widget>
                </item>

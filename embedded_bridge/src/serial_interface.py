@@ -43,7 +43,7 @@ class SerialInterface:
         # Communication Protocol Info
         self.window = [''] * self.WINDOW_SIZE
         self.SYS_ID = 'P'
-        self.peer_sys = ''
+        #self.peer_sys = ''
 
         # Others
         self.prints = prints
@@ -123,6 +123,7 @@ class SerialInterface:
     def send_bytes(self, packet_id, payload=[], system_id='N'):
 
         length = len(payload)
+        print(length)
         payload_size = 0
 
         if packet_id in ('0', '1'):
@@ -404,19 +405,19 @@ def find_ports():
                 port_list.append(port)
 
     elif sys.platform == "linux" or sys.platform == "linux2":
+    
         for i in range(0, 128):
             port = "/dev/ttyUSB" + str(i)
+            print(f"port: {port}")
             if port_is_valid(port):
                 port_list.append(port)
-            else:
-                break
 
         for i in range(0, 128):
             port = "/dev/ttyACM" + str(i)
+            print(f"port: {port}")
             if port_is_valid(port):
                 port_list.append(port)
-            else:
-                break
+            
 
     return port_list
 

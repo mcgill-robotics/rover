@@ -86,8 +86,7 @@ class ScienceSystem:
 
         self.stepper1_control_mode = msg.Stepper1ControlMode
         self.stepper2_control_mode = msg.Stepper2ControlMode
-
-        self.excavator_vel= msg.ContMotorSpeed
+        self.excavator_vel = msg.ContMotorSpeed
 
     # run the system; publish control data + subscribe to feedback data
     def run(self):
@@ -144,7 +143,9 @@ class ScienceSystem:
             newCmd.Stepper2IncAng = angle_stepper2
 
             self.science_control_publisher.publish(newCmd)
-            rospy.sleep(0.001)
+            print(newCmd)
+            print("========================================")
+            rospy.sleep(0.1)
 
 if __name__ == "__main__":
     scienceSystem = ScienceSystem()

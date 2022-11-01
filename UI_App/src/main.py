@@ -12,6 +12,7 @@ from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from visualization_msgs.msg import MarkerArray
 from arm_control.msg import ArmStatusFeedback
+from std_msgs.msg import Int16
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
@@ -54,17 +55,20 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         super().__init__(*args, **kwargs)
         self.setupUi(self)
         rospy.init_node("UINode", anonymous=True)
-
+        print("Started")
 
         # Listeners
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
-        
+        self.camera_selector.currentTextChanged.connect(self.on_camera_changed)
         # power
         self.Autonomy.kill_power_button.clicked.connect(self.on_kill_power)
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_pilot)
         self.Science.io_shutdown_button.clicked.connect(self.send_science_shutdown)
+        self.Science.upButton.clicked.connect(self.send_up_signal)
+        self.Science.stopButton.clicked.connect(self.send_stop_signal)
+        self.Science.downButton.clicked.connect(self.send_down_signal)
 
         #drive setup
         self.drive_backend = Drive_Backend(self.Drive)
@@ -73,14 +77,15 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.drive_backend.update_twist_data)
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
         self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints) 
-
+        self.system_select_publisher = rospy.Publisher("system_selection", Int16, queue_size=1)
+        self.camera_select_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
         # Rospy subscriber
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
         self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.on_science_feedback)
         # TODO: ML, CCD Camera, Microcamera
 
         # Rospy publisher
-        self.science_module_publisher = rospy.Publisher("science_controller_feedback", SciencePilot, queue_size=10)
+        self.science_module_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=10)
         # TODO: KillSwitch Publisher
 
     ## SCIENCE SECTION
@@ -91,12 +96,12 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         :param msg: ScienceFeedback
         """
-        self.update_boolean_value(msg.Stepper1Fault, self.Science.stepper1Fault_bool)
-        self.update_boolean_value(msg.Stepper2Fault, self.Science.stepper2Fault_bool)
+        self.update_boolean_value(msg.Stepper1Fault, self.Science.stepper1Fault_boolLabel)
+        self.update_boolean_value(msg.Stepper2Fault, self.Science.stepper2Fault_boolLabel)
         self.update_boolean_value(msg.PeltierState, self.Science.coolerState_bool)
-        self.update_boolean_value(msg.LedState, self.Science.ledState_state_label)
-        self.update_boolean_value(msg.LaserState, self.Science.laserState_state_label)
-        self.update_boolean_value(msg.GripperState, self.Science.gripperState_state_label)
+        self.update_boolean_value(msg.LedState, self.Science.ledState_label)
+        self.update_boolean_value(msg.LaserState, self.Science.laserState_label)
+        self.update_boolean_value(msg.GripperState, self.Science.gripperState_label)
 
     # Helpers
     def send_science_shutdown(self):
@@ -112,7 +117,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         Function creating a SciencePilot message and sending request through messaging broker
         """
         msg = SciencePilot()
-
+        print("Here")
         self.Science.laserState_toggle.isChecked()
 
         # Booleans
@@ -123,7 +128,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         msg.CcdSensorSnap = self.get_boolean_value(self.Science.ccdSensorSnap_toggle)
 
         # Float 32
-        msg.ContMotorSpeed = self.get_double_spin_box_value(self.Science.contMotorSpeed_doubleSpinBox)
+        #msg.ContMotorSpeed = self.get_double_spin_box_value(self.Science.contMotorSpeed_doubleSpinBox)
         msg.StepperMotor1Pos = self.get_double_spin_box_value(self.Science.stepper1Pos_doubleSpinBox)
         msg.StepperMotor2Pos = self.get_double_spin_box_value(self.Science.stepper1Pos_doubleSpinBox)
         msg.StepperMotor1Speed = self.get_double_spin_box_value(self.Science.stepper1Speed_doubleSpinBox)
@@ -134,6 +139,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         msg.Stepper2ControlMode = self.get_uint_spin_box_value(self.Science.stepper2ControlMode_spinBox)
 
         self.science_module_publisher.publish(msg)
+        print(msg)
+        print("=====================================")
 
     ## POWER SECTION
     # Subscribers
@@ -178,21 +185,50 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         select the control system.
         '''
 
-        if value == "Arm-Cartesian Control":
-            pass
+        if value == "Arm":
+            msg = Int16(0)
+            self.system_select_publisher.publish(msg)
             # return arm file
-        elif value == "Arm-Joint Control":
-            pass
-            # Return arm file
         elif value == "Science":
-            pass
+            msg = Int16(5)
+            self.system_select_publisher.publish(msg)
             # Return science file
         elif value == "Drive":
-            pass
+            msg = Int16(1)
+            self.system_select_publisher.publish(msg)
             # Return drive file
         else:
             pass
             # Return self for autonomy
+
+    def send_up_signal(self):
+        msg = SciencePilot()
+        msg.ContMotorSpeed = 1.0
+        self.science_module_publisher.publish(msg)
+        print(msg)
+
+    def send_stop_signal(self):
+        msg = SciencePilot()
+        msg.ContMotorSpeed = 0.0
+        self.science_module_publisher.publish(msg)
+        print(msg)
+    
+    def send_down_signal(self):
+        msg = SciencePilot()
+        msg.ContMotorSpeed = -1.0
+        self.science_module_publisher.publish(msg)
+        print(msg)
+
+    def on_camera_changed(self, value):
+        if value == "Cam 1":
+            msg = Int16(0)
+            self.camera_select_publisher.publish(msg)
+        elif value == "Cam 2":
+            msg = Int16(1)
+            self.camera_select_publisher.publish(msg)
+        elif value == "Cam 3":
+            msg = Int16(2)
+            self.camera_select_publisher.publish(msg)
 
 
 def main():

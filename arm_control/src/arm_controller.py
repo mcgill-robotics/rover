@@ -7,7 +7,7 @@ import arm_kinematics
 import numpy as np
 import time
 import rospy
-from arm_control.msg import ProcessedControllerInput, ArmMotorCommand, ArmStatusFeedback
+from arm_control.msg import ArmMotorCommand, ArmStatusFeedback, ArmControllerInput
 
 class Node_ArmControl():
 
@@ -46,7 +46,7 @@ class Node_ArmControl():
         # Initialize ROS
         rospy.init_node("arm_control", anonymous=False)
         self.armControlPublisher = rospy.Publisher("arm_control_data", ArmMotorCommand, queue_size=1)
-        self.uiSubscriber        = rospy.Subscriber("arm_controller_input", ProcessedControllerInput, self.controlLoop)
+        self.uiSubscriber        = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
         self.armStateSubscriber  = rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.updateArmState)
 
         self.run()
@@ -59,7 +59,7 @@ class Node_ArmControl():
             cmds.ClawState = self.ee_d
 
             self.armControlPublisher.publish(cmds)
-
+            print(cmds)
             time.sleep(0.01)
 
 

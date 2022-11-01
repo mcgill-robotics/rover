@@ -12,9 +12,10 @@ from geometry_msgs.msg import Twist
 class Node_DriveControl():
 
     def __init__(self):
-        self.wheel_radius = 10
-        self.wheel_base_length = 20
+        self.wheel_radius = 0.125
+        self.wheel_base_length = 1
         self.wheel_speed = None
+        self.same_speed = True
         self.correction_wheel_speed = None
         self.steering = Steering(self.wheel_radius, self.wheel_base_length)
         self.right_front_pid_controller = PID(1, 0.1, 0.05, 0)
@@ -32,65 +33,61 @@ class Node_DriveControl():
     def twist_to_velocity(self, robot_twist):
         vR = robot_twist.linear.x
         wR = robot_twist.angular.z
+        self.same_speed = False
         self.wheel_speed = self.steering.steering_control(vR, wR)
+
 
 
     def run(self):
         while not rospy.is_shutdown():
-            cmd = WheelSpeed()
+            if not self.same_speed:
+                cmd = WheelSpeed()
         
-            print(f"Desired speed: {self.wheel_speed}")
+                print(f"Desired speed: {self.wheel_speed}")
             
-            if(self.correction_wheel_speed is not None):
-                if(self.correction_wheel_speed.left[0] < 1):
-                    cmd.left[0] = self.wheel_speed[0]
-                else:
+                if(self.correction_wheel_speed is not None):
                     cmd.left[0] = self.correction_wheel_speed.left[0]
-
-                if(self.correction_wheel_speed.left[1] < 1):
-                    cmd.left[1] = self.wheel_speed[0]
-                else:
                     cmd.left[1] = self.correction_wheel_speed.left[1]
-
-                if(self.correction_wheel_speed.left[0] < 1):
-                    cmd.right[0] = self.wheel_speed[1]
-                else:
                     cmd.right[0] = self.correction_wheel_speed.right[0]
+                    cmd.right[1] = self.correction_wheel_speed.right[1] 
 
-                if(self.correction_wheel_speed.left[0] < 1):
+                elif(self.wheel_speed is not None):
+                    cmd.left[0] = self.wheel_speed[0]
+                    cmd.right[0] = self.wheel_speed[1]
+                    cmd.left[1] = self.wheel_speed[0]
                     cmd.right[1] = self.wheel_speed[1]
                 else:
-                    cmd.right[1] = self.correction_wheel_speed.right[1]    
-            elif(self.wheel_speed is not None):
-                cmd.left[0] = self.wheel_speed[0]
-                cmd.right[0] = self.wheel_speed[1]
-                cmd.left[1] = self.wheel_speed[0]
-                cmd.right[1] = self.wheel_speed[1]
-            else:
-                continue
+                    continue
 
-            self.angular_velocity_publisher.publish(cmd)
-            time.sleep(0.1)
-            print(cmd)
+                self.angular_velocity_publisher.publish(cmd)
+                self.same_speed = True
+                time.sleep(0.1)
+                print(cmd)
 
     
     def set_correction_velocity(self, velocity_feedback):
         self.correction_wheel_speed = WheelSpeed()
 
-        self.right_front_pid_controller.setpoint = self.wheel_speed[1]
-        self.left_front_pid_controller.setpoint = self.wheel_speed[0]
-        self.right_rear_pid_controller.setpoint = self.wheel_speed[1]
-        self.left_rear_pid_controller.setpoint = self.wheel_speed[0]
+        #PID removed
+        # self.right_front_pid_controller.setpoint = self.wheel_speed[1]
+        # self.left_front_pid_controller.setpoint = self.wheel_speed[0]
+        # self.right_rear_pid_controller.setpoint = self.wheel_speed[1]
+        # self.left_rear_pid_controller.setpoint = self.wheel_speed[0]
         
-        vLeftFront = self.left_front_pid_controller(velocity_feedback.left[0])
-        vRightFront = self.right_front_pid_controller(velocity_feedback.right[0])
-        vLeftRear = self.left_rear_pid_controller(velocity_feedback.left[1])
-        vRightRear = self.right_rear_pid_controller(velocity_feedback.right[1])
+        # vLeftFront = self.left_front_pid_controller(velocity_feedback.left[0])
+        # vRightFront = self.right_front_pid_controller(velocity_feedback.right[0])
+        # vLeftRear = self.left_rear_pid_controller(velocity_feedback.left[1])
+        # vRightRear = self.right_rear_pid_controller(velocity_feedback.right[1])
 
-        self.correction_wheel_speed.left[0] = vLeftFront
-        self.correction_wheel_speed.right[0] = vRightFront
-        self.correction_wheel_speed.left[1] = vLeftRear
-        self.correction_wheel_speed.right[1] = vRightRear
+        # self.correction_wheel_speed.left[0] = vLeftFront
+        # self.correction_wheel_speed.right[0] = vRightFront
+        # self.correction_wheel_speed.left[1] = vLeftRear
+        # self.correction_wheel_speed.right[1] = vRightRear
+
+        self.correction_wheel_speed.left[0] = self.wheel_speed[0]
+        self.correction_wheel_speed.right[0] = self.wheel_speed[0]
+        self.correction_wheel_speed.left[1] = self.wheel_speed[1]
+        self.correction_wheel_speed.right[1] = self.wheel_speed[1]
 
 
 if __name__ == "__main__":

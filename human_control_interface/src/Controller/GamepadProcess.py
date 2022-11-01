@@ -40,9 +40,9 @@ class Node_GamepadProcessing:
         self.sci_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=1)
 
     def gamepadProcessCall(self, msg):
-        if self.active_system == 0:
+        if self.active_system == 1:
             self.driveProcessCall(msg)
-        elif self.active_system == 1:
+        elif self.active_system == 0:
             self.armProcessCall(msg)
         elif self.active_system == 2:
             self.scienceProcessCall(msg)
@@ -52,38 +52,38 @@ class Node_GamepadProcessing:
     def systemSelection(self, msg):
         self.active_system = msg.data
 
-    def driveProcessCall(self, msg):
-        # assign axis values
-        # steering = msg.A1
-        # lt = msg.A3
-        # rt = msg.A6
-        left_speed = msg.A2
-        right_speed = msg.A5
+def driveProcessCall(self, msg):
+    # assign axis values
+    # steering = msg.A1
+    # lt = msg.A3
+    # rt = msg.A6
+    left_speed = msg.A2
+    right_speed = msg.A5
 
-        # # normalize to [0, 1] range
-        # backward_vel = (lt + 1)/2
-        # forward_vel = (rt + 1)/2        
+    # # normalize to [0, 1] range
+    # backward_vel = (lt + 1)/2
+    # forward_vel = (rt + 1)/2        
 
-        # # calc. for linear velocity
-        # self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel - backward_vel)
+    # # calc. for linear velocity
+    # self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel - backward_vel)
 
-        # # calc. for angular velocity
-        # self.roverAngularVelocity = -self.maxAngularVelocity * np.sign(steering) * steering**2
+    # # calc. for angular velocity
+    # self.roverAngularVelocity = -self.maxAngularVelocity * np.sign(steering) * steering**2
 
-        # # assigns values to a Twist msg, then publish it to ROS
-        # roverTwist = Twist()
-        # roverTwist.linear.x = self.roverLinearVelocity
-        # roverTwist.angular.z = self.roverAngularVelocity
+    # # assigns values to a Twist msg, then publish it to ROS
+    # roverTwist = Twist()
+    # roverTwist.linear.x = self.roverLinearVelocity
+    # roverTwist.angular.z = self.roverAngularVelocity
 
-        wheel_speed = WheelSpeed()
-        wheel_speed.left[0] = left_speed
-        wheel_speed.left[1] = left_speed
-        wheel_speed.right[0] = right_speed
-        wheel_speed.right[1] = right_speed
-        
+    wheel_speed = WheelSpeed()
+    wheel_speed.left[0] = left_speed
+    wheel_speed.left[1] = left_speed
+    wheel_speed.right[0] = right_speed
+    wheel_speed.right[1] = right_speed
+    
 
-        time.sleep(0.1)
-        self.drive_publisher.publish(wheel_speed)
+    time.sleep(0.1)
+    self.drive_publisher.publish(wheel_speed)
 
     def armProcessCall(self, msg):
         arm_ctrl = ArmControllerInput()

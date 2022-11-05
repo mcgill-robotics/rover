@@ -298,10 +298,8 @@ def calculate_angles(ee_target):
     --------
         Parameters
     --------
-        ee_target : list(float)
-            list of the values of the desired coordinates (x, y, z) where x is forward/back,
-            y is up/down, and z is right/left and the hand angles (vertical relative to the x axis,
-            rotational relative to standard frame of reference)
+        ee_target : np.array(6, 1)
+            end effector Cartesian coordinates and XYZ Euler angles
         
     Returns
     --------
@@ -310,24 +308,29 @@ def calculate_angles(ee_target):
             the last joint
     """
 
-    #TODO: find out proper reference for calculation
-
-    wrist_coordinates = (math.sqrt(ee_target[0] ** 2 + ee_target[2] ** 2), ee_target[1])
+    wrist_coordinates = (math.sqrt(ee_target[0] ** 2 + ee_target[1] ** 2), ee_target[2])
     true_base_coordinates = (0, arm_DH[0][0], 0)
     d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[1]) ** 2)
     theta_d = math.atan((wrist_coordinates[1] - true_base_coordinates[1]) / wrist_coordinates[0])
+    if wrist_coordinates[0] < 0:
+        theta_d = math.pi - theta_d
 
-    theta_l1_l2 = theta_d + math.acos((d ** 2 + arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2) / (2 * d * arm_DH[1][2]))
-    theta_b = math.acos((arm_DH[1][2] ** 2 + arm_DH[2][2] ** 2 - d ** 2) / (2 * arm_DH[1][2] * arm_DH[2][2]))
 
-    joint_angles = [math.atan(ee_target[2] / ee_target[0]), #base z
-    theta_b, # base angle relative to x axis
-    theta_l1_l2, # inner angle between L1 and L2
-    ee_target[4], # wrist rotation
-    180 + ee_target[3] + theta_l1_l2 - theta_b] # inner angle between L1 and L2
+    zero_position = Mat2Pose(forwardKinematics([0,0,0,0,0]))
+
+    theta_l1_l2 = math.acos((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2) / (-2 * d * arm_DH[1][2]))
+    theta_b = math.acos((arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2 - d ** 2) / (-2 * arm_DH[2][2] * d))
+
+    joint_angles = [ee_target[4] - zero_position[-2], #base z
+    math.pi / 2 - theta_b - theta_d, # base angle relative to z axis
+    math.pi / 2 - theta_l1_l2, # inner angle between L1 and L2
+    ee_target[3] - zero_position[3], # wrist rotation
+    ee_target[4] + theta_l1_l2 - theta_b - zero_position[-1]] # inner angle between L2 and hand
 
     return joint_angles
 
+
 if __name__ == '__main__':
-    target = Mat2Pose(forwardKinematics([1, 1, 1, 1, 1]))
+    target = Mat2Pose(forwardKinematics([0, 0, 0, 0, 0]))
+    print(target)
     print(calculate_angles(target))

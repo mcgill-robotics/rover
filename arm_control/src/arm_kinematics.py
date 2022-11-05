@@ -308,24 +308,29 @@ def calculate_angles(ee_target):
             the last joint
     """
 
-    wrist_coordinates = (math.sqrt(ee_target[0] ** 2 + ee_target[1] ** 2), ee_target[2])
-    true_base_coordinates = (0, arm_DH[0][0], 0)
-    d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[1]) ** 2)
-    theta_d = math.atan((wrist_coordinates[1] - true_base_coordinates[1]) / wrist_coordinates[0])
+    wrist_coordinates = (math.sqrt(ee_target[0] ** 2 + ee_target[1] ** 2) - math.sin(ee_target[4]) * arm_DH[-1][0], ee_target[2] - math.cos(ee_target[4]) * arm_DH[-1][0]) # projection, z
+    true_base_coordinates = (0, 0, arm_DH[0][0])
+
+    d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[2]) ** 2)
+    theta_d = math.acos(wrist_coordinates[0] / d)
     if wrist_coordinates[0] < 0:
         theta_d = math.pi - theta_d
 
+    print(theta_d)
 
     zero_position = Mat2Pose(forwardKinematics([0,0,0,0,0]))
 
     theta_l1_l2 = math.acos((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2) / (-2 * d * arm_DH[1][2]))
     theta_b = math.acos((arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2 - d ** 2) / (-2 * arm_DH[2][2] * d))
 
+    print(theta_b)
+    print(theta_d / math.pi)
+
     joint_angles = [ee_target[4] - zero_position[-2], #base z
     math.pi / 2 - theta_b - theta_d, # base angle relative to z axis
     math.pi / 2 - theta_l1_l2, # inner angle between L1 and L2
-    ee_target[3] - zero_position[3], # wrist rotation
-    ee_target[4] + theta_l1_l2 - theta_b - zero_position[-1]] # inner angle between L2 and hand
+    ee_target[4] + theta_l1_l2 - theta_b - zero_position[-1],  # inner angle between L2 and hand
+    ee_target[3] - zero_position[3]] # wrist rotation 
 
     return joint_angles
 

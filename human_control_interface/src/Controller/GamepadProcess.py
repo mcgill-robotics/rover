@@ -88,6 +88,7 @@ class Node_GamepadProcessing:
                 msg.A4 = self.gamepad.data.a4
                 msg.A5 = self.gamepad.data.a5
                 msg.A6 = self.gamepad.data.a6
+                #Passes msg (gamepad data) to gamepadProcessCall
                 self.gamepadProcessCall(msg)
             except Exception as error:
                     rospy.logerr(str(error))
@@ -110,11 +111,13 @@ class Node_GamepadProcessing:
 
     def driveProcessCall(self, msg):
         
+        #Need to Include: Preventing gamepad biases (floors negligible gamepad values to 0)
         if abs(msg.A1) < 0.1:
             msg.A1 = 0
         if abs(msg.A2) < 0.1:
             msg.A2 = 0
 
+        #Prints gamepad values
         steering = msg.A1
         print("LS-X: ", msg.A1)
         print("LS-Y: ", msg.A2, '\n')

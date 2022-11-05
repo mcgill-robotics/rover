@@ -313,7 +313,7 @@ def calculate_angles(ee_target):
 
     d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[2]) ** 2)
     theta_d = math.acos(wrist_coordinates[0] / d)
-    if wrist_coordinates[0] < 0:
+    if wrist_coordinates[1] < 0:
         theta_d = math.pi - theta_d
 
     print(theta_d)
@@ -324,7 +324,6 @@ def calculate_angles(ee_target):
     theta_b = math.acos((arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2 - d ** 2) / (-2 * arm_DH[2][2] * d))
 
     print(theta_b)
-    print(theta_d / math.pi)
 
     joint_angles = [ee_target[4] - zero_position[-2], #base z
     math.pi / 2 - theta_b - theta_d, # base angle relative to z axis

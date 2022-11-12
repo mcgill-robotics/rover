@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
@@ -55,7 +53,8 @@ class Node_ArmControl():
     def run(self):
         cmds = ArmMotorCommand()
         while not rospy.is_shutdown():
-            cmds.MotorVel = self.dq_d
+            cmds.MotorVel = self.dq_d 
+            cmds.MotorPos = self.q_d 
             cmds.ClawState = self.ee_d
 
             self.armControlPublisher.publish(cmds)
@@ -90,7 +89,7 @@ class Node_ArmControl():
             # Joint Velocity Control
             i = self.mode - 2
             self.dq_d[i] = ctrlInput.Y_dir * self.jointVelLimits[i]
-        
+
         self.ee_d = ctrlInput.ClawOpen
 
         # Check Joint Limits
@@ -99,7 +98,7 @@ class Node_ArmControl():
                 self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 
                 or
                 self.q[i] < self.jointLowerLimits[i] and self.dq_d[i] < 0
-            ):
+            ): 
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -109,6 +108,7 @@ class Node_ArmControl():
                 else:
                     self.dq_d[i] = 0
                 
+        self.q_d += self.dq_d*0.01
 
     def updateArmState(self, state):
         self.q      = state.MotorPos
@@ -127,7 +127,6 @@ class Node_ArmControl():
         self.mode = self.mode % (self.nbJoints + 2)
         
         return self.mode
-
 
     def computePoseJointVel(self, ctrlVel):
         v_x = ctrlVel[0] * self.cartVelLimits[0]

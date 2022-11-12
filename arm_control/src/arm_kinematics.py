@@ -311,11 +311,11 @@ def calculate_angles(ee_target):
 
     hand_coordinates = (math.sqrt(round(math.pow(ee_target[0], 2), 6) + math.pow(ee_target[1], 2)), ee_target[2])
 
-    print(f"HAND: {hand_coordinates}")
+    #print(f"HAND: {hand_coordinates}")
 
     wrist_coordinates = (hand_coordinates[0] - math.sin(ee_target[4]) * arm_DH[-1][0], hand_coordinates[1] - math.cos(ee_target[4]) * arm_DH[-1][0]) # projection, z
     
-    print(f"WRIST: {wrist_coordinates}")
+    #print(f"WRIST: {wrist_coordinates}")
 
     true_base_coordinates = (0, 0, arm_DH[0][0])
 
@@ -342,5 +342,7 @@ def calculate_angles(ee_target):
 
 
 if __name__ == '__main__':
-    target = Mat2Pose(forwardKinematics([1, 0, 0, 0, 0]))
-    print(calculate_angles(target))
+    lst = [math.pi/2, 0, 0, 0, 0]
+    target = Mat2Pose(forwardKinematics(lst))
+    print(f"GIVEN LIST: {lst} \n RETURNED TARGET: {target[3:]}")
+    #print(calculate_angles(target))

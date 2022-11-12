@@ -3,10 +3,10 @@
 <robot name="wheel" xmlns:xacro="http://ros.org/wiki/xacro" >
 
 
-  	<xacro:property name="wheel_kp" value="600000" />
-    <xacro:property name="wheel_kd" value="3" />
-    <xacro:property name="wheel_mu1" value="10000000" />
-    <xacro:property name="wheel_mu2" value="10000000" />
+  	<xacro:property name="wheel_kp" value="10000000.0" />
+    <xacro:property name="wheel_kd" value="1.0" />
+    <xacro:property name="wheel_mu1" value="200" />
+    <xacro:property name="wheel_mu2" value="100" />
 	<xacro:property name="M_PI" value="3.14159265" />
 
 <xacro:macro name="wheel" params="wheel_prefix parent_link *joint_pose">
@@ -46,19 +46,19 @@
 			<child link="${wheel_prefix}_wheel_link"/>
 			<xacro:insert_block name="joint_pose"/>
 			<axis xyz="0 1 0" rpy="0 0 0" />
-			<dynamics damping="1" friction="100.0" />
+			<limit effort="30" velocity="1.0"/>
+			<!-- <dynamics damping="1" friction="100.0" /> -->
 		</joint>
   
 		<gazebo reference="${wheel_prefix}_wheel_link">
 			<mu1 value="${wheel_mu1}"/>			
 			<mu2 value="${wheel_mu2}"/>
-			<kp>${wheel_kp}</kp>
-    		<kd>${wheel_kd}</kd>
-			<dampingFactor>0.05</dampingFactor>
-			<fdir1 value="1 0 0"/>
+			<kp value ="${wheel_kp}"/>
+    		<kd value ="${wheel_kd}"/>
+			<material>Gazebo/Grey</material>
 		</gazebo>
 
-		<transmission name="${wheel_prefix}_wheel_trans" type="SimpleTransmission">
+		<transmission name="${wheel_prefix}_wheel_trans">
 			<type>transmission_interface/SimpleTransmission</type>
 			<actuator name="${wheel_prefix}_wheel_motor">
 				<mechanicalReduction>1</mechanicalReduction>

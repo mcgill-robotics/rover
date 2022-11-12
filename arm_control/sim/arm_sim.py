@@ -41,7 +41,8 @@ class Node_ArmSim():
     self.jointVels  = [0]*self.numJoints
     self.jointTorq  = [0]*self.numJoints
 
-    self.desiredJointVels = [0]*self.numJoints
+    #self.desiredJointVels = [0]*self.numJoints replaced by Jointpos V
+    self.desiredJointPos = [0]*self.numJoints
 
     rospy.init_node("arm_sim", anonymous=False)
     self.armCmdSubscriber = rospy.Subscriber("arm_control_data", ArmMotorCommand, self.updateSim)
@@ -50,7 +51,8 @@ class Node_ArmSim():
     self.run()
 
   def updateSim(self, cmds):
-      self.desiredJointVels = cmds.MotorVel
+    #self.desiredJointVels = cmds.MotorVel replaced by position V
+    self.desiredJointPos = cmds.MotorPos
 
   
   def run(self):
@@ -64,8 +66,10 @@ class Node_ArmSim():
 
         p.setJointMotorControl2(bodyIndex=self.robotId,
                                 jointIndex=i,
-                                controlMode=p.VELOCITY_CONTROL,
-                                targetVelocity=self.desiredJointVels[i],
+                                #controlMode=p.VELOCITY_CONTROL, replaced by following line V
+                                controlMode=p.POSITION_CONTROL,
+                                #targetVelocity=self.desiredJointVels[i], replaced by the following line V
+                                targetPosition=self.desiredJointPos[i],
                                 force=500,
                                 positionGain=0.03,
                                 velocityGain=1)

@@ -332,15 +332,15 @@ def calculate_angles(ee_target):
     l = math.sqrt(round(hand_coordinates[0] - elbow_coordinates[0], 6) ** 2 + (hand_coordinates[1] - elbow_coordinates[1]) ** 2)
     theta_h = math.acos((l ** 2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2) / (-2 * arm_DH[-1][0] * arm_DH[2][2]))
     
-    joint_angles = [math.atan2(ee_target[1], ee_target[0]), #base z
+    joint_angles = [math.atan2(ee_target[1], ee_target[0]), # base z
     theta_b, # base angle relative to z axis
     math.pi / 2 - theta_l1_l2, # inner angle between L1 and L2
-    0, #theta_h,  # inner angle between L2 and hand
+    theta_h - math.pi,  # inner angle between L2 and hand
     ee_target[3] - zero_position[3]] # wrist rotation 
 
     return joint_angles
 
 
 if __name__ == '__main__':
-    target = Mat2Pose(forwardKinematics([0, 0, 0, 0, 0]))
+    target = Mat2Pose(forwardKinematics([1, 0, 0, 0, 0]))
     print(calculate_angles(target))

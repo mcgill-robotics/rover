@@ -119,8 +119,8 @@ class Node_GamepadProcessing:
 
         #Prints gamepad values
         steering = msg.A1
-        print("LS-X: ", msg.A1)
-        print("LS-Y: ", msg.A2, '\n')
+        #print("LS-X: ", msg.A1)
+        #print("LS-Y: ", msg.A2, '\n')
         lt = msg.A3
         rt = msg.A6
         

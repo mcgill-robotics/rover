@@ -4,10 +4,12 @@ import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 
+from PyQt5 import QtGui
 from ui_layout import Ui_MainWindow
-import rospy
+# import rospy
 from drive import Drive_Backend
 from arm_backend import Arm_Backend
+import cv2
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from visualization_msgs.msg import MarkerArray
@@ -48,12 +50,16 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
     def update_float_value(value, label):
         label.display("%.2f" % float(value))
 
-
     def __init__(self, *args, **kwargs):
         # Setup the UI from Ui_MainWindow
         super().__init__(*args, **kwargs)
         self.setupUi(self)
-        rospy.init_node("UINode", anonymous=True)
+        # rospy.init_node("UINode", anonymous=True)
+        self.timer_camera = qtc.QTimer()  # set up a timer, this is used to control frame rate
+        self.cap1 = cv2.VideoCapture()  # video float
+        #todo I just set variables here, if is invalid, please tell me to change it!
+        self.__now_cam = 0
+        self.__camera_opened = False
 
 
         # Listeners
@@ -66,13 +72,22 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.Science.send_button.clicked.connect(self.send_science_pilot)
         self.Science.io_shutdown_button.clicked.connect(self.send_science_shutdown)
 
+        # camera selection
+        self.camera_selector.currentIndexChanged.connect(self.change_camera)
+        self.timer_camera.timeout.connect(self.show_camera)  # 若定时b器结束，则调用show_camera()
+
+
+
+
+
+
         #drive setup
         self.drive_backend = Drive_Backend(self.Drive)
         self.arm_backend = Arm_Backend(self.Arm)
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)
         self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.drive_backend.update_twist_data)
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
-        self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints) 
+        self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints)
 
         # Rospy subscriber
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.on_power_feedback)
@@ -103,19 +118,19 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         """
         Function creating a SciencePilot message for shutdown, setting it to true and sending it through messaging broker
         """
-        msg = SciencePilot()
-        msg.Shutdown = True
-        self.science_module_publisher.publish(msg)
+        # msg = SciencePilot()
+        # msg.Shutdown = True
+        # self.science_module_publisher.publish(msg)
 
     def send_science_pilot(self):
         """
         Function creating a SciencePilot message and sending request through messaging broker
         """
-        msg = SciencePilot()
+        # msg = SciencePilot()
 
         self.Science.laserState_toggle.isChecked()
 
-        # Booleans
+        Booleans
         msg.LedState = self.get_boolean_value(self.Science.ledState_toggle)
         msg.LaserState = self.get_boolean_value(self.Science.laserState_toggle)
         msg.GripperState = self.get_boolean_value(self.Science.gripperState_toggle)
@@ -195,6 +210,36 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
             # Return self for autonomy
 
 
+
+    def change_camera(self):
+
+        if self.__camera_opened:
+            self.cap1.release()
+            # todo release camera takes too long time! try to fix it!
+            # todo Thread occupation causes program lag, consider multi-threading
+            self.timer_camera.stop()
+
+        self.timer_camera.start(30)
+        self.__camera_opened = self.cap1.open(self.camera_selector.currentIndex())
+
+        # this "if" just print some information
+        if not self.__camera_opened:
+            print("fail to open camera!")
+            self.__now_cam = self.camera_selector.currentIndex()
+            print(self.__now_cam+1,"is working")
+
+    def show_camera(self):
+        camera_opened, self.image = self.cap1.read()  # get image in video float
+
+        # show = cv2.resize(self.image, (640, 480))  # reset pix size into 640x480
+        show = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)  # change color into RGB
+        showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0],
+                                 QtGui.QImage.Format_RGB888)  # Turn the read video data into QImage form
+        self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
+
+
+
+
 def main():
     app = qtw.QApplication([])
 
@@ -208,4 +253,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    rospy.spin()
+    # rospy.spin()

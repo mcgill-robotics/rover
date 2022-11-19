@@ -1,6 +1,9 @@
 import numpy as np
 import math
 
+jointUpperLimits = [175*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
+jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
+
 arm_DH = [
     [0.0575,                0,     0, -90*math.pi/180], #vertical offset from base
     [     0, -90*math.pi/180,   0.5,               0], #first link
@@ -22,23 +25,48 @@ def Pose2Mat(pose):
         T : np.array(4,4)
             DH transform
     """
-    x = pose[0]
-    y = pose[1]
-    z = pose[2]
-    alpha_x = pose[3]
-    alpha_y = pose[4]
-    alpha_z = pose[5]
+    # x = pose[0]
+    # y = pose[1]
+    # z = pose[2]
+    # alpha_x = pose[3]
+    # alpha_y = pose[4]
+    # alpha_z = pose[5]
 
-    T = np.array([
-        np.array([math.cos(alpha_y) * math.cos(alpha_z), -math.cos(alpha_y) * math.sin(alpha_z), math.sin(alpha_y), x]),
-        np.array([math.sin(alpha_x) * math.sin(alpha_y) * math.cos(alpha_z) + math.cos(alpha_x) * math.sin(alpha_z),
-                  -math.sin(alpha_x) * math.sin(alpha_y) * math.sin(alpha_z) + math.cos(alpha_x) * math.cos(alpha_z),
-                  -math.sin(alpha_x) * math.cos(alpha_y), y]),
-        np.array([-math.cos(alpha_x) * math.sin(alpha_y) * math.cos(alpha_z) + math.sin(alpha_x) * math.sin(alpha_z),
-                  math.cos(alpha_x) * math.sin(alpha_y) * math.sin(alpha_z) + math.sin(alpha_x) * math.cos(alpha_z),
-                  math.cos(alpha_x) * math.cos(alpha_y), z]),
-        np.array([0, 0, 0, 1])
+    # T = np.array([
+    #     np.array([math.cos(alpha_y) * math.cos(alpha_z), -math.cos(alpha_y) * math.sin(alpha_z), math.sin(alpha_y), x]),
+    #     np.array([math.sin(alpha_x) * math.sin(alpha_y) * math.cos(alpha_z) + math.cos(alpha_x) * math.sin(alpha_z),
+    #               -math.sin(alpha_x) * math.sin(alpha_y) * math.sin(alpha_z) + math.cos(alpha_x) * math.cos(alpha_z),
+    #               -math.sin(alpha_x) * math.cos(alpha_y), y]),
+    #     np.array([-math.cos(alpha_x) * math.sin(alpha_y) * math.cos(alpha_z) + math.sin(alpha_x) * math.sin(alpha_z),
+    #               math.cos(alpha_x) * math.sin(alpha_y) * math.sin(alpha_z) + math.sin(alpha_x) * math.cos(alpha_z),
+    #               math.cos(alpha_x) * math.cos(alpha_y), z]),
+    #     np.array([0, 0, 0, 1])
+    # ])
+
+    alpha = pose[3]
+    beta = pose[4]
+    gamma = pose[5]
+
+    T = np.eye(4)
+    Rx = np.array([
+        [1,0,0],
+        [0,math.cos(alpha), -math.sin(alpha)],
+        [0,math.sin(alpha), math.cos(alpha)],
     ])
+    Ry = np.array([
+        [math.cos(beta), 0, math.sin(beta)],
+        [0, 1, 0],
+        [-math.sin(beta), 0, math.cos(beta)],
+    ])
+    Rz = np.array([
+        [math.cos(gamma), -math.sin(gamma), 0],
+        [math.sin(gamma), math.cos(gamma), 0],
+        [0, 0, 1],
+    ])
+
+    T[:3,:3] = Rz @ Ry @ Rx
+    T[:3,3] = pose[:3]
+    
     return T
 
 
@@ -56,22 +84,37 @@ def Mat2Pose(T):
         np.array(6, 1)
             [x, y, z, alpha_x, alpha_y, alpha_z]
     """
-    if(T[0][2] < 1):
-        if(T[0][2] > -1):
-            alpha_x = math.atan2(-T[1][2], T[2][2])
-            alpha_y = math.atan2(T[0][2], math.sqrt(1-pow(T[0][2], 2)))
-            alpha_z = math.atan2(-T[0][1], T[0][0])
-        else:
-            alpha_x = math.atan2(-T[1][0], T[1][1])
-            alpha_y = -math.pi/2
-            alpha_z = 0
+    # if(T[0][2] < 1):
+    #     if(T[0][2] > -1):
+    #         alpha_x = math.atan2(-T[1][2], T[2][2])
+    #         alpha_y = math.atan2(T[0][2], math.sqrt(1-pow(T[0][2], 2)))
+    #         alpha_z = math.atan2(-T[0][1], T[0][0])
+    #     else:
+    #         alpha_x = math.atan2(-T[1][0], T[1][1])
+    #         alpha_y = -math.pi/2
+    #         alpha_z = 0
 
+    # else:
+    #     alpha_x = math.atan2(T[1][0], T[1][1])
+    #     alpha_y = math.pi/2
+    #     alpha_z = 0
+
+    # return np.array([T[0][3], T[1][3], T[2][3], alpha_x, alpha_y, alpha_z])
+
+    if abs(T[2,0]) != 1:
+        beta = -math.asin(T[2,0])
+        alpha = math.atan2(T[2,1]/math.cos(beta), T[2,2]/math.cos(beta))
+        gamma = math.atan2(T[1,0]/math.cos(beta), T[0,0]/math.cos(beta))
     else:
-        alpha_x = math.atan2(T[1][0], T[1][1])
-        alpha_y = math.pi/2
-        alpha_z = 0
+        gamma = 0
+        if T[2,0] == -1:
+            beta = math.pi/2
+            alpha = math.atan2(T[0,1], T[0,2])
+        else:
+            beta = -math.pi/2
+            alpha = math.atan2(-T[0,1], -T[0,2])
 
-    return np.array([T[0][3], T[1][3], T[2][3], alpha_x, alpha_y, alpha_z])
+    return np.array([T[0][3], T[1][3], T[2][3], alpha, beta, gamma])
 
 
 def dhToMat(d, theta, a, alpha):
@@ -140,57 +183,12 @@ def _FK(q):
     for i in range(numJoints):
         T = dhToMat(arm_DH[i][0], arm_DH[i][1] + q[i], arm_DH[i][2], arm_DH[i][3])
         if len(matrices) > 0:
-            T0i = matrices[-1].dot(T)
+            T0i = matrices[-1] @ T
         else:
             T0i = T
         matrices.append(T0i)
 
     return matrices
-
-
-def inverseKinematics(posDes, qCur):
-    """Computes the joint angles required for the arm
-    to have the desired pose knowing its current pose
-
-    This method uses the Damped Least Squares (DLS) algorithm,
-    which is a numerical algorithm. The speed of convergence
-    can be tuned by changing the damping factor for the particular
-    arm we are using the algorithm for.
-
-    Parameters
-    --------
-        posDes : list(float)
-            Desired pose to achieve
-        qCur : list(float)
-            Current joint configuration of the arm
-
-    Returns
-    --------
-        np.array(len(qCur))
-            joint value for each joint
-    """
-    q = np.array(qCur)
-    posDes = np.array(posDes)
-
-    # Constants
-    de = float("Inf")
-    thres = 1e-6
-    damping = 1.5
-
-    while np.linalg.norm(de) > thres:
-        J, Jv, Jw = Jacobian(q)
-        
-        T = forwardKinematics(q)
-        posCur = Mat2Pose(T)
-        de = posDes - posCur[0:3]
-
-        dq = (Jv.T).dot(
-            Jv.dot(Jv.T) + damping**2*np.eye(de.shape[0])
-        ).dot(de.T)
-
-        q = q + dq
-
-    return q
 
 
 def Jacobian(q):
@@ -341,8 +339,68 @@ def calculate_angles(ee_target):
     return joint_angles
 
 
+def inverseKinematics(hand_pose, joint_truth):
+
+    hand_pose = np.array(hand_pose)
+    T_h = Pose2Mat(hand_pose)
+    # print(f"Hand: {hand_pose[:3]}")
+
+    # Get Wrist position
+    wrist_pose = hand_pose[:3] - T_h[:3,2] * arm_DH[-1][0]
+    # print(f"Wrist: {wrist_pose}")
+
+    # Get Shoulder position
+    shoulder_pose = np.array([0,0,arm_DH[0][0]])
+    # print(f"Shoulder: {shoulder_pose}")
+
+    ## Get Possible Elbow position
+    # Form Arm Plane Basis Vectors
+    basis_x = wrist_pose - shoulder_pose
+    d = np.linalg.norm(basis_x)
+    if not np.isclose(d, 0): 
+        basis_x = basis_x / d
+    w = np.linalg.norm(wrist_pose)
+    if np.isclose(w, 0):
+        pass
+    arm_plane_normal = np.cross(basis_x, wrist_pose)
+    basis_y = np.cross(arm_plane_normal, basis_x)
+    basis_y = basis_y / np.linalg.norm(basis_y)
+
+    # Get Position of Link intersections (circles)
+    elbow_basis_x = (d**2 - arm_DH[2][2]**2 + arm_DH[1][2]**2) / (2*d)
+    elbow_basis_y = np.sqrt(arm_DH[1][2]**2 - elbow_basis_x**2) 
+
+    elbow_pose_1 = elbow_basis_x * basis_x + elbow_basis_y * basis_y + shoulder_pose
+    elbow_pose_2 = elbow_basis_x * basis_x - elbow_basis_y * basis_y + shoulder_pose
+    # print(f"Elbow 1: {elbow_pose_1}")
+    # print(f"Elbow 2: {elbow_pose_2}")
+
+    Ts = _FK(joint_truth)
+
+    err = np.zeros(4)
+    err[0] = np.linalg.norm(shoulder_pose - Ts[0][:3,3])
+    err[1] = np.linalg.norm(hand_pose[:3] - Ts[-1][:3,3])
+    err[2] = np.linalg.norm(wrist_pose - Ts[-2][:3,3])
+    err[3] = np.min([
+        np.linalg.norm(elbow_pose_1 - Ts[1][:3,3]),
+        np.linalg.norm(elbow_pose_2 - Ts[1][:3,3]),
+    ])
+
+    return np.linalg.norm(err)
+
+
 if __name__ == '__main__':
-    lst = [math.pi/2, 0, 0, 0, 0]
-    target = Mat2Pose(forwardKinematics(lst))
-    print(f"GIVEN LIST: {lst} \n RETURNED TARGET: {target[3:]}")
-    #print(calculate_angles(target))
+    # lst = [math.pi/2, -math.pi/2, math.pi/3, math.pi/2, -math.pi/4]
+    # lst = [math.pi/2, 0, math.pi/4, math.pi/2, 0]
+    for _ in range(1000000):
+        lst = (np.random.random(5) - 0.5)*np.pi
+        pose = forwardKinematics(lst)
+        target = Mat2Pose(pose)
+        # print(f"GIVEN LIST: {lst}")# \nRETURNED TARGET: {target[3:]}")
+        q_ik = inverseKinematics(target, lst)
+        # print(f"Analytical: {q_ik}")
+        # print(f"Result: {Mat2Pose(forwardKinematics(q_ik))}")
+        if q_ik > 1e-6:
+            print(lst)
+            print(f"Err: {q_ik}")
+            break

@@ -5,7 +5,7 @@ import arm_kinematics
 import numpy as np
 import time
 import rospy
-from arm_control.msg import ProcessedControllerInput, ArmMotorCommand, ArmStatusFeedback
+from arm_control.msg import ArmControllerInput, ArmMotorCommand, ArmStatusFeedback
 
 class Node_ArmControl():
 
@@ -44,7 +44,7 @@ class Node_ArmControl():
         # Initialize ROS
         rospy.init_node("arm_control", anonymous=False)
         self.armControlPublisher = rospy.Publisher("arm_control_data", ArmMotorCommand, queue_size=1)
-        self.uiSubscriber        = rospy.Subscriber("arm_controller_input", ProcessedControllerInput, self.controlLoop)
+        self.uiSubscriber        = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
         self.armStateSubscriber  = rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.updateArmState)
 
         self.run()
@@ -53,7 +53,6 @@ class Node_ArmControl():
     def run(self):
         cmds = ArmMotorCommand()
         while not rospy.is_shutdown():
-            cmds.MotorVel = self.dq_d 
             cmds.MotorPos = self.q_d 
             cmds.ClawState = self.ee_d
 
@@ -78,9 +77,9 @@ class Node_ArmControl():
 
         elif self.mode == 1:
             xyz_ctrl = [
-                0,
+                ctrlInput.X_dir,
                 ctrlInput.Y_dir,
-                0
+                ctrlInput.Z_dir,
             ]
 
             self.dq_d, self.dx_d = self.computeOrientationJointVel(xyz_ctrl)
@@ -107,8 +106,8 @@ class Node_ArmControl():
 
                 else:
                     self.dq_d[i] = 0
-                
-        self.q_d += self.dq_d*0.01
+        
+            self.q_d[i] += self.dq_d[i] * 0.01
 
     def updateArmState(self, state):
         self.q      = state.MotorPos

@@ -17,17 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
-## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  WheelSpeed.msg
-)
-
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
-
 catkin_package(
     CATKIN_DEPENDS 
     roscpp

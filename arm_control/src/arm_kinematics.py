@@ -288,13 +288,35 @@ def inverseVelocity(q, dx):
 
     return dq
 
+def project(line, vector):
+    """
+    Parameters
+    --------
+        line : list(float)
+            two-dimensional vector defining line onto which pojection is done
+        vector : list(float)
+            two-dimensional vector to be projected
+        
+    Returns
+    --------
+        proj_coord : float
+            horizontal coordinate on the projection plane
+    """
 
-def calculate_angles(ee_target):
+    dot_product = line[0] * vector[0] + line[1] * vector[1]
+    length_sqrd = math.pow(line[0], 2) + math.pow(line[1], 2)
+    proj_vector = [line[0] * dot_product / length_sqrd, line[1] * dot_product / length_sqrd]
+
+    length = math.sqrt(math.pow(proj_vector[0], 2) + math.pow(proj_vector[1], 2))
+    if proj_vector[0] < 0:
+        length *= -1
+
+    return length
+
+def calculate_angles(ee_target, wrist_target, elbow_target):
     """Calculates the necessary angles of all joints to achieve the target end effector position
 
     Parameters
-    --------
-        Parameters
     --------
         ee_target : np.array(6, 1)
             end effector Cartesian coordinates and XYZ Euler angles
@@ -307,13 +329,15 @@ def calculate_angles(ee_target):
     """
     print(f"TARGET: {ee_target}")
 
-    hand_coordinates = (math.sqrt(round(math.pow(ee_target[0], 2), 6) + math.pow(ee_target[1], 2)), ee_target[2])
-
+    projection_line = [ee_target[0], ee_target[1]]
+    hand_coordinates = (project(projection_line, ee_target[:2]), hand_coordinates[2])
     #print(f"HAND: {hand_coordinates}")
 
-    wrist_coordinates = (hand_coordinates[0] - math.sin(ee_target[4]) * arm_DH[-1][0], hand_coordinates[1] - math.cos(ee_target[4]) * arm_DH[-1][0]) # projection, z
-    
+    #wrist_coordinates = (hand_coordinates[0] - math.sin(ee_target[4]) * arm_DH[-1][0], hand_coordinates[1] - math.cos(ee_target[4]) * arm_DH[-1][0]) # projection, z
+    wrist_coordinates = (project(projection_line, wrist_target[:2]), wrist_target[2])
     #print(f"WRIST: {wrist_coordinates}")
+
+    elbow_coordinates = (project(projection_line, elbow_target[:2]), elbow_target[2])
 
     true_base_coordinates = (0, 0, arm_DH[0][0])
 
@@ -323,13 +347,15 @@ def calculate_angles(ee_target):
     zero_position = Mat2Pose(forwardKinematics([0,0,0,0,0]))
 
     theta_l1_l2 = math.acos((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2) / (-2 * d * arm_DH[1][2]))
-    theta_inner = math.acos((arm_DH[2][2] ** 2 - arm_DH[1][2] ** 2 - d ** 2) / (-2 * arm_DH[1][2] * d))
-    theta_b = math.pi / 2 - theta_inner - theta_d
+    theta_b = math.asin(elbow_coordinates[0] / arm_DH[1][2])
 
-    elbow_coordinates = (math.sin(theta_b) * arm_DH[1][2], true_base_coordinates[2] + math.cos(theta_b) * arm_DH[1][2])
+    #theta_inner = math.acos((arm_DH[2][2] ** 2 - arm_DH[1][2] ** 2 - d ** 2) / (-2 * arm_DH[1][2] * d))
+    #theta_b = math.pi / 2 - theta_inner - theta_d
+    #elbow_coordinates = (math.sqrt(math.pow(elbow_target[0], 2) + math.pow(elbow_target[1], 2)), elbow_target[2])
     l = math.sqrt(round(hand_coordinates[0] - elbow_coordinates[0], 6) ** 2 + (hand_coordinates[1] - elbow_coordinates[1]) ** 2)
     theta_h = math.acos((l ** 2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2) / (-2 * arm_DH[-1][0] * arm_DH[2][2]))
     
+
     joint_angles = [math.atan2(ee_target[1], ee_target[0]), # base z
     theta_b, # base angle relative to z axis
     math.pi / 2 - theta_l1_l2, # inner angle between L1 and L2
@@ -338,20 +364,35 @@ def calculate_angles(ee_target):
 
     return joint_angles
 
+def inverseKinematics(hand_pose, cur_pose): #, joint_truth
+    """Calculates the necessary joint positions and selects ideal elbow
 
-def inverseKinematics(hand_pose, joint_truth):
+    Parameters
+    --------
+        hand_pose : np.array(6, 1)
+            end effector Cartesian coordinates and XYZ Euler angles
+
+        cur_pose : list
+            current joint angles 
+        
+    Returns
+    --------
+        joint_angles : list(float)
+            list of angles in radians of joints from base to end effector, relative to 
+            the last joint
+    """
 
     hand_pose = np.array(hand_pose)
     T_h = Pose2Mat(hand_pose)
-    # print(f"Hand: {hand_pose[:3]}")
+    print(f"Hand: {hand_pose[:3]}")
 
     # Get Wrist position
     wrist_pose = hand_pose[:3] - T_h[:3,2] * arm_DH[-1][0]
-    # print(f"Wrist: {wrist_pose}")
+    print(f"Wrist: {wrist_pose}")
 
     # Get Shoulder position
     shoulder_pose = np.array([0,0,arm_DH[0][0]])
-    # print(f"Shoulder: {shoulder_pose}")
+    print(f"Shoulder: {shoulder_pose}")
 
     ## Get Possible Elbow position
     # Form Arm Plane Basis Vectors
@@ -372,9 +413,54 @@ def inverseKinematics(hand_pose, joint_truth):
 
     elbow_pose_1 = elbow_basis_x * basis_x + elbow_basis_y * basis_y + shoulder_pose
     elbow_pose_2 = elbow_basis_x * basis_x - elbow_basis_y * basis_y + shoulder_pose
-    # print(f"Elbow 1: {elbow_pose_1}")
-    # print(f"Elbow 2: {elbow_pose_2}")
+    print(f"Elbow 1: {elbow_pose_1}")
+    print(f"Elbow 2: {elbow_pose_2}")
 
+    if elbow_pose_1[0] >= 0:
+        elbow_direction_1 = math.atan(elbow_pose_1[1] / elbow_pose_1[0])
+    elif elbow_pose_1[1] >= 0:
+        elbow_direction_1 = math.pi + math.atan(elbow_pose_1[1] / elbow_pose_1[0])
+    else:
+        elbow_direction_1 = -math.pi + math.atan(elbow_pose_1[1] / elbow_pose_1[0])
+
+    if elbow_pose_2[0] >= 0:
+        elbow_direction_2= math.atan(elbow_pose_2[1] / elbow_pose_2[0])
+    elif elbow_pose_2[1] >= 0:
+        elbow_direction_2 = math.pi + math.atan(elbow_pose_2[1] / elbow_pose_2[0])
+    else:
+        elbow_direction_2 = -math.pi + math.atan(elbow_pose_2[1] / elbow_pose_2[0])
+
+    if elbow_pose_1[2] > elbow_pose_2[2]:
+        higher = elbow_pose_1
+        lower = elbow_pose_2
+    else:
+        higher = elbow_pose_2
+        lower = elbow_pose_1
+
+    if 5*math.pi/180 < abs(elbow_direction_1) < 175*math.pi/180: #always legal
+        if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
+            if (elbow_direction_1 < 0) == (cur_pose[0] < 0):
+                elbow_pose = higher
+            else:
+                elbow_pose = lower
+        else:
+            if (elbow_direction_1 < 0) == (cur_pose[0] < 0):
+                elbow_pose = elbow_pose_2
+            else:
+                elbow_pose = elbow_pose_1
+    elif abs(elbow_direction_1) <= 5*math.pi/180: #front
+        if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
+            elbow_pose = lower
+        else:
+            elbow_pose = elbow_direction_1
+    else: #back
+        if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
+            elbow_pose = higher
+        else:
+            elbow_pose = elbow_direction_2
+
+    return calculate_angles(hand_pose, wrist_pose, elbow_pose)
+"""
     Ts = _FK(joint_truth)
 
     err = np.zeros(4)
@@ -387,20 +473,22 @@ def inverseKinematics(hand_pose, joint_truth):
     ])
 
     return np.linalg.norm(err)
+    """
 
 
 if __name__ == '__main__':
     # lst = [math.pi/2, -math.pi/2, math.pi/3, math.pi/2, -math.pi/4]
     # lst = [math.pi/2, 0, math.pi/4, math.pi/2, 0]
-    for _ in range(1000000):
+    for _ in range(10):
         lst = (np.random.random(5) - 0.5)*np.pi
         pose = forwardKinematics(lst)
         target = Mat2Pose(pose)
-        # print(f"GIVEN LIST: {lst}")# \nRETURNED TARGET: {target[3:]}")
-        q_ik = inverseKinematics(target, lst)
-        # print(f"Analytical: {q_ik}")
+        print(f"GIVEN LIST: {lst} \nRETURNED TARGET: {target}")
+        q_ik = inverseKinematics(target, [0,0,0,0,0])
+        print(f"PRODUCED: {q_ik}")
         # print(f"Result: {Mat2Pose(forwardKinematics(q_ik))}")
-        if q_ik > 1e-6:
+        """if q_ik > 1e-6:
             print(lst)
             print(f"Err: {q_ik}")
-            break
+            break"""
+        print("\n------------------------------------------------------------------\n")

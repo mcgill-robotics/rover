@@ -1,8 +1,8 @@
 import numpy as np
 import math
 
-jointUpperLimits = [175*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
-jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
+jointUpperLimits = [118.76*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
+jointLowerLimits = [-125.97*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
 
 arm_DH = [
     [0.0575,                0,     0, -90*math.pi/180], #vertical offset from base
@@ -346,7 +346,7 @@ def calculate_angles(ee_target, wrist_target, elbow_target):
 
     zero_position = Mat2Pose(forwardKinematics([0,0,0,0,0]))
 
-    theta_l1_l2 = math.acos((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2) / (-2 * d * arm_DH[1][2]))
+    theta_l1_l2 = math.acos((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2) / (-2 * arm_DH[1][2] * arm_DH[2][2]))
     theta_b = math.asin(elbow_coordinates[0] / arm_DH[1][2])
 
     #theta_inner = math.acos((arm_DH[2][2] ** 2 - arm_DH[1][2] ** 2 - d ** 2) / (-2 * arm_DH[1][2] * d))
@@ -356,13 +356,10 @@ def calculate_angles(ee_target, wrist_target, elbow_target):
     theta_h = math.acos((l ** 2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2) / (-2 * arm_DH[-1][0] * arm_DH[2][2]))
     
     if ee_target[0] >= 0:
-        print("FIRST CASE")
         rotation = math.atan2(ee_target[1], ee_target[0])
     elif ee_target[1] >= 0:
-        print("SECOND CASE")
         rotation = -math.pi + math.atan2(ee_target[1], ee_target[0])
     else:
-        print("THIRD CASE")
         rotation = math.pi + math.atan2(ee_target[1],  ee_target[0])
 
 
@@ -429,16 +426,16 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
     if elbow_pose_1[0] >= 0:
         elbow_direction_1 = math.atan2(elbow_pose_1[1],  elbow_pose_1[0])
     elif elbow_pose_1[1] >= 0:
-        elbow_direction_1 = math.pi + math.atan2(elbow_pose_1[1], elbow_pose_1[0])
-    else:
         elbow_direction_1 = -math.pi + math.atan2(elbow_pose_1[1], elbow_pose_1[0])
+    else:
+        elbow_direction_1 = math.pi + math.atan2(elbow_pose_1[1], elbow_pose_1[0])
 
     if elbow_pose_2[0] >= 0:
         elbow_direction_2= math.atan2(elbow_pose_2[1], elbow_pose_2[0])
     elif elbow_pose_2[1] >= 0:
-        elbow_direction_2 = math.pi + math.atan2(elbow_pose_2[1], elbow_pose_2[0])
-    else:
         elbow_direction_2 = -math.pi + math.atan2(elbow_pose_2[1], elbow_pose_2[0])
+    else:
+        elbow_direction_2 = math.pi + math.atan2(elbow_pose_2[1], elbow_pose_2[0])
 
     if elbow_pose_1[2] > elbow_pose_2[2]:
         higher = elbow_pose_1
@@ -447,7 +444,7 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
         higher = elbow_pose_2
         lower = elbow_pose_1
 
-    if 5*math.pi/180 < abs(elbow_direction_1) < 175*math.pi/180: #always legal
+    if 62*math.pi/180 < abs(elbow_direction_1) < 118*math.pi/180: #always legal
         if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
             if (elbow_direction_1 < 0) == (cur_pose[0] < 0):
                 elbow_pose = higher
@@ -458,7 +455,7 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
                 elbow_pose = elbow_pose_2
             else:
                 elbow_pose = elbow_pose_1
-    elif abs(elbow_direction_1) <= 5*math.pi/180: #front
+    elif abs(elbow_direction_1) <= 62*math.pi/180: #front
         if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
             elbow_pose = lower
         else:

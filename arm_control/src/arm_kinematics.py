@@ -330,7 +330,7 @@ def calculate_angles(ee_target, wrist_target, elbow_target):
     print(f"TARGET: {ee_target}")
 
     projection_line = [ee_target[0], ee_target[1]]
-    hand_coordinates = (project(projection_line, ee_target[:2]), hand_coordinates[2])
+    hand_coordinates = (project(projection_line, ee_target[:2]), ee_target[2])
     #print(f"HAND: {hand_coordinates}")
 
     #wrist_coordinates = (hand_coordinates[0] - math.sin(ee_target[4]) * arm_DH[-1][0], hand_coordinates[1] - math.cos(ee_target[4]) * arm_DH[-1][0]) # projection, z
@@ -355,8 +355,18 @@ def calculate_angles(ee_target, wrist_target, elbow_target):
     l = math.sqrt(round(hand_coordinates[0] - elbow_coordinates[0], 6) ** 2 + (hand_coordinates[1] - elbow_coordinates[1]) ** 2)
     theta_h = math.acos((l ** 2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2) / (-2 * arm_DH[-1][0] * arm_DH[2][2]))
     
+    if ee_target[0] >= 0:
+        print("FIRST CASE")
+        rotation = math.atan2(ee_target[1], ee_target[0])
+    elif ee_target[1] >= 0:
+        print("SECOND CASE")
+        rotation = -math.pi + math.atan2(ee_target[1], ee_target[0])
+    else:
+        print("THIRD CASE")
+        rotation = math.pi + math.atan2(ee_target[1],  ee_target[0])
 
-    joint_angles = [math.atan2(ee_target[1], ee_target[0]), # base z
+
+    joint_angles = [rotation, # base z
     theta_b, # base angle relative to z axis
     math.pi / 2 - theta_l1_l2, # inner angle between L1 and L2
     theta_h - math.pi,  # inner angle between L2 and hand
@@ -384,15 +394,15 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
 
     hand_pose = np.array(hand_pose)
     T_h = Pose2Mat(hand_pose)
-    print(f"Hand: {hand_pose[:3]}")
+    #print(f"Hand: {hand_pose[:3]}")
 
     # Get Wrist position
     wrist_pose = hand_pose[:3] - T_h[:3,2] * arm_DH[-1][0]
-    print(f"Wrist: {wrist_pose}")
+    #print(f"Wrist: {wrist_pose}")
 
     # Get Shoulder position
     shoulder_pose = np.array([0,0,arm_DH[0][0]])
-    print(f"Shoulder: {shoulder_pose}")
+    #print(f"Shoulder: {shoulder_pose}")
 
     ## Get Possible Elbow position
     # Form Arm Plane Basis Vectors
@@ -413,22 +423,22 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
 
     elbow_pose_1 = elbow_basis_x * basis_x + elbow_basis_y * basis_y + shoulder_pose
     elbow_pose_2 = elbow_basis_x * basis_x - elbow_basis_y * basis_y + shoulder_pose
-    print(f"Elbow 1: {elbow_pose_1}")
-    print(f"Elbow 2: {elbow_pose_2}")
+    #print(f"Elbow 1: {elbow_pose_1}")
+    #print(f"Elbow 2: {elbow_pose_2}")
 
     if elbow_pose_1[0] >= 0:
-        elbow_direction_1 = math.atan(elbow_pose_1[1] / elbow_pose_1[0])
+        elbow_direction_1 = math.atan2(elbow_pose_1[1],  elbow_pose_1[0])
     elif elbow_pose_1[1] >= 0:
-        elbow_direction_1 = math.pi + math.atan(elbow_pose_1[1] / elbow_pose_1[0])
+        elbow_direction_1 = math.pi + math.atan2(elbow_pose_1[1], elbow_pose_1[0])
     else:
-        elbow_direction_1 = -math.pi + math.atan(elbow_pose_1[1] / elbow_pose_1[0])
+        elbow_direction_1 = -math.pi + math.atan2(elbow_pose_1[1], elbow_pose_1[0])
 
     if elbow_pose_2[0] >= 0:
-        elbow_direction_2= math.atan(elbow_pose_2[1] / elbow_pose_2[0])
+        elbow_direction_2= math.atan2(elbow_pose_2[1], elbow_pose_2[0])
     elif elbow_pose_2[1] >= 0:
-        elbow_direction_2 = math.pi + math.atan(elbow_pose_2[1] / elbow_pose_2[0])
+        elbow_direction_2 = math.pi + math.atan2(elbow_pose_2[1], elbow_pose_2[0])
     else:
-        elbow_direction_2 = -math.pi + math.atan(elbow_pose_2[1] / elbow_pose_2[0])
+        elbow_direction_2 = -math.pi + math.atan2(elbow_pose_2[1], elbow_pose_2[0])
 
     if elbow_pose_1[2] > elbow_pose_2[2]:
         higher = elbow_pose_1
@@ -452,12 +462,12 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
         if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
             elbow_pose = lower
         else:
-            elbow_pose = elbow_direction_1
+            elbow_pose = elbow_pose_1
     else: #back
         if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
             elbow_pose = higher
         else:
-            elbow_pose = elbow_direction_2
+            elbow_pose = elbow_pose_2
 
     return calculate_angles(hand_pose, wrist_pose, elbow_pose)
 """

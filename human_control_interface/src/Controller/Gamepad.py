@@ -1,90 +1,90 @@
 #!/usr/bin/env python3
 
 import pygame
-import time
-import rospy
+#import time
+#import rospy
 from human_control_interface.msg import Gamepad_input
 
-class Node_Gamepad():
-    """Gets gamepad data and publishes the data to the gamepad_data topic
+# class Node_Gamepad():
+#     """Gets gamepad data and publishes the data to the gamepad_data topic
 
-    Topic data : Float32MultiArray
-    Data:
-            Input   | Possible Value    | Mapping
-        --------------------------------------------
-        Button 1    :   0 or 1          : X / A
-        Button 2    :   0 or 1          : O / B
-        Button 3    :   0 or 1          : triangle / Y
-        Button 4    :   0 or 1          : square / X
-        Button 5    :   0 or 1          : LB
-        Button 6    :   0 or 1          : RB
-        Button 7    :   0 or 1          : LT
-        Button 8    :   0 or 1          : RT
-        Button 9    :   0 or 1          : Select
-        Button 10   :   0 or 1          : Start
-        Button 11   :   0 or 1          : Home
-        Button 12   :   0 or 1          : L-stick press
-        Button 13   :   0 or 1          : R-stick press
-        Axis 1      : Range [-1, 1]     : L-stick L/R
-        Axis 2      : Range [-1, 1]     : L-stick U/D
-        Axis 3      : Range [-1, 1]     : LT - analog
-        Axis 4      : Range [-1, 1]     : R-stick L/R
-        Axis 5      : Range [-1, 1]     : R-stick U/D
-        Axis 6      : Range [-1, 1]     : RT - analog
+#     Topic data : Float32MultiArray
+#     Data:
+#             Input   | Possible Value    | Mapping
+#         --------------------------------------------
+#         Button 1    :   0 or 1          : X / A
+#         Button 2    :   0 or 1          : O / B
+#         Button 3    :   0 or 1          : triangle / Y
+#         Button 4    :   0 or 1          : square / X
+#         Button 5    :   0 or 1          : LB
+#         Button 6    :   0 or 1          : RB
+#         Button 7    :   0 or 1          : LT
+#         Button 8    :   0 or 1          : RT
+#         Button 9    :   0 or 1          : Select
+#         Button 10   :   0 or 1          : Start
+#         Button 11   :   0 or 1          : Home
+#         Button 12   :   0 or 1          : L-stick press
+#         Button 13   :   0 or 1          : R-stick press
+#         Axis 1      : Range [-1, 1]     : L-stick L/R
+#         Axis 2      : Range [-1, 1]     : L-stick U/D
+#         Axis 3      : Range [-1, 1]     : LT - analog
+#         Axis 4      : Range [-1, 1]     : R-stick L/R
+#         Axis 5      : Range [-1, 1]     : R-stick U/D
+#         Axis 6      : Range [-1, 1]     : RT - analog
 
-    """
-    def __init__(self):
-        # Initialize Gamepad
-        try:
-            self.gamepad = Gamepad()
-        except AssertionError as error:
-            rospy.logerr(str(error))
+#     """
+    # def __init__(self):
+    #     # Initialize Gamepad
+    #     try:
+    #         self.gamepad = Gamepad()
+    #     except AssertionError as error:
+    #         rospy.logerr(str(error))
 
-        # Initialize ROS
-        rospy.init_node("gamepad", anonymous=False)
-        self.gamepad_publisher = rospy.Publisher("gamepad_data", Gamepad_input, queue_size=1)
+    #     # Initialize ROS
+    #     #rospy.init_node("gamepad", anonymous=False)
+    #     #self.gamepad_publisher = rospy.Publisher("gamepad_data", Gamepad_input, queue_size=1)
 
-        # Start Node
-        self.run()
+    #     # Start Node
+    #     self.run()
 
-    def run(self):
-        """Runs the node loop for getting and updating the Gamepad information for user control
-        """
-        while not rospy.is_shutdown():
-            if rospy.is_shutdown():
-                exit()
-            try:
-                self.gamepad.update()
-                msg = Gamepad_input()
+    # def run(self):
+    #     """Runs the node loop for getting and updating the Gamepad information for user control
+    #     """
+    #     while not rospy.is_shutdown():
+    #         if rospy.is_shutdown():
+    #             exit()
+    #         try:
+    #             self.gamepad.update()
+    #             msg = Gamepad_input()
 
-                # Transfer Data into msg
-                msg.B1 = self.gamepad.data.b1
-                msg.B2 = self.gamepad.data.b2
-                msg.B3 = self.gamepad.data.b3
-                msg.B4 = self.gamepad.data.b4
-                msg.B5 = self.gamepad.data.b5
-                msg.B6 = self.gamepad.data.b6
-                msg.B7 = self.gamepad.data.b7
-                msg.B8 = self.gamepad.data.b8
-                msg.B9 = self.gamepad.data.b9
-                msg.B10 = self.gamepad.data.b10
-                msg.B11 = self.gamepad.data.b11
-                msg.B12 = self.gamepad.data.b12
-                msg.B13 = self.gamepad.data.b13
-                msg.A1 = self.gamepad.data.a1
-                msg.A2 = self.gamepad.data.a2
-                msg.A3 = self.gamepad.data.a3
-                msg.A4 = self.gamepad.data.a4
-                msg.A5 = self.gamepad.data.a5
-                msg.A6 = self.gamepad.data.a6
+    #             # Transfer Data into msg
+    #             msg.B1 = self.gamepad.data.b1
+    #             msg.B2 = self.gamepad.data.b2
+    #             msg.B3 = self.gamepad.data.b3
+    #             msg.B4 = self.gamepad.data.b4
+    #             msg.B5 = self.gamepad.data.b5
+    #             msg.B6 = self.gamepad.data.b6
+    #             msg.B7 = self.gamepad.data.b7
+    #             msg.B8 = self.gamepad.data.b8
+    #             msg.B9 = self.gamepad.data.b9
+    #             msg.B10 = self.gamepad.data.b10
+    #             msg.B11 = self.gamepad.data.b11
+    #             msg.B12 = self.gamepad.data.b12
+    #             msg.B13 = self.gamepad.data.b13
+    #             msg.A1 = self.gamepad.data.a1
+    #             msg.A2 = self.gamepad.data.a2
+    #             msg.A3 = self.gamepad.data.a3
+    #             msg.A4 = self.gamepad.data.a4
+    #             msg.A5 = self.gamepad.data.a5
+    #             msg.A6 = self.gamepad.data.a6
 
 
-                self.gamepad_publisher.publish(msg)
+    #             self.gamepad_publisher.publish(msg)
 
-                time.sleep(0.1)
-            except Exception as error:
-                rospy.logerr(str(error))
-        exit()
+    #             time.sleep(0.1)
+    #         except Exception as error:
+    #             rospy.logerr(str(error))
+    #     exit()
 
 
 class Gamepad():
@@ -205,7 +205,3 @@ class GamepadData():
         self.a4 = 0
         self.a5 = 0
         self.a6 = 0
-
-if __name__ == "__main__":
-    driver = Node_Gamepad()
-    rospy.spin()

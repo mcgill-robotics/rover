@@ -9,7 +9,9 @@ original_start_joints = [0 for i in range(5)]
 
 def pathfind(start_joints, end_joints, time):
     """
-    Generates the path polynomial for each joints and calculates the required position for a given time remaining
+    Generates the path polynomial for each joints and calculates the required position for a given time remaining.
+    Note: If time is too long or maximum velocity is too high, it will reverse and then overshoot before landing
+    on the desired position.
 
     Parameters
     ----------

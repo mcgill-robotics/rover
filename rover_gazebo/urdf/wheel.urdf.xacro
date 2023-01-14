@@ -14,9 +14,9 @@
 		<!-- Wheel Link -->
 		<link name="${wheel_prefix}_wheel_link">
 			<inertial>
-				<mass value="0.144" />
+				<mass value="1.2" />
 				<origin xyz="0 0 0" />
-				<inertia  ixx="0.00108333333333" ixy="0" ixz="0" iyy="0.00108333333333" iyz="0" izz="0.002" />
+				<inertia  ixx="0.142" ixy="0.0003118" ixz="0.0000392177" iyy="0.14155823" iyz="-0.000062645" izz="1.3729" />
 			</inertial>
 			<visual>
 				<xacro:if value="$(arg mesh_enabled)">

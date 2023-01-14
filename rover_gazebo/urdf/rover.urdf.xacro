@@ -9,10 +9,10 @@
     <link   name = "base_link">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="3.978"/>
-            <inertia ixx="0.0282916666667" ixy="0.0" ixz="0.0"
-                    iyy="0.0282916666667" iyz="0.0"
-                    izz="0.05625"/>
+            <mass value="45.2"/>
+            <inertia ixx="1.7724" ixy="0.0" ixz="0.0"
+                    iyy="0.141558" iyz="-0.0"
+                    izz="0.179826"/>
         </inertial>
         <visual>
             <xacro:if value="$(arg mesh_enabled)">

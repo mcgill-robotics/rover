@@ -1,11 +1,11 @@
 import numpy as np
 import math
 
-max_vels = [5, 5, 5, 5, 5] # waist shoulder elbow wrist hand maximum velocities (TEMPORARY VALUES)
-previous_end_joints = []
-polynomials = [[] for i in range(5)]
+max_vels = [.1, .1, .1, .1, .1] # waist shoulder elbow wrist hand maximum velocities (TEMPORARY VALUES)
+previous_end_joints = [0 for i in range(5)]
+polynomials = [[0 for j in range(4)] for i in range(5)]
 total_motion_time = 0
-original_start_joints = []
+original_start_joints = [0 for i in range(5)]
 
 def pathfind(start_joints, end_joints, time):
     """
@@ -27,7 +27,6 @@ def pathfind(start_joints, end_joints, time):
         joints : list(5)
             The next position the arm should move to in accordance with the path
     """
-
     if end_joints != previous_end_joints: #Setting up polynomials and saved variables
         half = time / 2
         matrix = np.array([[time ** 6, time ** 5, time ** 4, time ** 3], 
@@ -37,24 +36,28 @@ def pathfind(start_joints, end_joints, time):
 
         for i in range(len(polynomials)):
             points = np.array([end_joints[i] - start_joints[i], 0, max_vels[i], 0])
-            polynomials[i] = list(np.linalg.solve(matrix, points))
+            poly = np.linalg.solve(matrix, points)
+            for j in range(4):
+                polynomials[i][j] = poly[j]
+            previous_end_joints[i] = end_joints[i]
+            original_start_joints[i] = start_joints[i]
         
-        previous_end_joints = end_joints
-        original_start_joints = start_joints
+        global total_motion_time
         total_motion_time = time
 
     joints = [] #Calculating positions
-    for polynomial in polynomials:
+    for i in range(len(polynomials)):
+        polynomial = polynomials[i]
         delta_time = total_motion_time - time
         delta_position = polynomial[0] * delta_time ** 6 + polynomial[1] * delta_time ** 5 + polynomial[2] * delta_time ** 4 + polynomial[3] * delta_time ** 3
-        joints.append(delta_position + original_start_joints)
+        joints.append(delta_position + original_start_joints[i])
 
     return joints
     
 if __name__ == '__main__':
-    time = 30
+    time = 10
     start = [0, 0, 0, 0, 0]
     end = [1, 1, 1, 1, 1]
-    for i in range(time, 0):
-        start = pathfind(start, end, time)
+    for t in range(time, -1, -1):
+        start = pathfind(start, end, t)
         print(start)

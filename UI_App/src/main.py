@@ -3,6 +3,11 @@
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
+from PyQt5 import QtGui
+import cv2
+from sensor_msgs.msg import Image
+from std_msgs.msg import Int16
+from cv_bridge import CvBridge
 
 from ui_layout import Ui_MainWindow
 import rospy
@@ -56,6 +61,13 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         rospy.init_node("UINode", anonymous=True)
 
 
+        self.timer_camera = qtc.QTimer()  # set up a timer, this is used to control frame rate
+        self.cap1 = cv2.VideoCapture()  # video float
+        #todo I just set variables here, if is invalid, please tell me to change it!
+        self.__now_cam = 0
+        self.__camera_opened = False
+        self.cam_image = None
+
         # Listeners
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
         
@@ -82,6 +94,14 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # Rospy publisher
         self.science_module_publisher = rospy.Publisher("science_controller_feedback", SciencePilot, queue_size=10)
         # TODO: KillSwitch Publisher
+
+
+        # camera selection
+        #self.camera_selector.currentIndexChanged.connect(self.change_camera)
+        self.camera_index_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
+        self.camera_subscriber = rospy.Subscriber("/camera_frames", Image, self.camera_image)
+        self.timer_camera.timeout.connect(self.show_camera)
+
 
     ## SCIENCE SECTION
     # Subscribers
@@ -193,6 +213,46 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         else:
             pass
             # Return self for autonomy
+
+
+    # def change_camera(self):
+
+    #     if self.__camera_opened:
+    #         self.cap1.release()
+    #         # todo release camera takes too long time! try to fix it!
+    #         # todo Thread occupation causes program lag, consider multi-threading
+    #         self.timer_camera.stop()
+
+    #     self.timer_camera.start(30)
+    #     self.__camera_opened = self.cap1.open(self.camera_selector.currentIndex())
+
+    #     # this "if" just print some information
+    #     if not self.__camera_opened:
+    #         print("fail to open camera!")
+    #         self.__now_cam = self.camera_selector.currentIndex()
+    #         print(self.__now_cam+1,"is working")
+
+    def change_camera(self):
+        self.camera_index_publisher.publish(self.camera_selector.currentIndex())
+        print(self.camera_selector.currentIndex())
+
+
+    def camera_image(self, x):
+        self.cam_image = x
+
+    def show_camera(self):
+        self.frames = self.ros_to_openCV_image(self.cam_image)
+        self.frames = cv2.imdecode(self.frames, 1)
+        show = cv2.cvtColor(self.frames, cv2.COLOR_BGR2RGB)  # change color into RGB
+        showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0],
+                                 QtGui.QImage.Format_RGB888)  # Turn the read video data into QImage form
+        self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
+
+
+    def ros_to_openCV_image(self, ros_image):
+        bridge = CvBridge()
+        cv_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding='passthrough')
+        return cv_image
 
 
 def main():

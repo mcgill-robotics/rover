@@ -15,19 +15,20 @@
                     izz="0.179826"/>
         </inertial>
         <visual>
-            <xacro:if value="$(arg mesh_enabled)">
-                <origin xyz="0 0 0" rpy="0 0 0" />
+            <!-- <xacro:if value="$(arg mesh_enabled)"> -->
+                <origin xyz="-0.3 -1.2 -0.3" rpy="1.57 0 1.57" />
                 <geometry>
-                    <mesh filename="package://onebot_description/meshes/base_link.dae" />
+                    <mesh filename="package://rover_gazebo/meshes/2Full_Asm_F2022.dae" scale = "0.001 0.001 0.001"/>
                 </geometry>
-            </xacro:if>
-            <xacro:unless value="$(arg mesh_enabled)">
-                <origin xyz="0 0 -0.01" rpy="0 0 0" />
+            <!-- </xacro:if>
+            <xacro:unless value="$(arg mesh_enabled)"> -->
+            
+                <!-- <origin xyz="0 0 -0.01" rpy="0 0 0" />
                 <geometry>
                     <box size="0.25 0.25 0.02" />
-                </geometry>
-                <material name="Blue" />    
-            </xacro:unless>
+                </geometry>  -->
+                <!-- <material name="Blue" />    
+            </xacro:unless> -->
         </visual>
         <collision>
             <origin xyz="0 0 -0.01" rpy="0 0 0" />
@@ -48,7 +49,7 @@
 
 
     <xacro:wheel wheel_prefix="left" parent_link="base_link" >
-        <origin xyz="0.14 0.14 -0.045" rpy="0 0 0" />
+        <origin xyz="0.5 0.14 -0.045" rpy="0 0 0" />
     </xacro:wheel>
 
     <xacro:wheel wheel_prefix="right" parent_link="base_link" >

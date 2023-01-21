@@ -183,6 +183,7 @@ include_directories(
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
+   DIRECTORY src launch rviz config wolrd meshes
    rover.launch
    # myfile2
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

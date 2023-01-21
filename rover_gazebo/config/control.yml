@@ -51,6 +51,6 @@ rover_velocity_controller:
         has_velocity_limits    : true
         max_velocity           : 30.0  # rad/s
         has_acceleration_limits: true
-        max_acceleration       : 0.5  # rad/s^2
+        max_acceleration       : 1  # rad/s^2
         has_jerk_limits        : true
         max_jerk               : 2.5  # rad/s^3

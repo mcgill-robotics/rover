@@ -59,7 +59,7 @@ def pathfind(start_joints, end_joints, time):
 if __name__ == '__main__':
     time = 10
     start = [0, 0, 0, 0, 0]
-    end = [1, 1, 1, 1, 1]
+    end = [-1.5, 2, 2, .5, .75]
     for t in range(time, -1, -1):
         start = pathfind(start, end, t)
         print(start)

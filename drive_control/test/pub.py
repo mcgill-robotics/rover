@@ -25,7 +25,7 @@ def pub():
         twist_pub.publish(robot_twist)
         feedback_pub.publish(feedback)
         rospy.loginfo(feedback)
-        time.sleep(0.5)
+        time.sleep(0.35)
         i += 10
         
 

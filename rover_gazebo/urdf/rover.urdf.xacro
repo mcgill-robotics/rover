@@ -1,17 +1,18 @@
 <?xml version="1.0"?>
 <robot name="myfirst" xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:include filename="$(find rover_gazebo)/urdf/wheel.urdf.xacro" />
-    <link name = "base_link">
+    <xacro:include filename="$(find rover_gazebo)/urdf/depth_camera.urdf.xacro" />
+    <link name="base_link">
         <inertial>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-            <mass value="45.2"/>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="45.2" />
             <!-- <inertia ixx="0" ixy="0.0" ixz="0.0" iyy="0" iyz="0.0" izz="0"/> -->
-            <inertia ixx="1.7724" ixy="0.0" ixz="0.0" iyy="0.141558" iyz="-0.0" izz="0.179826"/>
+            <inertia ixx="1.7724" ixy="0.0" ixz="0.0" iyy="0.141558" iyz="-0.0" izz="0.179826" />
         </inertial>
         <visual>
             <origin xyz="0 0 0.1" rpy="0 0 0" />
             <geometry>
-                <mesh filename="package://rover_gazebo/meshes/Full_Asm_Adjusted.dae"/>
+                <mesh filename="package://rover_gazebo/meshes/Full_Asm_Adjusted.dae" />
             </geometry>
         </visual>
         <collision>
@@ -23,34 +24,38 @@
         </collision>
     </link>
 
-    <link name = "base_footprint"/>
-        
-    <joint name = "base_joint"  type = "fixed">
-        <parent link="base_footprint"/>
-        <child link="base_link"/>
+    <link name="base_footprint" />
+
+    <joint name="base_joint" type="fixed">
+        <parent link="base_footprint" />
+        <child link="base_link" />
         <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
         <axis xyz="0 1 0" rpy="0 0 0" />
     </joint>
 
-    <xacro:wheel wheel_prefix="left" parent_link="base_link" >
+    <xacro:wheel wheel_prefix="left" parent_link="base_link">
         <origin xyz="0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 3.141592 0" />
     </xacro:wheel>
 
-    <xacro:wheel wheel_prefix="right" parent_link="base_link" >
+    <xacro:wheel wheel_prefix="right" parent_link="base_link">
         <origin xyz="-0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 0 0" />
     </xacro:wheel>
 
-    <xacro:wheel wheel_prefix="rear_left" parent_link="base_link" >
+    <xacro:wheel wheel_prefix="rear_left" parent_link="base_link">
         <origin xyz="0.5125 0.306875 ${-0.060752 + .1}" rpy="0 3.141592 0" />
     </xacro:wheel>
 
-    <xacro:wheel wheel_prefix="rear_right" parent_link="base_link" >
+    <xacro:wheel wheel_prefix="rear_right" parent_link="base_link">
         <origin xyz="-0.5125 0.306875 ${-0.060752 + .1}" rpy="0 0 0" />
     </xacro:wheel>
 
+    <xacro:depth_camera parent_link="base_link">
+        <origin xyz="0 0.2754 ${0.9943 + .1}" rpy="0 0 -1.57079"/>
+    </xacro:depth_camera>
+
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-        <robotNamespace>/</robotNamespace>
+            <robotNamespace>/</robotNamespace>
         </plugin>
-    </gazebo>>
+    </gazebo>
 </robot>

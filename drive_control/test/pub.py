@@ -6,7 +6,7 @@ from drive_control.msg import WheelSpeed
 
 def pub():
     robot_twist = Twist()
-    robot_twist.angular.z = 0
+    robot_twist.angular.z = 1
     robot_twist.linear.x = 1
     # robot_twist.angular.z = 1500
     twist_pub = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=10)

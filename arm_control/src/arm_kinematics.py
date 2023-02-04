@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from scipy.spatial.transform import Rotation as R
 
 jointUpperLimits = [118.76*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
 jointLowerLimits = [-118*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
@@ -336,18 +337,31 @@ def calculate_angles(ee_target, wrist_target, elbow_target, chose_lower):
     """
     print(f"TARGET: {ee_target}")
 
-    projection_line = [ee_target[0], ee_target[1]]
-    hand_proj = project(projection_line, ee_target[:2])
-    hand_coordinates = (hand_proj, ee_target[2])
+    angles = R.from_euler('XYZ', ee_target[3:])
+    rotation_matrix = angles.as_matrix()
+    x_axis = [row[0] for row in rotation_matrix]
+    hand_pitch = -np.arctan(x_axis[2]) #Negative only if tiliting down is positive
+    print(f"HAND PITCH: {hand_pitch}")
+    
+
+    #projection_line = [ee_target[0], ee_target[1]]
+    #hand_proj = project(projection_line, ee_target[:2])
+    #hand_coordinates = (hand_proj, ee_target[2])
     #print(f"HAND: {hand_coordinates}")
+    hand_top_down_length = math.sqrt(ee_target[0] ** 2 + ee_target[1] **2)
+    hand_coordinates = (hand_top_down_length, ee_target[2])
 
     #wrist_coordinates = (hand_coordinates[0] - math.sin(ee_target[4]) * arm_DH[-1][0], hand_coordinates[1] - math.cos(ee_target[4]) * arm_DH[-1][0]) # projection, z
-    wrist_proj = project(projection_line, wrist_target[:2])
-    wrist_coordinates = (wrist_proj, wrist_target[2])
+    #wrist_proj = project(projection_line, wrist_target[:2])
+    #wrist_coordinates = (wrist_proj, wrist_target[2])
+    wrist_top_down_length = math.sqrt(wrist_target[0] ** 2 + wrist_target[1] **2)
+    wrist_coordinates = (wrist_top_down_length, wrist_target[2])
     print(f"WRIST: {wrist_coordinates}")
 
-    elbow_proj = project(projection_line, elbow_target[:2])
-    elbow_coordinates = (elbow_proj, elbow_target[2])
+    #elbow_proj = project(projection_line, elbow_target[:2])
+    #elbow_coordinates = (elbow_proj, elbow_target[2])
+    elbow_top_down_length = math.sqrt(elbow_target[0] ** 2 + elbow_target[1] **2)
+    elbow_coordinates = (elbow_top_down_length, elbow_target[2])
 
     true_base_coordinates = (0, 0, arm_DH[0][0])
 
@@ -380,7 +394,7 @@ def calculate_angles(ee_target, wrist_target, elbow_target, chose_lower):
     theta_b, # base angle relative to z axis
     math.pi / 2 - theta_l1_l2, # inner angle between L1 and L2
     theta_h - math.pi,  # inner angle between L2 and hand
-    ee_target[3] - zero_position[3]] # wrist rotation 
+    hand_pitch] # wrist pitch 
 
     if chose_lower != 0:
         joint_angles[0] += chose_lower * math.pi / 180
@@ -526,6 +540,7 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
 
 
 if __name__ == '__main__':
+    
     # lst = [math.pi/2, -math.pi/2, math.pi/3, math.pi/2, -math.pi/4]
     # lst = [math.pi/2, 0, math.pi/4, math.pi/2, 0]
     for _ in range(10):
@@ -541,5 +556,6 @@ if __name__ == '__main__':
             print(f"Err: {q_ik}")
             break"""
         print("\n------------------------------------------------------------------\n")
-    print("TEST PREVIOUS")
-    print(inverseKinematics(Mat2Pose(forwardKinematics([1.01013177,  0.33736669, -0.87278152,  0.29407235,  0.35744979])), [0,0,0,0,0]))
+        
+    #print("PREDEFINED TEST")
+    p#rint(inverseKinematics(Mat2Pose(forwardKinematics([0,  0.0, -0.0,  0.0,  0.35744979])), [0,0,0,0,0]))

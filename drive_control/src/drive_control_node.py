@@ -15,6 +15,10 @@ import scipy.stats as st
 class Node_DriveControl():
 
     def __init__(self):
+        """
+        Hard-coded the simulation rover measurement, will need to adapt it towards the real model.
+        Drive control takes care interpolating velocities and publishing them.
+        """
         self.wheel_radius = 0.04688
         self.wheel_base_length = 0.28
         self.wheel_speed = None
@@ -107,12 +111,14 @@ class Node_DriveControl():
             back_left = np.asarray(self.back_left)
             front_right = np.asarray(self.front_right)
             back_right = np.asarray(self.back_right)
-
+            
+            # Interpolating the veloctities according to gaussian kernel.
             correct_lf = np.sum(front_left * self.basis)
             correct_lb = np.sum(back_left * self.basis)
             correct_rf = np.sum(front_right * self.basis)
             correct_rb = np.sum(back_right * self.basis)
 
+            # Send out the correct values.
             cmd.left[0], cmd.left[1] = correct_lf, correct_lb
             cmd.right[0], cmd.right[1] = correct_rf, correct_rb
 

@@ -7,7 +7,7 @@
     <arg name="headless" default="false"/>
     <arg name="debug" default="false"/>
     <arg name="gui_required" default="true"/>
-    <arg name="mesh_enabled" default="false"/>
+    <arg name="mesh_enabled" default="true"/>
 
 
 

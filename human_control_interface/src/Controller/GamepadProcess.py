@@ -18,11 +18,13 @@ class Node_GamepadProcessing:
         gamepad: Reference to a Gamepad object.
 
         roverLinearVelocity: The rover's linear velocity
-        roverAngularVelocity: The rover's linear velocity
-        maxLinearVelocity: The upper limit set for velocity.
-        maxAngularVelocity: The lower limit set for velocity
+        roverAngularVelocity: The rover's angular velocity
+        maxLinearVelocity: The upper limit set for linear velocity.
+        maxAngularVelocity: The lower limit set for angular velocity
 
         active_system: What data the ROS COM system is polling (drive data, arm data, science data...)
+
+        NOTE: Twist measurements are in SI units. (m/s, m, ...)
 
         """
         # initialize ROS node
@@ -111,45 +113,35 @@ class Node_GamepadProcessing:
 
     def driveProcessCall(self, msg):
         
-        #Need to Include: Preventing gamepad biases (floors negligible gamepad values to 0)
-        if abs(msg.A1) < 0.1:
-            msg.A1 = 0
+        # Right stick left and right is for steering.
+
+        if abs(msg.A4) < 0.1:
+            msg.A4 = 0
         if abs(msg.A2) < 0.1:
             msg.A2 = 0
 
-        #Prints gamepad values
-        steering = msg.A1
-        #print("LS-X: ", msg.A1)
-        #print("LS-Y: ", msg.A2, '\n')
-        lt = msg.A3
-        rt = msg.A6
-        
-        # left_speed = msg.A2
-        # right_speed = msg.A5
+        steering = msg.A4
 
-        # # normalize to [0, 1] range
-        backward_vel = (lt + 1)/2
-        forward_vel = (rt + 1)/2        
+        backward_vel = 0
+        forward_vel = 0
+        if msg.A2 < 0:
+            backward_vel = msg.A2
+        else:
+            forward_vel = msg.A2   
 
         # # calc. for linear velocity
-        self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel - backward_vel)
+        self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel + backward_vel)
 
         # # calc. for angular velocity
         self.roverAngularVelocity = -self.maxAngularVelocity * np.sign(steering) * steering**2
+
 
         # # assigns values to a Twist msg, then publish it to ROS
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
 
-        # wheel_speed = WheelSpeed()
-        # wheel_speed.left[0] = left_speed
-        # wheel_speed.left[1] = left_speed
-        # wheel_speed.right[0] = right_speed
-        # wheel_speed.right[1] = right_speed
-        
-
-        time.sleep(0.1)
+        #time.sleep(0.5)
         self.drive_publisher.publish(roverTwist)
 
     def armProcessCall(self, msg):

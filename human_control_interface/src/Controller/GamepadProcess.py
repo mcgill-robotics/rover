@@ -127,11 +127,7 @@ class Node_GamepadProcessing:
         if msg.A2 < 0:
             backward_vel = msg.A2
         else:
-            forward_vel = msg.A2
-
-        # # normalize to [0, 1] range
-        #backward_vel = (lt + 1)/2
-        #forward_vel = (rt + 1)/2        
+            forward_vel = msg.A2   
 
         # # calc. for linear velocity
         self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel + backward_vel)
@@ -144,13 +140,6 @@ class Node_GamepadProcessing:
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
-
-        # wheel_speed = WheelSpeed()
-        # wheel_speed.left[0] = left_speed
-        # wheel_speed.left[1] = left_speed
-        # wheel_speed.right[0] = right_speed
-        # wheel_speed.right[1] = right_speed
-        
 
         #time.sleep(0.5)
         self.drive_publisher.publish(roverTwist)

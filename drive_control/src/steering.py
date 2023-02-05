@@ -4,16 +4,18 @@ class Steering:
         self.base_length=base_length # wheel base length
         
         
-    def steering_control(self, vR, wR): # R = rover
+    def steering_control(self, vR, wR, maxLin=3.0, maxAng=3.0): # R = rover
         
         # Manually caps the linear and angular velocities.
-        if wR > 3.0:
-            wR = 3.0
-        elif wR < -3.0:
-            wR = -3.0
+        if vR > maxLin:
+            vR = maxLin
+        elif vR < -maxLin:
+            vR = -maxLin
 
-        if vR < -0.5:
-            vR = -0.5
+        if wR > maxAng:
+            wR = maxAng
+        elif wR < -maxAng:
+            wR = -maxAng
         
         temp=wR*self.base_length/2
         wLeft=(vR-temp)/self.rWheel

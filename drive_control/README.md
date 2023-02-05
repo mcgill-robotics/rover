@@ -11,8 +11,6 @@ Messages manipulated:
 
 /rover_velocity_controller/cmd_vel: Contains the Twist messages (SI Units)
 
-/feedback_velocity: No idea what this is about.
-
 drive_control_node.py: Manages the velocities taken from the controller and then converts them into velocities that the rover must be travelling with.
 
 steering.py: Implements the math behind the driving of the rover.

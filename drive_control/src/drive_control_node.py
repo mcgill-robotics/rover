@@ -5,7 +5,6 @@ sys.path.append(currentdir)
 import rospy
 import numpy as np
 from steering import Steering
-from simple_pid import PID
 from std_msgs.msg import String
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
@@ -21,28 +20,21 @@ class Node_DriveControl():
         """
         self.wheel_radius = 0.04688
         self.wheel_base_length = 0.28
-        self.wheel_speed = None
-        self.correction_wheel_speed = None
+        self.wheel_speed = [0, 0]
         self.steering = Steering(self.wheel_radius, self.wheel_base_length)
-        self.right_front_pid_controller = PID(1, 0.1, 0.05, 0)
-        self.left_front_pid_controller = PID(1, 0.1, 0.05, 0)
-        self.right_rear_pid_controller = PID(1, 0.1, 0.05, 0)
-        self.left_rear_pid_controller = PID(1, 0.1, 0.05, 0)
-
+        self.sample_size = 50
         # Gaussian kernel
         self.basis = self.gkern(kernlen=50)
 
         # Filter samples for four wheels
-        self.front_left = np.zeros(50).tolist()
-        self.back_left = np.zeros(50).tolist()
-        self.front_right = np.zeros(50).tolist()
-        self.back_right = np.zeros(50).tolist()
+        self.front_left = np.zeros(self.sample_size).tolist()
+        self.back_left = np.zeros(self.sample_size).tolist()
+        self.front_right = np.zeros(self.sample_size).tolist()
+        self.back_right = np.zeros(self.sample_size).tolist()
         
         rospy.init_node('drive_controller')
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
         self.robot_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.twist_to_velocity)
-        self.feedback_velocity_subscriber = rospy.Subscriber('/feedback_velocity', WheelSpeed, self.set_correction_velocity)
-
         # The controller publisher is publishing straight to the twist_to_velocity values
         # which then results in what we have now. Must I add a new publisher that creates a sample first
         # and then feeds it to steering? yes
@@ -68,34 +60,6 @@ class Node_DriveControl():
         
             print(f"Desired speed: {self.wheel_speed}")
             
-            if(self.correction_wheel_speed is not None):
-                if(self.correction_wheel_speed.left[0] < 1):
-                    cmd.left[0] = self.wheel_speed[0]
-                else:
-                    cmd.left[0] = self.correction_wheel_speed.left[0]
-
-                if(self.correction_wheel_speed.left[1] < 1):
-                    cmd.left[1] = self.wheel_speed[0]
-                else:
-                    cmd.left[1] = self.correction_wheel_speed.left[1]
-
-                if(self.correction_wheel_speed.left[0] < 1):
-                    cmd.right[0] = self.wheel_speed[1]
-                else:
-                    cmd.right[0] = self.correction_wheel_speed.right[0]
-
-                if(self.correction_wheel_speed.left[0] < 1):
-                    cmd.right[1] = self.wheel_speed[1]
-                else:
-                    cmd.right[1] = self.correction_wheel_speed.right[1]    
-            elif(self.wheel_speed is not None):
-                cmd.left[0] = self.wheel_speed[0]
-                cmd.right[0] = self.wheel_speed[1]
-                cmd.left[1] = self.wheel_speed[0]
-                cmd.right[1] = self.wheel_speed[1]
-            else:
-                continue
-
             # Velocity filtering:
             self.front_left.append(self.wheel_speed[0])
             self.back_left.append(self.wheel_speed[0])
@@ -125,26 +89,6 @@ class Node_DriveControl():
             self.angular_velocity_publisher.publish(cmd)
             time.sleep(0.1)
             print(cmd)
-
-    
-    def set_correction_velocity(self, velocity_feedback):
-        self.correction_wheel_speed = WheelSpeed()
-
-        self.right_front_pid_controller.setpoint = self.wheel_speed[1]
-        self.left_front_pid_controller.setpoint = self.wheel_speed[0]
-        self.right_rear_pid_controller.setpoint = self.wheel_speed[1]
-        self.left_rear_pid_controller.setpoint = self.wheel_speed[0]
-        
-        vLeftFront = self.left_front_pid_controller(velocity_feedback.left[0])
-        vRightFront = self.right_front_pid_controller(velocity_feedback.right[0])
-        vLeftRear = self.left_rear_pid_controller(velocity_feedback.left[1])
-        vRightRear = self.right_rear_pid_controller(velocity_feedback.right[1])
-
-        self.correction_wheel_speed.left[0] = vLeftFront
-        self.correction_wheel_speed.right[0] = vRightFront
-        self.correction_wheel_speed.left[1] = vLeftRear
-        self.correction_wheel_speed.right[1] = vRightRear
-
 
 if __name__ == "__main__":
     driver = Node_DriveControl()

@@ -12,14 +12,14 @@
         <visual>
             <origin xyz="0 0 0.1" rpy="0 0 0" />
             <geometry>
-                <mesh filename="package://rover_gazebo/meshes/Full_Asm_Adjusted.dae" />
+                <mesh filename="package://rover_gazebo/meshes/rover_body_with_arm.dae" />
             </geometry>
         </visual>
         <collision>
-            <origin xyz="0 0 0.1" rpy="0 0 0" />
+            <origin xyz="0 0 0.4" rpy="0 0 0" />
             <geometry>
                 <!-- <mesh filename="package://rover_gazebo/meshes/Full_Asm_Adjusted.dae"/> -->
-                <box size="0 0 0" />
+                <box size="1 .5 .25" />
             </geometry>
         </collision>
     </link>
@@ -34,23 +34,23 @@
     </joint>
 
     <xacro:wheel wheel_prefix="left" parent_link="base_link">
-        <origin xyz="0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 3.141592 0" />
+        <origin xyz="0.316275 0.5125 ${-0.060752 + .1}" rpy="0 3.141592 ${3.141592/2}" />
     </xacro:wheel>
 
     <xacro:wheel wheel_prefix="right" parent_link="base_link">
-        <origin xyz="-0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 0 0" />
+        <origin xyz="0.316275 -0.5125 ${-0.060752 + .1}" rpy="0 0 ${3.141592/2}" />
     </xacro:wheel>
 
     <xacro:wheel wheel_prefix="rear_left" parent_link="base_link">
-        <origin xyz="0.5125 0.306875 ${-0.060752 + .1}" rpy="0 3.141592 0" />
+        <origin xyz="-0.306875 0.5125 ${-0.060752 + .1}" rpy="0 3.141592 ${3.141592/2}" />
     </xacro:wheel>
 
     <xacro:wheel wheel_prefix="rear_right" parent_link="base_link">
-        <origin xyz="-0.5125 0.306875 ${-0.060752 + .1}" rpy="0 0 0" />
+        <origin xyz="-0.306875 -0.5125 ${-0.060752 + .1}" rpy="0 0 ${3.141592/2}" />
     </xacro:wheel>
 
     <xacro:depth_camera parent_link="base_link">
-        <origin xyz="0 0.2754 ${0.9943 + .1}" rpy="0 0 -1.57079"/>
+        <origin xyz="-0.2754 0 ${0.9943 + .1}" rpy="0 0 0"/>
     </xacro:depth_camera>
 
     <gazebo>

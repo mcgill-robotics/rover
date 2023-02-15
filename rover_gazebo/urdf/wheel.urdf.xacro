@@ -20,7 +20,7 @@
 			<visual>
 				<origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
 				<geometry>
-					<mesh filename="package://rover_gazebo/meshes/full_wheel_assembly_fixed.dae" />
+					<mesh filename="package://rover_gazebo/meshes/rover_wheel.dae" />
 				</geometry>
 			</visual>
 			<collision>

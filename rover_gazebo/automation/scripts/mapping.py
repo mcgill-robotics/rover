@@ -11,8 +11,8 @@ class PointCloudTracker:
     def __init__(self) -> None:
         self.existing_points = set() 
         self.fixed_frame_id = 'parsed_point_cloud_world'
-        self.camera_height_offset = 1.2
-        self.rounding_coef = 5
+        self.camera_position_offset = [-0.285, 0, 1.1]
+        self.rounding_coef = 1
         self.rviz_pc2_pub = rospy.Publisher('parsed_point_cloud', PointCloud2, queue_size=10)
         self.rviz_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
 
@@ -21,7 +21,7 @@ class PointCloudTracker:
         rospy.Subscriber("camera/depth/points", PointCloud2, self.parse_pointcloud2_message)
         rospy.spin()
 
-    def get_camera_pose(self) -> tuple:
+    def get_rover_pose(self) -> tuple:
         data = rospy.wait_for_message("/gazebo/model_states", ModelStates)
         rover_model_name = '/' 
         model_names = data.name
@@ -31,36 +31,58 @@ class PointCloudTracker:
         rover_pose_quat = model_poses[model_names.index(rover_model_name)].orientation 
         rover_pose_obj = model_poses[model_names.index(rover_model_name)].position
         return (
-            rover_pose_obj.x, rover_pose_obj.y, rover_pose_obj.z + self.camera_height_offset
+            rover_pose_obj.x, rover_pose_obj.y, rover_pose_obj.z
         ), (rover_pose_quat.x, rover_pose_quat.y, rover_pose_quat.z, rover_pose_quat.w)
         
-    def apply_camera_pose_transform(self, points_tuple: tuple, camera_position_tuple: tuple, camera_orientation_tuple: tuple) -> np.array:
-        Rxy = np.array(
-            [[0 ,-1 ,0],
-             [1,0 ,0],
-             [0 ,0 ,1]]) 
+    def apply_camera_pose_transform(self, points_tuple: tuple, rover_position_tuple: tuple, camera_orientation_tuple: tuple) -> np.array:
 
-        Rxz = np.array(
-            [[0 ,0 ,-1],
-             [0 ,1 ,0],
-             [1 ,0 ,0]]
-        )  
-        return (points_tuple @ (Rxy @ Rxz)) @ self.quaternion_rotation_matrix(camera_orientation_tuple)
+        Drw = np.reshape(np.array(rover_position_tuple), (3, 1))
+
+        Rrw = self.quaternion_rotation_matrix(camera_orientation_tuple)
+
+        Trw = np.vstack((
+            np.hstack((Rrw, Drw)), 
+            np.hstack((np.zeros((1, 3)), np.array([[1]])))
+        ))
+
+        Rcr = np.array(
+            [[0 ,0 ,1],
+            [0 ,1 ,0],
+            [-1 ,0 ,0]]
+        ) @ np.array(
+            [[0 ,1 ,0],
+            [-1,0 ,0],
+            [0 ,0 ,1]]
+        )
+
+        Dcr = np.reshape(self.camera_position_offset, (3, 1))
+
+        Tcr = np.vstack((
+            np.hstack((Rcr, Dcr)),
+            np.hstack((np.zeros((1, 3)), np.array([[1]])))
+        ))
+        
+        P = np.vstack((
+            points_tuple.T,
+            np.ones((points_tuple.shape[0],))
+        ))
+
+        return Trw @ Tcr @ P
 
     def parse_pointcloud2_message(self, msg: PointCloud2) -> None:
         print(f'{len(self.existing_points)=}')
-        camera_position_tuple, camera_orientation_tuple = self.get_camera_pose()
-        points = pc2.read_points(msg, field_names=['x', 'y', 'z'], skip_nans=True)
-        points_np = np.array(list(points))
-        points_transformed_np = self.apply_camera_pose_transform(points_np, camera_position_tuple, camera_orientation_tuple)
+        rover_position_tuple, rover_orientation_tuple = self.get_rover_pose()
+        points_np = np.array(list(pc2.read_points(msg, field_names=['x', 'y', 'z'], skip_nans=True)))
+        points_transformed_np = self.apply_camera_pose_transform(points_np, rover_position_tuple, rover_orientation_tuple).T
         for p in points_transformed_np:
             p_xyz_rounded = (
-                round(p[0] + camera_position_tuple[0], self.rounding_coef),
-                round(p[1] + camera_position_tuple[1], self.rounding_coef),
-                round(p[2] + camera_position_tuple[2], self.rounding_coef)
+                round(p[0], self.rounding_coef),
+                round(p[1], self.rounding_coef),
+                round(p[2], self.rounding_coef)
             )
             self.existing_points.add(p_xyz_rounded)
-        self.publish_rover_position_to_rviz(camera_position_tuple)
+        
+        self.publish_rover_position_to_rviz(rover_position_tuple)
         self.publish_pc2_to_rviz()
 
     def publish_pc2_to_rviz(self) -> None:
@@ -119,7 +141,7 @@ class PointCloudTracker:
         q0 = Q[3]
         q1 = Q[0]
         q2 = Q[1]
-        q3 = -Q[2]
+        q3 = Q[2]
         
         # First row of the rotation matrix
         r00 = 2 * (q0 * q0 + q1 * q1) - 1

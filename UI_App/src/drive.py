@@ -22,6 +22,9 @@ class Drive_Backend():
     def update_robot_location(self, location):
         self.ui.robot_location_x.display(location.x)
         self.ui.robot_location_y.display(location.y)
+        self.ui.robot_location_z.display(location.z)
+        self.ui.robot_location_roll.display(location.r)
+        self.ui.robot_location_pitch.display(location.p)
         self.ui.robot_location_yaw.display(location.yaw)
 
     def set_error(self, error):

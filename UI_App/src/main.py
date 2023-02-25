@@ -163,11 +163,11 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         Takes in a boolean value for signal. If the signal is true, it changes error to red
         otherwise it makes it green.
         '''
-        
-        if signal == True:
-            self.Arm.error_label.setStyleSheet("QLabel {background:red}\n""")
-        else:
-            self.Arm.error_label.setStyleSheet("QLabel {background:green}\n""")
+        pass
+        # if signal == True:
+        #     self.Arm.error_label.setStyleSheet("QLabel {background:red}\n""")
+        # else:
+        #     self.Arm.error_label.setStyleSheet("QLabel {background:green}\n""")
 
 
     def on_control_changed(self, value):

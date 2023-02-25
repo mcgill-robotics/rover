@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import time
 import rospy
+import math
 from human_control_interface.msg import Gamepad_input
 from arm_control.msg import ArmControllerInput
 from science_module.msg import SciencePilot
+from CameraData.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16
 from drive_control.msg import WheelSpeed
@@ -38,6 +40,7 @@ class Node_GamepadProcessing:
         self.drive_publisher = rospy.Publisher("/wheel_velocity_cmd", WheelSpeed, queue_size=1)
         self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
         self.sci_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=1)
+        self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
 
     def gamepadProcessCall(self, msg):
         if self.active_system == 0:
@@ -46,6 +49,8 @@ class Node_GamepadProcessing:
             self.armProcessCall(msg)
         elif self.active_system == 2:
             self.scienceProcessCall(msg)
+        elif self.active_system == 3:
+            self.cameraProcessCall(msg)
         else:
             pass
 
@@ -134,6 +139,14 @@ class Node_GamepadProcessing:
         sci_ctrl.StepperMotor2Speed = msg.A4 * abs(msg.A4)
 
         self.sci_publisher.publish(sci_ctrl)
+
+    def cameraProcessCall(self, msg):
+        cam_ctrl = Camera_Orientation()
+
+        cam_ctrl.v_angle = ((math.acos(msg.A5) - math.pi/2)/math.pi)*40
+        cam_ctrl.h_angle = ((math.acos(msg.A4) - math.pi/2)/math.pi)*40
+
+        self.camera_publisher.publish(cam_ctrl)
 
     def risingEdge(self, prevSignal, nextSignal):
         if prevSignal < nextSignal:

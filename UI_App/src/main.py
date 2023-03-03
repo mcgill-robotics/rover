@@ -97,11 +97,9 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
 
         # camera selection
-        #self.camera_selector.currentIndexChanged.connect(self.change_camera)
         self.camera_index_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
-        self.camera_subscriber = rospy.Subscriber("/camera_frames", Image, self.camera_image)
-        self.timer_camera.timeout.connect(self.show_camera)
-
+        self.camera_selector.currentTextChanged.connect(self.on_camera_changed)
+        
 
     ## SCIENCE SECTION
     # Subscribers
@@ -215,45 +213,19 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
             # Return self for autonomy
 
 
-    # def change_camera(self):
+    def on_camera_changed(self, value):
+        print(value)
+        if value == "Cam 1":
+            msg = Int16(0)
+            self.camera_index_publisher.publish(msg)
+        elif value == "Cam 2":
+            msg = Int16(1)
+            self.camera_index_publisher.publish(msg)
+        elif value == "Cam 3":
+            msg = Int16(2)
+            self.camera_index_publisher.publish(msg)
 
-    #     if self.__camera_opened:
-    #         self.cap1.release()
-    #         # todo release camera takes too long time! try to fix it!
-    #         # todo Thread occupation causes program lag, consider multi-threading
-    #         self.timer_camera.stop()
-
-    #     self.timer_camera.start(30)
-    #     self.__camera_opened = self.cap1.open(self.camera_selector.currentIndex())
-
-    #     # this "if" just print some information
-    #     if not self.__camera_opened:
-    #         print("fail to open camera!")
-    #         self.__now_cam = self.camera_selector.currentIndex()
-    #         print(self.__now_cam+1,"is working")
-
-    def change_camera(self):
-        self.camera_index_publisher.publish(self.camera_selector.currentIndex())
-        print(self.camera_selector.currentIndex())
-
-
-    def camera_image(self, x):
-        self.cam_image = x
-
-    def show_camera(self):
-        self.frames = self.ros_to_openCV_image(self.cam_image)
-        self.frames = cv2.imdecode(self.frames, 1)
-        show = cv2.cvtColor(self.frames, cv2.COLOR_BGR2RGB)  # change color into RGB
-        showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0],
-                                 QtGui.QImage.Format_RGB888)  # Turn the read video data into QImage form
-        self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
-
-
-    def ros_to_openCV_image(self, ros_image):
-        bridge = CvBridge()
-        cv_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding='passthrough')
-        return cv_image
-
+    
 
 def main():
     app = qtw.QApplication([])

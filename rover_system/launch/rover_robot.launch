@@ -1,0 +1,17 @@
+<launch>
+    <!-- Node for the arm controller -->
+    <node pkg="arm_control" type="arm_controller.py" name="arm_controller" output="screen">
+    </node>
+  
+    <!-- Node for the drive controller -->
+    <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
+    </node>
+
+    <!-- Node for the embedded communication bridge to electrical systems -->
+    <node pkg="embedded_bridge" type="serial_node.py" name="embedded_communication" output="screen">
+    </node>
+
+    <!-- Set the gamepad to send command to the drive system initially -->
+    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 0'"/>
+    
+</launch>

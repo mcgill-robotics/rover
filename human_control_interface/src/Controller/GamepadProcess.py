@@ -58,6 +58,9 @@ class Node_GamepadProcessing:
         self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
         self.sci_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=1)
 
+        # Control frequency of the node
+        self.rate = rospy.Rate(100)
+
 
         self.run()
 
@@ -94,6 +97,8 @@ class Node_GamepadProcessing:
                 self.gamepadProcessCall(msg)
             except Exception as error:
                     rospy.logerr(str(error))
+
+            self.rate.sleep()
 
         exit()
     

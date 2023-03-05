@@ -39,6 +39,9 @@ class Node_DriveControl():
         # which then results in what we have now. Must I add a new publisher that creates a sample first
         # and then feeds it to steering? yes
 
+        # Control Frequency of the drive controller
+        self.rate = rospy.Rate(100)
+
         self.run()
     
     def twist_to_velocity(self, robot_twist):
@@ -87,7 +90,8 @@ class Node_DriveControl():
             cmd.right[0], cmd.right[1] = correct_rf, correct_rb
 
             self.angular_velocity_publisher.publish(cmd)
-            time.sleep(0.1)
+
+            self.rate.sleep()
             print(cmd)
 
 if __name__ == "__main__":

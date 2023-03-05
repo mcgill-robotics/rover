@@ -12,6 +12,6 @@
     </node>
 
     <!-- Set the gamepad to send command to the drive system initially -->
-    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 1'"/>
+    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 0'"/>
     
 </launch>

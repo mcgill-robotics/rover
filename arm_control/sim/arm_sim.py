@@ -6,6 +6,7 @@ import math
 from datetime import datetime
 import pybullet_data
 import sys
+import os
 sys.path.append("..") 
 from arm_control.msg import ArmMotorCommand, ArmStatusFeedback
 import numpy as np
@@ -19,7 +20,8 @@ class Node_ArmSim():
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.loadURDF("plane.urdf", [0, 0, -0.1])
 
-    self.robotId = p.loadURDF("arm_control/model/MR_arm.urdf", [0, 0, 0], useFixedBase=1)
+    urdf_path = os.path.dirname(os.path.abspath(__file__)) + "/../model/MR_arm.urdf"
+    self.robotId = p.loadURDF(urdf_path, [0, 0, 0], useFixedBase=1)
 
     p.resetBasePositionAndOrientation(self.robotId, [0, 0, 0], [0, 0, 0, 1])
     self.numJoints = p.getNumJoints(self.robotId)

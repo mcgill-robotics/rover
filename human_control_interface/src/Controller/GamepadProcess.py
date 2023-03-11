@@ -207,8 +207,11 @@ class Node_GamepadProcessing:
     def cameraProcessCall(self, msg):
         cam_ctrl = Camera_Orientation()
 
-        cam_ctrl.v_angle = ((math.acos(msg.A5) - math.pi/2)/math.pi)*40
-        cam_ctrl.h_angle = ((math.acos(msg.A4) - math.pi/2)/math.pi)*40
+        #((math.acos(msg.A5) - math.pi/2)/math.pi)*180 integrated
+        cam_ctrl.v_angle = (180*msg.A5*math.acos(msg.A5)-180*math.sqrt(1-msg.A5**2))/math.pi - 90*msg.A5 
+        
+        # ((math.acos(msg.A4) - math.pi/2)/math.pi)*180 integrated
+        cam_ctrl.h_angle = (180*msg.A4*math.acos(msg.A4)-180*math.sqrt(1-msg.A4**2))/math.pi - 90*msg.A4
 
         self.camera_publisher.publish(cam_ctrl)
 

@@ -4,11 +4,12 @@ from mpl_toolkits import mplot3d
 import math
 
 # q = [math.pi/2, 0, 0, math.pi/2, 0]
-# q = [0, 0, 0, 0, 0]
+#q = [0, 0, 0, 0, 0]
+q = [ 0.07144171, -1.22915937, -0.03627638, -0.67306168,  1.36934897]
 # q = [math.pi/2, 0, 0, math.pi/2, math.pi]
 # q = [math.pi/2, math.pi/4, math.pi/4, -math.pi/2, math.pi/4]
 # q = [math.pi/2, -math.pi/2, math.pi/3, math.pi/2, -math.pi/4]
-q = [0, math.pi/2, 0, 0, 0]
+#q = [0, math.pi/2, 0, 0, 0]
 
 Ts = kin._FK(q)
 

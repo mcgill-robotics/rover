@@ -339,8 +339,9 @@ def calculate_angles(ee_target, wrist_target, elbow_target, chose_lower):
 
     angles = R.from_euler('XYZ', ee_target[3:])
     rotation_matrix = angles.as_matrix()
-    x_axis = [row[0] for row in rotation_matrix]
-    hand_pitch = -np.arctan(x_axis[2]) #Negative only if tiliting down is positive
+    z_axis = [row[2] for row in rotation_matrix]
+    #print(f"Z AXIS: {z_axis}")
+    hand_pitch = -abs(np.arctan(z_axis[2]/math.sqrt(z_axis[0] **2 + z_axis[1] **2))) #Negative only if tiliting down is positive
     print(f"HAND PITCH: {hand_pitch}")
     
 
@@ -367,9 +368,9 @@ def calculate_angles(ee_target, wrist_target, elbow_target, chose_lower):
 
     d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[2]) ** 2)
     print(f"D: {d}")
-    theta_d = math.acos(wrist_coordinates[0] / d)
+    #theta_d = math.acos(wrist_coordinates[0] / d)
 
-    zero_position = Mat2Pose(forwardKinematics([0,0,0,0,0]))
+    #zero_position = Mat2Pose(forwardKinematics([0,0,0,0,0]))
     print(f"NUMERATOR: {(d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2)} DENOMINATOR: {(-2 * arm_DH[1][2] * arm_DH[2][2])}")
     theta_l1_l2 = math.acos(round((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2), 2) / (-2 * arm_DH[1][2] * arm_DH[2][2]))
     theta_b = math.asin(elbow_coordinates[0] / arm_DH[1][2])
@@ -438,8 +439,8 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
     basis_x = wrist_pose - shoulder_pose
     d = np.linalg.norm(basis_x)
     if not np.isclose(d, 0): 
-        basis_x = basis_x / d
-    w = np.linalg.norm(wrist_pose)
+        basis_x = basis_x / d #Unit vector
+    w = np.linalg.norm(wrist_pose) #length of vector
     if np.isclose(w, 0):
         pass
     arm_plane_normal = np.cross(basis_x, wrist_pose)
@@ -447,6 +448,7 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
     basis_y = basis_y / np.linalg.norm(basis_y)
 
     # Get Position of Link intersections (circles)
+    #Notes: d points from wrist to shoulder
     elbow_basis_x = (d**2 - arm_DH[2][2]**2 + arm_DH[1][2]**2) / (2*d)
     elbow_basis_y = np.sqrt(arm_DH[1][2]**2 - elbow_basis_x**2) 
 
@@ -457,70 +459,70 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
 
     if elbow_pose_1[0] >= 0:
         elbow_direction_1 = math.atan2(elbow_pose_1[1],  elbow_pose_1[0])
-        #print('pizza 1')
+        print('pizza 1')
     elif elbow_pose_1[1] >= 0:
         elbow_direction_1 = math.pi + math.atan2(elbow_pose_1[1], elbow_pose_1[0])
-        #print('pizza 2')
+        print('pizza 2')
     else:
         elbow_direction_1 = -math.pi + math.atan2(elbow_pose_1[1], elbow_pose_1[0])
-        #print('pizza 3')
+        print('pizza 3')
 
     if elbow_pose_2[0] >= 0:
         elbow_direction_2= math.atan2(elbow_pose_2[1], elbow_pose_2[0])
-        #print('pizza 4')
+        print('pizza 4')
     elif elbow_pose_2[1] >= 0:
         elbow_direction_2 = math.pi + math.atan2(elbow_pose_2[1], elbow_pose_2[0])
-        #print('pizza 5')
+        print('pizza 5')
     else:
         elbow_direction_2 = -math.pi + math.atan2(elbow_pose_2[1], elbow_pose_2[0])
-        #print('pizza 6')
+        print('pizza 6')
 
     if elbow_pose_1[2] > elbow_pose_2[2]:
         higher = elbow_pose_1
         lower = elbow_pose_2
-        #print('pizza 7')
+        print('pizza 7')
     else:
         higher = elbow_pose_2
         lower = elbow_pose_1
-        #print('pizza 8')
+        print('pizza 8')
 
     if 62*math.pi/180 < abs(elbow_direction_1) < 118*math.pi/180: #always legal
         if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
             if (elbow_direction_1 < 0) == (cur_pose[0] < 0):
                 elbow_pose = higher
                 chose_lower = 0
-                #print('pizza 9') #DONE
+                print('pizza 9') #DONE
             else:
                 elbow_pose = lower
                 chose_lower = 180
-                #print('pizza 10') #Works for legal positions -- fails when shoulder is overextended by reverse facing
+                print('pizza 10') #Works for legal positions -- fails when shoulder is overextended by reverse facing
         else:
             if (elbow_direction_1 < 0) == (cur_pose[0] < 0):
                 elbow_pose = elbow_pose_2
                 chose_lower = 0 #DONE
-                #print('pizza 11')
+                print('pizza 11')
             else:
                 elbow_pose = elbow_pose_1
                 chose_lower = 180
-                #print('pizza 12') #DONE
+                print('pizza 12') #DONE
     elif abs(elbow_direction_1) <= 62*math.pi/180: #front
         if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
             elbow_pose = lower
             chose_lower = 180
-            #print('pizza 13') #DONE
+            print('pizza 13') #DONE
         else:
             elbow_pose = elbow_pose_1
             chose_lower = 180
-            #print('pizza 14') #DONE
+            print('pizza 14') #DONE
     else: #back
         if (elbow_direction_1 < 0) == (elbow_direction_2 < 0):
             elbow_pose = higher
             chose_lower = 180
-            #print('pizza 15') #DONE
+            print('pizza 15') #DONE
         else:
             elbow_pose = elbow_pose_2
             chose_lower = 180 #DONE
-            #print('pizza 16')
+            print('pizza 16')
 
     return calculate_angles(hand_pose, wrist_pose, elbow_pose, chose_lower)
 """
@@ -558,4 +560,4 @@ if __name__ == '__main__':
         print("\n------------------------------------------------------------------\n")
         
     #print("PREDEFINED TEST")
-    p#rint(inverseKinematics(Mat2Pose(forwardKinematics([0,  0.0, -0.0,  0.0,  0.35744979])), [0,0,0,0,0]))
+    #print(inverseKinematics(Mat2Pose(forwardKinematics([0,  0.0, -0.0,  0.0,  0.35744979])), [0,0,0,0,0]))

@@ -1,5 +1,4 @@
 import os, sys
-from ssl import _PasswordType
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import kinematics

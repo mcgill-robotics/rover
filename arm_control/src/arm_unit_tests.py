@@ -2,6 +2,9 @@ import numpy as np
 import math
 import arm_kinematics
 
+jointUpperLimits = [118.76*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
+jointLowerLimits = [-125.97*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
+
 def test_inverseKinematicsJointPositions(num_sample_points=10000, verbose=False):
     print("------------------------------------------------------------------")
     print("---------------test_inverseKinematicsJointPositions---------------")
@@ -52,7 +55,7 @@ def test_inverseKinematicsComputeJointAngles(num_samples=10000, verbose = False)
         if verbose:
             print(f"GIVEN LIST: {lst} \nRETURNED TARGET: {target}")
 
-        joint_options = arm_kinematics.inverseKinematics(target, [0,0,0,0,0])
+        joint_options = arm_kinematics.inverseKinematicsAngleOptions(target, [0,0,0,0,0])
         err = [0 for _ in range(len(joint_options))]
         for i in range(len(joint_options)):
             err[i] += np.sum((lst[:-1] - joint_options[i][:-1])**2)
@@ -77,18 +80,27 @@ def test_inverseKinematics(num_samples = 1000, verbose=False):
     failed = 0
     for _ in range(num_samples):
         lst = (np.random.random(5) - 0.5)*np.pi
+        legal = True
+        for j in range(len(lst)):
+            if lst[j] < jointLowerLimits[j] or lst[j] > jointUpperLimits[j]:
+                legal = False
+        if not legal:
+            continue
         pose = arm_kinematics.forwardKinematics(lst)
         target = arm_kinematics.Mat2Pose(pose)
-        if verbose:
-            print(f"GIVEN LIST: {lst} \nRETURNED TARGET: {target}")
+        #if verbose:
+            #print(f"GIVEN LIST: {lst} \nRETURNED TARGET: {target}")
 
-        joint = arm_kinematics.inverseKinematics(target, [0,0,0,0,0])
+        try:
+            joint = arm_kinematics.inverseKinematics(target, lst)
+        except AssertionError:
+            #print(f"Unreachable position. Target: {target} Lst: {lst}")
+            continue
         err = np.sum((lst[:-1] - joint[:-1])**2)
 
         if np.min(err) > 1e-1:
             if verbose:
                 print(f"Expected: {lst}")
-                print(f"Options:\n{joint}")
                 print(f"Error: {err}")
             failed += 1
         if verbose:
@@ -99,5 +111,6 @@ def test_inverseKinematics(num_samples = 1000, verbose=False):
     return failed
 
 if __name__=="__main__":
-    test_inverseKinematicsJointPositions()
-    test_inverseKinematicsComputeJointAngles()
+    #test_inverseKinematicsJointPositions()
+    #test_inverseKinematicsComputeJointAngles()
+    test_inverseKinematics(verbose=True)

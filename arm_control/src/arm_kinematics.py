@@ -359,7 +359,7 @@ def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, c
     eh_normal = np.cross(np.array(ee_target[:3]) - np.array(elbow_target), robot_normal)
     tmp = eh_normal @ (np.array(wrist_target) - np.array(elbow_target))
     if ee_target[0] < 0:
-        tmp = -tmp
+        tmp = -tmp # Negative if wrist below hand-elbow line, positive if above
 
     if ee_target[0] >= 0:
         rotation = math.atan2(ee_target[1], ee_target[0])
@@ -445,7 +445,7 @@ def inverseKinematicsJointPositions(hand_pose):
         [shoulder_pose, elbow_pose_2, wrist_pose, wrist_pose, hand_pose[:3]],
     )
 
-def inverseKinematics(hand_pose, cur_pose): #, joint_truth
+def inverseKinematicsAngleOptions(hand_pose, cur_pose): #, joint_truth
     """Calculates the necessary joint positions and selects ideal elbow
 
     Parameters
@@ -473,10 +473,53 @@ def inverseKinematics(hand_pose, cur_pose): #, joint_truth
     #     [shoulder_pose, elbow_pose_1, wrist_pose, wrist_pose, hand_pose[:3]],
     #     [shoulder_pose, elbow_pose_2, wrist_pose, wrist_pose, hand_pose[:3]],
     # )
+
     return (
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, 0),
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, 180),
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, 0),
-        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, 180),
+        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, 180)
     )
 # calculate_angles(hand_pose, wrist_pose, elbow_pose, chose_lower)
+
+def legalIKPositionPicker(poses, cur_pose):
+    """ Determines which of the given poses is the best choice. 
+
+    Parameters
+    --------
+        poses : list(list(float))
+            list of four sets of five joint angles achieving the same hand position
+        cur_pose : list(float)
+            list of five joint angles representing the current pose
+
+    Returns
+    -------
+        best_pose : list(float)
+            list of five joint angles representing the best choice of angles
+    """
+    legal_poses = []
+    for pose in poses:
+        legal = True
+        for i in range(len(pose)):
+            if pose[i] > jointUpperLimits[i] or pose[i] < jointLowerLimits[i]:
+                legal = False
+        if legal:
+            legal_poses.append(np.array(pose))
+
+    if len(legal_poses) == 0:
+        raise AssertionError("Unreachable Position")
+    
+    cur_pose = np.array(cur_pose)
+    best_pose = legal_poses[0]
+    best_difference = np.sum((cur_pose[:-1] - best_pose[:-1])**2)
+    for pose in legal_poses:
+        if np.sum((cur_pose[:-1] - pose[:-1])**2) < best_difference:
+            best_pose = pose
+            best_difference = np.sum((cur_pose[:-1] - pose[:-1])**2)
+
+    return best_pose
+
+
+def inverseKinematics(hand_pose, cur_pose):
+
+    return legalIKPositionPicker(inverseKinematicsAngleOptions(hand_pose, cur_pose), cur_pose)

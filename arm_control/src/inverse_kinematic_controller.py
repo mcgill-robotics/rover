@@ -8,7 +8,7 @@ class InverseKinematicsController():
 
     def __init__(self, dt, home_state, max_vel) -> None:
         self.goal = None
-        self.dt = dt
+        self.dt = dt 
         self.home_state = home_state
         self.max_vel = max_vel
 

@@ -111,6 +111,6 @@ def test_inverseKinematics(num_samples = 1000, verbose=False):
     return failed
 
 if __name__=="__main__":
-    #test_inverseKinematicsJointPositions()
-    #test_inverseKinematicsComputeJointAngles()
-    test_inverseKinematics(verbose=True)
+    test_inverseKinematicsJointPositions()
+    test_inverseKinematicsComputeJointAngles()
+    test_inverseKinematics()

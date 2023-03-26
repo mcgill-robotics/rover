@@ -7,10 +7,11 @@ import struct
 import time
 import random
 
-START_OF_PACKET = '~'
-MAX_PACKET_SIZE = 255
+FRAME_DELIMITER = '$'
+MAX_PAYLOAD_SIZE = 255
+HEADER_SIZE = 4
 NO_MSG_FRAME = ('N', -1, 'N', [], -1)
-FRAME_TYPES = ('0', '1', '2', 'A', 'R', 'S', 'Y', 'F', 'Q')
+VALID_SYSTEM_IDS = (0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40)
 
 
 class SerialInterface:
@@ -84,19 +85,15 @@ class SerialInterface:
               if the message is a valid message
 
           packet : tuple
-              Tuple containing the packet's data (frame_type, payload_len, system_id, payload, checksum)
-
-                      frame_type : char
-                          the frame type
+              Tuple containing the packet's data (system_id, payload_len, payload, checksum)
+              
+                      system_id : char
+                          ID of the system
                           'N' returned if not valid
 
                       payload_len : int
                           length of the payload (counting the system_id). 0 is returned in other cases
                           -1 returned when not valid
-
-                      system_id : char
-                          ID of the system
-                          'N' returned if not valid
 
                       payload : bytes
                           payload of the message
@@ -109,7 +106,7 @@ class SerialInterface:
           rest_of_msg : bytes
               The rest of the bytes to be read. The original message if no valid packet found.
         """
-        msg = self.serial.read_until(START_OF_PACKET, self.serial.inWaiting())
+        msg = self.serial.read_until(FRAME_DELIMITER, self.serial.inWaiting(), size=MAX_PAYLOAD_SIZE+HEADER_SIZE)
         valid, packet, rest_of_msg = decode_bytes(msg)
 
         if valid:
@@ -220,70 +217,69 @@ def decode_bytes(msg: str, prints=True):
     # If the frame is valid return True, Frame, rest_of_msg
 
     # Start of filtering
-    if len(msg) < 2:
+    if len(msg) < HEADER_SIZE:
         if prints:
             print(f"No frame detected: {msg}")
         return False, NO_MSG_FRAME, msg
 
-    try:
-        frame_type = chr(msg[1])
-    except:
-        if prints:
-            print(f"No frame detected: {msg}")
-        return False, NO_MSG_FRAME, msg
+    # try:
+    #     frame_type = chr(msg[1])
+    # except:
+    #     if prints:
+    #         print(f"No frame detected: {msg}")
+    #     return False, NO_MSG_FRAME, msg
 
-    if frame_type not in FRAME_TYPES:
-        if prints:
-            print(f"No frame detected: {msg}")
-        return False, NO_MSG_FRAME, ''.join(msg[1:].partition(START_OF_PACKET)[1:])
+    # if frame_type not in FRAME_TYPES:
+    #     if prints:
+    #         print(f"No frame detected: {msg}")
+    #     return False, NO_MSG_FRAME, ''.join(msg[1:].partition(START_OF_PACKET)[1:])
 
-    # Valid frames
-    if frame_type in FRAME_TYPES[3:]:
-        if prints:
-            print(f"Arduino sent: {frame_type}")
+    # # Valid frames
+    # if frame_type in FRAME_TYPES[3:]:
+    #     if prints:
+    #         print(f"Arduino sent: {frame_type}")
 
         # If more byte on the serial
-        if len(msg) > 2:
-            return True, (frame_type, -1, 'N', -1, []), b''.join(msg[2:].partition(START_OF_PACKET.encode('ascii'))[1:])
-        return True, (frame_type, -1, 'N', -1, []), ""
+        # if len(msg) > 2:
+        #     return True, (frame_type, -1, 'N', -1, []), b''.join(msg[2:].partition(START_OF_PACKET.encode('ascii'))[1:])
+        # return True, (frame_type, -1, 'N', -1, []), ""
 
     try:
-        payload_len = msg[2]
-        if len(msg) < (3 + payload_len + 1):
+        system_id = msg[0]
+        payload_len = msg[1]
+        if len(msg) < (payload_len + HEADER_SIZE):
             if prints:
                 print(f"Message too short {msg}")
             return False, ('N', -1, 'N', [], -1), ''
     except:
         if prints:
             print(f"No valid payload length {msg}")
-        return False, NO_MSG_FRAME, b''.join(msg[1:].partition(START_OF_PACKET.encode('ascii'))[1:])
+        return False, NO_MSG_FRAME, b''.join(msg[1:].partition(FRAME_DELIMITER.encode('ascii'))[1:])
 
     payload = []
     crc = 0
 
     # Conversion of payload based on frame type
-    if frame_type in ('0', '1'):
-        system_id = chr(msg[3])
+    if system_id in VALID_SYSTEM_IDS:
         crc = compute_crc8ccitt(crc, ord(system_id))  # For sys id (part of payload)
-        for i in range(4, 4 + payload_len - 1,
-                       4):  # For each float (4 byte each starting at the fourth byte of the msg)
-            byte_array = b'' + msg[i + 3].to_bytes(1, 'big') \
-                         + msg[i + 2].to_bytes(1, 'big') \
-                         + msg[i + 1].to_bytes(1, 'big') \
-                         + msg[i].to_bytes(1, 'big')
+        for i in range(2, 2 + payload_len):  # for each byte starting at pos 2 of msg
+            # byte_array = b'' + msg[i + 3].to_bytes(1, 'big') \
+            #              + msg[i + 2].to_bytes(1, 'big') \
+            #              + msg[i + 1].to_bytes(1, 'big') \
+            #              + msg[i].to_bytes(1, 'big')
+            byte = msg[i]
+            payload.append(byte)
+            crc = compute_crc8ccitt(crc, byte)  # compute for entire payload
 
-            for byte in byte_array[::-1]:
-                crc = compute_crc8ccitt(crc, byte)  # compute for entire payload
+            # raw_float = struct.unpack('!f', byte_array)
+            # formatted_float = float("{:.3f}".format(raw_float[0]))  # Format the float to be precise to 3 digits
+            # payload.append(formatted_float)
+        checksum = msg[2 + payload_len]
 
-            raw_float = struct.unpack('!f', byte_array)
-            formatted_float = float("{:.3f}".format(raw_float[0]))  # Format the float to be precise to 3 digits
-            payload.append(formatted_float)
-        checksum = msg[2 + payload_len + 1]
-
-    elif frame_type in '2':
-        # 3691 int16(pixels)
-        checksum = msg[2 + payload_len + 1]
-        pass #TODO implement
+    else:
+        if prints:
+            print(f"System ID invalid {msg}")
+        return False, ('N', -1, 'N', [], -1), ''  
 
     # Checksum validation
     if crc != checksum:
@@ -291,8 +287,40 @@ def decode_bytes(msg: str, prints=True):
             print(f"No valid checksum {msg}")
         return False, NO_MSG_FRAME, ""
 
-    return True, (frame_type, payload_len, system_id, payload, checksum), \
-           b''.join(msg[(3 + payload_len + 1):].partition(START_OF_PACKET.encode('ascii'))[1:])
+    return True, (system_id, payload_len, payload, checksum), \
+           b''.join(msg[(3 + payload_len + 1):].partition(FRAME_DELIMITER.encode('ascii'))[1:])
+           
+
+def addressFormat(addr, payload, len):
+    new_payload = []
+    if addr == 0x01: #drive
+        if len != 16:
+            return False, []
+        for i in range(0,len,4):
+            byte_array = b'' + payload[i + 3].to_bytes(1, 'big') \
+                + payload[i + 2].to_bytes(1, 'big') \
+                + payload[i + 1].to_bytes(1, 'big') \
+                + payload[i].to_bytes(1, 'big')
+            raw_float = struct.unpack('!f', byte_array)
+            formatted_float = float("{:.3f}".format(raw_float[0]))  # Format the float to be precise to 3 digits
+            new_payload.append(formatted_float)
+        return True, new_payload
+    elif addr == 0x02: #arm1
+        
+    elif addr == 0x04: #arm2
+        
+    elif addr == 0x08: #science
+        
+    elif addr == 0x10: #power
+        
+    elif addr == 0x20: #battery
+        
+    elif addr == 0x40: #PC
+        #TODO decide if this should be error message
+        return False, []
+    else:
+        return False, []
+        
 
 
 # https://stackoverflow.com/questions/8751653/how-to-convert-a-binary-string-into-a-float-value

@@ -60,14 +60,6 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         rospy.init_node("UINode", anonymous=True)
 
-
-        self.timer_camera = qtc.QTimer()  # set up a timer, this is used to control frame rate
-        self.cap1 = cv2.VideoCapture()  # video float
-        #todo I just set variables here, if is invalid, please tell me to change it!
-        self.__now_cam = 0
-        self.__camera_opened = False
-        self.cam_image = None
-
         # Listeners
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
         
@@ -223,6 +215,15 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
             self.camera_index_publisher.publish(msg)
         elif value == "Cam 3":
             msg = Int16(2)
+            self.camera_index_publisher.publish(msg)
+        elif value == "Cam 4":
+            msg = Int16(3)
+            self.camera_index_publisher.publish(msg)
+        elif value == "Cam 5":
+            msg = Int16(4)
+            self.camera_index_publisher.publish(msg)
+        elif value == "Cam 6":
+            msg = Int16(5)
             self.camera_index_publisher.publish(msg)
 
     

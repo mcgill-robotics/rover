@@ -57,7 +57,7 @@ class Node_CameraFramePub():
         self.video_capture.release()
         self.video_capture.open(x.data)
         # self.video_capture = cv2.VideoCapture(x.data, cv2.CAP_V4L2)
-        print(x.data+"\n")
+        print(str(x.data)+"\n")
 if __name__ == "__main__":
     driver = Node_CameraFramePub()
     rospy.spin()

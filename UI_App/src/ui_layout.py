@@ -59,6 +59,7 @@ class Ui_MainWindow(object):
         self.camera_selector.addItem("")
         self.camera_selector.addItem("")
         self.camera_selector.addItem("")
+        # camera showbox
         self.Camera = QtWidgets.QLabel(self.centralwidget)
         self.Camera.setGeometry(QtCore.QRect(10, 10, 411, 271))
         font = QtGui.QFont()

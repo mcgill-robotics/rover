@@ -62,9 +62,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
 
         self.timer_camera = qtc.QTimer()  # set up a timer, this is used to control frame rate
-        self.cap1 = cv2.VideoCapture()  # video float
-        #todo I just set variables here, if is invalid, please tell me to change it!
-        self.__now_cam = 0
+        # self.cap1 = cv2.VideoCapture()  # video float
         self.__camera_opened = False
         self.cam_image = None
 
@@ -99,7 +97,13 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # camera selection
         self.camera_index_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
         self.camera_selector.currentTextChanged.connect(self.on_camera_changed)
-        
+
+        #camera float
+        self.timer_camera.timeout.connect(self.show_image)
+        self.camera_frame_requester = rospy.Publisher("frame_request", Int16, queue_size=1)
+        self.camera_frame_subscriber = rospy.Subscriber('/camera_frames', Image, self.set_image)
+        self.timer_camera.start(33)
+        self.count = 0
 
     ## SCIENCE SECTION
     # Subscribers
@@ -214,19 +218,33 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
 
     def on_camera_changed(self, value):
-        print(value)
-        if value == "Cam 1":
-            msg = Int16(0)
-            self.camera_index_publisher.publish(msg)
-        elif value == "Cam 2":
-            msg = Int16(1)
-            self.camera_index_publisher.publish(msg)
-        elif value == "Cam 3":
-            msg = Int16(2)
-            self.camera_index_publisher.publish(msg)
+        self.timer_camera.stop()
+        index = self.camera_selector.currentIndex()
+        msg = Int16(index)
+        self.camera_index_publisher.publish(msg)
+        self.timer_camera.start(33)  # start timer to request for video
 
-    
+    def show_image(self):
+        self.camera_frame_requester.publish(Int16(1))
+        try:
+            show = cv2.cvtColor(self.cam_image, cv2.COLOR_BGR2RGB)
+            showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0],
+                                     QtGui.QImage.Format_RGB888)
+            self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
+        except:
+            print("no image %d' "% self.count,end = "\r")
+            self.count+=1
 
+    def set_image(self,msg):
+        try:
+            self.cam_image = self.ros_to_openCV_image(msg)
+            print("image set",end = "\r")
+        except:
+            print("cannot set image correctly" + msg)
+    def ros_to_openCV_image(self, ros_image):
+        bridge = CvBridge()
+        cv_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding='passthrough')
+        return cv_image
 def main():
     app = qtw.QApplication([])
 

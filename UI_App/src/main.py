@@ -10,6 +10,7 @@ from drive import Drive_Backend
 from arm_backend import Arm_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Pose
 from visualization_msgs.msg import MarkerArray
 from arm_control.msg import ArmStatusFeedback
 
@@ -71,7 +72,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.arm_backend = Arm_Backend(self.Arm)
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)
         self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.drive_backend.update_twist_data)
-        self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
+        self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose, self.drive_backend.update_robot_location)
         self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints) 
 
         # Rospy subscriber

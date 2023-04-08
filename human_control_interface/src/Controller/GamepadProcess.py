@@ -30,6 +30,10 @@ class Node_GamepadProcessing:
         self.modeState = False
         self.clawState = False
 
+        # Initialize variables for cameras
+        self.v_angle = 0
+        self.h_angle = 0
+
         # System Selection variables
         self.active_system = 0
 
@@ -143,11 +147,26 @@ class Node_GamepadProcessing:
     def cameraProcessCall(self, msg):
         cam_ctrl = Camera_Orientation()
 
-        #((math.acos(msg.A5) - math.pi/2)/math.pi)*180 integrated
-        cam_ctrl.v_angle = (180*msg.A5*math.acos(msg.A5)-180*math.sqrt(1-msg.A5**2))/math.pi - 90*msg.A5 
+        # ((math.acos(msg.A5) - math.pi/2)/math.pi)*180 vertical position integrated
+        v_angle_speed = (180*msg.A5*math.acos(msg.A5)-180*math.sqrt(1-msg.A5**2))/math.pi - 90*msg.A5 
+
+        if(v_angle + v_angle_speed <= 90 and v_angle + v_angle_speed >= -90):
+            v_angle += v_angle_speed
+
+        elif(v_angle + v_angle_speed > 90):
+            v_angle = 90
+
+        else:
+            v_angle = -90
+
+        cam_ctrl.v_angle = v_angle
         
-        # ((math.acos(msg.A4) - math.pi/2)/math.pi)*180 integrated
-        cam_ctrl.h_angle = (180*msg.A4*math.acos(msg.A4)-180*math.sqrt(1-msg.A4**2))/math.pi - 90*msg.A4
+        # ((math.acos(msg.A4) - math.pi/2)/math.pi)*180 horizontal position integrated
+        h_angle_speed = (180*msg.A4*math.acos(msg.A4)-180*math.sqrt(1-msg.A4**2))/math.pi - 90*msg.A4
+
+        if(h_angle + h_angle_speed <= 90 and h_angle + h_angle_speed >= -90):
+            h_angle += h_angle_speed
+            cam_ctrl.h_angle = h_angle
 
         self.camera_publisher.publish(cam_ctrl)
 

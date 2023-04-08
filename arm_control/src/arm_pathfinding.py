@@ -55,6 +55,22 @@ def pathfind(start_joints, end_joints, time):
         joints.append(delta_position + original_start_joints[i])
 
     return joints
+
+def pathfiningPolynomial(start_joints, end_joints, time):
+    half = time/2
+    polynomials = [[0 for j in range(4)] for i in range(5)]
+    matrix = np.array([[time ** 6, time ** 5, time ** 4, time ** 3], 
+        [6 * time ** 5, 5 * time ** 4, 4 * time ** 3, 3 * time ** 2],
+        [6 * half ** 5, 5 * half ** 4, 4 * half ** 3, 3 * half ** 2],
+        [30 * half ** 4, 20 * half ** 3, 12 * half ** 2, 6 * half]])
+
+    for i in range(len(polynomials)):
+        points = np.array([end_joints[i] - start_joints[i], 0, max_vels[i], 0])
+        poly = np.linalg.solve(matrix, points)
+        for j in range(4):
+            polynomials[i][j] = poly[j]
+
+    return polynomials
     
 if __name__ == '__main__':
     time = 10

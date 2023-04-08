@@ -210,7 +210,7 @@ class Node_ArmControl():
         self.dq_d[0] = ctrlVel[1] * self.jointVelLimits[0]
 
         J, Jv, Jw = arm_kinematics.Jacobian(self.q)
-        self.dx_d = np.linalg(Jv).dot(self.dq_d)
+        self.dx_d = Jv.dot(self.dq_d)
 
         return self.dq_d, self.dx_d
 

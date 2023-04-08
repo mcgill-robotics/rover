@@ -6,12 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>681</width>
+    <width>515</width>
     <height>615</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>true</bool>
   </property>
   <widget class="QLCDNumber" name="right_speed_data">
    <property name="geometry">
@@ -29,14 +32,14 @@
   <widget class="QLabel" name="right_speed_label">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>116</x>
      <y>70</y>
-     <width>47</width>
+     <width>91</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Right</string>
+    <string>Front_Right</string>
    </property>
   </widget>
   <widget class="QLCDNumber" name="rear_left_speed_data">
@@ -55,14 +58,14 @@
   <widget class="QLabel" name="left_speed_label">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>20</x>
      <y>70</y>
-     <width>47</width>
+     <width>81</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Left</string>
+    <string>Front_Left</string>
    </property>
   </widget>
   <widget class="QLCDNumber" name="left_speed_data">
@@ -141,8 +144,8 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>211</width>
-     <height>16</height>
+     <width>231</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="font">
@@ -151,7 +154,10 @@
     </font>
    </property>
    <property name="text">
-    <string>Wheel Velocities</string>
+    <string>Wheel Velocities (Angular)</string>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QLabel" name="twist_label">
@@ -279,36 +285,13 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>380</y>
+     <y>460</y>
      <width>681</width>
      <height>16</height>
     </rect>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
-  <widget class="QLabel" name="error_label">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>400</y>
-     <width>301</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff1723;&quot;&gt;TextLabel&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QLCDNumber" name="robot_location_x">
@@ -363,7 +346,7 @@
     <string>y</string>
    </property>
   </widget>
-  <widget class="QLCDNumber" name="robot_location_yaw">
+  <widget class="QLCDNumber" name="robot_location_z">
    <property name="geometry">
     <rect>
      <x>180</x>
@@ -376,7 +359,7 @@
     <enum>QLCDNumber::Flat</enum>
    </property>
   </widget>
-  <widget class="QLabel" name="robot_location_yaw_label">
+  <widget class="QLabel" name="robot_location_z_label">
    <property name="geometry">
     <rect>
      <x>200</x>
@@ -386,7 +369,113 @@
     </rect>
    </property>
    <property name="text">
+    <string>z</string>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="robot_location_roll">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>390</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="robot_location_pitch">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>390</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="robot_location_yaw">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>390</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="robot_location_roll_label">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>420</y>
+     <width>47</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>roll</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="robot_location_pitch_label">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>420</y>
+     <width>47</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>pitch</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="robot_location_yaw_label">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>420</y>
+     <width>51</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
     <string>yaw</string>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="error_label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>510</y>
+     <width>271</width>
+     <height>91</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="error_message_label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>470</y>
+     <width>151</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>17</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Error Message</string>
    </property>
   </widget>
  </widget>

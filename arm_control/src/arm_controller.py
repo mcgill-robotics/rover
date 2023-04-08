@@ -5,6 +5,7 @@ import arm_kinematics
 import numpy as np
 import time
 import rospy
+import math
 from arm_control.msg import ArmControllerInput, ArmMotorCommand, ArmStatusFeedback
 
 class Node_ArmControl():
@@ -70,7 +71,15 @@ class Node_ArmControl():
             self.changeControlMode()
 
         # Cartesian Velocity Control
-        if self.mode == 0:
+        if self.mode == 1:
+            xyz_ctrl = [
+                ctrlInput.X_dir,
+                ctrlInput.Y_dir,
+                ctrlInput.Z_dir
+            ]
+            self.dq_d, self.dx_d = self.computeIntuitiveJointVel(xyz_ctrl)
+
+        elif self.mode == 1:
             xyz_ctrl = [
                 ctrlInput.X_dir,
                 ctrlInput.Y_dir,
@@ -78,7 +87,7 @@ class Node_ArmControl():
             ]
             self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
 
-        elif self.mode == 1:
+        elif self.mode == 2:
             xyz_ctrl = [
                 ctrlInput.X_dir,
                 ctrlInput.Y_dir,
@@ -89,7 +98,7 @@ class Node_ArmControl():
 
         else:
             # Joint Velocity Control
-            i = self.mode - 2
+            i = self.mode - 3
             self.dq_d[i] = ctrlInput.Y_dir * self.jointVelLimits[i]
 
         self.ee_d = ctrlInput.ClawOpen
@@ -126,7 +135,7 @@ class Node_ArmControl():
 
     def changeControlMode(self):
         self.mode += 1
-        self.mode = self.mode % (self.nbJoints + 2)
+        self.mode = self.mode % (self.nbJoints + 3)
         
         return self.mode
 
@@ -176,6 +185,34 @@ class Node_ArmControl():
 
         return self.dq_d, self.dx_d
 
+    def computeIntuitiveJointVel(self, ctrlVel):
+        v_z = ctrlVel[2] * self.cartVelLimits[2]
+        theta = self.q[0]
+        v_x = ctrlVel[0] * math.cos(theta) * self.cartVelLimits[0]
+        v_y = ctrlVel[0] * -math.sin(theta) * self.cartVelLimits[0]
+
+        self.dx_d = [v_x, v_y, v_z]
+        try:
+            self.dq_d = arm_kinematics.inverseVelocity(self.q, self.dx_d)
+        except ValueError:
+            # Leave JointVels as is
+            pass
+
+        max_ratio = 1
+        for i in range(len(self.dq_d)):
+            ratio = abs(self.dq_d[i] / self.jointVelLimits[i])
+            if ratio > max_ratio:
+                max_ratio = ratio
+            
+        if max_ratio != 1:
+            self.dq_d[i] = self.dq_d[i] / max_ratio
+        
+        self.dq_d[0] = ctrlVel[1] * self.jointVelLimits[0]
+
+        J, Jv, Jw = arm_kinematics.Jacobian(self.q)
+        self.dx_d = np.linalg(Jv).dot(self.dq_d)
+
+        return self.dq_d, self.dx_d
 
 if __name__ == "__main__":
     driver = Node_ArmControl()

@@ -6,7 +6,7 @@ sys.path.append(currentdir)
 
 from ui_layout import Ui_MainWindow
 import rospy
-from drive import Drive_Backend
+from drive_backend import Drive_Backend
 from arm_backend import Arm_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
@@ -164,11 +164,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         Takes in a boolean value for signal. If the signal is true, it changes error to red
         otherwise it makes it green.
         '''
-        pass
-        # if signal == True:
-        #     self.Arm.error_label.setStyleSheet("QLabel {background:red}\n""")
-        # else:
-        #     self.Arm.error_label.setStyleSheet("QLabel {background:green}\n""")
+        if signal == True:
+            self.Arm.error_label.setStyleSheet("QLabel {background:red}\n""")
+        else:
+            self.Arm.error_label.setStyleSheet("QLabel {background:green}\n""")
 
 
     def on_control_changed(self, value):

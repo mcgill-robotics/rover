@@ -1,6 +1,7 @@
 import time
 import rospy
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Pose
 from drive_control.msg import WheelSpeed
     
 
@@ -18,19 +19,29 @@ def pub():
     feedback.right[1] = 1
     feedback_pub = rospy.Publisher('/feedback_velocity', WheelSpeed, queue_size=10)
 
+    position_pub = rospy.Publisher('/position_pose',Pose,queue_size=10)
+    rover_position = Pose()
+    rover_position.position.x = 2.0
+    rover_position.position.y = 3.0
+    rover_position.position.z = 1.0
+    rover_position.orientation.x = 0.778
+    rover_position.orientation.y = 0.34
+    rover_position.orientation.z = 0.35
+    rover_position.orientation.w = 0.395
+
+
+
     rospy.init_node('test_pub', anonymous=True)
     i = 0
     while not rospy.is_shutdown():
         robot_twist.linear.x = 30 + i
         twist_pub.publish(robot_twist)
+        position_pub.publish(rover_position)
         feedback_pub.publish(feedback)
-        rospy.loginfo(feedback)
+        rospy.loginfo(rover_position)
         time.sleep(0.35)
         i += 10
         
-
-
-
 
 if __name__ == "__main__":
     pub()

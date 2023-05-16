@@ -41,3 +41,5 @@ Navigate to the "rover" folder (or "src" if you renamed it), then use this synta
 
 Package names are the same as the folders that you see in the repo. You can find the node names in the "src" subfolder
 of each package.
+
+Also see the README in the folder "rover_system" to see how to launch all the necessary nodes for different tasks.

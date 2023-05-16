@@ -16,7 +16,7 @@ Facilities) PC's, but some of the steps will need sudo which might not be allowe
 ### Installing ROS
 Follow [these steps](http://wiki.ros.org/noetic/Installation/Ubuntu) to install ROS. Next, follow [these steps](http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment) to see how to configure your shell and how to make a workspace. If you
 want, you can keep going with the tutorials to familiarize yourself with ROS and its commands. In addition, you
-should install pyserial and pybullet for Python.
+should install the packages listed in "requirements.txt".
 
 ### Working with Catkin
 Catkin is ROS's build system, which traverses every ROS package in a source directory and compiles them into 

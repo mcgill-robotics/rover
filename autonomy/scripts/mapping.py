@@ -5,18 +5,29 @@ from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
 import sensor_msgs.point_cloud2 as pc2
 from gazebo_msgs.msg._ModelStates import ModelStates
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose, PolygonStamped, Polygon, Point32
 from visualization_msgs.msg import Marker
+from autonomy_config import FIXED_FRAME_ID, CAMERA_POSITION_OFFSET, ROUNDING_COEF, ROVER_MODEL_NAME, PointsFilters
 import numpy as np
+from typing import Set, Tuple, List
+from scipy.spatial import ConvexHull
+from bounding_boxes import get_all_hulls_vertices
 
 class PointCloudTracker:
     def __init__(self) -> None:
-        self.existing_points = set() 
-        self.fixed_frame_id = 'parsed_point_cloud_world'
-        self.camera_position_offset = [-0.285, 0, 1.1]
-        self.rounding_coef = 1
+        self.obstacle_points: Set[Tuple[float, float, float]] = set() 
+        self.ground_points: Set[Tuple[float, float, float]] = set()
+        self.convex_hulls: List[ConvexHull] = []
         self.rviz_pc2_pub = rospy.Publisher('parsed_point_cloud', PointCloud2, queue_size=10)
         self.rviz_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
+        self.rviz_polygon_pub_lst = [
+            rospy.Publisher('obstacle_polygons/1', PolygonStamped, queue_size=10),
+            rospy.Publisher('obstacle_polygons/2', PolygonStamped, queue_size=10),
+            rospy.Publisher('obstacle_polygons/3', PolygonStamped, queue_size=10),
+            rospy.Publisher('obstacle_polygons/4', PolygonStamped, queue_size=10),
+            rospy.Publisher('obstacle_polygons/5', PolygonStamped, queue_size=10),
+        ]
+
 
     def listener(self) -> None:
         rospy.init_node('pc2_publisher_and_listener', anonymous=True)
@@ -25,13 +36,11 @@ class PointCloudTracker:
 
     def get_rover_pose(self) -> tuple:
         data = rospy.wait_for_message("/gazebo/model_states", ModelStates)
-        rover_model_name = '/' 
-        model_names = data.name
-        model_poses = data.pose
-        if rover_model_name not in model_names:
-            raise Exception(f"Rover model name not found: '{rover_model_name}'")
-        rover_pose_quat = model_poses[model_names.index(rover_model_name)].orientation 
-        rover_pose_obj = model_poses[model_names.index(rover_model_name)].position
+        model_names, model_poses = data.name, data.pose
+        if ROVER_MODEL_NAME not in model_names:
+            raise Exception(f"Rover model name not found: '{ROVER_MODEL_NAME}'")
+        rover_pose_quat = model_poses[model_names.index(ROVER_MODEL_NAME)].orientation 
+        rover_pose_obj = model_poses[model_names.index(ROVER_MODEL_NAME)].position
         return (
             rover_pose_obj.x, rover_pose_obj.y, rover_pose_obj.z
         ), (rover_pose_quat.x, rover_pose_quat.y, rover_pose_quat.z, rover_pose_quat.w)
@@ -57,7 +66,7 @@ class PointCloudTracker:
             [0 ,0 ,1]]
         )
 
-        Dcr = np.reshape(self.camera_position_offset, (3, 1))
+        Dcr = np.reshape(CAMERA_POSITION_OFFSET, (3, 1))
 
         Tcr = np.vstack((
             np.hstack((Rcr, Dcr)),
@@ -72,29 +81,37 @@ class PointCloudTracker:
         return Trw @ Tcr @ P
 
     def parse_pointcloud2_message(self, msg: PointCloud2) -> None:
-        print(f'{len(self.existing_points)=}')
+        print(f'{len(self.obstacle_points)=}')
         rover_position_tuple, rover_orientation_tuple = self.get_rover_pose()
         points_np = np.array(list(pc2.read_points(msg, field_names=['x', 'y', 'z'], skip_nans=True)))
-        points_transformed_np = self.apply_camera_pose_transform(points_np, rover_position_tuple, rover_orientation_tuple).T
-        for p in points_transformed_np:
-            p_xyz_rounded = (
-                round(p[0], self.rounding_coef),
-                round(p[1], self.rounding_coef),
-                round(p[2], self.rounding_coef)
-            )
-            self.existing_points.add(p_xyz_rounded)
+        points_transformed_np = np.round(self.apply_camera_pose_transform(points_np, rover_position_tuple, rover_orientation_tuple).T, decimals=ROUNDING_COEF)
+        
+        new_obstacle_points = points_transformed_np[
+            (points_transformed_np[:, 2] < PointsFilters.GROUND_LOWER_LIMIT) |
+            (points_transformed_np[:, 2] > PointsFilters.GROUND_UPPER_LIMIT)
+        ]
+
+        # ground_points = points_transformed_np[
+        #     (points_transformed_np[:, 2] >= PointsFilters.GROUND_LOWER_LIMIT) &
+        #     (points_transformed_np[:, 2] <= PointsFilters.GROUND_UPPER_LIMIT)
+        # ]
+
+        for p in new_obstacle_points:
+            self.obstacle_points.add(tuple((p[0], p[1], p[2])))
         
         self.publish_rover_position_to_rviz(rover_position_tuple)
-        self.publish_pc2_to_rviz()
+        if (len(self.obstacle_points) > 0):
+            self.publish_pc2_to_rviz()
+            self.publish_bounding_boxes_to_rviz()
 
     def publish_pc2_to_rviz(self) -> None:
         header = Header()
         header.stamp = rospy.Time.now()
-        header.frame_id = self.fixed_frame_id
+        header.frame_id = FIXED_FRAME_ID
         fields = [PointField('x', 0, PointField.FLOAT32, 1),
           PointField('y', 4, PointField.FLOAT32, 1),
           PointField('z', 8, PointField.FLOAT32, 1)]
-        points = np.array(list(self.existing_points), dtype=np.float32) 
+        points = np.array(list(self.obstacle_points), dtype=np.float32) 
         data = points.tobytes()
         cloud_msg = PointCloud2(
             header=header,
@@ -110,7 +127,7 @@ class PointCloudTracker:
 
     def publish_rover_position_to_rviz(self, camera_pose_tuple: tuple) -> None:
         marker = Marker()
-        marker.header.frame_id = self.fixed_frame_id
+        marker.header.frame_id = FIXED_FRAME_ID
         marker.type = marker.SPHERE
         marker.action = marker.ADD
         marker.scale.x = 0.2
@@ -126,6 +143,20 @@ class PointCloudTracker:
         marker.pose.position.z = camera_pose_tuple[2]
         self.rviz_marker_pub.publish(marker)
         # print(f'Published {tuple(round(n, 2) for n in camera_pose_tuple)} ')
+
+    def publish_bounding_boxes_to_rviz(self) -> None:
+        X = np.array([(t[0], t[1]) for t in self.obstacle_points])
+
+        for e, hull in enumerate(get_all_hulls_vertices(X)):
+            polygon_stamped_msg = PolygonStamped()
+            polygon_stamped_msg.header.stamp = rospy.Time.now()
+            polygon_stamped_msg.header.frame_id = FIXED_FRAME_ID
+            polygon_stamped_msg.polygon.points = [Point32(x=x, y=y, z=0.5) for x, y in hull]
+            polygon_stamped_msg.header.seq = e
+            if (e < len(self.rviz_polygon_pub_lst)):
+                self.rviz_polygon_pub_lst[e].publish(polygon_stamped_msg)
+            else:
+                print(f'WARNING: {e=} is out of range of {len(self.rviz_polygon_pub_lst)=}')
 
     def quaternion_rotation_matrix(self, Q: tuple):
         """

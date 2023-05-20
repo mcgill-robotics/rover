@@ -3,10 +3,8 @@ from pydoc_data.topics import topics
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import rospy
-import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
-import rospy
 import cv2
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
@@ -23,6 +21,7 @@ class Node_CameraFrameSub():
     def display_frames(self, frame):
         self.frames = self.ros_to_openCV_image(frame)
         self.frames = cv2.imdecode(self.frames, 1)
+        print(self.frames.shape)
         cv2.imshow("Live Feed", self.frames)
         cv2.waitKey(10)  # Look into to reduce latency
 

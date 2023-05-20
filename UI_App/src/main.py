@@ -100,7 +100,6 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         #camera float
         self.timer_camera.timeout.connect(self.show_image)
-        self.camera_frame_requester = rospy.Publisher("frame_request", Int16, queue_size=1)
         self.camera_frame_subscriber = rospy.Subscriber('/camera_frames', Image, self.set_image)
         self.timer_camera.start(33)
         self.count = 0
@@ -199,22 +198,17 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         #TODO: Waiting for system controls to be implemented so that this selector can 
         select the control system.
         '''
-
-        if value == "Arm-Cartesian Control":
-            pass
-            # return arm file
-        elif value == "Arm-Joint Control":
-            pass
-            # Return arm file
+        if value == "Drive":
+            msg = Int16(1)
+            self.system_select_publisher.publish(msg)
+        elif value == "Arm":
+            msg = Int16(2)
+            self.system_select_publisher.publish(msg)
         elif value == "Science":
-            pass
-            # Return science file
-        elif value == "Drive":
-            pass
-            # Return drive file
+            msg = Int16(3)
+            self.system_select_publisher.publish(msg)
         else:
             pass
-            # Return self for autonomy
 
 
     def on_camera_changed(self, value):
@@ -222,37 +216,43 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         index = self.camera_selector.currentIndex()
         msg = Int16(index)
         self.camera_index_publisher.publish(msg)
-        self.timer_camera.start(33)  # start timer to request for video
+        self.timer_camera.start(16)  # start timer to request for video
+
 
     def show_image(self):
-        self.camera_frame_requester.publish(Int16(1))
         try:
-            show = cv2.cvtColor(self.cam_image, cv2.COLOR_BGR2RGB)
-            showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0],
-                                     QtGui.QImage.Format_RGB888)
+            height, width, channel = self.cam_image.shape
+            bytesPerLine = 3 * width
+            self.cam_image = cv2.cvtColor(self.cam_image, cv2.COLOR_BGR2RGB)
+            self.cam_image = cv2.resize(self.cam_image, (411, 271))  #TODO: this causes image flicker
+            showImage = QtGui.QImage(self.cam_image.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
             self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
         except:
             print("no image %d' "% self.count,end = "\r")
             self.count+=1
 
+
     def set_image(self,msg):
         try:
-            self.cam_image = self.ros_to_openCV_image(msg)
-            print("image set",end = "\r")
+            frames = self.ros_to_openCV_image(msg)
+            self.cam_image = cv2.imdecode(frames, 1)
+            print("image set")
         except:
             print("cannot set image correctly" + msg)
+
+
     def ros_to_openCV_image(self, ros_image):
         bridge = CvBridge()
         cv_image = bridge.imgmsg_to_cv2(ros_image, desired_encoding='passthrough')
         return cv_image
+    
+
+
 def main():
     app = qtw.QApplication([])
-
     window = UI()
     window.arm_error_toggle(False)      # No errors in arm system at the start
     window.show()
-
-
     app.exec()
 
 

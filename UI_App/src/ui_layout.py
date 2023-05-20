@@ -21,28 +21,24 @@ class Ui_MainWindow(object):
         MainWindow.resize(800, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+
+
         self.Systemsview = QtWidgets.QTabWidget(self.centralwidget)
         self.Systemsview.setGeometry(QtCore.QRect(470, 10, 301, 531))
         self.Systemsview.setObjectName("Systemsview")
-        
         #
         self.Arm = Ui_Arm()
         self.Arm.setupUi(self.Arm)
-        #
-
         self.Systemsview.addTab(self.Arm, "")
-
         #
         self.Drive = Ui_DriveTab()
         self.Drive.setupUi(self.Drive)
         self.Systemsview.addTab(self.Drive, "")
-
         #
         self.Science = Ui_Science()
         self.Science.setupUi(self.Science)
         self.Science.setObjectName("Science")
         self.Systemsview.addTab(self.Science, "")
-
         #
         self.Autonomy = Ui_Power()
         self.Autonomy.setupUi(self.Autonomy)
@@ -85,6 +81,7 @@ class Ui_MainWindow(object):
         self.control_selector.addItem("")
         self.control_selector.addItem("")
         self.control_selector.addItem("")
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
@@ -114,8 +111,7 @@ class Ui_MainWindow(object):
         self.camera_selector.setItemText(5, _translate("MainWindow", "Cam 6"))
         self.Camera.setText(_translate("MainWindow", "Camera (add pixmap)"))
         self.label.setText(_translate("MainWindow", "Overall Feedback"))
-        self.control_selector.setItemText(0, _translate("MainWindow", "Arm-Joint Control"))
-        self.control_selector.setItemText(1, _translate("MainWindow", "Arm-Cartesian Control"))
+        self.control_selector.setItemText(0, _translate("MainWindow", "Arm"))
         self.control_selector.setItemText(2, _translate("MainWindow", "Drive"))
         self.control_selector.setItemText(3, _translate("MainWindow", "Science"))
         self.control_selector.setItemText(4, _translate("MainWindow", "Autonomy"))

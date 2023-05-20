@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(UI_App)
+project(camera_data)
 
 
 
@@ -14,8 +14,18 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
 )
 
-
 catkin_python_setup()
+
+## Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  Camera_Orientation.msg
+)
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+)
 
 catkin_package(
     CATKIN_DEPENDS 
@@ -29,6 +39,7 @@ catkin_package(
 )
 
 catkin_install_python(PROGRAMS
-  src/main.py
+  src/camera_publisher.py
+  src/camera_subscriber.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -1,7 +1,13 @@
-
+#!/usr/bin/env python
+# Imports
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentdir)
+sys.path.append(currentdir + "/../..")
 from arm_layout import Ui_Arm
 from arm_control.msg import ArmStatusFeedback
-import arm_kinematics
+from arm_control.src import arm_kinematics
+
 
 class Arm_Backend():
 

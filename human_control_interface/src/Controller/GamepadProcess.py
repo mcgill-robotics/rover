@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import time
 import rospy
+import math
 from human_control_interface.msg import Gamepad_input
 from arm_control.msg import ArmControllerInput
 from science_module.msg import SciencePilot
+from CameraData.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16
 from drive_control.msg import WheelSpeed
@@ -47,6 +49,10 @@ class Node_GamepadProcessing:
         self.modeState = False
         self.clawState = False
 
+        # Initialize variables for cameras
+        self.v_angle = 0
+        self.h_angle = 0
+
         # System Selection variables
         self.active_system = 0
 
@@ -57,6 +63,10 @@ class Node_GamepadProcessing:
         # self.drive_publisher = rospy.Publisher("/wheel_velocity_cmd", WheelSpeed, queue_size=1)
         self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
         self.sci_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=1)
+        self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
+
+        # Control frequency of the node
+        self.rate = rospy.Rate(100)
 
 
         self.run()
@@ -95,6 +105,8 @@ class Node_GamepadProcessing:
             except Exception as error:
                     rospy.logerr(str(error))
 
+            self.rate.sleep()
+
         exit()
     
     # Poll the gamepad data and then call the respective process call.
@@ -105,6 +117,8 @@ class Node_GamepadProcessing:
             self.armProcessCall(msg)
         elif self.active_system == 2:
             self.scienceProcessCall(msg)
+        elif self.active_system == 3:
+            self.cameraProcessCall(msg)
         else:
             pass
 
@@ -193,6 +207,20 @@ class Node_GamepadProcessing:
         sci_ctrl.StepperMotor2Speed = msg.A4 * abs(msg.A4)
 
         self.sci_publisher.publish(sci_ctrl)
+
+    def cameraProcessCall(self, msg):
+        cam_ctrl = Camera_Orientation()
+
+        if(v_angle + msg.A5 <= 90 and v_angle + msg.A5 >= -90):
+            v_angle += msg.A5
+
+        if(h_angle + msg.A4 <= 90 and h_angle + msg.A4 >= -90):
+            h_angle += msg.A4
+
+        cam_ctrl.v_angle = v_angle
+        cam_ctrl.h_angle = h_angle
+
+        self.camera_publisher.publish(cam_ctrl)
 
     def risingEdge(self, prevSignal, nextSignal):
         if prevSignal < nextSignal:

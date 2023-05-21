@@ -1,7 +1,7 @@
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
-import arm_kinematics
+import arm_kinematics 
 import numpy as np
 import time
 import rospy
@@ -47,6 +47,9 @@ class Node_ArmControl():
         self.uiSubscriber        = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
         self.armStateSubscriber  = rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.updateArmState)
 
+        # Control Frequency of the arm controller
+        self.rate = rospy.Rate(100)
+
         self.run()
 
 
@@ -58,7 +61,7 @@ class Node_ArmControl():
 
             self.armControlPublisher.publish(cmds)
 
-            time.sleep(0.01)
+            self.rate.sleep()
 
 
     def controlLoop(self, ctrlInput):
@@ -107,7 +110,7 @@ class Node_ArmControl():
                 else:
                     self.dq_d[i] = 0
         
-            self.q_d[i] += self.dq_d[i] * 0.01
+            self.q_d[i] += self.dq_d[i] * 0.001
 
     def updateArmState(self, state):
         self.q      = state.MotorPos

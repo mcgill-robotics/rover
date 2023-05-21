@@ -224,7 +224,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
             height, width, channel = self.cam_image.shape
             bytesPerLine = 3 * width
             self.cam_image = cv2.cvtColor(self.cam_image, cv2.COLOR_BGR2RGB)
-            self.cam_image = cv2.resize(self.cam_image, (411, 271))  #TODO: this causes image flicker
+            self.cam_image = cv2.resize(self.cam_image, (410, 270))  #TODO: this causes image flicker
             showImage = QtGui.QImage(self.cam_image.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
             self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
         except:
@@ -235,6 +235,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
     def set_image(self,msg):
         try:
             frames = self.ros_to_openCV_image(msg)
+            frames= cv2.resize(frames, (410, 270)) #todo test which one is better
             self.cam_image = cv2.imdecode(frames, 1)
             print("image set")
         except:

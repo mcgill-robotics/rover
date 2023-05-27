@@ -102,7 +102,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         #camera float
         self.timer_camera.timeout.connect(self.show_image)
         self.camera_frame_subscriber = rospy.Subscriber('/camera_frames', Image, self.set_image)
-        self.timer_camera.start(33)
+        self.timer_camera.start(1)
         self.count = 0
 
     ## SCIENCE SECTION
@@ -216,16 +216,15 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         index = self.camera_selector.currentIndex()
         msg = Int16(index)
         self.camera_index_publisher.publish(msg)
-        self.timer_camera.start(16)  # start timer to request for video
+        self.timer_camera.start(1)  # start timer to request for video
 
 
     def show_image(self):
         try:
             height, width, channel = self.cam_image.shape
             bytesPerLine = 3 * width
-            self.cam_image = cv2.cvtColor(self.cam_image, cv2.COLOR_BGR2RGB)
-            self.cam_image = cv2.resize(self.cam_image, (410, 270))  #TODO: this causes image flicker
-            showImage = QtGui.QImage(self.cam_image.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+            showImage = cv2.cvtColor(self.cam_image, cv2.COLOR_BGR2RGB)
+            showImage = QtGui.QImage(showImage.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
             self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
         except:
             print("no image %d' "% self.count,end = "\r")
@@ -235,8 +234,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
     def set_image(self,msg):
         try:
             frames = self.ros_to_openCV_image(msg)
+            # self.cam_image = self.ros_to_openCV_image(msg)
             frames= cv2.resize(frames, (410, 270)) #todo test which one is better
-            self.cam_image = cv2.imdecode(frames, 1)
+            # self.cam_image = cv2.imdecode(frames, 1)
+            self.cam_image = frames
             print("image set")
         except:
             print("cannot set image correctly" + msg)

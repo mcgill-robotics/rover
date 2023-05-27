@@ -22,15 +22,16 @@ class Node_CameraFramePub():
 
         rospy.init_node('camera_frame_publisher')
         self.camera_select_subscriber = rospy.Subscriber("camera_selection", Int16, self.select_camera)
-        self.timer = rospy.Timer(rospy.Duration(0.01), self.timer_callback)
+        self.timer = rospy.Timer(rospy.Duration(0.10), self.timer_callback)
         self.camera_frame_publisher = rospy.Publisher('/camera_frames', Image, queue_size=10)
         
 
     def timer_callback(self, event):
         try:
             ret, frame = self.video_capture.read()
-            encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-            result, frame = cv2.imencode(".jpg", frame, encode_params)
+            # these code cause error
+            # encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+            # result, frame = cv2.imencode(".jpg", frame, encode_params)
             self.frames = self.openCV_to_ros_image(frame)
             if ret:
                 print("Publishing frame")

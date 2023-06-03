@@ -40,10 +40,10 @@ class Ui_MainWindow(object):
         self.Science.setObjectName("Science")
         self.Systemsview.addTab(self.Science, "")
         #
-        self.Autonomy = Ui_Power()
-        self.Autonomy.setupUi(self.Autonomy)
-        self.Autonomy.setObjectName("Autonomy")
-        self.Systemsview.addTab(self.Autonomy, "")
+        self.Power = Ui_Power()
+        self.Power.setupUi(self.Power)
+        self.Power.setObjectName("Power")
+        self.Systemsview.addTab(self.Power, "")
 
 
         self.camera_selector = QtWidgets.QComboBox(self.centralwidget)
@@ -80,7 +80,6 @@ class Ui_MainWindow(object):
         self.control_selector.addItem("")
         self.control_selector.addItem("")
         self.control_selector.addItem("")
-        self.control_selector.addItem("")
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -101,7 +100,7 @@ class Ui_MainWindow(object):
         self.Systemsview.setTabText(self.Systemsview.indexOf(self.Arm), _translate("MainWindow", "Arm"))
         self.Systemsview.setTabText(self.Systemsview.indexOf(self.Drive), _translate("MainWindow", "Drive "))
         self.Systemsview.setTabText(self.Systemsview.indexOf(self.Science), _translate("MainWindow", "Science"))
-        self.Systemsview.setTabText(self.Systemsview.indexOf(self.Autonomy), _translate("MainWindow", "Autonomy"))
+        self.Systemsview.setTabText(self.Systemsview.indexOf(self.Power), _translate("MainWindow", "Power"))
         self.camera_selector.setCurrentText(_translate("MainWindow", "Cam 1"))
         self.camera_selector.setItemText(0, _translate("MainWindow", "Cam 1"))
         self.camera_selector.setItemText(1, _translate("MainWindow", "Cam 2"))
@@ -112,6 +111,6 @@ class Ui_MainWindow(object):
         self.Camera.setText(_translate("MainWindow", "Camera (add pixmap)"))
         self.label.setText(_translate("MainWindow", "Overall Feedback"))
         self.control_selector.setItemText(0, _translate("MainWindow", "Arm"))
-        self.control_selector.setItemText(2, _translate("MainWindow", "Drive"))
-        self.control_selector.setItemText(3, _translate("MainWindow", "Science"))
-        self.control_selector.setItemText(4, _translate("MainWindow", "Autonomy"))
+        self.control_selector.setItemText(1, _translate("MainWindow", "Drive"))
+        self.control_selector.setItemText(2, _translate("MainWindow", "Science"))
+        self.control_selector.setItemText(3, _translate("MainWindow", "Power"))

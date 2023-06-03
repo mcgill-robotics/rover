@@ -30,8 +30,8 @@ class Node_CameraFramePub():
         try:
             ret, frame = self.video_capture.read()
             # these code cause error
-            # encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-            # result, frame = cv2.imencode(".jpg", frame, encode_params)
+            encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+            result, frame = cv2.imencode(".jpg", frame, encode_params)
             self.frames = self.openCV_to_ros_image(frame)
             if ret:
                 print("Publishing frame")
@@ -53,7 +53,7 @@ class Node_CameraFramePub():
 
     def select_camera(self, x):
         self.video_capture.release()
-        self.video_capture.open(x.data)
+        self.video_capture.open(x.data * 2)
         print(x.data)
 
 

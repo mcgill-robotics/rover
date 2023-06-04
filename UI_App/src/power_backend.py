@@ -30,5 +30,5 @@ class Power_Backend():
 
     def power_kill_toggle(self, signal):
         self.power_killed = signal
-        self.ui.kill_switch_bool.setText("System Killed" if signal else "System Normal")
+        self.ui.kill_switch_bool.setText("Emergency Stop" if signal else "Active")
         # TODO: Change system enabled?

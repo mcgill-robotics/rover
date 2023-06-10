@@ -55,6 +55,8 @@ class Gamepad():
             self.controller.init()
         else:
             # Either no Gamepad found or multiple detected (currently unsupported)
+            print(pygame.joystick.get_count())
+            
             self.controller = None
 
         if self.controller is None:

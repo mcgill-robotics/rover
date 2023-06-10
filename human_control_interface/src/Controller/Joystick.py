@@ -3,8 +3,8 @@
 import pygame
 import time
 import rospy
-from custom_msgs.msg import Joystick_input
-from arm_control.msg import ProcessedControllerInput
+from human_control_interface.msg import Joystick_input
+from arm_control.msg import ArmControllerInput
 
 class Node_Joystick():
     """Gets joystick data and publishes the data to the joystick_data topic
@@ -42,7 +42,7 @@ class Node_Joystick():
         # Initialize ROS
         rospy.init_node("joystick", anonymous=False)
         self.joystick_publisher = rospy.Publisher("joystick_data", Joystick_input, queue_size=1)
-        self.arm_publisher = rospy.Publisher("processed_arm_controller_input", ProcessedControllerInput, queue_size=1)
+        self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
 
         self.prevB3 = 0
         self.prevB4 = 0
@@ -81,10 +81,12 @@ class Node_Joystick():
                 msg.A4 = self.joystick.data.a4
                 msg.Hat_X = self.joystick.data.hat_x
                 msg.Hat_Y = self.joystick.data.hat_y
-
+                if (abs(msg.A1)<0.1): msg.A1=0
+                if (abs(msg.A2)<0.1): msg.A2=0
+                if (abs(msg.A3)<0.1): msg.A3=0
                 self.joystick_publisher.publish(msg)
 
-                arm_ctrl = ProcessedControllerInput()
+                arm_ctrl = ArmControllerInput()
                 arm_ctrl.X_dir = msg.A2**2
                 if msg.A2 < 0:
                     arm_ctrl.X_dir = -1 * arm_ctrl.X_dir
@@ -123,6 +125,8 @@ class Node_Joystick():
             return True
         else: 
             return False
+
+    
 
 
 class Joystick():

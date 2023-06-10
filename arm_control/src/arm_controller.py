@@ -36,8 +36,8 @@ class Node_ArmControl():
         # one joint at a time to keep it intuitive to the user
 
         # Physical Constraints
-        self.jointUpperLimits = [175*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
-        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
+        self.jointUpperLimits = [175*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad  (3.05, 1.57, 1.309, 1.309)
+        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad  (3.05, 1.047, 1.22, 1.309)
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
@@ -69,17 +69,10 @@ class Node_ArmControl():
         
         if ctrlInput.ModeChange:
             self.changeControlMode()
+            print(self.mode)
 
         # Cartesian Velocity Control
-        if self.mode == 1:
-            xyz_ctrl = [
-                ctrlInput.X_dir,
-                ctrlInput.Y_dir,
-                ctrlInput.Z_dir
-            ]
-            self.dq_d, self.dx_d = self.computeIntuitiveJointVel(xyz_ctrl)
-
-        elif self.mode == 1:
+        if self.mode == 0:
             xyz_ctrl = [
                 ctrlInput.X_dir,
                 ctrlInput.Y_dir,
@@ -87,7 +80,7 @@ class Node_ArmControl():
             ]
             self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
 
-        elif self.mode == 2:
+        elif self.mode == 1:
             xyz_ctrl = [
                 ctrlInput.X_dir,
                 ctrlInput.Y_dir,
@@ -98,7 +91,7 @@ class Node_ArmControl():
 
         else:
             # Joint Velocity Control
-            i = self.mode - 3
+            i = self.mode - 2
             self.dq_d[i] = ctrlInput.Y_dir * self.jointVelLimits[i]
 
         self.ee_d = ctrlInput.ClawOpen
@@ -106,10 +99,25 @@ class Node_ArmControl():
         # Check Joint Limits
         for i in range(len(self.q)):
             if(
-                self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 
+                (self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 )
                 or
-                self.q[i] < self.jointLowerLimits[i] and self.dq_d[i] < 0
+                (self.q[i] < self.jointLowerLimits[i] and self.dq_d[i] < 0 )
             ): 
+                print("reach the limit")
+                if self.mode == 0:
+                    self.dq_d = [0] * self.nbJoints
+
+                elif self.mode == 1:
+                    self.dq_d = [0] * self.nbJoints
+
+                else:
+                    self.dq_d[i] = 0
+
+            if ((self.q_d[i] > self.jointUpperLimits[i] and self.dq_d[i] > self.jointUpperLimits[i]) 
+                or
+                (self.q_d[i] < self.jointLowerLimits[i] and self.dq_d[i] < self.jointLowerLimits[i])
+            ):
+                print("reach the limit 2")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -119,7 +127,8 @@ class Node_ArmControl():
                 else:
                     self.dq_d[i] = 0
         
-            self.q_d[i] += self.dq_d[i] * 0.001
+            self.q_d[i] += self.dq_d[i] * 0.01
+
 
     def updateArmState(self, state):
         self.q      = state.MotorPos
@@ -135,7 +144,7 @@ class Node_ArmControl():
 
     def changeControlMode(self):
         self.mode += 1
-        self.mode = self.mode % (self.nbJoints + 3)
+        self.mode = self.mode % (self.nbJoints + 2)
         
         return self.mode
 
@@ -185,35 +194,12 @@ class Node_ArmControl():
 
         return self.dq_d, self.dx_d
 
-    def computeIntuitiveJointVel(self, ctrlVel):
-        v_z = ctrlVel[2] * self.cartVelLimits[2]
-        theta = self.q[0]
-        v_x = ctrlVel[0] * math.cos(theta) * self.cartVelLimits[0]
-        v_y = ctrlVel[0] * -math.sin(theta) * self.cartVelLimits[0]
+    # def checkCrashWithFloor(self, bottom, arm1,arm2, clawLength):
+    #     height = bottom + 
+    
 
-        self.dx_d = [v_x, v_y, v_z]
-        try:
-            self.dq_d = arm_kinematics.inverseVelocity(self.q, self.dx_d)
-        except ValueError:
-            # Leave JointVels as is
-            pass
-
-        max_ratio = 1
-        for i in range(len(self.dq_d)):
-            ratio = abs(self.dq_d[i] / self.jointVelLimits[i])
-            if ratio > max_ratio:
-                max_ratio = ratio
-            
-        if max_ratio != 1:
-            self.dq_d[i] = self.dq_d[i] / max_ratio
-        
-        self.dq_d[0] = ctrlVel[1] * self.jointVelLimits[0]
-
-        J, Jv, Jw = arm_kinematics.Jacobian(self.q)
-        self.dx_d = Jv.dot(self.dq_d)
-
-        return self.dq_d, self.dx_d
 
 if __name__ == "__main__":
     driver = Node_ArmControl()
     rospy.spin()
+

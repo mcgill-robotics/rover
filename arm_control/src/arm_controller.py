@@ -75,14 +75,23 @@ class Node_ArmControl():
             print(self.mode)
 
         #Cartesian Velocity Control
-        
+
         if self.mode == 0:
             xyz_ctrl = [
                 ctrlInput.X_dir,
-                ctrlInput.Y_dir,
-                ctrlInput.Z_dir
+                0,
+                ctrlInput.Y_dir
             ]
             self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
+            self.dq_d[0] = ctrlInput.Z_dir * self.jointVelLimits[0]
+        
+        # if self.mode == 0:
+        #     xyz_ctrl = [
+        #         ctrlInput.X_dir,
+        #         ctrlInput.Y_dir,
+        #         ctrlInput.Z_dir
+        #     ]
+        #     self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
 
         # if self.mode == 0:
         #     xyz_ctrl = [
@@ -101,10 +110,16 @@ class Node_ArmControl():
 
         #     self.dq_d, self.dx_d = self.computeOrientationJointVel(xyz_ctrl)
 
+        elif (self.mode ==1):
+            self.dq_d[0] = ctrlInput.Z_dir *-1* self.jointVelLimits[0]
+
+        elif(self.mode == 3):
+            self.dq_d[2] = ctrlInput.X_dir *-1* self.jointVelLimits[2]
+
         else:
             # Joint Velocity Control
             i = self.mode - 1
-            self.dq_d[i] = ctrlInput.Y_dir * self.jointVelLimits[i]
+            self.dq_d[i] = ctrlInput.X_dir * self.jointVelLimits[i]
 
         self.ee_d = ctrlInput.ClawOpen
 
@@ -139,7 +154,7 @@ class Node_ArmControl():
                 else:
                     self.dq_d[i] = 0
         
-            self.q_d[i] += self.dq_d[i] * 0.01
+            self.q_d[i] += self.dq_d[i] * 0.01* ctrlInput.velocity
 
 
     def updateArmState(self, state):
@@ -170,6 +185,7 @@ class Node_ArmControl():
             self.dq_d = arm_kinematics.inverseVelocity(self.q, self.dx_d)
         except ValueError:
             # Leave JointVels as is
+            print("inverse velocity error")
             pass
 
         max_ratio = 1

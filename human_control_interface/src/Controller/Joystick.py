@@ -92,22 +92,36 @@ class Node_Joystick():
                 if (abs(msg.A1)<0.1): msg.A1=0
                 if (abs(msg.A2)<0.1): msg.A2=0
                 if (abs(msg.A3)<0.1): msg.A3=0
+                if (msg.A1!=0 and abs(msg.A2)/abs(msg.A1)<0.3): msg.A2=0
+                if (msg.A1!=0 and abs(msg.A3)/abs(msg.A1)<0.3): msg.A3=0
+
+                if (msg.A2!=0 and abs(msg.A1)/abs(msg.A2)<0.3): msg.A1=0
+                if (msg.A2!=0 and abs(msg.A3)/abs(msg.A2)<0.3): msg.A3=0
+
+                if (msg.A3!=0 and abs(msg.A1)/abs(msg.A3)<0.3): msg.A1=0
+                if (msg.A3!=0 and abs(msg.A2)/abs(msg.A3)<0.3): msg.A2=0
+
                 self.joystick_publisher.publish(msg)
 
                 arm_ctrl = ArmControllerInput()
-                # arm_ctrl.X_dir = msg.A2**2
-                # if msg.A2 < 0:
-                #     arm_ctrl.X_dir = -1 * arm_ctrl.X_dir
+                arm_ctrl.X_dir = msg.A2**2
+                if msg.A2 < 0:
+                    arm_ctrl.X_dir = -1 * arm_ctrl.X_dir
 
                 arm_ctrl.Y_dir = msg.A1**2
 
                 if msg.A1 > 0:
                     arm_ctrl.Y_dir = -1 * arm_ctrl.Y_dir
 
-                # arm_ctrl.Z_dir = msg.A3**2
+                arm_ctrl.Z_dir = msg.A3**2
 
-                # if msg.A3 < 0:
-                #     arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
+                if msg.A3 < 0:
+                    arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
+
+                arm_ctrl.velocity = msg.A4
+                if msg.A4<0:
+                    arm_ctrl.velocity = 1+ arm_ctrl.velocity
+                else: arm_ctrl.velocity = arm_ctrl.velocity + 1
 
                 # if self.risingEdge(msg.B3, self.prevB3):
                 #     self.modeState = True

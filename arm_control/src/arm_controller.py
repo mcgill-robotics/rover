@@ -59,6 +59,14 @@ class Node_ArmControl():
             cmds.MotorPos = self.q_d 
             cmds.ClawState = self.ee_d
 
+            print("_________[Control cycle]_________")
+            print(f"Waist: {self.q_d[0]}\n\
+                  Tumor: {self.q_d[1]}\n\
+                  Elbow: {self.q_d[2]}\n\
+                  Wrist pitch: {self.q_d[3]}\n\
+                  Wrist roll: {self.q_d[4]}\n\
+                  Claw opened?: {self.ee_d}\n\n")
+
             self.armControlPublisher.publish(cmds)
 
             self.rate.sleep()

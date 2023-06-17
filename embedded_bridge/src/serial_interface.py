@@ -34,11 +34,11 @@ class SerialInterface:
     sync_id = 0
     connected = False
 
-    def __init__(self, port, baud_rate=115200, timeout=5, prints=True):
+    def __init__(self, port, baud_rate=115200, timeout=0, write_timeout=0, prints=True):
         # Port Information
         self.port = port
         self.baud_rate = baud_rate
-        self.serial = serial.Serial(port, baud_rate, timeout=timeout)
+        self.serial = serial.Serial(port, baudrate, timeout=timeout, write_timeout=write_timeout)
 
         # Communication Protocol Info
         self.window = [''] * self.WINDOW_SIZE
@@ -70,7 +70,7 @@ class SerialInterface:
         for i in range(timeout):
             if s.serial.inWaiting() > 0:
                 return self.read_bytes()
-            time.sleep(1)
+            # time.sleep(1)
         return False, (), ''
 
     def read_bytes(self):
@@ -136,10 +136,10 @@ class SerialInterface:
         if packet_size >= MAX_PACKET_SIZE:
             return False
 
-        # Convert the data to bytes
+        # # Convert the data to bytes
         byte_array = struct.pack("cc",
-                                 START_OF_PACKET.encode('ascii'),
-                                 packet_id.encode('ascii'))
+                                  START_OF_PACKET.encode('ascii'),
+                                  packet_id.encode('ascii'))
 
         if packet_id in ('0', '1'):
             byte_array += payload_size.to_bytes(1, 'big')
@@ -154,17 +154,19 @@ class SerialInterface:
                 byte_array += two_bytes_to_bin(pixel)
 
         if packet_id in ('0', '1', '2'):
-            # Compute crc8ccitt
+             # Compute crc8ccitt
             crc = 0
-            # crc = compute_crc8ccitt(crc, ord(packet_id)) Now matches the Arduino algorithm
+        #     # crc = compute_crc8ccitt(crc, ord(packet_id)) Now matches the Arduino algorithm
             for char in byte_array[3:]:
                 crc = compute_crc8ccitt(crc, char)  # compute for entire payload
             byte_array += struct.pack("c", crc.to_bytes(1, 'big'))
 
         self.serial.write(byte_array)
+
         if self.prints:
             #print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc} as {byte_array}')
-            print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc}')
+            #print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload} {crc}')
+            print(f'Sending {START_OF_PACKET} {packet_id} {payload_size} {system_id} {payload}')
         return True
 
 
@@ -497,4 +499,4 @@ if __name__ == "__main__":
         #s.send_bytes(frame_type, payload)
         s.send_bytes(frame_type, [50,50,50,50])
 
-        time.sleep(1)
+        # time.sleep(1)

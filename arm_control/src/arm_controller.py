@@ -83,7 +83,7 @@ class Node_ArmControl():
                 ctrlInput.Y_dir
             ]
             self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
-            self.dq_d[0] = ctrlInput.Z_dir * self.jointVelLimits[0]
+            self.dq_d[0] = ctrlInput.Z_dir * -1*self.jointVelLimits[0]
         
         # if self.mode == 0:
         #     xyz_ctrl = [

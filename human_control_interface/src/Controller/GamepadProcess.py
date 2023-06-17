@@ -5,7 +5,7 @@ import math
 from human_control_interface.msg import Gamepad_input
 from arm_control.msg import ArmControllerInput
 from science_module.msg import SciencePilot
-from CameraData.msg import Camera_Orientation
+from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16
 from drive_control.msg import WheelSpeed
@@ -57,10 +57,8 @@ class Node_GamepadProcessing:
         self.active_system = 0
 
         # initialize a subscriber for grabbing data from gamepad
-        #self.joystick_sub = rospy.Subscriber("gamepad_data", Gamepad_input, self.gamepadProcessCall)
         self.mode_sub = rospy.Subscriber("system_selection", Int16, self.systemSelection)
         self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        # self.drive_publisher = rospy.Publisher("/wheel_velocity_cmd", WheelSpeed, queue_size=1)
         self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
         self.sci_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=1)
         self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
@@ -101,7 +99,10 @@ class Node_GamepadProcessing:
                 msg.A5 = self.gamepad.data.a5
                 msg.A6 = self.gamepad.data.a6
                 #Passes msg (gamepad data) to gamepadProcessCall
-                self.gamepadProcessCall(msg)
+                self.driveProcessCall(msg) # Drive controller is always on.
+                self.cameraProcessCall(msg) # Camera controller is always on.
+                self.gamepadProcessCall(msg) # Gamepad system selection to enable either the arm or science controls.
+
             except Exception as error:
                     rospy.logerr(str(error))
 
@@ -111,16 +112,10 @@ class Node_GamepadProcessing:
     
     # Poll the gamepad data and then call the respective process call.
     def gamepadProcessCall(self, msg):
-        if self.active_system == 0:
-            self.driveProcessCall(msg)
-        elif self.active_system == 1:
+        if self.active_system == 1:
             self.armProcessCall(msg)
         elif self.active_system == 2:
             self.scienceProcessCall(msg)
-        elif self.active_system == 3:
-            self.cameraProcessCall(msg)
-        else:
-            pass
 
     def systemSelection(self, msg):
         self.active_system = msg.data

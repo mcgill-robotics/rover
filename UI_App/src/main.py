@@ -46,7 +46,9 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.arm_backend = Arm_Backend(self.Arm)
         self.science_backend = Science_Backend(self.Science)
         self.power_backend = Power_Backend(self.Power)
-    
+        
+        # system selection
+        self.system_select_publisher = rospy.Publisher("system_selection", Int16, queue_size=1)
         
         # power
         self.control_selector.currentTextChanged.connect(self.on_control_changed)

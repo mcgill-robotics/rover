@@ -5,6 +5,7 @@ import arm_kinematics
 import numpy as np
 import time
 import rospy
+import copy
 import math
 from arm_control.msg import ArmControllerInput, ArmMotorCommand, ArmStatusFeedback
 
@@ -123,7 +124,7 @@ class Node_ArmControl():
 
         self.ee_d = ctrlInput.ClawOpen
 
-        # Check Joint Limits
+        # Check Joint Limitshttps://github.com/mcgill-robotics/rover/tree/arm_joystick_correction
         for i in range(len(self.q)):
             if(
                 (self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 )
@@ -181,8 +182,10 @@ class Node_ArmControl():
         v_z = ctrlVel[2] * self.cartVelLimits[2]
 
         self.dx_d = [v_x, v_y, v_z]
+        q_t = list(self.q)
+        q_t[0] =0
         try:
-            self.dq_d = arm_kinematics.inverseVelocity(self.q, self.dx_d)
+            self.dq_d = arm_kinematics.inverseVelocity(q_t, self.dx_d)
         except ValueError:
             # Leave JointVels as is
             print("inverse velocity error")

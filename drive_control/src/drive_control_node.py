@@ -14,9 +14,9 @@ import scipy.stats as st
 class Node_DriveControl():
 
     MAX_NO_STEER = 21.333
-    MAX_WITH_STEER = 95.99
+    MAX_WITH_STEER = 24.32
     MIN_NO_STEER = -MAX_NO_STEER
-    MIN_WITH_STEER_1 = -53.33
+    MIN_WITH_STEER_1 = -MAX_NO_STEER
     MIN_WITH_STEER_2 = -MAX_WITH_STEER
 
 
@@ -43,8 +43,6 @@ class Node_DriveControl():
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
         self.robot_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.twist_to_velocity)
         # The controller publisher is publishing straight to the twist_to_velocity values
-        # which then results in what we have now. Must I add a new publisher that creates a sample first
-        # and then feeds it to steering? yes
 
         # Control Frequency of the drive controller
         self.rate = rospy.Rate(100)

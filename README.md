@@ -27,7 +27,7 @@ This repository represents the "src" folder in this file tree. So, create a fold
 workspace and clone this repository inside that folder. (This part might not be necessary, but rename the cloned
 folder "src" in case the catkin builder gives errors.)
 
-Navigate to the folder into which you cloned this repo, and run `catkin_make`. This should build the modules and
+Navigate to the folder into which you cloned this repo, and run `catkin init` followed by `catkin build`. This should build the modules and
 create two more folders: "build" and "devel". At this point, you should source the setup script in the devel folder:
 
 `source devel/setup.bash`

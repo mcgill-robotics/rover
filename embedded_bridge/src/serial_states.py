@@ -7,29 +7,29 @@ class SerialTX:
         Performs conversions from different integer types to byte arrays sendable
         over a serial port. Also adds a checksum byte to the end. (41 bytes)
         """
-        # Drive commands - int32
-        self.driveMotorLBSpeed = 0
-        self.driveMotorLFSpeed = 0
-        self.driveMotorRBSpeed = 0
-        self.driveMotorRFSpeed = 0
+        # Drive commands
+        self.driveMotorLBSpeed = 0      # int32
+        self.driveMotorLFSpeed = 0      # int32
+        self.driveMotorRBSpeed = 0      # int32
+        self.driveMotorRFSpeed = 0      # int32
 
-        # Arm positions - float32
-        self.waistPosition = 1.0
-        self.tumorPosition = 2.0
-        self.elbowPosition = 3.0
-        self.wristPitchPosition = 4.0
-        self.wristRollPosition = 5.0
+        # Arm positions
+        self.waistPosition = 1.0        # float32
+        self.tumorPosition = 2.0        # float32
+        self.elbowPosition = 3.0        # float32
+        self.wristPitchPosition = 4.0   # float32
+        self.wristRollPosition = 5.0    # float32
 
-        # End effector open? - bool
-        self.clawState = False
+        # End effector open?
+        self.clawState = False          # boolean
 
-        # Science commands - int8
-        self.augerDrillSpeed = 7
-        self.stepperSteps = 8
-        self.leadScrewSpeed = 9
+        # Science commands
+        self.augerDrillSpeed = 7        # int8
+        self.stepperSteps = 8           # int8
+        self.leadScrewSpeed = 9         # int8
 
-        # Power command - uint8
-        self.relayStates = 0
+        # Power command
+        self.relayStates = 0            # uint8
 
     def encode(self):
         """
@@ -50,13 +50,6 @@ class SerialTX:
         payload += float_to_bytes(self.wristPitchPosition)
         payload += float_to_bytes(self.wristRollPosition)
         payload += bool_to_bytes(self.clawState)
-
-        # payload += short_to_bytes(self.endEffectorPosition)
-        # payload += short_to_bytes(self.wristRollPosition)
-        # payload += short_to_bytes(self.wristPitchPosition)
-        # payload += short_to_bytes(self.elbowPosition)
-        # payload += short_to_bytes(self.tumorPosition)
-        # payload += short_to_bytes(self.waistPosition)
 
         payload += byte_to_bytes(self.augerDrillSpeed)
         payload += byte_to_bytes(self.stepperSteps)
@@ -103,50 +96,49 @@ class SerialRX:
     (87 bytes with checksum)
     """  
     def __init__(self):
-        # Drive feedback - float32
-        self.driveMotorLBSpeed = 0
-        self.driveMotorLFSpeed = 0
-        self.driveMotorRBSpeed = 0
-        self.driveMotorRFSpeed = 0
+        # Drive feedback
+        self.driveMotorLBSpeed = 0      # float32
+        self.driveMotorLFSpeed = 0      # float32
+        self.driveMotorRBSpeed = 0      # float32
+        self.driveMotorRFSpeed = 0      # float32
 
-        # Arm motor positions - float32
-        self.waistPosition = 0
-        self.tumorPosition = 0
-        self.elbowPosition = 0
-        self.wristPitchPosition = 0
-        self.wristRollPosition = 0
+        # Arm motor positions
+        self.waistPosition = 0          # float32
+        self.tumorPosition = 0          # float32
+        self.elbowPosition = 0          # float32
+        self.wristPitchPosition = 0     # float32
+        self.wristRollPosition = 0      # float32
 
-        # Arm motor velocities - float32
-        self.waistSpeed = 0
-        self.tumorSpeed = 0
-        self.elbowSpeed = 0
-        self.wristPitchSpeed = 0
-        self.wristRollSpeed = 0
+        # Arm motor velocities
+        self.waistSpeed = 0             # float32
+        self.tumorSpeed = 0             # float32
+        self.elbowSpeed = 0             # float32
+        self.wristPitchSpeed = 0        # float32
+        self.wristRollSpeed = 0         # float32
 
-        # Claw feedback - bool
-        self.clawState = False
+        # Claw feedback
+        self.clawState = False          # boolean
 
-        # Science feedback. Moisture data is
-        # uint16, limit switches are one uint8 register
-        self.moisture1 = 0
-        self.moisture2 = 0
-        self.moisture3 = 0
-        self.moisture4 = 0
-        self.limitSwitches = 0
+        # Science feedback
+        self.moisture1 = 0              # uint16
+        self.moisture2 = 0              # uint16
+        self.moisture3 = 0              # uint16
+        self.moisture4 = 0              # uint16
+        self.limitSwitches = 0          # uint8
 
-        # Power feedback - uint16
-        self.wheelCurrentLB = 0
-        self.wheelCurrentLF = 0
-        self.wheelCurrentRB = 0
-        self.wheelCurrentRF = 0
-        self.upperArmCurrent = 0
-        self.lowerArmCurrent = 0
-        self.scienceMotorsCurrent = 0
-        self.scienceStepperCurrent = 0
+        # Power feedback
+        self.wheelCurrentLB = 0         # uint16
+        self.wheelCurrentLF = 0         # uint16
+        self.wheelCurrentRB = 0         # uint16
+        self.wheelCurrentRF = 0         # uint16
+        self.upperArmCurrent = 0        # uint16
+        self.lowerArmCurrent = 0        # uint16
+        self.scienceMotorsCurrent = 0   # uint16
+        self.scienceStepperCurrent = 0  # uint16
 
-        # Battery feedback - uint16
-        self.battery1Current = 0
-        self.battery2Current = 0
+        # Battery feedback
+        self.battery1Current = 0        # uint16
+        self.battery2Current = 0        # uint16
     
     def debugPrint(self):
         print("[RX]______________________________________\n")

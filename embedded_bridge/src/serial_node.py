@@ -91,6 +91,7 @@ class Node_EmbeddedBridge():
 
         # Initialize timekeeping/statistic variables
         t = time.time()
+        rate = rospy.Rate(1.0/self.serial_polling_interval)
         if self.verbose:
             tx_data = []
             rx_data = []
@@ -108,23 +109,24 @@ class Node_EmbeddedBridge():
                 exit()
             try:
                 # Transmit data using the SerialTX states
-                if time.time() - t >= self.serial_polling_interval:
-                    self.commandStateLock.acquire()
-                    
-                    # Enclose this in a try-finally block to make sure the lock
-                    # is released even if there is an exception
-                    try:
-                        byte_array = self.commandState.encode()
-                    finally:
-                        self.commandStateLock.release()
+                # if time.time() - t >= self.serial_polling_interval:
 
-                    tx = self.serial_port.write(byte_array)
-                    t = time.time()
+                self.commandStateLock.acquire()
+                
+                # Enclose this in a try-finally block to make sure the lock
+                # is released even if there is an exception
+                try:
+                    byte_array = self.commandState.encode()
+                finally:
+                    self.commandStateLock.release()
 
-                    if self.verbose:
-                        tx_time = time.time()
-                        print(f"Wrote {tx} bytes to serial at {time.time()}")
-                        self.commandState.debugPrint()
+                tx = self.serial_port.write(byte_array)
+                t = time.time()
+
+                if self.verbose:
+                    tx_time = time.time()
+                    print(f"Wrote {tx} bytes to serial at {time.time()}")
+                    self.commandState.debugPrint()
 
                 # Check serial line for new feedback, put it into buffer and pass it to the
                 # feedbackState object to update the feedback values
@@ -160,7 +162,8 @@ class Node_EmbeddedBridge():
                 self.drive_state_publisher.publish(self.drive_state)
                 self.power_state_publisher.publish(self.power_state)
 
-                time.sleep(self.serial_polling_interval)
+                rate.sleep()
+                # time.sleep(self.serial_polling_interval)
 
             except Exception as error:
                 self.serial_port.close()

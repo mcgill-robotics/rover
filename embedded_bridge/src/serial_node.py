@@ -104,12 +104,15 @@ class Node_EmbeddedBridge():
         
         while not rospy.is_shutdown():
             if rospy.is_shutdown():
+                self.serial_port.close()
                 exit()
             try:
                 # Transmit data using the SerialTX states
                 if time.time() - t >= self.serial_polling_interval:
                     self.commandStateLock.acquire()
                     
+                    # Enclose this in a try-finally block to make sure the lock
+                    # is released even if there is an exception
                     try:
                         byte_array = self.commandState.encode()
                     finally:
@@ -160,6 +163,7 @@ class Node_EmbeddedBridge():
                 time.sleep(self.serial_polling_interval)
 
             except Exception as error:
+                self.serial_port.close()
                 rospy.logerr(str(error))
             
         # On exit, draw and show the debug graph as well as some connection statistics
@@ -176,13 +180,20 @@ class Node_EmbeddedBridge():
                 plt.ylabel('Data')
                 plt.legend()
                 plt.show()
+        
+        # Also close serial port
+        self.serial_port.close()
 
         exit()
 
     # TODO: Clarify message content with software teams for science and power
     def writeArmCommand(self, control):
+        # Busy spin while waiting for lock, check back every ms
         while not self.commandStateLock.acquire(blocking=False):
             time.sleep(0.001)
+        
+        # Enclose with try-finally block to make sure the lock is released even if an
+        # exception happens
         try:
             self.commandState.waistPosition = control.MotorPos[0]
             self.commandState.tumorPosition = control.MotorPos[1]
@@ -194,8 +205,12 @@ class Node_EmbeddedBridge():
             self.commandStateLock.release()
 
     def writeDriveCommand(self, control):
+        # Busy spin while waiting for lock, check back every ms
         while not self.commandStateLock.acquire(blocking=False):
             time.sleep(0.001)
+
+        # Enclose with try-finally block to make sure the lock is released even if an
+        # exception happens
         try:
             self.commandState.driveMotorLBSpeed = int(round(control.left[0]*5, 2))
             self.commandState.driveMotorLFSpeed = int(round(control.left[1]*5, 2))

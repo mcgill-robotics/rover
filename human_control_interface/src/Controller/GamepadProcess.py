@@ -5,7 +5,7 @@ import math
 from human_control_interface.msg import Gamepad_input
 from arm_control.msg import ArmControllerInput
 from science_module.msg import SciencePilot
-# from CameraData.msg import Camera_Orientation
+from CameraData.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int16
 from drive_control.msg import WheelSpeed

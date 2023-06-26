@@ -127,28 +127,22 @@ class Node_GamepadProcessing:
 
     def driveProcessCall(self, msg):
         
-        # Right stick left and right is for steering.
+        # A2 is the left stick moving up and down.
+        # A4 is the right stick moving left and right.
 
         if abs(msg.A4) < 0.1:
             msg.A4 = 0
         if abs(msg.A2) < 0.1:
             msg.A2 = 0
 
-        steering = msg.A4
-
-        backward_vel = 0
-        forward_vel = 0
-        if msg.A2 < 0:
-            backward_vel = msg.A2
-        else:
-            forward_vel = msg.A2   
+        drive = msg.A2
+        steer = msg.A4
 
         # # calc. for linear velocity
-        self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel + backward_vel)
+        self.roverLinearVelocity = self.maxLinearVelocity * drive
 
         # # calc. for angular velocity
-        self.roverAngularVelocity = -self.maxAngularVelocity * np.sign(steering) * steering**2
-
+        self.roverAngularVelocity = self.maxAngularVelocity * steer
 
         # # assigns values to a Twist msg, then publish it to ROS
         roverTwist = Twist()
@@ -229,5 +223,5 @@ class Node_GamepadProcessing:
             return False
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(1, 25)
+    gamepadProcess = Node_GamepadProcessing(1, 1)
     #rospy.spin()

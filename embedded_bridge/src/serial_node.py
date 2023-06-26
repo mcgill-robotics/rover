@@ -44,7 +44,7 @@ class Node_EmbeddedBridge():
         rospy.init_node("SerialNode", anonymous=False)
 
         # Bridge Parameters
-        self.port_name = "/dev/ttyACM0"
+        self.port_name = rospy.get_param("~port_name", "/dev/ttyACM0")
         self.baud = 115200
         self.timeout = 0
         self.write_timeout = 0
@@ -90,7 +90,6 @@ class Node_EmbeddedBridge():
         """
 
         # Initialize timekeeping/statistic variables
-        t = time.time()
         rate = rospy.Rate(1.0/self.serial_polling_interval)
         if self.verbose:
             tx_data = []
@@ -108,11 +107,7 @@ class Node_EmbeddedBridge():
                 self.serial_port.close()
                 exit()
             try:
-                # Transmit data using the SerialTX states
-                # if time.time() - t >= self.serial_polling_interval:
-
                 self.commandStateLock.acquire()
-                
                 # Enclose this in a try-finally block to make sure the lock
                 # is released even if there is an exception
                 try:
@@ -163,7 +158,6 @@ class Node_EmbeddedBridge():
                 self.power_state_publisher.publish(self.power_state)
 
                 rate.sleep()
-                # time.sleep(self.serial_polling_interval)
 
             except Exception as error:
                 self.serial_port.close()

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # Imports
-import os, sys
+import os
+import sys
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
@@ -19,7 +20,6 @@ from power_backend import Power_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
-from visualization_msgs.msg import MarkerArray
 from arm_control.msg import ArmStatusFeedback
 
 from PyQt5 import QtWidgets as qtw
@@ -50,23 +50,18 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # power
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
         self.Power.kill_power_button.clicked.connect(self.power_backend.on_kill_power)
-        self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,
-                                                       self.power_backend.on_power_feedback)
+        self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_pilot)
         self.Science.io_shutdown_button.clicked.connect(self.send_science_shutdown)
-        self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback,
-                                                          self.science_backend.on_science_feedback)
+        self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback,self.science_backend.on_science_feedback)
         self.science_module_publisher = rospy.Publisher("science_controller_feedback", SciencePilot, queue_size=10)
 
         # drive
-        self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed,
-                                                                self.drive_backend.update_wheel_velocities)
-        self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist,
-                                                       self.drive_backend.update_twist_data)
-        self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,
-                                                          self.drive_backend.update_robot_location)
+        self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed,self.drive_backend.update_wheel_velocities)
+        self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist,self.drive_backend.update_twist_data)
+        self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
 
         # arm
         self.arm_hand_subscriber = rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints)
@@ -78,7 +73,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.cam_image = None
         self.camera_index_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
         self.camera_selector.currentTextChanged.connect(self.on_camera_changed)
-        self.timer_camera.timeout.connect(self.show_image)
+
         self.camera_frame_subscriber = rospy.Subscriber('/camera_frames', Image, self.set_image)
         self.timer_camera.start(33)
         self.count = 0
@@ -132,16 +127,18 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         except:
             msg = f"no image {self.count // 30}"
             # print(msg, end="\r")
-            self.Camera.setText(
-                msg)  # if you don't feel comfortable displaying error message on camera screen, comment out this line and enable the line above
+            self.Camera.setText(msg)  # if you don't feel comfortable displaying error message on camera screen, comment out this line and enable the line above
             self.count += 1
 
+    # when rospy send the image, it will call this function
     def set_image(self, msg):
         try:
             frames = self.ros_to_openCV_image(msg)
             frames = cv2.imdecode(frames, 1)
-            self.cam_image = cv2.resize(frames, (410, 270))
+            self.cam_image = cv2.resize(frames, (1000, 562))
             print("image set")
+            self.show_image()
+        #     todo need test: call show_image here rather than use timer
         except:
             print("cannot set image correctly")
 

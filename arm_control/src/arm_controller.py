@@ -12,7 +12,7 @@ class Node_ArmControl():
 
     def __init__(self):
         
-        self.nbJoints = 5
+        self.nbJoints = 7
         self.nbCart   = 3
         
         # Actual Arm State
@@ -30,16 +30,19 @@ class Node_ArmControl():
         self.dx_d = [0] * self.nbCart
         self.ee_d = False
 
+        # print length instead
+        # print(f"{len(self.q)=} {len(self.dq)=} {len(self.dq_d)=} {len(self.torq)=} {len(self.x)=} {len(self.dx)=}")
+
         # Control mode
         self.mode = 0     # default cartesian mode
         # Options: [0, nbJoints), In joint control mode, control is
         # one joint at a time to keep it intuitive to the user
 
         # Physical Constraints
-        self.jointUpperLimits = [175*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad  (3.05, 1.57, 1.309, 1.309)
-        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad  (3.05, 1.047, 1.22, 1.309)
+        self.jointUpperLimits = [175*np.pi/180, 960*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi, np.pi, np.pi]      # rad  (3.05, 1.57, 1.309, 1.309)
+        self.jointLowerLimits = [-175*np.pi/180, -0*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi, np.pi, np.pi] # rad  (3.05, 1.047, 1.22, 1.309)
 
-        self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
+        self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
 
         # Initialize ROS
@@ -124,7 +127,7 @@ class Node_ArmControl():
         self.ee_d = ctrlInput.ClawOpen
 
         # Check Joint Limits
-        for i in range(len(self.q)):
+        for i in range(5):
             if(
                 (self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 )
                 or

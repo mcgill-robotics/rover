@@ -1,2 +1,2 @@
-float32[5] MotorPos
+float32[7] MotorPos
 bool ClawState

@@ -5,6 +5,7 @@ import arm_kinematics
 import numpy as np
 import time
 import rospy
+import copy
 import math
 from arm_control.msg import ArmControllerInput, ArmMotorCommand, ArmStatusFeedback
 
@@ -86,7 +87,7 @@ class Node_ArmControl():
                 ctrlInput.Y_dir
             ]
             self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
-            self.dq_d[0] = ctrlInput.Z_dir *-1* self.jointVelLimits[0]
+            self.dq_d[0] = ctrlInput.Z_dir * -1 *self.jointVelLimits[0]
         
         # if self.mode == 0:
         #     xyz_ctrl = [
@@ -184,8 +185,10 @@ class Node_ArmControl():
         v_z = ctrlVel[2] * self.cartVelLimits[2]
 
         self.dx_d = [v_x, v_y, v_z]
+        q_t = list(self.q)
+        q_t[0] =0
         try:
-            self.dq_d = arm_kinematics.inverseVelocity(self.q, self.dx_d)
+            self.dq_d = arm_kinematics.inverseVelocity(q_t, self.dx_d)
         except ValueError:
             # Leave JointVels as is
             print("inverse velocity error")

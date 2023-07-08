@@ -40,8 +40,8 @@ class Node_ArmControl():
         # one joint at a time to keep it intuitive to the user
 
         # Physical Constraints
-        self.jointUpperLimits = [175*np.pi/180, 960*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi, np.pi, np.pi]      # rad  (3.05, 1.57, 1.309, 1.309)
-        self.jointLowerLimits = [-175*np.pi/180, -0*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi, np.pi, np.pi] # rad  (3.05, 1.047, 1.22, 1.309)
+        self.jointUpperLimits = [175*np.pi/180, 960*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi, 0.125, 0.125]      # rad  (3.05, 1.57, 1.309, 1.309)
+        self.jointLowerLimits = [-175*np.pi/180, -0*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi, -0.55, -0.55] # rad  (3.05, 1.047, 1.22, 1.309)
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
@@ -62,8 +62,7 @@ class Node_ArmControl():
         cmds = ArmMotorCommand()
         while not rospy.is_shutdown():
             cmds.MotorPos = self.q_d 
-            cmds.ClawState = self.ee_d
-
+            cmds.ClawState = True
             self.armControlPublisher.publish(cmds)
 
             self.rate.sleep()
@@ -71,12 +70,14 @@ class Node_ArmControl():
 
     def controlLoop(self, ctrlInput):
         
+        # print(ctrlInput)
         # if ctrlInput.ModeChange:
         #     self.changeControlMode()
         #     print(self.mode)
         if self.mode != ctrlInput.Mode:
             self.mode = ctrlInput.Mode
             print(self.mode)
+
 
         #Cartesian Velocity Control
 
@@ -119,6 +120,25 @@ class Node_ArmControl():
 
         elif(self.mode == 3):
             self.dq_d[2] = ctrlInput.X_dir *-1* self.jointVelLimits[2]
+
+        elif(self.mode == 4):
+            self.dq_d[3] = ctrlInput.X_dir * self.jointVelLimits[3]
+            self.dq_d[4] = ctrlInput.Z_dir * self.jointVelLimits[4]
+
+        elif (self.mode == 5):
+            self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
+
+
+
+            if (self.q_d[5] > self.jointUpperLimits[5]) or (self.q_d[5] < self.jointLowerLimits[5]):
+                self.q_d[5] = self.jointUpperLimits[5] if self.q_d[5] > self.jointUpperLimits[5] else self.jointLowerLimits[5]
+
+            self.q_d[6] += ctrlInput.X_dir * self.jointVelLimits[6] * 0.01
+
+            # print(self.q_d[5], self.q_d[6])
+
+            if (self.q_d[6] > self.jointUpperLimits[6]) or (self.q_d[6] < self.jointLowerLimits[6]):
+                self.q_d[6] = self.jointUpperLimits[6] if self.q_d[6] > self.jointUpperLimits[6] else self.jointLowerLimits[6]
 
         else:
             # Joint Velocity Control
@@ -166,7 +186,7 @@ class Node_ArmControl():
         # self.dq     = state.MotorVel
         # self.torq   = state.MotorTorq
         self.ee     = state.ClawMode
-
+        # print(round(state.MotorPos[5], 3), round(state.MotorPos[6], 3))
         self.x = arm_kinematics.forwardKinematics(self.q)
 
         # J, Jv, Jw = arm_kinematics.Jacobian(self.q)

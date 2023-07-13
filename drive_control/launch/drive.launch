@@ -3,7 +3,7 @@
     <node pkg="human_control_interface" type="GamepadProcess.py" name="gamepad" output="screen">
     </node>
 
-    <!-- Node for the arm controller -->
+    <!-- Node for the drive controller -->
     <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
     </node>
 

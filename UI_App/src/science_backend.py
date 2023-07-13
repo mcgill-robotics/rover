@@ -1,12 +1,15 @@
-from science_module.msg import SciencePilot, ScienceFeedback
+from std_msgs.msg import Float32MultiArray
 
 
 class Science_Backend():
 
     def __init__(self, science_tab):
         self.ui = science_tab
+        self.num_moisture_sensors = 4
+        self.moisture_samples = [[] for _ in range(self.num_moisture_sensors)]
+        self.ui.auger_speed_slider.valueChanged.connect(self.update_dynamic_value(self.ui.auger_speed_slider, self.ui.auger_speed_fb_lcd))
+        self.ui.linear_guide_slider.valueChanged.connect(self.update_dynamic_value(self.ui.linear_guide_slider, self.ui.linear_guide_fb_lcd))
 
-    
     ## READER FUNCTIONS
     @staticmethod
     def get_boolean_value(button):
@@ -29,47 +32,33 @@ class Science_Backend():
     def update_float_value(value, label):
         label.display("%.2f" % float(value))
 
+    @staticmethod
+    def update_dynamic_value(dynamic_input, dynamic_output):
+        def update_value():
+            dynamic_output.display(f"{int(dynamic_input.value())}")
+        return update_value
 
 
-    
     def on_science_feedback(self, msg):
         """
         Callback function when receiving a science message from messaging broker
 
-        :param msg: ScienceFeedback
+        :param msg: Float32MultiArray
         """
-        self.update_boolean_value(msg.Stepper1Fault, self.ui.stepper1Fault_bool)
-        self.update_boolean_value(msg.Stepper2Fault, self.ui.stepper2Fault_bool)
-        self.update_boolean_value(msg.PeltierState, self.ui.coolerState_bool)
-        self.update_boolean_value(msg.LedState, self.ui.ledState_state_label)
-        self.update_boolean_value(msg.LaserState, self.ui.laserState_state_label)
-        self.update_boolean_value(msg.GripperState, self.ui.gripperState_state_label)
-
+        for i in range(self.num_moisture_sensors):
+            self.moisture_samples[i].append(msg.data[i])
+        # Add code to update plot
     
-    def set_science_pilot(self):
+    def set_science_cmd(self):
         """
-        Function creating a SciencePilot message and sending request through messaging broker
+        Function creating a Float32MultiArray message and sending request through messaging broker
         """
-        msg = SciencePilot()
-        self.ui.laserState_toggle.isChecked()
-
-        # Booleans
-        msg.LedState = self.get_boolean_value(self.ui.ledState_toggle)
-        msg.LaserState = self.get_boolean_value(self.ui.laserState_toggle)
-        msg.GripperState = self.get_boolean_value(self.ui.gripperState_toggle)
-        msg.PeltierState = self.get_boolean_value(self.ui.peltierState_toggle)
-        msg.CcdSensorSnap = self.get_boolean_value(self.ui.ccdSensorSnap_toggle)
+        msg = Float32MultiArray()
 
         # Float 32
-        msg.ContMotorSpeed = self.get_double_spin_box_value(self.ui.contMotorSpeed_doubleSpinBox)
-        msg.StepperMotor1Pos = self.get_double_spin_box_value(self.ui.stepper1Pos_doubleSpinBox)
-        msg.StepperMotor2Pos = self.get_double_spin_box_value(self.ui.stepper1Pos_doubleSpinBox)
-        msg.StepperMotor1Speed = self.get_double_spin_box_value(self.ui.stepper1Speed_doubleSpinBox)
-        msg.StepperMotor2Speed = self.get_double_spin_box_value(self.ui.stepper2Speed_doubleSpinBox)
-
-        # UInt 32
-        msg.Stepper1ControlMode = self.get_uint_spin_box_value(self.ui.stepper1ControlMode_spinBox)
-        msg.Stepper2ControlMode = self.get_uint_spin_box_value(self.ui.stepper2ControlMode_spinBox)
+        msg.data.append(self.get_double_spin_box_value(self.ui.carousel_position_inc_spinbox))
+        msg.data.append(self.get_double_spin_box_value(self.ui.auger_speed_slider))
+        msg.data.append(self.get_double_spin_box_value(self.ui.linear_guide_slider))
 
         return msg
 

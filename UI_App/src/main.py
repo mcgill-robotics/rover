@@ -20,13 +20,13 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from visualization_msgs.msg import MarkerArray
 from arm_control.msg import ArmStatusFeedback
+from std_msgs.msg import Float32MultiArray
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 
 
 from embedded_bridge.msg import PowerFeedback
-from science_module.msg import SciencePilot, ScienceFeedback
 
 class UI(qtw.QMainWindow, Ui_MainWindow):
     '''
@@ -54,10 +54,9 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback, self.power_backend.on_power_feedback)
 
         # science
-        self.Science.send_button.clicked.connect(self.send_science_pilot)
-        self.Science.io_shutdown_button.clicked.connect(self.send_science_shutdown)
-        self.science_module_subscriber = rospy.Subscriber("science_state_data", ScienceFeedback, self.science_backend.on_science_feedback)
-        self.science_module_publisher = rospy.Publisher("science_controller_feedback", SciencePilot, queue_size=10)
+        self.Science.send_button.clicked.connect(self.send_science_cmd)
+        self.science_module_subscriber = rospy.Subscriber("science_state_data", Float32MultiArray, self.science_backend.on_science_feedback)
+        self.science_module_publisher = rospy.Publisher("science_controller_feedback", Float32MultiArray, queue_size=10)
 
         #drive
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)
@@ -81,15 +80,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
 
 
-    def send_science_pilot(self):
-        msg = self.science_backend.set_science_pilot()
-        self.science_module_publisher.publish(msg)
-
-
-    def send_science_shutdown(self):
-        # Function creating a SciencePilot message for shutdown, setting it to true and sending it through messaging broker
-        msg = SciencePilot()
-        msg.Shutdown = True
+    def send_science_cmd(self):
+        msg = self.science_backend.set_science_cmd()
         self.science_module_publisher.publish(msg)
 
 

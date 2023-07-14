@@ -55,8 +55,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_cmd)
-        self.science_module_subscriber = rospy.Subscriber("science_state_data", Float32MultiArray, self.science_backend.on_science_feedback)
-        self.science_module_publisher = rospy.Publisher("science_controller_feedback", Float32MultiArray, queue_size=10)
+        self.science_module_subscriber = rospy.Subscriber("science_fb", Float32MultiArray, self.science_backend.on_science_feedback)
+        self.science_module_publisher = rospy.Publisher("science_cmd", Float32MultiArray, queue_size=10)
 
         #drive
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)
@@ -77,7 +77,6 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.camera_frame_subscriber = rospy.Subscriber('/camera_frames', Image, self.set_image)
         self.timer_camera.start(1)
         self.count = 0
-
 
 
     def send_science_cmd(self):

@@ -39,7 +39,7 @@
          <item row="2" column="0">
           <layout class="QGridLayout" name="gridLayout_22">
            <property name="sizeConstraint">
-            <enum>QLayout::SetNoConstraint</enum>
+            <enum>QLayout::SetDefaultConstraint</enum>
            </property>
            <item row="4" column="0" colspan="3">
             <widget class="QLabel" name="linear_guide_label">
@@ -89,7 +89,14 @@
             </widget>
            </item>
            <item row="6" column="2">
-            <widget class="QLCDNumber" name="linear_guide_fb_lcd"/>
+            <widget class="QLCDNumber" name="linear_guide_fb_lcd">
+             <property name="maximumSize">
+              <size>
+               <width>500</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
            </item>
            <item row="2" column="0">
             <widget class="QLabel" name="carousel_position_inc_label">
@@ -147,11 +154,17 @@
            </item>
            <item row="2" column="1">
             <widget class="QDoubleSpinBox" name="carousel_position_inc_spinbox">
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="minimum">
+              <double>-360.000000000000000</double>
+             </property>
              <property name="maximum">
               <double>360.000000000000000</double>
              </property>
              <property name="singleStep">
-              <double>0.100000000000000</double>
+              <double>1.000000000000000</double>
              </property>
              <property name="value">
               <double>0.000000000000000</double>
@@ -159,10 +172,33 @@
             </widget>
            </item>
            <item row="9" column="2">
-            <widget class="QLCDNumber" name="auger_speed_fb_lcd"/>
+            <widget class="QLCDNumber" name="auger_speed_fb_lcd">
+             <property name="maximumSize">
+              <size>
+               <width>500</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
            </item>
            <item row="2" column="2">
-            <widget class="QLCDNumber" name="carousel_position_fb_lcd"/>
+            <widget class="QLCDNumber" name="carousel_position_fb_lcd">
+             <property name="maximumSize">
+              <size>
+               <width>500</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="smallDecimalPoint">
+              <bool>false</bool>
+             </property>
+             <property name="digitCount">
+              <number>7</number>
+             </property>
+             <property name="mode">
+              <enum>QLCDNumber::Dec</enum>
+             </property>
+            </widget>
            </item>
            <item row="7" column="0" colspan="3">
             <widget class="QLabel" name="auger_label">
@@ -237,6 +273,19 @@
          </item>
         </layout>
        </item>
+       <item row="5" column="1">
+        <widget class="QLabel" name="moisture_sampleCnt_label">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Samples to display</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QPushButton" name="send_button">
          <property name="font">
@@ -247,6 +296,38 @@
          </property>
          <property name="text">
           <string>Send</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QSpinBox" name="moisture_sampleCnt_spinbox">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="minimum">
+          <number>100</number>
+         </property>
+         <property name="maximum">
+          <number>10000000</number>
+         </property>
+         <property name="singleStep">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>10000</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QWidget" name="moisture_plotter" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>400</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(0, 0, 0);</string>
          </property>
         </widget>
        </item>
@@ -266,67 +347,12 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QLabel" name="moisture_sampleCnt_label">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Samples to display</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QwtPlot" name="moisture_plotter">
-         <property name="canvasBackground">
-          <brush brushstyle="CrossPattern">
-           <color alpha="255">
-            <red>0</red>
-            <green>0</green>
-            <blue>0</blue>
-           </color>
-          </brush>
-         </property>
-         <property name="autoReplot">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QSpinBox" name="moisture_sampleCnt_spinbox">
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="minimum">
-          <number>100</number>
-         </property>
-         <property name="maximum">
-          <number>10000000</number>
-         </property>
-         <property name="singleStep">
-          <number>100</number>
-         </property>
-         <property name="value">
-          <number>10000</number>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
     </widget>
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QwtPlot</class>
-   <extends>QFrame</extends>
-   <header>qwt_plot.h</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../ressources/buttons.qrc"/>
  </resources>

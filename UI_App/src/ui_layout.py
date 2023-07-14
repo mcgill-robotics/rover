@@ -18,13 +18,14 @@ from power_layout import Ui_Power
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
+        MainWindow.resize(1460,900)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
 
         self.Systemsview = QtWidgets.QTabWidget(self.centralwidget)
-        self.Systemsview.setGeometry(QtCore.QRect(470, 10, 301, 531))
+        # self.Systemsview.setGeometry(QtCore.QRect(470, 10, 301, 531))
+        self.Systemsview.setGeometry(QtCore.QRect(1050, 10, 400, 880))
         self.Systemsview.setObjectName("Systemsview")
         #
         self.Arm = Ui_Arm()
@@ -45,9 +46,8 @@ class Ui_MainWindow(object):
         self.Power.setObjectName("Power")
         self.Systemsview.addTab(self.Power, "")
 
-
         self.camera_selector = QtWidgets.QComboBox(self.centralwidget)
-        self.camera_selector.setGeometry(QtCore.QRect(10, 290, 131, 31))
+        self.camera_selector.setGeometry(QtCore.QRect(10, 585, 131, 31))
         self.camera_selector.setObjectName("camera_selector")
         self.camera_selector.addItem("")
         self.camera_selector.addItem("")
@@ -57,9 +57,9 @@ class Ui_MainWindow(object):
         self.camera_selector.addItem("")
         # camera showbox
         self.Camera = QtWidgets.QLabel(self.centralwidget)
-        self.Camera.setGeometry(QtCore.QRect(10, 10, 411, 271))
+        self.Camera.setGeometry(QtCore.QRect(10, 10, 1000, 562))
         font = QtGui.QFont()
-        font.setPointSize(14)
+        font.setPointSize(17)
         self.Camera.setFont(font)
         self.Camera.setFrameShape(QtWidgets.QFrame.Box)
         self.Camera.setLineWidth(2)
@@ -68,13 +68,22 @@ class Ui_MainWindow(object):
         self.OverallFeedback.setGeometry(QtCore.QRect(10, 360, 311, 191))
         self.OverallFeedback.setObjectName("OverallFeedback")
         self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(10, 340, 151, 17))
+        # self.label.setGeometry(QtCore.QRect(10, 340, 151, 17))
+        self.label.setGeometry(QtCore.QRect(320, 585, 200, 17))
         font = QtGui.QFont()
-        font.setPointSize(14)
+        font.setPointSize(17)
         self.label.setFont(font)
         self.label.setObjectName("label")
+
+        self.overall_feedback_messagebox = QtWidgets.QTextBrowser(self.centralwidget)
+        self.overall_feedback_messagebox.setGeometry(QtCore.QRect(320, 620, 410, 220))
+        self.overall_feedback_messagebox.setObjectName("text_browser")
+        self.overall_feedback_messagebox.clear()
+
+
+
         self.control_selector = QtWidgets.QComboBox(self.centralwidget)
-        self.control_selector.setGeometry(QtCore.QRect(160, 290, 181, 31))
+        self.control_selector.setGeometry(QtCore.QRect(160, 585, 150, 31))
         self.control_selector.setObjectName("control_selector")
         self.control_selector.addItem("")
         self.control_selector.addItem("")
@@ -83,7 +92,7 @@ class Ui_MainWindow(object):
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
+        self.menubar.setGeometry(QtCore.QRect(5, 5, 800, 22))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)

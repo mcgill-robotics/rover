@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os, sys
 from pydoc_data.topics import topics
+
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import rospy
@@ -11,6 +12,7 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Int16
 from PyQt5 import QtGui
 import sys
+
 stop = False
 
 class Node_CameraFramePub():
@@ -22,9 +24,8 @@ class Node_CameraFramePub():
 
         rospy.init_node('camera_frame_publisher')
         self.camera_select_subscriber = rospy.Subscriber("camera_selection", Int16, self.select_camera)
-        self.timer = rospy.Timer(rospy.Duration(0.10), self.timer_callback)
+        self.timer = rospy.Timer(rospy.Duration(0.03), self.timer_callback)
         self.camera_frame_publisher = rospy.Publisher('/camera_frames', Image, queue_size=10)
-        
 
     def timer_callback(self, event):
         try:
@@ -41,7 +42,6 @@ class Node_CameraFramePub():
         finally:
             pass
 
-
     def openCV_to_ros_image(self, cv_image):
         try:
             bridge = CvBridge()
@@ -49,7 +49,6 @@ class Node_CameraFramePub():
             return ros_image
         except:
             print("Cannot translate image correctly")
-
 
     def select_camera(self, x):
         self.video_capture.release()

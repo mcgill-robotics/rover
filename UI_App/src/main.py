@@ -55,8 +55,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_cmd)
-        self.science_module_subscriber = rospy.Subscriber("science_fb", Float32MultiArray, self.science_backend.on_science_feedback)
-        self.science_module_publisher = rospy.Publisher("science_cmd", Float32MultiArray, queue_size=10)
+        self.science_module_subscriber = rospy.Subscriber("scienceFB", Float32MultiArray, self.science_backend.on_science_feedback)
+        self.science_module_publisher = rospy.Publisher("scienceCmd", Float32MultiArray, queue_size=10)
 
         #drive
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed, self.drive_backend.update_wheel_velocities)

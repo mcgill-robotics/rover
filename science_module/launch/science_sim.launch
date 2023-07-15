@@ -4,10 +4,6 @@
     </node>
 
     <!-- Node for the science controller -->
-    <node pkg="science_module" type="science_module_node.py" name="science_controller" output="screen">
-    </node>
-
-    <!-- Node for the science controller -->
     <node pkg="science_module" type="science_sim.py" name="science_module_sim" output="screen">
     </node>
  

@@ -15,14 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
-## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  ScienceCmd.msg
-  ScienceFeedback.msg
-  SciencePilot.msg
-  CcdData.msg
-)
 
 generate_messages(
     DEPENDENCIES

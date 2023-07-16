@@ -31,7 +31,6 @@ catkin_package(
 )
 
 catkin_install_python(PROGRAMS
-  src/science_module_node.py
   sim/science_sim.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

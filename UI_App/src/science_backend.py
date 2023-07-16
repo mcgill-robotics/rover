@@ -1,6 +1,9 @@
-from std_msgs.msg import Float32MultiArray
-import numpy as np
+import datetime
 import matplotlib.pyplot as plt
+import numpy as np
+import os
+from std_msgs.msg import Float32MultiArray
+import time
 
 
 class Science_Backend():
@@ -13,6 +16,11 @@ class Science_Backend():
         self.num_moisture_samples = 10000
         self.moisture_samples = [[] for _ in range(self.num_moisture_sensors)]
         self.ui.moisture_sampleCnt_spinbox.valueChanged.connect(self.on_moisture_sample_display_change)
+
+        # Logger for sensor data
+        self.science_log_path = os.path.dirname(__file__) + f"/../../rover_out/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        os.makedirs(self.science_log_path)
+        self.science_log_filename = self.science_log_path + "/science_moisture_data.log"
 
         # Motor variables
         self.carousel_angle_position = 0
@@ -56,12 +64,18 @@ class Science_Backend():
 
         :param msg: Float32MultiArray
         """
+        # Log new data feedback
+        log_file = open(self.science_log_filename, "a")
+        log_file.write(f"{time.time()},{msg.data[0]},{msg.data[1]},{msg.data[2]},{msg.data[3]}\n")
+        log_file.close()
+
+        # Plot new data sample
         self.ui.moisture_data_fig.clear()
         ax = self.ui.moisture_data_fig.add_subplot(111)
 
         for i in range(self.num_moisture_sensors):
             # pop oldest sample
-            if not (len(self.moisture_samples[i]) < self.num_moisture_samples):
+            while not (len(self.moisture_samples[i]) < self.num_moisture_samples):
                 self.moisture_samples[i].pop(0)
             # add new sample
             self.moisture_samples[i].append(msg.data[i])

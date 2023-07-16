@@ -8,6 +8,7 @@ import rospy
 import copy
 import math
 from arm_control.msg import ArmControllerInput, ArmMotorCommand, ArmStatusFeedback
+from std_msgs.msg import Float32MultiArray
 
 class Node_ArmControl():
 
@@ -22,14 +23,14 @@ class Node_ArmControl():
         self.torq = [0] * self.nbJoints
         self.x    = [0] * self.nbCart
         self.dx   = [0] * self.nbCart
-        self.ee   = False                   # End-effector (EE) : active/inactive
+        
 
         # Desired Arm State
         self.q_d  = [0] * self.nbJoints
         self.dq_d = [0] * self.nbJoints
         self.x_d  = [0] * self.nbCart
         self.dx_d = [0] * self.nbCart
-        self.ee_d = False
+        
 
         # print length instead
         # print(f"{len(self.q)=} {len(self.dq)=} {len(self.dq_d)=} {len(self.torq)=} {len(self.x)=} {len(self.dx)=}")
@@ -52,6 +53,12 @@ class Node_ArmControl():
         self.uiSubscriber        = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
         self.armStateSubscriber  = rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.updateArmState)
 
+        # Arduino message 
+        self.arm12Subscriber = rospy.Subscriber("arm12FB", Float32MultiArray, self.updateArm12State)
+        self.arm24Subscriber = rospy.Subscriber("arm24FB", Float32MultiArray, self.updateArm24State)
+        self.arm12Publisher = rospy.Publisher("arm12Cmd", Float32MultiArray, queue_size=10)
+        self.arm24Publisher = rospy.Publisher("arm24Cmd", Float32MultiArray, queue_size=10)
+
         # Control Frequency of the arm controller
         self.rate = rospy.Rate(100)
 
@@ -60,20 +67,31 @@ class Node_ArmControl():
 
     def run(self):
         cmds = ArmMotorCommand()
+        cmd12 = Float32MultiArray()
+        cmd24 = Float32MultiArray()
         while not rospy.is_shutdown():
             cmds.MotorPos = self.q_d 
-            cmds.ClawState = True
+            q_dDeg=[]
+            for i in range(len(self.q_d)):
+                q_dDeg.append(self.q_d[i]/np.pi*180)
+            cmd12.data.append(q_dDeg[5]*2)
+            cmd12.data.append(q_dDeg[4])
+            cmd12.data.append(q_dDeg[3])
+
+            cmd24.data.append(q_dDeg[2])
+            cmd24.data.append(q_dDeg[1])
+            cmd24.data.append(q_dDeg[0])
+
+            self.arm12Publisher.publish(cmd12)
+            self.arm24Publisher.publish(cmd24)
             self.armControlPublisher.publish(cmds)
+
 
             self.rate.sleep()
 
 
     def controlLoop(self, ctrlInput):
         
-        # print(ctrlInput)
-        # if ctrlInput.ModeChange:
-        #     self.changeControlMode()
-        #     print(self.mode)
         if self.mode != ctrlInput.Mode:
             self.mode = ctrlInput.Mode
             print(self.mode)
@@ -90,13 +108,6 @@ class Node_ArmControl():
             self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
             self.dq_d[0] = ctrlInput.Z_dir * -1 *self.jointVelLimits[0]
         
-        # if self.mode == 0:
-        #     xyz_ctrl = [
-        #         ctrlInput.X_dir,
-        #         ctrlInput.Y_dir,
-        #         ctrlInput.Z_dir
-        #     ]
-        #     self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
 
         # if self.mode == 0:
         #     xyz_ctrl = [
@@ -124,7 +135,8 @@ class Node_ArmControl():
         elif(self.mode == 4):
             self.dq_d[3] = ctrlInput.X_dir * self.jointVelLimits[3]
             self.dq_d[4] = ctrlInput.Z_dir * self.jointVelLimits[4]
-
+        
+        # Control of EOAT
         elif (self.mode == 5):
             self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
 
@@ -158,9 +170,6 @@ class Node_ArmControl():
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
-                elif self.mode == 1:
-                    self.dq_d = [0] * self.nbJoints
-
                 else:
                     self.dq_d[i] = 0
 
@@ -172,32 +181,42 @@ class Node_ArmControl():
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
-                elif self.mode == 1:
-                    self.dq_d = [0] * self.nbJoints
-
                 else:
                     self.dq_d[i] = 0
         
             self.q_d[i] += self.dq_d[i] * 0.01* ctrlInput.velocity
 
-
+    # simulation 
     def updateArmState(self, state):
         self.q      = state.MotorPos
         # self.dq     = state.MotorVel
         # self.torq   = state.MotorTorq
-        self.ee     = state.ClawMode
         # print(round(state.MotorPos[5], 3), round(state.MotorPos[6], 3))
         self.x = arm_kinematics.forwardKinematics(self.q)
 
         # J, Jv, Jw = arm_kinematics.Jacobian(self.q)
         # self.dx = arm_kinematics.forwardVelocity(self.q, self.dq)
+    
+    def updateArm12State(self, state12):
+        state12_r=[]
+        for i in range(len(state12.data)):
+            state12_r.append(state12.data[i]/180* np.pi)
+        self.q[5] = state12_r[0]/2              #EOAT
+        self.q[6] = state12_r[0]/2              #EOAT
+        self.q[4] = state12_r[1]                #Wrist Roll, disk
+        self.q[3] = state12_r[2]                #Wrist Pitch
+        self.x = arm_kinematics.forwardKinematics(self.q)
 
 
-    def changeControlMode(self):
-        self.mode += 1
-        self.mode = self.mode % (self.nbJoints + 2)
-        
-        return self.mode
+    def updateArm24State(self, state24):
+        state24_r=[]
+        for i in range(len(state24.data)):
+           state24_r.append(state24.data[i]/180* np.pi)
+        self.q[2] = state24_r[0]                #Elbow
+        self.q[1] = state24_r[1]                #Shoulder
+        self.q[0] = state24_r[2]                #Tumor
+        self.x = arm_kinematics.forwardKinematics(self.q)
+
 
     def computePoseJointVel(self, ctrlVel):
         v_x = ctrlVel[0] * self.cartVelLimits[0]

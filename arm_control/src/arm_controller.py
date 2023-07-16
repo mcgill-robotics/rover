@@ -31,9 +31,6 @@ class Node_ArmControl():
         self.dx_d = [0] * self.nbCart
         self.ee_d = False
 
-        # print length instead
-        # print(f"{len(self.q)=} {len(self.dq)=} {len(self.dq_d)=} {len(self.torq)=} {len(self.x)=} {len(self.dx)=}")
-
         # Control mode
         self.mode = 0     # default cartesian mode
         # Options: [0, nbJoints), In joint control mode, control is
@@ -69,51 +66,18 @@ class Node_ArmControl():
 
 
     def controlLoop(self, ctrlInput):
-        
-        # print(ctrlInput)
-        # if ctrlInput.ModeChange:
-        #     self.changeControlMode()
-        #     print(self.mode)
+
         if self.mode != ctrlInput.Mode:
             self.mode = ctrlInput.Mode
-            print(self.mode)
+            print(f"Changed to mode {self.mode}")
 
 
         #Cartesian Velocity Control
 
         if self.mode == 0:
-            xyz_ctrl = [
-                ctrlInput.X_dir,
-                0,
-                ctrlInput.Y_dir
-            ]
+            xyz_ctrl = [ctrlInput.X_dir, 0, ctrlInput.Y_dir]
             self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
             self.dq_d[0] = ctrlInput.Z_dir * -1 *self.jointVelLimits[0]
-        
-        # if self.mode == 0:
-        #     xyz_ctrl = [
-        #         ctrlInput.X_dir,
-        #         ctrlInput.Y_dir,
-        #         ctrlInput.Z_dir
-        #     ]
-        #     self.dq_d, self.dx_d = self.computePoseJointVel(xyz_ctrl)
-
-        # if self.mode == 0:
-        #     xyz_ctrl = [
-        #         ctrlInput.X_dir,
-        #         ctrlInput.Y_dir,
-        #         ctrlInput.Z_dir
-        #     ]
-        #     self.dq_d, self.dx_d = self.computeIntuitiveJointVel(xyz_ctrl)
-
-        # if self.mode == 0:
-        #     xyz_ctrl = [
-        #         ctrlInput.X_dir,
-        #         ctrlInput.Y_dir,
-        #         ctrlInput.Z_dir,
-        #     ]
-
-        #     self.dq_d, self.dx_d = self.computeOrientationJointVel(xyz_ctrl)
 
         elif (self.mode ==1):
             self.dq_d[0] = ctrlInput.Z_dir *-1* self.jointVelLimits[0]
@@ -128,14 +92,10 @@ class Node_ArmControl():
         elif (self.mode == 5):
             self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
 
-
-
             if (self.q_d[5] > self.jointUpperLimits[5]) or (self.q_d[5] < self.jointLowerLimits[5]):
                 self.q_d[5] = self.jointUpperLimits[5] if self.q_d[5] > self.jointUpperLimits[5] else self.jointLowerLimits[5]
 
             self.q_d[6] += ctrlInput.X_dir * self.jointVelLimits[6] * 0.01
-
-            # print(self.q_d[5], self.q_d[6])
 
             if (self.q_d[6] > self.jointUpperLimits[6]) or (self.q_d[6] < self.jointLowerLimits[6]):
                 self.q_d[6] = self.jointUpperLimits[6] if self.q_d[6] > self.jointUpperLimits[6] else self.jointLowerLimits[6]

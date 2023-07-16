@@ -11,8 +11,8 @@ from arm_backend import Arm_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from visualization_msgs.msg import MarkerArray
-from arm_control.msg import ArmStatusFeedback
 from arm_control.msg import ArmControllerInput
+from std_msgs.msg import Float32MultiArray
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
@@ -75,7 +75,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
         
         #arm 
-        self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints) 
+        self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", Float32MultiArray, self.arm_backend.update_joints) 
         self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control) 
     
         # Rospy subscriber

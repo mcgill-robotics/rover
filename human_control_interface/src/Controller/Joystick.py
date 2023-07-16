@@ -128,10 +128,10 @@ class Node_Joystick():
                 # else:
                 #     self.modeState = False
 
-                if self.risingEdge(msg.B4, self.prevB4):
-                    self.clawState = True
-                else:
-                    self.clawState = False
+                # if self.risingEdge(msg.B4, self.prevB4):
+                #     self.clawState = True
+                # else:
+                #     self.clawState = False
 
                 if self.risingEdge(msg.B8, self.prevB8):
                     self.mode = 1
@@ -147,7 +147,7 @@ class Node_Joystick():
                     self.mode = 0
                
                 arm_ctrl.Mode = self.mode
-                arm_ctrl.ClawOpen   = self.clawState
+                # arm_ctrl.ClawOpen   = self.clawState
 
                 self.prevB3 = msg.B3
                 self.prevB4 = msg.B4

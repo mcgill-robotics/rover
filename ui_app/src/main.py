@@ -75,7 +75,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_location_subscriber = rospy.Subscriber('/visualization_marker_array', MarkerArray, self.drive_backend.update_robot_location)
         
         #arm 
-        self.arm_hand_subscriber= rospy.Subscriber("arm_state_data", Float32MultiArray, self.arm_backend.update_joints) 
+        self.arm12Subscriber = rospy.Subscriber("arm12FB", Float32MultiArray, self.arm_backend.update_joints12)
+        self.arm24Subscriber = rospy.Subscriber("arm24FB", Float32MultiArray, self.arm_backend.update_joints24)
         self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control) 
     
         # Rospy subscriber

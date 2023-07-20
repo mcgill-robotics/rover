@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Science</class>
+ <widget class="QWidget" name="Science">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -20,1183 +20,331 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_10">
    <item row="0" column="0">
-    <widget class="QTabWidget" name="Display">
-     <property name="tabPosition">
-      <enum>QTabWidget::West</enum>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
      </property>
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="QWidget" name="Control">
-      <attribute name="title">
-       <string>Control</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QScrollArea" name="scrollArea">
-         <property name="widgetResizable">
-          <bool>true</bool>
-         </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>418</width>
-            <height>761</height>
-           </rect>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_7">
-           <item row="0" column="0">
-            <layout class="QGridLayout" name="gridLayout_3">
-             <item row="15" column="0">
-              <widget class="Line" name="line_4">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="0">
-              <widget class="Line" name="line_6">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <layout class="QGridLayout" name="gridLayout">
-               <item row="4" column="0">
-                <widget class="Line" name="line">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="Line" name="line_10">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <layout class="QGridLayout" name="gridLayout_2">
-                 <item row="1" column="0" rowspan="2">
-                  <widget class="QLabel" name="stepper1Pos_label">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>35</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Poistion</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QLCDNumber" name="stepper1Pos_value">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>50</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="2">
-                  <widget class="QDoubleSpinBox" name="stepper1Pos_doubleSpinBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <spacer name="horizontalSpacer_3">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="label">
-                   <property name="font">
-                    <font>
-                     <weight>75</weight>
-                     <bold>true</bold>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Stepper Motor 1</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="2" column="0">
-                <widget class="Line" name="line_5">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="6" column="0">
-              <layout class="QGridLayout" name="gridLayout_23">
-               <item row="3" column="1">
-                <spacer name="horizontalSpacer_6">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item row="7" column="2">
-                <widget class="QLabel" name="stepper2Fault_boolLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>50</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>TextLabel</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="stepper2Speed_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>35</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Speed</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="7" column="0">
-                <widget class="QLabel" name="stepper2Fault_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>50</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Fault</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="2">
-                <widget class="QDoubleSpinBox" name="stepper2Speed_doubleSpinBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="2">
-                <widget class="QSpinBox" name="stepper2ControlMode_spinBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
-                <widget class="QLabel" name="stepper2ControlMode_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>35</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Control Mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0" colspan="3">
-                <layout class="QGridLayout" name="gridLayout_6">
-                 <item row="1" column="2">
-                  <widget class="QLCDNumber" name="stepper2Pos_value">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>50</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="2">
-                  <widget class="QDoubleSpinBox" name="stepper2Pos_doubleSpinBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <spacer name="horizontalSpacer_4">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="1" column="0" rowspan="2">
-                  <widget class="QLabel" name="stepper2Pos_label">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>35</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Position</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="label_2">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <weight>75</weight>
-                     <bold>true</bold>
-                    </font>
-                   </property>
-                   <property name="layoutDirection">
-                    <enum>Qt::LeftToRight</enum>
-                   </property>
-                   <property name="text">
-                    <string>Stepper Motor 2</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="2" column="0" colspan="3">
-                <widget class="Line" name="line_3">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="2" column="0">
-              <layout class="QGridLayout" name="gridLayout_22">
-               <item row="5" column="2">
-                <widget class="QLabel" name="stepper1Fault_boolLabel">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>50</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>TextLabel</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <spacer name="horizontalSpacer_5">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item row="0" column="2">
-                <widget class="QDoubleSpinBox" name="stepper1Speed_doubleSpinBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
-                <widget class="QLabel" name="stepper1Fault_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>50</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Fault</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="stepper1ControlMode_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>35</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Control Mode</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="2">
-                <widget class="QSpinBox" name="stepper1ControlMode_spinBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="stepper1Speed_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>35</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Speed</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="0" column="0">
-              <widget class="QPushButton" name="io_shutdown_button">
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Shutdown</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="Line" name="line_9">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="8" column="0">
-              <widget class="Line" name="line_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="19" column="0">
-              <widget class="Line" name="line_11">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="17" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_11">
-               <item>
-                <widget class="QLabel" name="contMotorSpeed_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>ContMotorSpeed</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_13">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QDoubleSpinBox" name="contMotorSpeed_doubleSpinBox">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="9" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_5">
-               <item>
-                <widget class="QLabel" name="laserState_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Laser State</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="Line" name="line_7">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_8">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="laserState_toggle">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>60</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton{
-	border-image: url(:/buttons/off.png);
-}
-
-QPushButton:checked{
-	border-image: url(:/buttons/on.png);
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                 <property name="checked">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="20" column="0">
-              <widget class="QPushButton" name="send_button">
-               <property name="font">
-                <font>
-                 <weight>75</weight>
-                 <bold>true</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Send</string>
-               </property>
-              </widget>
-             </item>
-             <item row="13" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_6">
-               <item>
-                <widget class="QLabel" name="ledState_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Led State</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_11">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="ledState_toggle">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>60</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton{
-	border-image: url(:/buttons/off.png);
-}
-
-QPushButton:checked{
-	border-image: url(:/buttons/on.png);
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="14" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_10">
-               <item>
-                <widget class="QLabel" name="ccdSensorSnap_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>CCD Sensor snap</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_10">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="ccdSensorSnap_toggle">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>60</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton{
-	border-image: url(:/buttons/off.png);
-}
-
-QPushButton:checked{
-	border-image: url(:/buttons/on.png);
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="16" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_8">
-               <item>
-                <widget class="QLabel" name="coolerState_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Cooler State</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_7">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QLabel" name="coolerState_bool">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>TextLabel</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="11" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_7">
-               <item>
-                <widget class="QLabel" name="gripperState_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Gripper State</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_12">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="gripperState_toggle">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>60</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton{
-	border-image: url(:/buttons/off.png);
-}
-
-QPushButton:checked{
-	border-image: url(:/buttons/on.png);
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="10" column="0">
-              <layout class="QHBoxLayout" name="horizontalLayout_9">
-               <item>
-                <widget class="QLabel" name="peltierState_label">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Peltier State</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_9">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="peltierState_toggle">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>60</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton{
-	border-image: url(:/buttons/off.png);
-}
-
-QPushButton:checked{
-	border-image: url(:/buttons/on.png);
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="18" column="0">
-              <widget class="Line" name="line_8">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>480</width>
+        <height>727</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="0" column="1">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="2" column="0">
+          <layout class="QGridLayout" name="gridLayout_22">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetDefaultConstraint</enum>
+           </property>
+           <item row="4" column="0" colspan="3">
+            <widget class="QLabel" name="linear_guide_label">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="text">
+              <string>Linear Guide Control</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::AutoText</enum>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0">
+            <widget class="QLabel" name="auger_speed_label">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>60</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Speed</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="2">
+            <widget class="QLCDNumber" name="linear_guide_fb_lcd">
+             <property name="maximumSize">
+              <size>
+               <width>500</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="carousel_position_inc_label">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>60</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Position</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="linear_guide_speed_label">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>60</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Speed</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QScrollBar" name="linear_guide_slider">
+             <property name="minimum">
+              <number>-100</number>
+             </property>
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="carousel_position_inc_spinbox">
+             <property name="decimals">
+              <number>0</number>
+             </property>
+             <property name="minimum">
+              <double>-360.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>360.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="2">
+            <widget class="QLCDNumber" name="auger_speed_fb_lcd">
+             <property name="maximumSize">
+              <size>
+               <width>500</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLCDNumber" name="carousel_position_fb_lcd">
+             <property name="maximumSize">
+              <size>
+               <width>500</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="smallDecimalPoint">
+              <bool>false</bool>
+             </property>
+             <property name="digitCount">
+              <number>7</number>
+             </property>
+             <property name="mode">
+              <enum>QLCDNumber::Dec</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0" colspan="3">
+            <widget class="QLabel" name="auger_label">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
+             </property>
+             <property name="text">
+              <string>Auger Control</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="3">
+            <widget class="QLabel" name="carousel_label">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>35</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Carousel Position</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
+            <widget class="QScrollBar" name="auger_speed_slider">
+             <property name="minimum">
+              <number>-100</number>
+             </property>
+             <property name="maximum">
+              <number>100</number>
+             </property>
+             <property name="pageStep">
+              <number>1</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
            </item>
           </layout>
-         </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="5" column="1">
+        <widget class="QLabel" name="moisture_sampleCnt_label">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Samples to display</string>
+         </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="Camera">
-      <attribute name="title">
-       <string>Camera</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="0" column="0">
-        <widget class="QScrollArea" name="scrollArea_2">
-         <property name="widgetResizable">
-          <bool>true</bool>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="send_button">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
          </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents_2">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>432</width>
-            <height>705</height>
-           </rect>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_9">
-           <item row="0" column="0">
-            <layout class="QGridLayout" name="gridLayout_8">
-             <item row="1" column="0">
-              <layout class="QVBoxLayout" name="verticalLayout_3">
-               <item>
-                <widget class="QLabel" name="microcamera_image_label">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>Microcamera Image</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QGraphicsView" name="microcamera_image_graphicsView"/>
-               </item>
-              </layout>
-             </item>
-             <item row="0" column="0">
-              <layout class="QVBoxLayout" name="verticalLayout">
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_2">
-                 <item>
-                  <widget class="QLabel" name="ccd_image_label">
-                   <property name="font">
-                    <font>
-                     <weight>75</weight>
-                     <bold>true</bold>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>CCD Image</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QGraphicsView" name="ccd_image_graphicsView"/>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </item>
-             <item row="2" column="0">
-              <layout class="QVBoxLayout" name="ml_row1">
-               <item>
-                <widget class="QLabel" name="ml_classifier_label">
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>ML Classifier</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="Line" name="line_29">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QFormLayout" name="ml_classifier_layout">
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="ml_classifier_class1_label1">
-                   <property name="text">
-                    <string>class1</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <layout class="QHBoxLayout" name="horizontalLayout_2">
-                   <item>
-                    <widget class="QLabel" name="ml_classifier_class1_label2">
-                     <property name="text">
-                      <string>TextLabel</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QLCDNumber" name="ml_classifier_class1_display"/>
-                   </item>
-                  </layout>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="ml_classifier_class2_label1">
-                   <property name="text">
-                    <string>class2</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <layout class="QHBoxLayout" name="horizontalLayout">
-                   <item>
-                    <widget class="QLabel" name="ml_classifier_class2_label2">
-                     <property name="text">
-                      <string>TextLabel</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_2">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="QLCDNumber" name="ml_classifier_class2_display"/>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
+         <property name="text">
+          <string>Send</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QSpinBox" name="moisture_sampleCnt_spinbox">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="minimum">
+          <number>100</number>
+         </property>
+         <property name="maximum">
+          <number>10000000</number>
+         </property>
+         <property name="singleStep">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>10000</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QWidget" name="moisture_plotter" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>400</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(0, 0, 0);</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="moisture_plotter_label">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Moisture Sensors Plots</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
         </widget>
        </item>
       </layout>

@@ -13,11 +13,13 @@ class Node_GPS():
 
 
     def __init__(self):
-        self.gps_map = GPS_Map()
         rospy.init_node('gps_node')
-        self.robot_twist_subscriber = rospy.Subscriber("/rover_gps_coordinate", Float32MultiArray, self.gps_map.update_robot_location)
+        self.robot_twist_subscriber = rospy.Subscriber("/roverGPSData", Float32MultiArray, self.write_data)
         self.rate = rospy.Rate(100)
-        
+    
+    def write_data(self, msg: Float32MultiArray):
+        with open('data.txt', 'w', encoding='utf-8') as f:
+            f.write(f"{msg.data[0]},{msg.data[1]}")
         
 
 if __name__ == "__main__":

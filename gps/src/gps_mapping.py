@@ -20,8 +20,8 @@ class GPS_Map:
         #     location = tuple(float(value.strip()) for value in values_list)   
         #     self.fixed_points.append(location) 
 
-        self.control_station = (51.4, 0.2)
-        self.fixed_points = [(51.4, 0.2), (51.3, -0.4), (51.5, -0.6), (51.03, 0.123)]
+        self.control_station = [45.5056037902832, -73.57576751708984]
+        self.fixed_points = [[45.50570297241211, -73.57591247558594], [45.50539779663086, -73.5755615234375], [45.50568771362305, -73.5759506225586]]
         self.robot_marker = None
         self.animation = None
 
@@ -38,10 +38,15 @@ class GPS_Map:
 
 
     def get_robot_location(self):
-        self.robot_location_x -= 0.001  
-        self.robot_location_y -= 0.000  
-        return self.robot_location_x, self.robot_location_y
-
+        with open('data.txt', 'r', encoding='utf-8') as f:
+            data = f.read()
+            if data == "":
+                return self.robot_location_x, self.robot_location_y
+            data = data.split(',')
+            location_x = float(data[0])
+            location_y = float(data[1])
+            print(location_x, location_y)
+            return location_x, location_y
 
 
     def run(self):

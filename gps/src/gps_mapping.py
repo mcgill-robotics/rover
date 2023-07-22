@@ -21,7 +21,7 @@ class GPS_Map:
 
 
     def get_robot_location(self):
-        data = rospy.wait_for_message('/roversGPSData', Float32MultiArray, timeout=1).data
+        data = rospy.wait_for_message('/roverGPSData', Float32MultiArray, timeout=1).data
         return float(data[0]), float(data[1])
 
 

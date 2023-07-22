@@ -1,34 +1,17 @@
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import psutil
+import rospy
+from std_msgs.msg import Float32MultiArray
 
 class GPS_Map:
 
     def __init__(self):
-        # Coordinates : (latitude, longitude)
-        # location_input = input("Enter control station coordinates (separated by commas): ")
-        # values_list = location_input.split(',')
-        # self.control_station = tuple(float(value.strip()) for value in values_list)
-        
-        # self.fixed_points = []
-        # self.fixed_points.append(self.control_station)
-        # while True:
-        #     location_input = input("Enter checkpoint coordinates (separated by commas): ")
-        #     if location_input == "":
-        #         break
-        #     values_list = location_input.split(',')
-        #     location = tuple(float(value.strip()) for value in values_list)   
-        #     self.fixed_points.append(location) 
-
+        rospy.init_node('gps_node')
         self.control_station = [45.5056037902832, -73.57576751708984]
         self.fixed_points = [[45.50570297241211, -73.57591247558594], [45.50539779663086, -73.5755615234375], [45.50568771362305, -73.5759506225586]]
         self.robot_marker = None
         self.animation = None
-
-        print(self.fixed_points)
-        self.robot_location_x = 51.5074
-        self.robot_location_y = -0.1278
-
+        self.robot_location_x, self.robot_location_y = 0, 0
         self.run()
 
 
@@ -38,15 +21,8 @@ class GPS_Map:
 
 
     def get_robot_location(self):
-        with open('data.txt', 'r', encoding='utf-8') as f:
-            data = f.read()
-            if data == "":
-                return self.robot_location_x, self.robot_location_y
-            data = data.split(',')
-            location_x = float(data[0])
-            location_y = float(data[1])
-            print(location_x, location_y)
-            return location_x, location_y
+        data = rospy.wait_for_message('/roversGPSData', Float32MultiArray, timeout=1).data
+        return float(data[0]), float(data[1])
 
 
     def run(self):
@@ -78,7 +54,6 @@ class GPS_Map:
 
         # Show the scatter plot
         plt.show()
-
 
 
 if __name__ == "__main__":

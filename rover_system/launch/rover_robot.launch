@@ -7,8 +7,8 @@
     <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
     </node>
 
-    <!-- Node for the embedded communication bridge to electrical systems -->
-    <node pkg="embedded_bridge" type="serial_node.py" name="embedded_communication" output="screen">
+    <!-- Node for the camera publisher -->
+    <node pkg="camera_data" type="camera_publisher.py" name="camera_publisher" output="screen">
     </node>
 
     <!-- Set the gamepad to send command to the drive system initially -->

@@ -17,11 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 
 
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
-
 catkin_package(
     CATKIN_DEPENDS 
     roscpp
@@ -34,5 +29,6 @@ catkin_package(
 
 catkin_install_python(PROGRAMS
   src/gps_node.py
+  src/gps_test.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

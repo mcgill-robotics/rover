@@ -1,6 +1,6 @@
 <launch>
     <!-- Node for the Game controller -->
-    <node pkg="UI_App" type="main.py" name="ui" output="screen">
+    <node pkg="ui_app" type="main.py" name="ui" output="screen">
     </node>
 
     <!-- Node for the science controller -->

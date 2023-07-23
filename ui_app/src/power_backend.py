@@ -1,4 +1,4 @@
-from embedded_bridge.msg import PowerFeedback
+# from embedded_bridge.msg import PowerFeedback
 
 
 class Power_Backend():

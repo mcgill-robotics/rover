@@ -149,7 +149,7 @@ class Node_ArmControl():
                 else:
                     self.dq_d[i] = 0
         
-            self.q_d[i] += self.dq_d[i] * 0.01* ctrlInput.velocity
+            self.q_d[i] += self.dq_d[i] * 0.01* ctrlInput.MaxVelPercentage
     
 
     def updateArm12State(self, state12: Float32MultiArray):

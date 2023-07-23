@@ -41,7 +41,7 @@ class Arm_Backend():
         
     def update_control(self,ctrl_input):
         self.ui.joint_mode_value.display (ctrl_input.Mode)
-        self.ui.joint_velocity_value.display (ctrl_input.velocity/2*100)
+        self.ui.joint_velocity_value.display (ctrl_input.MacVelPercentage/2*100)
         
 
 

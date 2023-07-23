@@ -12,8 +12,9 @@ from std_msgs.msg import Float32MultiArray
 class Node_ArmControl():
 
     def __init__(self):
-        self.nbJoints = 6
-        self.nbCart   = 3
+        self.nbJoints    = 6
+        self.nbJointsArm = 5
+        self.nbCart      = 3
         
         # Actual Arm State
         self.q    = [0] * self.nbJoints
@@ -114,22 +115,21 @@ class Node_ArmControl():
         elif (self.mode == 5):
             self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
 
-            if (self.q_d[5] > self.jointUpperLimits[5]) or (self.q_d[5] < self.jointLowerLimits[5]):
-                self.q_d[5] = self.jointUpperLimits[5] if self.q_d[5] > self.jointUpperLimits[5] else self.jointLowerLimits[5]
+            self.q_d[5] = np.clip(self.q_d[5], self.jointLowerLimits[5], self.jointUpperLimits[5])
 
         else:
             # Joint Velocity Control
             i = self.mode - 1
             self.dq_d[i] = ctrlInput.X_dir * self.jointVelLimits[i]
 
-        # Check Joint Limits
-        for i in range(5):
+        # Check Joint Limits of arm joints
+        for i in range(self.nbJointsArm):
             if(
                 (self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 )
                 or
                 (self.q[i] < self.jointLowerLimits[i] and self.dq_d[i] < 0 )
             ): 
-                print("reach the limit")
+                print(f"Joint {i} reached the limit")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 

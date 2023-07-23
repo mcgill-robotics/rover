@@ -36,7 +36,7 @@ class Node_ArmControl():
 
         # Physical Constraints
         self.jointUpperLimits = [175*np.pi/180, 60*np.pi/180, 75*np.pi/180, 75*np.pi/180, 175*np.pi/180, 0.110]       # rad  (3.05 , 1.047, 1.309, 1.309,  3.05, 0.11)
-        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, 2-175*np.pi/180, -0.3]   # rad  (-3.05, -1.05, -1.22, -1.31, -1.05, -0.3)
+        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -175*np.pi/180, -0.3]   # rad  (-3.05, -1.05, -1.22, -1.31, -3.05, -0.3)
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 

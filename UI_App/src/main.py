@@ -26,7 +26,7 @@ from std_msgs.msg import Float32MultiArray
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 
-from embedded_bridge.msg import PowerFeedback
+# from embedded_bridge.msg import PowerFeedback
 
 
 class UI(qtw.QMainWindow, Ui_MainWindow):
@@ -50,7 +50,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # power
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
         self.Power.kill_power_button.clicked.connect(self.power_backend.on_kill_power)
-        self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
+        # self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_cmd)

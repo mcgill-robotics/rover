@@ -35,8 +35,8 @@ class Node_ArmControl():
         # one joint at a time to keep it intuitive to the user
 
         # Physical Constraints
-        self.jointUpperLimits = [175*np.pi/180, 60*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi, 0.110]       # rad  (3.05 , 1.047, 1.309, 1.309,  3.14, 0.11)
-        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi, -0.3]   # rad  (-3.05, -1.05, -1.22, -1.31, -3.14, -0.3)
+        self.jointUpperLimits = [175*np.pi/180, 60*np.pi/180, 75*np.pi/180, 75*np.pi/180, 175*np.pi/180, 0.110]       # rad  (3.05 , 1.047, 1.309, 1.309,  3.14, 0.11)
+        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, 2-175*np.pi/180, -0.3]   # rad  (-3.05, -1.05, -1.22, -1.31, -3.14, -0.3)
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
@@ -122,6 +122,8 @@ class Node_ArmControl():
             i = self.mode - 1
             self.dq_d[i] = ctrlInput.X_dir * self.jointVelLimits[i]
 
+        # print(f"Angles: {[round(x, 2) for x in self.q]} \nVelocities: {[round(x, 2) for x in self.dq_d]} \n q_d: {[round(x, 2) for x in self.q_d]} \n dx: {[round(x, 2) for x in self.dx]} \n dx_d: {[round(x, 2) for x in self.dx_d]} \n")
+
         # Check Joint Limits of arm joints
         for i in range(self.nbJointsArm):
             if(
@@ -129,7 +131,7 @@ class Node_ArmControl():
                 or
                 (self.q[i] < self.jointLowerLimits[i] and self.dq_d[i] < 0 )
             ): 
-                print(f"Joint {i} reached the limit")
+                print(f"Joint {i} reached the limit: {self.q[i]} {self.dq_d[i]}")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -140,7 +142,7 @@ class Node_ArmControl():
                 or
                 (self.q_d[i] < self.jointLowerLimits[i] and self.dq_d[i] < self.jointLowerLimits[i])
             ):
-                print("reach the limit 2")
+                print(f"Joint {i} reached the second limit: {self.q[i]} {self.dq_d[i]}")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 

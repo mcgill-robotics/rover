@@ -20,7 +20,8 @@ from power_backend import Power_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
-from arm_control.msg import ArmStatusFeedback
+from arm_control.msg import ArmControllerInput
+from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import Float32MultiArray
 
 from PyQt5 import QtWidgets as qtw

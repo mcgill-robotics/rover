@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>UI_App</name>
+  <name>ui_app</name>
   <version>0.0.0</version>
-  <description>The UI_App package</description>
+  <description>The ui_app package</description>
 
   
   <maintainer email="shaswata.bhattacharyya@mail.mcgill.ca">Shaswata</maintainer>

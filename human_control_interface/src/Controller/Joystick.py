@@ -119,9 +119,7 @@ class Node_Joystick():
                     arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
 
                 arm_ctrl.MaxVelPercentage = msg.A4
-                if msg.A4<0:
-                    arm_ctrl.MaxVelPercentage = 1+ arm_ctrl.MaxVelPercentage
-                else: arm_ctrl.MaxVelPercentage = arm_ctrl.MaxVelPercentage + 1
+                arm_ctrl.MaxVelPercentage = 1+ arm_ctrl.MaxVelPercentage
 
                 if self.risingEdge(msg.B8, self.prevB8):
                     self.mode = 1

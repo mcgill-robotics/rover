@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
-import time
 import rospy
 from human_control_interface.msg import Gamepad_input
-from arm_control.msg import ArmControllerInput
-from science_module.msg import SciencePilot
+from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Int16
-from drive_control.msg import WheelSpeed
 from Gamepad import *
-import numpy as np
 
 class Node_GamepadProcessing:
     def __init__(self, v_max, w_max):
@@ -47,16 +42,16 @@ class Node_GamepadProcessing:
         self.modeState = False
         self.clawState = False
 
+        # Initialize variables for cameras
+        self.v_angle = 0
+        self.h_angle = 0
+
         # System Selection variables
         self.active_system = 0
 
         # initialize a subscriber for grabbing data from gamepad
-        #self.joystick_sub = rospy.Subscriber("gamepad_data", Gamepad_input, self.gamepadProcessCall)
-        self.mode_sub = rospy.Subscriber("system_selection", Int16, self.systemSelection)
         self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        # self.drive_publisher = rospy.Publisher("/wheel_velocity_cmd", WheelSpeed, queue_size=1)
-        self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
-        self.sci_publisher = rospy.Publisher("science_controller_input", SciencePilot, queue_size=1)
+        self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
 
         # Control frequency of the node
         self.rate = rospy.Rate(100)
@@ -104,42 +99,27 @@ class Node_GamepadProcessing:
     
     # Poll the gamepad data and then call the respective process call.
     def gamepadProcessCall(self, msg):
-        if self.active_system == 0:
-            self.driveProcessCall(msg)
-        elif self.active_system == 1:
-            self.armProcessCall(msg)
-        elif self.active_system == 2:
-            self.scienceProcessCall(msg)
-        else:
-            pass
-
-    def systemSelection(self, msg):
-        self.active_system = msg.data
+        self.driveProcessCall(msg)
+        self.cameraProcessCall(msg)
 
     def driveProcessCall(self, msg):
         
-        # Right stick left and right is for steering.
+        # A2 is the left stick moving up and down.
+        # A4 is the right stick moving left and right.
 
         if abs(msg.A4) < 0.1:
             msg.A4 = 0
         if abs(msg.A2) < 0.1:
             msg.A2 = 0
 
-        steering = msg.A4
-
-        backward_vel = 0
-        forward_vel = 0
-        if msg.A2 < 0:
-            backward_vel = msg.A2
-        else:
-            forward_vel = msg.A2   
+        drive = msg.A2
+        steer = msg.A4
 
         # # calc. for linear velocity
-        self.roverLinearVelocity = self.maxLinearVelocity * (forward_vel + backward_vel)
+        self.roverLinearVelocity = self.maxLinearVelocity * drive
 
         # # calc. for angular velocity
-        self.roverAngularVelocity = -self.maxAngularVelocity * np.sign(steering) * steering**2
-
+        self.roverAngularVelocity = self.maxAngularVelocity * steer
 
         # # assigns values to a Twist msg, then publish it to ROS
         roverTwist = Twist()
@@ -149,55 +129,20 @@ class Node_GamepadProcessing:
         #time.sleep(0.5)
         self.drive_publisher.publish(roverTwist)
 
-    def armProcessCall(self, msg):
-        arm_ctrl = ArmControllerInput()
-        # Convert joysticks to X, Y, Z motion
-        arm_ctrl.X_dir = msg.A2**2
-        if msg.A2 < 0:
-            arm_ctrl.X_dir = -1 * arm_ctrl.X_dir
-        arm_ctrl.Y_dir = msg.A1**2
-        if msg.A1 > 0:
-            arm_ctrl.Y_dir = -1 * arm_ctrl.Y_dir
-        arm_ctrl.Z_dir = msg.A5**2
-        if msg.A5 < 0:
-            arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
 
-        # Rising edge filter on buttons
-        if self.risingEdge(msg.B1, self.prevB1):
-            self.modeState = True
-        else:
-            self.modeState = False
+    def cameraProcessCall(self, msg):
+        cam_ctrl = Camera_Orientation()
 
-        if self.risingEdge(msg.B2, self.prevB2):
-            self.clawState = True
-        else:
-            self.clawState = False
+        if(v_angle + msg.A5 <= 90 and v_angle + msg.A5 >= -90):
+            v_angle += msg.A5
 
-        # Publish msg
-        arm_ctrl.ModeChange = self.modeState
-        arm_ctrl.ClawOpen   = self.clawState
+        if(h_angle + msg.A4 <= 90 and h_angle + msg.A4 >= -90):
+            h_angle += msg.A4
 
-        self.prevB1 = msg.B1
-        self.prevB2 = msg.B2
+        cam_ctrl.v_angle = v_angle
+        cam_ctrl.h_angle = h_angle
 
-        self.arm_publisher.publish(arm_ctrl)
-
-    def scienceProcessCall(self, msg):
-        sci_ctrl = SciencePilot()
-
-        sci_ctrl.LedState = msg.B1
-        sci_ctrl.LaserState = msg.B2
-        sci_ctrl.GripperState = msg.B3
-        sci_ctrl.PeltierState = msg.B4
-        sci_ctrl.CcdSensorSnap = msg.B5
-        sci_ctrl.Shutdown = msg.B6
-
-        sci_ctrl.Stepper1ControlMode = 1
-        sci_ctrl.StepperMotor1Speed = msg.A1 * abs(msg.A1)
-        sci_ctrl.Stepper2ControlMode = 1
-        sci_ctrl.StepperMotor2Speed = msg.A4 * abs(msg.A4)
-
-        self.sci_publisher.publish(sci_ctrl)
+        self.camera_publisher.publish(cam_ctrl)
 
     def risingEdge(self, prevSignal, nextSignal):
         if prevSignal < nextSignal:
@@ -206,5 +151,5 @@ class Node_GamepadProcessing:
             return False
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(1, 25)
+    gamepadProcess = Node_GamepadProcessing(1, 1)
     #rospy.spin()

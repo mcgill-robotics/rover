@@ -10,6 +10,9 @@ class CameraHandler:
         for i in range (25):
             newCap = cv2.VideoCapture(i, cv2.CAP_V4L2)
 
+            if newCap is not None:
+                newCap.open(i)
+
             # check if object is not null
             if newCap is not None and newCap.isOpened():
                 # add the camera found

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(embedded_bridge)
+project(camera_data)
+
 
 
 ## Find catkin macros and libraries
@@ -10,15 +11,15 @@ find_package(catkin REQUIRED COMPONENTS
     rospy
     std_msgs
     message_generation
+    geometry_msgs
 )
-
 
 catkin_python_setup()
 
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  PowerFeedback.msg
+  Camera_Orientation.msg
 )
 
 generate_messages(
@@ -31,11 +32,14 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
-    LIBRARIES embedded_bridge
+    geometry_msgs
+    visualization_msgs
+    LIBRARIES drive_control
     CATKIN_DEPENDS message_runtime
 )
 
 catkin_install_python(PROGRAMS
-  src/serial_node.py
+  src/camera_publisher.py
+  src/camera_subscriber.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

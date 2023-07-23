@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'arm_layout.ui'
+# Form implementation generated from reading ui file 'qt_ui_files/arm_layout.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -53,8 +53,7 @@ class Ui_Arm(QtWidgets.QWidget):
         self.joint_Waist.setObjectName("joint_Waist")
         self.hand_position_label = QtWidgets.QLabel(Arm)
         self.hand_position_label.setGeometry(QtCore.QRect(10, 250, 151, 41))
-        font = QtGui.QFont()
-        font.setPointSize(17)
+
         self.hand_position_label.setFont(font)
         self.hand_position_label.setObjectName("hand_position_label")
         self.orientation_label = QtWidgets.QLabel(Arm)
@@ -67,18 +66,23 @@ class Ui_Arm(QtWidgets.QWidget):
         self.hand_x.setGeometry(QtCore.QRect(40, 290, 21, 17))
         font = QtGui.QFont()
         font.setPointSize(14)
+
+        self.joint_Shoulder.setFont(font)
+        self.joint_Elbow.setFont(font)
+        self.joint_Wrist.setFont(font)
+        self.joint_End.setFont(font)
+        self.joint_Waist.setFont(font)
+
         self.hand_x.setFont(font)
         self.hand_x.setObjectName("hand_x")
         self.hand_y = QtWidgets.QLabel(Arm)
         self.hand_y.setGeometry(QtCore.QRect(150, 290, 31, 21))
-        font = QtGui.QFont()
-        font.setPointSize(14)
+
         self.hand_y.setFont(font)
         self.hand_y.setObjectName("hand_y")
         self.hand_z = QtWidgets.QLabel(Arm)
         self.hand_z.setGeometry(QtCore.QRect(250, 290, 21, 17))
-        font = QtGui.QFont()
-        font.setPointSize(14)
+
         self.hand_z.setFont(font)
         self.hand_z.setObjectName("hand_z")
         self.orientation_z_val = QtWidgets.QLCDNumber(Arm)
@@ -101,20 +105,17 @@ class Ui_Arm(QtWidgets.QWidget):
         self.hand_x_val.setObjectName("hand_x_val")
         self.orientation_y = QtWidgets.QLabel(Arm)
         self.orientation_y.setGeometry(QtCore.QRect(150, 400, 31, 21))
-        font = QtGui.QFont()
-        font.setPointSize(14)
+
         self.orientation_y.setFont(font)
         self.orientation_y.setObjectName("orientation_y")
         self.orientation_x = QtWidgets.QLabel(Arm)
         self.orientation_x.setGeometry(QtCore.QRect(40, 400, 21, 17))
-        font = QtGui.QFont()
-        font.setPointSize(14)
+
         self.orientation_x.setFont(font)
         self.orientation_x.setObjectName("orientation_x")
         self.orientation_z = QtWidgets.QLabel(Arm)
         self.orientation_z.setGeometry(QtCore.QRect(250, 400, 21, 17))
-        font = QtGui.QFont()
-        font.setPointSize(14)
+
         self.orientation_z.setFont(font)
         self.orientation_z.setObjectName("orientation_z")
         self.error_label = QtWidgets.QTextBrowser(Arm)

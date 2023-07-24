@@ -77,6 +77,19 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.timer_camera.start(33)
         self.count = 0
 
+        # gps timer
+        self.gps_timer = qtc.QTimer()
+        self.timer_camera.start(33)
+        self.gps_timer.timeout.connect(self.update_gps)
+
+    def update_gps(self):
+        content = None
+        with open('gps_plot.png', 'rb') as f:
+            content = f.read()
+        self.gps_image = QtGui.QImage()
+        print(self.gps_image.loadFromData(content))
+        gps_image = QtGui.QImage(gps_image, 400, 400, QtGui.QImage.Format_RGB888)
+        self.OverallFeedback.setPixmap(QtGui.QPixmap.fromImage(gps_image))
 
     def send_science_cmd(self):
         msg = self.science_backend.set_science_cmd()

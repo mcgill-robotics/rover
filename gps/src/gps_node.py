@@ -10,27 +10,27 @@ class GPS_Map:
         rospy.init_node('gps_node')
 
         # Coordinates : (latitude, longitude)
-        location_input = input("Enter control station coordinates (separated by commas): ")
-        values_list = location_input.split(',')
-        self.control_station = tuple(float(value.strip()) for value in values_list)
+        # location_input = input("Enter control station coordinates (separated by commas): ")
+        # values_list = location_input.split(',')
+        # self.control_station = tuple(float(value.strip()) for value in values_list)
 
-        self.fixed_points = []
-        self.fixed_points.append(self.control_station)
-        while True:
-            location_input = input("Enter checkpoint coordinates (separated by commas): ")
-            if location_input == "":
-                break
-            values_list = location_input.split(',')
-            location = tuple(float(value.strip()) for value in values_list)   
-            self.fixed_points.append(location) 
+        # self.fixed_points = []
+        # self.fixed_points.append(self.control_station)
+        # while True:
+        #     location_input = input("Enter checkpoint coordinates (separated by commas): ")
+        #     if location_input == "":
+        #         break
+        #     values_list = location_input.split(',')
+        #     location = tuple(float(value.strip()) for value in values_list)   
+        #     self.fixed_points.append(location) 
 
         # for testing
-        # self.control_station = [45.5056037902832, -73.57576751708984]
-        # self.fixed_points = [
-        #     [45.50570297241211, -73.57591247558594], 
-        #     [45.50539779663086, -73.5755615234375],
-        #     [45.50568771362305, -73.5759506225586]
-        # ]
+        self.control_station = [45.5056037902832, -73.57576751708984]
+        self.fixed_points = [
+            [45.50570297241211, -73.57591247558594], 
+            [45.50539779663086, -73.5755615234375],
+            [45.50568771362305, -73.5759506225586]
+        ]
 
         self.robot_marker = None
         self.animation = None
@@ -65,6 +65,7 @@ class GPS_Map:
         ax.set_ylabel('Latitude')
         ax.legend()
 
+        plt.savefig('gps_plot.png')
         plt.show()
 
 

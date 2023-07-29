@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'F:/Shaswata/Robotics/rover/UI_App/qt_ui_files/ui_layout.ui'
+# Form implementation generated from reading ui file 'F:/Shaswata/Robotics/rover/ui_app/qt_ui_files/ui_layout.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #

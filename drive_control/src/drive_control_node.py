@@ -10,6 +10,8 @@ from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from scipy.ndimage import gaussian_filter1d
 import scipy.stats as st
+from std_msgs.msg import Float32MultiArray
+
 
 class Node_DriveControl():
 
@@ -42,6 +44,8 @@ class Node_DriveControl():
         rospy.init_node('drive_controller')
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
         self.robot_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.twist_to_velocity)
+        self.motor_publisher = rospy.Subscriber("/driveCmd", Float32MultiArray, queue_size=1)
+
         # The controller publisher is publishing straight to the twist_to_velocity values
 
         # Control Frequency of the drive controller
@@ -65,6 +69,7 @@ class Node_DriveControl():
     def run(self):
         while not rospy.is_shutdown():
             cmd = WheelSpeed()
+            motor_val = Float32MultiArray()
         
             print(f"Desired speed: {self.wheel_speed}")
             
@@ -99,8 +104,15 @@ class Node_DriveControl():
             motor_rf = self.motor_speed(correct_rf)
             motor_rb = self.motor_speed(correct_rb)
 
+            motor_val.data.append(motor_lb)
+            motor_val.data.append(motor_lf)
+            motor_val.data.append(motor_rb)
+            motor_val.data.append(motor_rf)
+
+
             
             print(f"Motor values: {[motor_lf, motor_lb, motor_rf, motor_rb]}")
+
 
             self.angular_velocity_publisher.publish(cmd)
 

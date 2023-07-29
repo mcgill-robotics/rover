@@ -3,6 +3,7 @@
 from std_msgs.msg import Float32MultiArray
 from numpy import pi
 import rospy
+import numpy as np
 import pybullet as p
 import pybullet_data
 import sys
@@ -58,7 +59,9 @@ class Node_ArmSim():
 
 
     def updateArm12Sim(self, cmds: Float32MultiArray):
-        self.desiredJointPos[6], self.desiredJointPos[5], self.desiredJointPos[4], self.desiredJointPos[3] = tuple([cmds.data[0] * (pi/180)]) + tuple(x * (pi/180) for x in cmds.data) 
+        self.desiredJointPos[4], self.desiredJointPos[3] = tuple(x * (pi/180) for x in cmds.data[1:])
+        self.desiredJointPos[5] = np.clip(self.desiredJointPos[5] + cmds.data[0], -0.3, 0.11)
+        self.desiredJointPos[6] = self.desiredJointPos[5]
 
 
     def updateArm24Sim(self, cmds: Float32MultiArray):
@@ -95,7 +98,7 @@ class Node_ArmSim():
                 self.jointTorq[i] = states[i][3]
 
             state12_msg = Float32MultiArray()
-            state12_msg.data = self.jointPoses[5], self.jointPoses[4], self.jointPoses[3]
+            state12_msg.data = self.jointPoses[4], self.jointPoses[3]
 
             state24_msg = Float32MultiArray()
             state24_msg.data = self.jointPoses[2], self.jointPoses[1], self.jointPoses[0]

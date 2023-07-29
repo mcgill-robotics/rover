@@ -12,7 +12,7 @@ from std_msgs.msg import Float32MultiArray
 class Node_ArmControl():
 
     def __init__(self):
-        self.nbJoints    = 6
+        self.nbJoints    = 5
         self.nbJointsArm = 5
         self.nbCart      = 3
         
@@ -34,9 +34,11 @@ class Node_ArmControl():
         # Options: [0, nbJoints), In joint control mode, control is
         # one joint at a time to keep it intuitive to the user
 
+        self.claw_state = 0
+
         # Physical Constraints
-        self.jointUpperLimits = [175*np.pi/180, 60*np.pi/180, 75*np.pi/180, 75*np.pi/180, 175*np.pi/180, 0.110]       # rad  (3.05 , 1.047, 1.309, 1.309,  3.05, 0.11)
-        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -175*np.pi/180, -0.3]   # rad  (-3.05, -1.05, -1.22, -1.31, -3.05, -0.3)
+        self.jointUpperLimits = [175*np.pi/180, 60*np.pi/180, 75*np.pi/180, 75*np.pi/180, 175*np.pi/180]       # rad  (3.05 , 1.047, 1.309, 1.309,  3.05, 0.11)
+        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -175*np.pi/180]   # rad  (-3.05, -1.05, -1.22, -1.31, -3.05, -0.3)
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
@@ -63,8 +65,8 @@ class Node_ArmControl():
         while not rospy.is_shutdown():
             q_dDeg = tuple(q_d_i * (180/np.pi) for q_d_i in self.q_d)
 
-            cmd12.data = [q_dDeg[5], q_dDeg[4], q_dDeg[3]]
-            cmd24.data = [q_dDeg[2], q_dDeg[1], q_dDeg[0]]
+            cmd12.data = [self.claw_state, q_dDeg[4], q_dDeg[3]]
+            cmd24.data = [q_dDeg[2]      , q_dDeg[1], q_dDeg[0]]
 
             self.arm12Publisher.publish(cmd12)
             self.arm24Publisher.publish(cmd24)
@@ -113,10 +115,7 @@ class Node_ArmControl():
         
         # Control of EOAT
         elif (self.mode == 5):
-            self.q_d[5] = ctrlInput.X_dir * 100
-            # self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
-
-            # self.q_d[5] = np.clip(self.q_d[5], self.jointLowerLimits[5], self.jointUpperLimits[5])
+            self.claw_state = ctrlInput.X_dir * 100
 
         else:
             # Joint Velocity Control
@@ -155,8 +154,8 @@ class Node_ArmControl():
 
     def updateArm12State(self, state12: Float32MultiArray):
         state12_r = tuple(data_i * (np.pi/180) for data_i in state12.data)
-        self.q[4] = state12_r[1]                #Wrist Roll, disk
-        self.q[3] = state12_r[2]                #Wrist Pitch
+        self.q[4] = state12_r[0]                #Wrist Roll, disk
+        self.q[3] = state12_r[1]                #Wrist Pitch
         self.x = arm_kinematics.forwardKinematics(self.q)
 
 

@@ -113,9 +113,10 @@ class Node_ArmControl():
         
         # Control of EOAT
         elif (self.mode == 5):
-            self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
+            self.q_d[5] = ctrlInput.X_dir * 100
+            # self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
 
-            self.q_d[5] = np.clip(self.q_d[5], self.jointLowerLimits[5], self.jointUpperLimits[5])
+            # self.q_d[5] = np.clip(self.q_d[5], self.jointLowerLimits[5], self.jointUpperLimits[5])
 
         else:
             # Joint Velocity Control
@@ -154,7 +155,6 @@ class Node_ArmControl():
 
     def updateArm12State(self, state12: Float32MultiArray):
         state12_r = tuple(data_i * (np.pi/180) for data_i in state12.data)
-        self.q[5] = state12_r[0]/2              #EOAT
         self.q[4] = state12_r[1]                #Wrist Roll, disk
         self.q[3] = state12_r[2]                #Wrist Pitch
         self.x = arm_kinematics.forwardKinematics(self.q)

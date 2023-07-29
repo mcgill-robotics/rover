@@ -5,6 +5,8 @@ from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
 from Gamepad import *
 
+
+
 class Node_GamepadProcessing:
     def __init__(self, v_max, w_max):
         """
@@ -43,8 +45,7 @@ class Node_GamepadProcessing:
         self.clawState = False
 
         # Initialize variables for cameras
-        self.v_angle = 0
-        self.h_angle = 0
+        self.cam_ctrl = Camera_Orientation()
 
         # System Selection variables
         self.active_system = 0
@@ -56,8 +57,9 @@ class Node_GamepadProcessing:
         # Control frequency of the node
         self.rate = rospy.Rate(100)
 
-
         self.run()
+
+
 
     # The run loop that updates a controller's value.
     def run(self):
@@ -131,24 +133,29 @@ class Node_GamepadProcessing:
 
 
     def cameraProcessCall(self, msg):
-        cam_ctrl = Camera_Orientation()
+        # up: triangle
+        # down: X
+        # right: O
+        # left: square
 
-        if(v_angle + msg.A5 <= 90 and v_angle + msg.A5 >= -90):
-            v_angle += msg.A5
+        if (msg.B3 == 1 or msg.B1 == 1) and (self.cam_ctrl.v_angle + msg.B3 <= 180) and (self.cam_ctrl.v_angle - msg.B1 >= 0):
+            self.cam_ctrl.v_angle = self.cam_ctrl.v_angle + msg.B3 - msg.B1
+            print(f"vertical: {self.cam_ctrl.v_angle}")
 
-        if(h_angle + msg.A4 <= 90 and h_angle + msg.A4 >= -90):
-            h_angle += msg.A4
-
-        cam_ctrl.v_angle = v_angle
-        cam_ctrl.h_angle = h_angle
-
-        self.camera_publisher.publish(cam_ctrl)
+        if (msg.B4 == 1 or msg.B2 == 1) and (self.cam_ctrl.h_angle + msg.B2 <= 180) and (self.cam_ctrl.h_angle - msg.B4 >= 0):
+            self.cam_ctrl.h_angle = self.cam_ctrl.h_angle + msg.B2 - msg.B4
+            print(f"horizontal: {self.cam_ctrl.h_angle}")
+        
+        self.camera_publisher.publish(self.cam_ctrl)
+        
 
     def risingEdge(self, prevSignal, nextSignal):
         if prevSignal < nextSignal:
             return True
         else: 
             return False
+        
+
 
 if __name__ == "__main__":
     gamepadProcess = Node_GamepadProcessing(1, 1)

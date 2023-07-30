@@ -24,9 +24,10 @@ try:
             motion_frame = frames.first_or_default(rs.stream.gyro)
             gyro_data = motion_frame.as_motion_frame().get_motion_data()
 
-            print("Accelerometer Data (m/s^2): x={:.3f}, y={:.3f}, z={:.3f}".format(
-                accel_data.x, accel_data.y, accel_data.z))
-            print("Gyroscope Data (rad/s): x={:.3f}, y={:.3f}, z={:.3f}\n".format(
-                gyro_data.x, gyro_data.y, gyro_data.z))
+            imu_data = Realsense_imu_data()
+            imu_data.accelorometer = [accel_data.x, accel_data.y, accel_data.z]
+            imu_data.gyroscope = [gyro_data.x, gyro_data.y, gyro_data.z]
+
+            real_sense_publisher.publish(imu_data)
 finally:
     pipeline.stop()

@@ -10,7 +10,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Power(object):
+class Ui_Power(QtWidgets.QWidget):
     def setupUi(self, Power):
         Power.setObjectName("Power")
         Power.resize(427, 475)

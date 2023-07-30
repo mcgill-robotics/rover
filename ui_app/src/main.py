@@ -46,7 +46,6 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.power_backend = Power_Backend(self.Power)
 
         # power
-        self.control_selector.currentTextChanged.connect(self.on_control_changed)
         self.Power.drive_enabled.toggled.connect(self.power_backend.get_drive_enabled)
         self.Power.science_enabled.toggled.connect(self.power_backend.get_science_enabled)
         self.Power.lower_arm_enabled.toggled.connect(self.power_backend.get_lower_arm_enabled)
@@ -65,8 +64,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.science_module_publisher = rospy.Publisher("scienceCmd", Float32MultiArray, queue_size=10)
 
         # drive
-        self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed,self.drive_backend.update_wheel_velocities)
-        self.drive_twist_subscriber = rospy.Subscriber("driveFB", Float32MultiArray, self.drive_backend.update_drive_data)
+        self.drive_twist_subscriber = rospy.Subscriber("driveFB", Float32MultiArray, self.drive_backend.update_wheel_velocities)
         self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
 
         # arm: We want this subscriber because the arm will not always be active.

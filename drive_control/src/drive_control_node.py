@@ -46,14 +46,6 @@ class Node_DriveControl():
         self.motor_pubisher = rospy.Publisher("/driveCmd", Float32MultiArray, queue_size=1)
         self.power_publisher = rospy.Publisher("/powerCmd", Float32MultiArray, queue_size=1)
 
-        # self.drive_feedback = rospy.Subscriber("/driveFB", Float32MultiArray, self.on_drive_feedback)
-        # self.power_feedback = rospy.Subscriber("/currentPower", Float32MultiArray, self.on_power_feedback)
-        # The controller publisher is publishing straight to the twist_to_velocity values
-
-        power_val = Float32MultiArray()
-        power_val.data = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
-        self.power_publisher.publish(power_val)
-
         # Control Frequency of the drive controller
         self.rate = rospy.Rate(50)
 
@@ -63,13 +55,6 @@ class Node_DriveControl():
         vR = robot_twist.linear.x
         wR = robot_twist.angular.z
         self.wheel_speed = self.steering.steering_control(vR, wR)
-
-    # def on_drive_feedback(self, msg):
-    #     print("Drive feedback received")
-    
-
-    # def on_power_feedback(self, msg):
-    #     print("Power feedback received")    
 
 
     # Function that yields a 1D gaussian basis
@@ -131,10 +116,8 @@ class Node_DriveControl():
 
             self.rate.sleep()
             print(cmd)
-        
-    # def motor_speed(self, cur_val):
-                
-    # TODO: CHECK MOTOR VALUES AND VERIFY CALCULATIONS.
+                        
+
     def motor_speed(self, cur_val):
         motor_val = cur_val / Node_DriveControl.MAX_NO_STEER
         if motor_val < 1 and motor_val > 0:

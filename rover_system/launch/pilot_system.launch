@@ -11,4 +11,6 @@
     <node pkg="ui_app" type="main.py" name="ui" output="screen">
     </node>
 
+    <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
+    </node>
 </launch>

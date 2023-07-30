@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Power</class>
+ <widget class="QWidget" name="Power">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -261,7 +261,7 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QCheckBox" name="upper_arm_enable">
+          <widget class="QCheckBox" name="upper_arm_enabled">
            <property name="text">
             <string>Upper Arm</string>
            </property>

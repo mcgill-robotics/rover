@@ -47,10 +47,15 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         # power
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
-        self.Power.kill_power_button.clicked.connect(self.power_backend.on_kill_power)
+        self.Power.drive_enabled.toggled.connect(self.power_backend.get_drive_enabled)
+        self.Power.science_enabled.toggled.connect(self.power_backend.get_science_enabled)
+        self.Power.lower_arm_enabled.toggled.connect(self.power_backend.get_lower_arm_enabled)
+        self.Power.upper_arm_enabled.toggled.connect(self.power_backend.get_upper_arm_enabled)
+
+
         # self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
         self.killswitch_subscriber = rospy.Subscriber("killswitchFB", Float32MultiArray, self.power_backend.power_feedback)
-        self.power_state_subscriber = rospy.Subscriber("currentPower", Float32MultiArray, self.power_backend.power_feedback)
+        self.power_state_subscriber = rospy.Subscriber("currentPower", Float32MultiArray, self.power_backend.system_feedback)
         self.power_state_publisher = rospy.Publisher("powerCmd", Float32MultiArray, queue_size=1)
 
 

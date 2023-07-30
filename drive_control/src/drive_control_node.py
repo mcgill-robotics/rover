@@ -46,12 +46,12 @@ class Node_DriveControl():
         self.motor_pubisher = rospy.Publisher("/driveCmd", Float32MultiArray, queue_size=1)
         self.power_publisher = rospy.Publisher("/powerCmd", Float32MultiArray, queue_size=1)
 
-        self.drive_feedback = rospy.Subscriber("/driveFB", Float32MultiArray, self.on_drive_feedback)
-        self.power_feedback = rospy.Subscriber("/powerFB", Float32MultiArray, self.on_power_feedback)
+        # self.drive_feedback = rospy.Subscriber("/driveFB", Float32MultiArray, self.on_drive_feedback)
+        # self.power_feedback = rospy.Subscriber("/currentPower", Float32MultiArray, self.on_power_feedback)
         # The controller publisher is publishing straight to the twist_to_velocity values
 
         power_val = Float32MultiArray()
-        power_val.data = [0, 0, 1.0, 0, 0, 0]
+        power_val.data = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
         self.power_publisher.publish(power_val)
 
         # Control Frequency of the drive controller
@@ -64,12 +64,12 @@ class Node_DriveControl():
         wR = robot_twist.angular.z
         self.wheel_speed = self.steering.steering_control(vR, wR)
 
-    def on_drive_feedback(self, msg):
-        print("Drive feedback received")
+    # def on_drive_feedback(self, msg):
+    #     print("Drive feedback received")
     
 
-    def on_power_feedback(self, msg):
-        print("Power feedback received")    
+    # def on_power_feedback(self, msg):
+    #     print("Power feedback received")    
 
 
     # Function that yields a 1D gaussian basis
@@ -119,12 +119,12 @@ class Node_DriveControl():
             motor_rb = self.motor_speed(correct_rb)
 
             
-            print(f"Motor values: {[motor_lf, motor_lb, motor_rf, motor_rb]}")
+            motor_val.data.append(motor_lb * 100)
+            motor_val.data.append(motor_lf * 100)
+            motor_val.data.append(motor_rb * -100)
+            motor_val.data.append(motor_rf * 100)
 
-            motor_val.data.append(motor_lf)
-            motor_val.data.append(motor_lb)
-            motor_val.data.append(motor_rf)
-            motor_val.data.append(motor_rb)
+            print(motor_val)
 
             self.angular_velocity_publisher.publish(cmd)
             self.motor_pubisher.publish(motor_val)

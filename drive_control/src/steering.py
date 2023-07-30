@@ -7,7 +7,7 @@ class Steering:
     def steering_control(self, vR, wR, maxLin=3.0, maxAng=3.0): # R = rover
         
         # Equations based on differential drive controller.
-        temp=wR*self.base_length/2
+        temp=-wR*self.base_length/2
         wLeft=(vR-temp)/self.rWheel
         wRight=(vR+temp)/self.rWheel
         val = [wLeft, wRight]                     

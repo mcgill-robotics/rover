@@ -45,23 +45,23 @@ class Node_ArmSim():
 
         rospy.init_node("arm_sim", anonymous=False)
 
-        self.arm12Subscriber = rospy.Subscriber(
-            "arm12Cmd", Float32MultiArray, self.updateArm12Sim)
-        self.arm24Subscriber = rospy.Subscriber(
-            "arm24Cmd", Float32MultiArray, self.updateArm24Sim)
-        self.arm12Publisher = rospy.Publisher(
-            "arm12FB", Float32MultiArray, queue_size=10)
-        self.arm24Publisher = rospy.Publisher(
-            "arm24FB", Float32MultiArray, queue_size=10)
+        self.armBrushedSubscriber = rospy.Subscriber(
+            "armBrushedCmd", Float32MultiArray, self.updatearmBrushedSim)
+        self.armBrushlessSubscriber = rospy.Subscriber(
+            "armBrushlessCmd", Float32MultiArray, self.updatearmBrushlessSim)
+        self.armBrushedPublisher = rospy.Publisher(
+            "armBrushedFB", Float32MultiArray, queue_size=10)
+        self.armBrushlessPublisher = rospy.Publisher(
+            "armBrushlessFB", Float32MultiArray, queue_size=10)
 
         self.run()
 
 
-    def updateArm12Sim(self, cmds: Float32MultiArray):
+    def updatearmBrushedSim(self, cmds: Float32MultiArray):
         self.desiredJointPos[6], self.desiredJointPos[5], self.desiredJointPos[4], self.desiredJointPos[3] = tuple([cmds.data[0] * (pi/180)]) + tuple(x * (pi/180) for x in cmds.data) 
 
 
-    def updateArm24Sim(self, cmds: Float32MultiArray):
+    def updatearmBrushlessSim(self, cmds: Float32MultiArray):
         self.desiredJointPos[2], self.desiredJointPos[1], self.desiredJointPos[0] = tuple(x * (pi/180) for x in cmds.data)
 
 
@@ -100,8 +100,8 @@ class Node_ArmSim():
             state24_msg = Float32MultiArray()
             state24_msg.data = self.jointPoses[2], self.jointPoses[1], self.jointPoses[0]
 
-            self.arm12Publisher.publish(state12_msg)
-            self.arm24Publisher.publish(state24_msg)
+            self.armBrushedPublisher.publish(state12_msg)
+            self.armBrushlessPublisher.publish(state24_msg)
 
         p.disconnect()
 

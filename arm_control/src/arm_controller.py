@@ -46,10 +46,10 @@ class Node_ArmControl():
         self.controllerSubscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
 
         # Arduino message 
-        self.arm12Subscriber = rospy.Subscriber("arm12FB", Float32MultiArray, self.updateArm12State)
-        self.arm24Subscriber = rospy.Subscriber("arm24FB", Float32MultiArray, self.updateArm24State)
-        self.arm12Publisher = rospy.Publisher("arm12Cmd", Float32MultiArray, queue_size=10)
-        self.arm24Publisher = rospy.Publisher("arm24Cmd", Float32MultiArray, queue_size=10)
+        self.armBrushedPublisher = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.updateArm12State)
+        self.armBrushlessPublisher = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.updateArm24State)
+        self.armBrushedPublisher = rospy.Publisher("armBrushedCmd", Float32MultiArray, queue_size=10)
+        self.armBrushlessPublisher = rospy.Publisher("armBrushlessCmd", Float32MultiArray, queue_size=10)
 
         # Control Frequency of the arm controller
         self.rate = rospy.Rate(100)
@@ -66,8 +66,8 @@ class Node_ArmControl():
             cmd12.data = [q_dDeg[5], q_dDeg[4], q_dDeg[3]]
             cmd24.data = [q_dDeg[2], q_dDeg[1], q_dDeg[0]]
 
-            self.arm12Publisher.publish(cmd12)
-            self.arm24Publisher.publish(cmd24)
+            self.armBrushedPublisher.publish(cmd12)
+            self.armBrushlessPublisher.publish(cmd24)
 
             self.rate.sleep()
 

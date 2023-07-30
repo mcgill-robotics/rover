@@ -45,7 +45,7 @@ class Node_DriveControl():
         # The controller publisher is publishing straight to the twist_to_velocity values
 
         # Control Frequency of the drive controller
-        self.rate = rospy.Rate(100)
+        self.rate = rospy.Rate(50)
 
         self.run()
     

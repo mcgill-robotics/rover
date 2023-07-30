@@ -1,6 +1,6 @@
 import pyrealsense2 as rs
 import rospy
-from imu.msg import Realsense_imu_data
+from realsense_imu.msg import Realsense_imu_data
 
 pipeline = rs.pipeline()
 config = rs.config()

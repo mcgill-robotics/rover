@@ -3,11 +3,12 @@
     <node pkg="human_control_interface" type="GamepadProcess.py" name="gamepad" output="screen">
     </node>
 
-    <!-- Node for the user interface -->
-    <node pkg="UI_App" type="main.py" name="ui" output="screen">
+    <!-- Node for the Game controller -->
+    <node pkg="human_control_interface" type="Joystick.py" name="gamepad" output="screen">
     </node>
 
-    <!-- Set the gamepad to forward to the drive controller system -->
-    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 0'"/>
-    
+    <!-- Node for the user interface -->
+    <node pkg="ui_app" type="main.py" name="ui" output="screen">
+    </node>
+
 </launch>

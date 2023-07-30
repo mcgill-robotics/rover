@@ -20,13 +20,12 @@ from power_backend import Power_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
-from arm_control.msg import ArmStatusFeedback
+from arm_control.msg import ArmControllerInput
+from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import Float32MultiArray
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
-
-from embedded_bridge.msg import PowerFeedback
 
 
 class UI(qtw.QMainWindow, Ui_MainWindow):
@@ -50,7 +49,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # power
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
         self.Power.kill_power_button.clicked.connect(self.power_backend.on_kill_power)
-        self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
+        # self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_cmd)
@@ -63,7 +62,9 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
 
         # arm
-        self.arm_hand_subscriber = rospy.Subscriber("arm_state_data", ArmStatusFeedback, self.arm_backend.update_joints)
+        self.arm12Subscriber = rospy.Subscriber("arm12FB", Float32MultiArray, self.arm_backend.update_joints12)
+        self.arm24Subscriber = rospy.Subscriber("arm24FB", Float32MultiArray, self.arm_backend.update_joints24)
+        self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control)
 
         # TODO: KillSwitch Publisher
 

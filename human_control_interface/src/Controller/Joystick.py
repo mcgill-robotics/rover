@@ -3,8 +3,8 @@
 import pygame
 import time
 import rospy
-from custom_msgs.msg import Joystick_input
-from arm_control.msg import ProcessedControllerInput
+from human_control_interface.msg import Joystick_input
+from arm_control.msg import ArmControllerInput
 
 class Node_Joystick():
     """Gets joystick data and publishes the data to the joystick_data topic
@@ -42,12 +42,20 @@ class Node_Joystick():
         # Initialize ROS
         rospy.init_node("joystick", anonymous=False)
         self.joystick_publisher = rospy.Publisher("joystick_data", Joystick_input, queue_size=1)
-        self.arm_publisher = rospy.Publisher("processed_arm_controller_input", ProcessedControllerInput, queue_size=1)
+        self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
 
         self.prevB3 = 0
         self.prevB4 = 0
-        self.modeState = False
+
+        self.prevB7 = 0
+        self.prevB8 = 0
+        self.prevB9 = 0
+        self.prevB10 = 0
+        self.prevB11 = 0
+        self.prevB12 = 0
+        #self.modeState = False 
         self.clawState = False
+        self.mode = 0
 
         # Start Node
         self.run()
@@ -81,35 +89,62 @@ class Node_Joystick():
                 msg.A4 = self.joystick.data.a4
                 msg.Hat_X = self.joystick.data.hat_x
                 msg.Hat_Y = self.joystick.data.hat_y
+                if (abs(msg.A1)<0.1): msg.A1=0
+                if (abs(msg.A2)<0.1): msg.A2=0
+                if (abs(msg.A3)<0.1): msg.A3=0
+                if (msg.A1!=0 and abs(msg.A2)/abs(msg.A1)<0.3): msg.A2=0
+                if (msg.A1!=0 and abs(msg.A3)/abs(msg.A1)<0.3): msg.A3=0
+
+                if (msg.A2!=0 and abs(msg.A1)/abs(msg.A2)<0.3): msg.A1=0
+                if (msg.A2!=0 and abs(msg.A3)/abs(msg.A2)<0.3): msg.A3=0
+
+                if (msg.A3!=0 and abs(msg.A1)/abs(msg.A3)<0.3): msg.A1=0
+                if (msg.A3!=0 and abs(msg.A2)/abs(msg.A3)<0.3): msg.A2=0
 
                 self.joystick_publisher.publish(msg)
 
-                arm_ctrl = ProcessedControllerInput()
+                arm_ctrl = ArmControllerInput()
                 arm_ctrl.X_dir = msg.A2**2
                 if msg.A2 < 0:
                     arm_ctrl.X_dir = -1 * arm_ctrl.X_dir
+
                 arm_ctrl.Y_dir = msg.A1**2
+
                 if msg.A1 > 0:
                     arm_ctrl.Y_dir = -1 * arm_ctrl.Y_dir
+
                 arm_ctrl.Z_dir = msg.A3**2
+
                 if msg.A3 < 0:
                     arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
 
-                if self.risingEdge(msg.B3, self.prevB3):
-                    self.modeState = True
-                else:
-                    self.modeState = False
+                arm_ctrl.MaxVelPercentage = msg.A4
+                arm_ctrl.MaxVelPercentage = 1+ arm_ctrl.MaxVelPercentage
 
-                if self.risingEdge(msg.B4, self.prevB4):
-                    self.clawState = True
-                else:
-                    self.clawState = False
-
-                arm_ctrl.ModeChange = self.modeState
-                arm_ctrl.ClawOpen   = self.clawState
+                if self.risingEdge(msg.B8, self.prevB8):
+                    self.mode = 1
+                if self.risingEdge(msg.B10, self.prevB10):
+                    self.mode = 2
+                if self.risingEdge(msg.B12, self.prevB12):
+                    self.mode = 3
+                if self.risingEdge(msg.B7, self.prevB7):
+                    self.mode = 4
+                if self.risingEdge(msg.B9, self.prevB9):
+                    self.mode = 5
+                if self.risingEdge(msg.B11, self.prevB11):
+                    self.mode = 0
+               
+                arm_ctrl.Mode = self.mode
 
                 self.prevB3 = msg.B3
                 self.prevB4 = msg.B4
+
+                self.prevB7 = msg.B7
+                self.prevB8 = msg.B8
+                self.prevB9 = msg.B9
+                self.prevB10 = msg.B10
+                self.prevB11 = msg.B11
+                self.prevB12 = msg.B12
 
                 self.arm_publisher.publish(arm_ctrl)
 
@@ -123,6 +158,8 @@ class Node_Joystick():
             return True
         else: 
             return False
+
+    
 
 
 class Joystick():

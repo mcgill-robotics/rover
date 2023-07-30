@@ -22,7 +22,7 @@ Qt Designer which is a part of `pyqt5-tools` does not work on M1 macs. If anyone
 ## Running the app
 1. Make sure to have PyQt5 installed before trying to run the app.
 2. Clone the repository into a directory called `/rover`.
-3. `$ cd ~/rover/UI_App/src`
+3. `$ cd ~/rover/ui_app/src`
 4. On Mac and Linux: `$ python3 main.py` and on Windows: `$ python main.py`
 
 ## Understanding the app
@@ -31,7 +31,7 @@ The app is designed with PyQt5 along with Qt Designer. Qt designer allows you to
 ## Using Qt Designer
 In linux, Qt designer can be run directly from the terminal by `$ designer` if you followed the above instructions. In Windows, you need to find a file called `designer.exe` and run that.
 
-Please put any GUIs you create using Qt Designer into `/UI_App/qt_ui_files`
+Please put any GUIs you create using Qt Designer into `/ui_app/qt_ui_files`
 
 ### Converting .ui into Python code
 Run the command `$ pyuic5 -o \<filename>.py \<desginerFile.ui>

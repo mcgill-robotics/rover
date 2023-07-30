@@ -7,6 +7,7 @@ import rospy
 import math
 from arm_control.msg import ArmControllerInput
 from std_msgs.msg import Float32MultiArray
+from arm_kinematics import jointLowerLimits, jointUpperLimits
 
 
 class Node_ArmControl():
@@ -35,10 +36,6 @@ class Node_ArmControl():
         # one joint at a time to keep it intuitive to the user
 
         self.claw_state = 0
-
-        # Physical Constraints
-        self.jointUpperLimits = [175*np.pi/180, 60*np.pi/180, 75*np.pi/180, 75*np.pi/180, 175*np.pi/180]       # rad  (3.05 , 1.047, 1.309, 1.309,  3.05, 0.11)
-        self.jointLowerLimits = [-175*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -175*np.pi/180]   # rad  (-3.05, -1.05, -1.22, -1.31, -3.05, -0.3)
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
@@ -127,9 +124,9 @@ class Node_ArmControl():
         # Check Joint Limits of arm joints
         for i in range(self.nbJointsArm):
             if(
-                (self.q[i] > self.jointUpperLimits[i] and self.dq_d[i] > 0 )
+                (self.q[i] > jointUpperLimits[i] and self.dq_d[i] > 0 )
                 or
-                (self.q[i] < self.jointLowerLimits[i] and self.dq_d[i] < 0 )
+                (self.q[i] < jointLowerLimits[i] and self.dq_d[i] < 0 )
             ): 
                 print(f"Joint {i} reached the limit: {self.q[i]} {self.dq_d[i]}")
                 if self.mode == 0:
@@ -138,9 +135,9 @@ class Node_ArmControl():
                 else:
                     self.dq_d[i] = 0
 
-            if ((self.q_d[i] > self.jointUpperLimits[i] and self.dq_d[i] > self.jointUpperLimits[i]) 
+            if ((self.q_d[i] > jointUpperLimits[i] and self.dq_d[i] > jointUpperLimits[i]) 
                 or
-                (self.q_d[i] < self.jointLowerLimits[i] and self.dq_d[i] < self.jointLowerLimits[i])
+                (self.q_d[i] < jointLowerLimits[i] and self.dq_d[i] < jointLowerLimits[i])
             ):
                 print(f"Joint {i} reached the second limit: {self.q_d[i]} {self.dq_d[i]}")
                 if self.mode == 0:

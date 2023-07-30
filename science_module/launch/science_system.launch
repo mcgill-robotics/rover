@@ -1,0 +1,9 @@
+<launch>
+    <!-- Node for the Game controller -->
+    <node pkg="ui_app" type="main.py" name="ui" output="screen">
+    </node>
+
+    <!-- Node for the science embedded system --> 
+    <node pkg="rosserial_python" type="serial_node.py" name="science_embedded" args="/dev/ttyACM0" ></node>
+
+</launch>

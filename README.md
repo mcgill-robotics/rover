@@ -18,6 +18,13 @@ Follow [these steps](http://wiki.ros.org/noetic/Installation/Ubuntu) to install 
 want, you can keep going with the tutorials to familiarize yourself with ROS and its commands. In addition, you
 should install the packages listed in "requirements.txt".
 
+### Installing Dependencies
+The rover uses some packages provided by the larger community. To install them and be able to use them, the following commands need to be run
+```
+sudo apt-get install ros-noetic-rosserial
+
+```
+
 ### Working with Catkin
 Catkin is ROS's build system, which traverses every ROS package in a source directory and compiles them into 
 ROS modules. Every ROS project has a Catkin workspace structure:

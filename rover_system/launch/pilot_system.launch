@@ -4,7 +4,7 @@
     </node>
 
     <!-- Node for the Game controller -->
-    <node pkg="human_control_interface" type="Joystick.py" name="gamepad" output="screen">
+    <node pkg="human_control_interface" type="Joystick.py" name="arm" output="screen">
     </node>
 
     <!-- Node for the user interface -->

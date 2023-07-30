@@ -4,8 +4,8 @@
     </node>
   
     <!-- Node for the drive controller -->
-    <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
-    </node>
+    <!-- <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
+    </node> -->
 
     <!-- Node for the camera publisher -->
     <node pkg="camera_data" type="camera_publisher.py" name="camera_publisher" output="screen">

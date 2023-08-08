@@ -51,7 +51,9 @@ class Node_GamepadProcessing:
 
         # initialize a subscriber for grabbing data from gamepad
         self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
+        self.camera_publisher = rospy.Publisher("panTiltAngles", Float32MultiArray, queue_size=1)
+        self.cam_angles = Float32MultiArray()
+
 
         # Control frequency of the node
         self.rate = rospy.Rate(100)
@@ -131,7 +133,6 @@ class Node_GamepadProcessing:
 
 
     def cameraProcessCall(self, msg):
-        cam_ctrl = Camera_Orientation()
 
         if(v_angle + msg.A5 <= 90 and v_angle + msg.A5 >= -90):
             v_angle += msg.A5
@@ -139,9 +140,7 @@ class Node_GamepadProcessing:
         if(h_angle + msg.A4 <= 90 and h_angle + msg.A4 >= -90):
             h_angle += msg.A4
 
-        cam_ctrl.v_angle = v_angle
-        cam_ctrl.h_angle = h_angle
-
+        self.cam_angles.data = [v_angle, h_angle]
         self.camera_publisher.publish(cam_ctrl)
 
     def risingEdge(self, prevSignal, nextSignal):

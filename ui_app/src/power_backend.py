@@ -31,10 +31,7 @@ class Power_Backend():
         else:
             self.drive_on = 0.0
         
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
         
     def get_science_enabled(self):
@@ -43,10 +40,7 @@ class Power_Backend():
         else:
             self.science_on = 0.0
 
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
     
     def get_lower_arm_enabled(self):
@@ -55,10 +49,7 @@ class Power_Backend():
         else:
             self.lower_arm_on = 0.0
 
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
     
     def get_upper_arm_enabled(self):
@@ -67,10 +58,7 @@ class Power_Backend():
         else:
             self.upper_arm_on = 0.0
 
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
 
     # Callback for battery currents.

@@ -104,10 +104,10 @@ class Node_DriveControl():
             motor_rb = self.motor_speed(correct_rb)
 
             
-            motor_val.data.append(motor_lb * 100)
-            motor_val.data.append(motor_lf * 100)
-            motor_val.data.append(motor_rb * -100)
-            motor_val.data.append(motor_rf * 100)
+            motor_val.data.append(motor_rb * 100)  # rb
+            motor_val.data.append(motor_lf * 58)  # lf, too fast
+            motor_val.data.append(motor_lb * -100)  # lb, tpo slow
+            motor_val.data.append(motor_rf * 88)  # rf
 
             print(motor_val)
 

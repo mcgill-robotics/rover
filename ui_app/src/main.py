@@ -64,8 +64,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.science_module_publisher = rospy.Publisher("scienceCmd", Float32MultiArray, queue_size=10)
 
         # drive
+        self.Drive.send_antenna.clicked.connect(self.drive_backend.on_send)
         self.drive_twist_subscriber = rospy.Subscriber("driveFB", Float32MultiArray, self.drive_backend.update_wheel_velocities)
         self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
+
 
         # arm: We want this subscriber because the arm will not always be active.
         self.arm12Subscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.arm_backend.update_joints12)

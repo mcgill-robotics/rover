@@ -10,10 +10,15 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentdir)
+sys.path.append(currentdir + "/../..")
 from drive_layout import Ui_DriveTab
 from arm_layout import Ui_Arm
 from science_tab_layout import Ui_Science
 from power_layout import Ui_Power
+from gps_layout import Ui_GPS
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -45,6 +50,11 @@ class Ui_MainWindow(object):
         self.Power.setupUi(self.Power)
         self.Power.setObjectName("Power")
         self.Systemsview.addTab(self.Power, "")
+        #
+        self.GPS = Ui_GPS()
+        self.GPS.setupUi(self.GPS)
+        self.GPS.setObjectName("GPS")
+        self.Systemsview.addTab(self.GPS, "")
 
         self.camera_selector = QtWidgets.QComboBox(self.centralwidget)
         self.camera_selector.setGeometry(QtCore.QRect(10, 585, 131, 31))
@@ -110,6 +120,7 @@ class Ui_MainWindow(object):
         self.Systemsview.setTabText(self.Systemsview.indexOf(self.Drive), _translate("MainWindow", "Drive "))
         self.Systemsview.setTabText(self.Systemsview.indexOf(self.Science), _translate("MainWindow", "Science"))
         self.Systemsview.setTabText(self.Systemsview.indexOf(self.Power), _translate("MainWindow", "Power"))
+        self.Systemsview.setTabText(self.Systemsview.indexOf(self.GPS), _translate("MainWindow", "GPS"))
         self.camera_selector.setCurrentText(_translate("MainWindow", "Cam 1"))
         self.camera_selector.setItemText(0, _translate("MainWindow", "Cam 1"))
         self.camera_selector.setItemText(1, _translate("MainWindow", "Cam 2"))

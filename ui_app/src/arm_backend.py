@@ -46,6 +46,9 @@ class Arm_Backend():
     def update_control(self,ctrl_input):
         self.ui.joint_mode_value.display (ctrl_input.Mode)
         self.ui.joint_velocity_value.display (ctrl_input.MaxVelPercentage/2*100)
+
+    def set_error(self, error):
+        self.ui.error_label.setText(error.data)
         
 
 

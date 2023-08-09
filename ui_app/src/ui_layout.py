@@ -10,10 +10,11 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import os, sys
+import os
+import sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
-sys.path.append(currentdir + "/../..")
+
 from drive_layout import Ui_DriveTab
 from arm_layout import Ui_Arm
 from science_tab_layout import Ui_Science

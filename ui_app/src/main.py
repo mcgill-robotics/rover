@@ -17,12 +17,13 @@ from drive_backend import Drive_Backend
 from arm_backend import Arm_Backend
 from science_backend import Science_Backend
 from power_backend import Power_Backend
+from gps_backend import GPS_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from arm_control.msg import ArmControllerInput
 from std_msgs.msg import Float32MultiArray
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import String
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
@@ -45,6 +46,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.arm_backend = Arm_Backend(self.Arm)
         self.science_backend = Science_Backend(self.Science)
         self.power_backend = Power_Backend(self.Power)
+        self.gps_backend = GPS_Backend(self.GPS)
 
         # power
         self.control_selector.currentTextChanged.connect(self.on_control_changed)
@@ -65,6 +67,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.arm_brushed_subscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.arm_backend.update_joints_brushed)
         self.arm_brushless_subscriber = rospy.Subscriber("armBrushlessCmd", Float32MultiArray, self.arm_backend.update_joints_brushless)
         self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control)
+        self.arm_error_subscriber = rospy.Subscriber("armError", String, self.arm_backend.set_error)
+        
 
         # TODO: KillSwitch Publisher
 

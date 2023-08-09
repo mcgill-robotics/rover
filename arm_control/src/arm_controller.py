@@ -6,7 +6,7 @@ import numpy as np
 import rospy
 import math
 from arm_control.msg import ArmControllerInput
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray,String
 from arm_kinematics import jointLowerLimits, jointUpperLimits
 
 
@@ -16,6 +16,7 @@ class Node_ArmControl():
         self.nbJoints    = 6
         self.nbJointsArm = 5
         self.nbCart      = 3
+        self.error_msg = String()
         
         # Actual Arm State
         self.q    = [0] * self.nbJoints
@@ -43,10 +44,12 @@ class Node_ArmControl():
         self.controllerSubscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
 
         # Arduino message 
-        self.armBrushedPublisher = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.update_arm_brushed_state)
-        self.armBrushlessPublisher = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.update_arm_brushless_state)
+        self.armBrushedSubscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.update_arm_brushed_state)
+        self.armBrushlesSubscriber= rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.update_arm_brushless_state)
         self.armBrushedPublisher = rospy.Publisher("armBrushedCmd", Float32MultiArray, queue_size=10)
         self.armBrushlessPublisher = rospy.Publisher("armBrushlessCmd", Float32MultiArray, queue_size=10)
+        self.armErrorPublisher = rospy.Publisher("armError", String, queue_size=10)
+
 
         # Control Frequency of the arm controller
         self.rate = rospy.Rate(100)
@@ -65,6 +68,8 @@ class Node_ArmControl():
 
             self.armBrushedPublisher.publish(cmd_brushed)
             self.armBrushlessPublisher.publish(cmd_brushless)
+            self.armErrorPublisher.publish(self.error_msg)
+            self.error_msg = String()
 
             self.rate.sleep()
 
@@ -129,6 +134,7 @@ class Node_ArmControl():
                 (self.q[i] < jointLowerLimits[i] and self.dq_d[i] < 0 )
             ): 
                 print(f"Joint {i} reached the limit: {self.q[i]} {self.dq_d[i]}")
+                self.error_msg.data = "Joint"+str(i)+"reached the limit"+str(self.q[i])+str(self.dq_d[i])+"\n"
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -140,6 +146,9 @@ class Node_ArmControl():
                 (self.q_d[i] < jointLowerLimits[i] and self.dq_d[i] < jointLowerLimits[i])
             ):
                 print(f"Joint {i} reached the second limit: {self.q_d[i]} {self.dq_d[i]}")
+                error_msg = String()
+                self.error_msg.data = "Joint"+str(i)+"reached the limit"+str(self.q_d[i])+str(self.dq_d[i])+"\n"
+                self.armErrorPublisher.publish(error_msg)
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -178,6 +187,9 @@ class Node_ArmControl():
         except ValueError:
             # Leave JointVels as is
             print("inverse velocity error")
+            error_msg = String()
+            self.error_msg.data += "inverse velocity error"
+            self.armErrorPublisher.publish(error_msg)
             pass
 
         max_ratio = 1

@@ -8,6 +8,9 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 
 
 class Ui_GPS(QtWidgets.QWidget):
@@ -26,7 +29,12 @@ class Ui_GPS(QtWidgets.QWidget):
         self.GPS_Plot.setFont(font)
         self.GPS_Plot.setObjectName("GPS_Plot")
         self.verticalLayout.addWidget(self.GPS_Plot)
-        self.gps_plotter = QtWidgets.QWidget(self.verticalLayoutWidget)
+
+        self.gps_fig = plt.figure()
+        self.gps_canvas = FigureCanvas(self.gps_fig)
+        self.gps_plotter = self.gps_canvas
+        #self.gps_plotter = QtWidgets.QWidget(self.verticalLayoutWidget)
+        self.verticalLayout.addWidget(self.gps_plotter)
         self.gps_plotter.setMinimumSize(QtCore.QSize(0, 400))
         self.gps_plotter.setStyleSheet("background-color: rgb(0, 0, 0);")
         self.gps_plotter.setObjectName("gps_plotter")

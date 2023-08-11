@@ -19,7 +19,7 @@
      <x>10</x>
      <y>20</y>
      <width>481</width>
-     <height>435</height>
+     <height>488</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -49,6 +49,32 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QLabel" name="GPS_data_lable">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>530</y>
+     <width>479</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>GPS Data</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>550</y>
+     <width>479</width>
+     <height>37</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>data</string>
+   </property>
   </widget>
  </widget>
  <resources/>

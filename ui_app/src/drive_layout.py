@@ -147,15 +147,10 @@ class Ui_DriveTab(QtWidgets.QWidget):
         self.robot_location_yaw_label = QtWidgets.QLabel(Drive)
         self.robot_location_yaw_label.setGeometry(QtCore.QRect(200, 420, 51, 21))
         self.robot_location_yaw_label.setObjectName("robot_location_yaw_label")
-        self.error_label = QtWidgets.QTextBrowser(Drive)
-        self.error_label.setGeometry(QtCore.QRect(10, 510, 271, 91))
-        self.error_label.setObjectName("error_label")
-        self.error_message_label = QtWidgets.QLabel(Drive)
-        self.error_message_label.setGeometry(QtCore.QRect(20, 470, 151, 41))
+
         font = QtGui.QFont()
         font.setPointSize(17)
-        self.error_message_label.setFont(font)
-        self.error_message_label.setObjectName("error_message_label")
+
         self.AntennaBox = QtWidgets.QLabel(Drive)
         self.AntennaBox.setGeometry(QtCore.QRect(249, 16, 101, 17))
         self.AntennaBox.setObjectName("AntennaBox")
@@ -181,6 +176,25 @@ class Ui_DriveTab(QtWidgets.QWidget):
         self.LongitudeLabel.setGeometry(QtCore.QRect(250, 68, 70, 17))
         self.LongitudeLabel.setObjectName("LongitudeLabel")
 
+        self.wheel_velocity_label.setFont(font)
+        self.twist_label.setFont(font)
+        self.current_robot_location_label.setFont(font)
+
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.right_speed_label.setFont(font)
+        self.left_speed_label.setFont(font)
+        self.rear_right_speed_label.setFont(font)
+        self.rear_left_speed_label.setFont(font)
+        self.twist_linear_velocity_label.setFont(font)
+        self.twist_angular_velocity_label.setFont(font)
+        self.robot_location_x_label.setFont(font)
+        self.robot_location_y_label.setFont(font)
+        self.robot_location_z_label.setFont(font)
+        self.robot_location_roll_label.setFont(font)
+        self.robot_location_pitch_label.setFont(font)
+        self.robot_location_yaw_label.setFont(font)
+
         self.retranslateUi(Drive)
         QtCore.QMetaObject.connectSlotsByName(Drive)
 
@@ -202,7 +216,7 @@ class Ui_DriveTab(QtWidgets.QWidget):
         self.robot_location_roll_label.setText(_translate("Drive", "roll"))
         self.robot_location_pitch_label.setText(_translate("Drive", "pitch"))
         self.robot_location_yaw_label.setText(_translate("Drive", "yaw"))
-        self.error_message_label.setText(_translate("Drive", "Error Message"))
+
         self.AntennaBox.setText(_translate("Drive", "Antenna Data"))
         self.send_antenna.setText(_translate("Drive", "Send!"))
         self.LatitudeLabel.setText(_translate("Drive", "Latitude"))

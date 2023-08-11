@@ -1,8 +1,8 @@
 import numpy as np
 import math
 
-jointUpperLimits = [118.76*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
-jointLowerLimits = [-125.97*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
+jointUpperLimits = [90*np.pi/180, 70*np.pi/180, 70*np.pi/180, 38*np.pi/180, 85*np.pi/180]      # rad
+jointLowerLimits = [-90*np.pi/180, -60*np.pi/180, -20*np.pi/180, -35*np.pi/180, -85*np.pi/180] # rad
 
 arm_DH = [
     [0.0575,                0,     0, -90*math.pi/180], #vertical offset from base

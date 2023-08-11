@@ -4,14 +4,20 @@
     </node>
   
     <!-- Node for the drive controller -->
-    <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
-    </node>
+    <!-- <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
+    </node> -->
 
     <!-- Node for the camera publisher -->
     <node pkg="camera_data" type="camera_publisher.py" name="camera_publisher" output="screen">
     </node>
 
-    <!-- Set the gamepad to send command to the drive system initially -->
-    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 0'"/>
-    
+    <!-- Nodes for the embedded system --> 
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_0" args="/dev/ttyACM0" ></node>
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_1" args="/dev/ttyACM1" ></node>
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_2" args="/dev/ttyACM2" ></node>
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_3" args="/dev/ttyACM3" ></node>
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_4" args="/dev/ttyACM4" ></node>
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_5" args="/dev/ttyACM5" ></node>
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_6" args="/dev/ttyACM6" ></node>
+
 </launch>

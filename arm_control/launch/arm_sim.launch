@@ -11,7 +11,4 @@
     <node pkg="arm_control" type="arm_sim.py" name="arm_sim" output="screen">
     </node>
 
-    <!-- Set the gamepad to send command to the arm system initially -->
-    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 1'"/>
-    
 </launch>

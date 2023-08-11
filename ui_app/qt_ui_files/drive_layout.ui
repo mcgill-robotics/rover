@@ -450,16 +450,6 @@
     <string>yaw</string>
    </property>
   </widget>
-  <widget class="QTextBrowser" name="error_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>510</y>
-     <width>271</width>
-     <height>91</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLabel" name="error_message_label">
    <property name="geometry">
     <rect>

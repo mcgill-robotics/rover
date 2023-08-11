@@ -26,51 +26,43 @@ class Power_Backend():
         label.display("%.2f" % float(value))
     
     def get_drive_enabled(self):
-        if self.ui.drive_enabled.isChecked():
+        isChecked = self.ui.drive_enabled.isChecked()
+        if isChecked:
             self.drive_on = 1.0
         else:
             self.drive_on = 0.0
         
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
         
     def get_science_enabled(self):
-        if self.ui.science_enabled.isChecked():
+        isChecked = self.ui.science_enabled.isChecked()
+        if isChecked:
             self.science_on = 1.0
         else:
             self.science_on = 0.0
 
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
     
     def get_lower_arm_enabled(self):
-        if self.ui.lower_arm_enabled.isChecked():
+        isChecked = self.ui.lower_arm_enabled.isChecked()
+        if isChecked:
             self.lower_arm_on = 1.0
         else:
             self.lower_arm_on = 0.0
 
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
     
     def get_upper_arm_enabled(self):
-        if self.ui.upper_arm_enabled.isChecked():
+        isChecked = self.ui.upper_arm_enabled.isChecked()
+        if isChecked:
             self.upper_arm_on = 1.0
         else:
             self.upper_arm_on = 0.0
 
-        self.system_publisher.data[0] = self.drive_on
-        self.system_publisher.data[1] = self.science_on
-        self.system_publisher.data[2] = self.lower_arm_on
-        self.system_publisher.data[3] = self.upper_arm_on
+        self.system_publisher.data = [self.drive_on, self.science_on, self.lower_arm_on, self.upper_arm_on]
         self.power_on_publisher.publish(self.system_publisher)
 
     # Callback for battery currents.

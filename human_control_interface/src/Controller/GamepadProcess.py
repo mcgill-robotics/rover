@@ -52,7 +52,9 @@ class Node_GamepadProcessing:
 
         # initialize a subscriber for grabbing data from gamepad
         self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
+        self.camera_publisher = rospy.Publisher("panTiltAngles", Float32MultiArray, queue_size=1)
+        self.cam_angles = Float32MultiArray()
+
 
         # Control frequency of the node
         self.rate = rospy.Rate(100)

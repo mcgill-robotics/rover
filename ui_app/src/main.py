@@ -49,9 +49,17 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.gps_backend = GPS_Backend(self.GPS)
 
         # power
-        self.control_selector.currentTextChanged.connect(self.on_control_changed)
-        self.Power.kill_power_button.clicked.connect(self.power_backend.on_kill_power)
+        self.Power.drive_enabled.toggled.connect(self.power_backend.get_drive_enabled)
+        self.Power.science_enabled.toggled.connect(self.power_backend.get_science_enabled)
+        self.Power.lower_arm_enabled.toggled.connect(self.power_backend.get_lower_arm_enabled)
+        self.Power.upper_arm_enabled.toggled.connect(self.power_backend.get_upper_arm_enabled)
+
+
         # self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
+        self.killswitch_subscriber = rospy.Subscriber("killswitchFB", Float32MultiArray, self.power_backend.power_feedback)
+        self.power_state_subscriber = rospy.Subscriber("powerFB", Float32MultiArray, self.power_backend.system_feedback)
+        self.power_state_publisher = rospy.Publisher("powerCmd", Float32MultiArray, queue_size=1)
+
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_cmd)
@@ -59,8 +67,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.science_module_publisher = rospy.Publisher("scienceCmd", Float32MultiArray, queue_size=10)
 
         # drive
-        self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed,self.drive_backend.update_wheel_velocities)
-        self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist,self.drive_backend.update_twist_data)
+        self.drive_wheel_velocity_subscriber = rospy.Subscriber("driveFB", Float32MultiArray, self.drive_backend.update_wheel_velocities)
         self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
 
         # arm

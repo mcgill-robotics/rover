@@ -30,5 +30,6 @@ catkin_package(
 
 catkin_install_python(PROGRAMS
   src/main.py
+  test/gps_test.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

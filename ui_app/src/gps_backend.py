@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 # Imports
-import matplotlib.pyplot as plt
-import rospy
-import numpy as np
-from std_msgs.msg import Float32MultiArray
-from matplotlib.animation import FuncAnimation
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)

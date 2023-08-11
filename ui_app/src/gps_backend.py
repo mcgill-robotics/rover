@@ -17,17 +17,18 @@ class GPS_Backend():
         self.fixed_points = [
             [45.50570297241211, -73.57591247558594], 
             [45.50539779663086, -73.5755615234375],
-            [45.50568771362305, -73.5759506225586]
+            [45.50568771362305, -73.5759506225586],
+            [45.50548771362305, -73.5756506225586],
+            [45.51548771362305, -73.5766506225586]
         ]
 
         self.robot_marker = None
-        self.animation = None
-        self.plot_gps_figure()
+        
 
-    def plot_gps_figure(self):
+    def plot_gps_figure(self,gps_data):
 
         self.ui.gps_fig.clear()
-        fig = plt.figure()
+        
         ax = self.ui.gps_fig.add_subplot(111)
         ax.scatter(self.control_station[1], self.control_station[0], c='black', label='Control Station')
 
@@ -35,11 +36,7 @@ class GPS_Backend():
 
         ax.scatter(lons, lats, c='red', label='Goal')
 
-        self.robot_marker = ax.scatter([], [], c='blue', label='Robot')
-        self.animation = FuncAnimation(fig,
-                                       lambda _: self.robot_marker.set_offsets(rospy.wait_for_message(
-                                           '/roverGPSData', Float32MultiArray, timeout=3).data[::-1]),
-                                       frames=range(200))
+        ax.scatter(gps_data.data[1], gps_data.data[0], c='blue', label='Robot')
 
         # compute and set limits on graph
         longitude_max = max(self.fixed_points, key=lambda x: x[1])[1]

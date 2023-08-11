@@ -31,7 +31,7 @@ class Ui_MainWindow(object):
 
         self.Systemsview = QtWidgets.QTabWidget(self.centralwidget)
         # self.Systemsview.setGeometry(QtCore.QRect(470, 10, 301, 531))
-        self.Systemsview.setGeometry(QtCore.QRect(1050, 10, 400, 880))
+        self.Systemsview.setGeometry(QtCore.QRect(1050, 10, 500, 880))
         self.Systemsview.setObjectName("Systemsview")
         #
         self.Arm = Ui_Arm()

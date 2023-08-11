@@ -45,8 +45,8 @@ class Node_ArmControl():
         self.controllerSubscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
 
         # Arduino message 
-        self.armBrushedPublisher = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.updateArmBrushedState)
-        self.armBrushlessPublisher = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.updateArmBrushlessState)
+        self.armBrushedSubscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.updateArmBrushedState)
+        self.armBrushlessSubscriber = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.updateArmBrushlessState)
         self.armBrushedPublisher = rospy.Publisher("armBrushedCmd", Float32MultiArray, queue_size=10)
         self.armBrushlessPublisher = rospy.Publisher("armBrushlessCmd", Float32MultiArray, queue_size=10)
 

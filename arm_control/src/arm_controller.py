@@ -248,4 +248,3 @@ class Node_ArmControl():
 if __name__ == "__main__":
     driver = Node_ArmControl()
     rospy.spin()
-

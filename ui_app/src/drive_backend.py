@@ -8,7 +8,6 @@ class Drive_Backend():
 
     def __init__(self, drive_tab):
         self.ui = drive_tab
-        self.ui.error_label.clear()
 
         self.latitude = 0.0
         self.longitude = 0.0
@@ -66,9 +65,6 @@ class Drive_Backend():
         self.ui.robot_location_roll.display(roll)
         self.ui.robot_location_pitch.display(pitch)
         self.ui.robot_location_yaw.display(yaw)
-
-    def set_error(self, error):
-        self.ui.error_label.setText(error)
     
     def on_send(self):
         latitude = self.ui.latitude_val.text()

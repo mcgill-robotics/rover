@@ -67,9 +67,9 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_wheel_velocity_subscriber = rospy.Subscriber("driveFB", Float32MultiArray, self.drive_backend.update_wheel_velocities)
         self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
 
-        # arm: We want this subscriber because the arm will not always be active.
-        self.arm12Subscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.arm_backend.update_joints12)
-        self.arm24Subscriber = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.arm_backend.update_joints24)
+        # arm
+        self.arm_brushed_subscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.arm_backend.update_joints_brushed)
+        self.arm_brushless_subscriber = rospy.Subscriber("armBrushlessCmd", Float32MultiArray, self.arm_backend.update_joints_brushless)
         self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control)
 
         # TODO: KillSwitch Publisher

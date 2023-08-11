@@ -44,6 +44,7 @@ class Node_DriveControl():
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
         self.robot_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.twist_to_velocity)
         self.motor_pubisher = rospy.Publisher("/driveCmd", Float32MultiArray, queue_size=1)
+        self.power_publisher = rospy.Publisher("/powerCmd", Float32MultiArray, queue_size=1)
 
         # Control Frequency of the drive controller
         self.rate = rospy.Rate(50)
@@ -102,9 +103,10 @@ class Node_DriveControl():
             motor_rf = self.motor_speed(correct_rf)
             motor_rb = self.motor_speed(correct_rb)
 
-            motor_val.data.append(motor_rb * -100)
-            motor_val.data.append(motor_lf * 100)
+            
             motor_val.data.append(motor_lb * 100)
+            motor_val.data.append(motor_lf * 100)
+            motor_val.data.append(motor_rb * -100)
             motor_val.data.append(motor_rf * 100)
 
             print(motor_val)

@@ -4,14 +4,13 @@
     </node>
 
     <!-- Node for the Game controller -->
-    <node pkg="human_control_interface" type="Joystick.py" name="gamepad" output="screen">
+    <node pkg="human_control_interface" type="Joystick.py" name="arm" output="screen">
     </node>
 
     <!-- Node for the user interface -->
     <node pkg="ui_app" type="main.py" name="ui" output="screen">
     </node>
 
-    <!-- Set the gamepad to forward to the drive controller system -->
-    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 0'"/>
-    
+    <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
+    </node>
 </launch>

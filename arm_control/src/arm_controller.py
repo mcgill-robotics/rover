@@ -8,12 +8,13 @@ import math
 from arm_control.msg import ArmControllerInput
 from std_msgs.msg import Float32MultiArray
 from arm_kinematics import jointLowerLimits, jointUpperLimits
+from std_msgs.msg import String
 
 
 class Node_ArmControl():
 
     def __init__(self):
-        self.nbJoints    = 6
+        self.nbJoints    = 5
         self.nbJointsArm = 5
         self.nbCart      = 3
         
@@ -35,6 +36,8 @@ class Node_ArmControl():
         # Options: [0, nbJoints), In joint control mode, control is
         # one joint at a time to keep it intuitive to the user
 
+        self.claw_state = 0
+
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
 
@@ -43,10 +46,12 @@ class Node_ArmControl():
         self.controllerSubscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
 
         # Arduino message 
-        self.arm12Subscriber = rospy.Subscriber("arm12FB", Float32MultiArray, self.updateArm12State)
-        self.arm24Subscriber = rospy.Subscriber("arm24FB", Float32MultiArray, self.updateArm24State)
-        self.arm12Publisher = rospy.Publisher("arm12Cmd", Float32MultiArray, queue_size=10)
-        self.arm24Publisher = rospy.Publisher("arm24Cmd", Float32MultiArray, queue_size=10)
+        self.armBrushedSubscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.updateArmBrushedState)
+        self.armBrushlessSubscriber = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.updateArmBrushlessState)
+        self.armBrushedPublisher = rospy.Publisher("armBrushedCmd", Float32MultiArray, queue_size=10)
+        self.armBrushlessPublisher = rospy.Publisher("armBrushlessCmd", Float32MultiArray, queue_size=10)
+
+        self.arm_error_publisher = rospy.Publisher("armError", String, queue_size=10)
 
         # Control Frequency of the arm controller
         self.rate = rospy.Rate(100)
@@ -55,16 +60,16 @@ class Node_ArmControl():
 
 
     def run(self):
-        cmd12 = Float32MultiArray()
-        cmd24 = Float32MultiArray()
+        cmd_brushed = Float32MultiArray()
+        cmd_brushless = Float32MultiArray()
         while not rospy.is_shutdown():
             q_dDeg = tuple(q_d_i * (180/np.pi) for q_d_i in self.q_d)
 
-            cmd12.data = [q_dDeg[5], q_dDeg[4], q_dDeg[3]]
-            cmd24.data = [q_dDeg[2], q_dDeg[1], q_dDeg[0]]
+            cmd_brushed.data = [self.claw_state, q_dDeg[4], q_dDeg[3]]
+            cmd_brushless.data = [q_dDeg[2]      , q_dDeg[1], q_dDeg[0]]
 
-            self.arm12Publisher.publish(cmd12)
-            self.arm24Publisher.publish(cmd24)
+            self.armBrushedPublisher.publish(cmd_brushed)
+            self.armBrushlessPublisher.publish(cmd_brushless)
 
             self.rate.sleep()
 
@@ -110,9 +115,7 @@ class Node_ArmControl():
         
         # Control of EOAT
         elif (self.mode == 5):
-            self.q_d[5] += ctrlInput.X_dir * self.jointVelLimits[5] * 0.01
-
-            self.q_d[5] = np.clip(self.q_d[5], jointLowerLimits[5], jointUpperLimits[5])
+            self.claw_state = ctrlInput.X_dir * 100
 
         else:
             # Joint Velocity Control
@@ -128,7 +131,7 @@ class Node_ArmControl():
                 or
                 (self.q[i] < jointLowerLimits[i] and self.dq_d[i] < 0 )
             ): 
-                print(f"Joint {i} reached the limit: {self.q[i]} {self.dq_d[i]}")
+                self.displayError(f"Joint {i} reached the limit: {self.q[i]} {self.dq_d[i]}")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -139,7 +142,7 @@ class Node_ArmControl():
                 or
                 (self.q_d[i] < jointLowerLimits[i] and self.dq_d[i] < jointLowerLimits[i])
             ):
-                print(f"Joint {i} reached the second limit: {self.q_d[i]} {self.dq_d[i]}")
+                self.displayError(f"Joint {i} reached the second limit: {self.q_d[i]} {self.dq_d[i]}")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -149,19 +152,18 @@ class Node_ArmControl():
             self.q_d[i] += self.dq_d[i] * 0.01* ctrlInput.MaxVelPercentage
     
 
-    def updateArm12State(self, state12: Float32MultiArray):
-        state12_r = tuple(data_i * (np.pi/180) for data_i in state12.data)
-        self.q[5] = state12_r[0]/2              #EOAT
-        self.q[4] = state12_r[1]                #Wrist Roll, disk
-        self.q[3] = state12_r[2]                #Wrist Pitch
+    def updateArmBrushedState(self, state_brushed: Float32MultiArray):
+        state12_r = tuple(data_i * (np.pi/180) for data_i in state_brushed.data)
+        self.q[4] = state12_r[0]                #Wrist Roll, disk
+        self.q[3] = state12_r[1]                #Wrist Pitch
         self.x = arm_kinematics.forwardKinematics(self.q)
 
 
-    def updateArm24State(self, state24: Float32MultiArray):
-        state24_r = tuple(data_i * (np.pi/180) for data_i in state24.data)
-        self.q[2] = state24_r[0]                #Elbow
-        self.q[1] = state24_r[1]                #Shoulder
-        self.q[0] = state24_r[2]                #Tumor
+    def updateArmBrushlessState(self, state_brushless: Float32MultiArray):
+        state_brushless_r = tuple(data_i * (np.pi/180) for data_i in state_brushless.data)
+        self.q[2] = state_brushless_r[0]                #Elbow
+        self.q[1] = state_brushless_r[1]                #Shoulder
+        self.q[0] = state_brushless_r[2]                #Tumor
         self.x = arm_kinematics.forwardKinematics(self.q)
 
 
@@ -246,7 +248,11 @@ class Node_ArmControl():
         return self.dq_d, self.dx_d 
 
 
+    def displayError(self, msg: str):
+        print(msg)
+        self.arm_error_publisher.publish(msg)
+
+
 if __name__ == "__main__":
     driver = Node_ArmControl()
     rospy.spin()
-

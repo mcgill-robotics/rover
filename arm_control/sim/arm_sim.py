@@ -3,6 +3,7 @@
 from std_msgs.msg import Float32MultiArray
 from numpy import pi
 import rospy
+import numpy as np
 import pybullet as p
 import pybullet_data
 import sys
@@ -45,23 +46,24 @@ class Node_ArmSim():
 
         rospy.init_node("arm_sim", anonymous=False)
 
-        self.arm12Subscriber = rospy.Subscriber(
-            "arm12Cmd", Float32MultiArray, self.updateArm12Sim)
-        self.arm24Subscriber = rospy.Subscriber(
-            "arm24Cmd", Float32MultiArray, self.updateArm24Sim)
-        self.arm12Publisher = rospy.Publisher(
-            "arm12FB", Float32MultiArray, queue_size=10)
-        self.arm24Publisher = rospy.Publisher(
-            "arm24FB", Float32MultiArray, queue_size=10)
+        self.armBrushedSubscriber = rospy.Subscriber(
+            "armBrushedCmd", Float32MultiArray, self.updateArmBrushedSim)
+        self.armBrushlessSubscriber = rospy.Subscriber(
+            "armBrushlessCmd", Float32MultiArray, self.updateArmBrushlessSim)
+        self.armBrushedPublisher = rospy.Publisher(
+            "armBrushedFB", Float32MultiArray, queue_size=10)
+        self.armBrushlessPublisher = rospy.Publisher(
+            "armBrushlessFB", Float32MultiArray, queue_size=10)
 
         self.run()
 
+    def updateArmBrushedSim(self, cmds: Float32MultiArray):
+        self.desiredJointPos[4], self.desiredJointPos[3] = tuple(x * (pi/180) for x in cmds.data[1:])
+        self.desiredJointPos[5] = np.clip(self.desiredJointPos[5] + cmds.data[0], -0.3, 0.11)
+        self.desiredJointPos[6] = self.desiredJointPos[5]
 
-    def updateArm12Sim(self, cmds: Float32MultiArray):
-        self.desiredJointPos[6], self.desiredJointPos[5], self.desiredJointPos[4], self.desiredJointPos[3] = tuple([cmds.data[0] * (pi/180)]) + tuple(x * (pi/180) for x in cmds.data) 
 
-
-    def updateArm24Sim(self, cmds: Float32MultiArray):
+    def updateArmBrushlessSim(self, cmds: Float32MultiArray):
         self.desiredJointPos[2], self.desiredJointPos[1], self.desiredJointPos[0] = tuple(x * (pi/180) for x in cmds.data)
 
 
@@ -94,14 +96,14 @@ class Node_ArmSim():
                 self.jointVels[i] = states[i][1]
                 self.jointTorq[i] = states[i][3]
 
-            state12_msg = Float32MultiArray()
-            state12_msg.data = self.jointPoses[5], self.jointPoses[4], self.jointPoses[3]
+            state_brushed_msg = Float32MultiArray()
+            state_brushed_msg.data = self.jointPoses[5], self.jointPoses[4], self.jointPoses[3]
 
-            state24_msg = Float32MultiArray()
-            state24_msg.data = self.jointPoses[2], self.jointPoses[1], self.jointPoses[0]
+            state_brushless_msg = Float32MultiArray()
+            state_brushless_msg.data = self.jointPoses[2], self.jointPoses[1], self.jointPoses[0]
 
-            self.arm12Publisher.publish(state12_msg)
-            self.arm24Publisher.publish(state24_msg)
+            self.armBrushedPublisher.publish(state_brushed_msg)
+            self.armBrushlessPublisher.publish(state_brushless_msg)
 
         p.disconnect()
 

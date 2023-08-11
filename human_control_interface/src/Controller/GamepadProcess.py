@@ -4,6 +4,7 @@ from human_control_interface.msg import Gamepad_input
 from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
 from Gamepad import *
+from std_msgs.msg import Float32MultiArray
 
 
 
@@ -30,6 +31,7 @@ class Node_GamepadProcessing:
         # Initialize a Gamepad object
         self.gamepad = Gamepad()
 
+
         # initialize variables for velocity
         self.roverLinearVelocity = 0
         self.roverAngularVelocity = 0
@@ -45,14 +47,16 @@ class Node_GamepadProcessing:
         self.clawState = False
 
         # Initialize variables for cameras
-        self.cam_ctrl = Camera_Orientation()
+        self.cam_ctrl = Float32MultiArray()
 
         # System Selection variables
         self.active_system = 0
 
         # initialize a subscriber for grabbing data from gamepad
         self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
+        self.camera_publisher = rospy.Publisher("panTiltAngles", Float32MultiArray, queue_size=1)
+
+        self.cam_ctrl.data = [0, 0]
 
         # Control frequency of the node
         self.rate = rospy.Rate(100)
@@ -138,13 +142,13 @@ class Node_GamepadProcessing:
         # right: O
         # left: square
 
-        if (msg.B3 == 1 or msg.B1 == 1) and (self.cam_ctrl.v_angle + msg.B3 <= 180) and (self.cam_ctrl.v_angle - msg.B1 >= 0):
-            self.cam_ctrl.v_angle = self.cam_ctrl.v_angle + msg.B3 - msg.B1
-            print(f"vertical: {self.cam_ctrl.v_angle}")
+        if (msg.B3 == 1 or msg.B1 == 1) and (self.cam_ctrl.data[0] + msg.B3 <= 180) and (self.cam_ctrl.data[0] - msg.B1 >= 0):
+            self.cam_ctrl.data[0] = self.cam_ctrl.data[0] + msg.B3 - msg.B1
+            print(f"vertical: {self.cam_ctrl.data[0]}")
 
-        if (msg.B4 == 1 or msg.B2 == 1) and (self.cam_ctrl.h_angle + msg.B2 <= 180) and (self.cam_ctrl.h_angle - msg.B4 >= 0):
-            self.cam_ctrl.h_angle = self.cam_ctrl.h_angle + msg.B2 - msg.B4
-            print(f"horizontal: {self.cam_ctrl.h_angle}")
+        if (msg.B4 == 1 or msg.B2 == 1) and (self.cam_ctrl.data[1] + msg.B2 <= 180) and (self.cam_ctrl.data[1] - msg.B4 >= 0):
+            self.cam_ctrl.data[1] = self.cam_ctrl.data[1] + msg.B2 - msg.B4
+            print(f"horizontal: {self.cam_ctrl.data[1]}")
         
         self.camera_publisher.publish(self.cam_ctrl)
         
@@ -158,5 +162,5 @@ class Node_GamepadProcessing:
 
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(1, 1)
+    gamepadProcess = Node_GamepadProcessing(1, 2)
     #rospy.spin()

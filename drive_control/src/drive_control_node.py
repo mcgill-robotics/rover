@@ -6,6 +6,7 @@ import rospy
 import numpy as np
 from steering import Steering
 from std_msgs.msg import String
+from std_msgs.msg import Float32MultiArray
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from scipy.ndimage import gaussian_filter1d
@@ -42,10 +43,11 @@ class Node_DriveControl():
         rospy.init_node('drive_controller')
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
         self.robot_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.twist_to_velocity)
-        # The controller publisher is publishing straight to the twist_to_velocity values
+        self.motor_pubisher = rospy.Publisher("/driveCmd", Float32MultiArray, queue_size=1)
+        self.power_publisher = rospy.Publisher("/powerCmd", Float32MultiArray, queue_size=1)
 
         # Control Frequency of the drive controller
-        self.rate = rospy.Rate(100)
+        self.rate = rospy.Rate(50)
 
         self.run()
     
@@ -53,6 +55,7 @@ class Node_DriveControl():
         vR = robot_twist.linear.x
         wR = robot_twist.angular.z
         self.wheel_speed = self.steering.steering_control(vR, wR)
+
 
     # Function that yields a 1D gaussian basis
     # Source: https://stackoverflow.com/questions/29731726/how-to-calculate-a-gaussian-kernel-matrix-efficiently-in-numpy
@@ -65,6 +68,7 @@ class Node_DriveControl():
     def run(self):
         while not rospy.is_shutdown():
             cmd = WheelSpeed()
+            motor_val = Float32MultiArray()
         
             print(f"Desired speed: {self.wheel_speed}")
             
@@ -100,16 +104,20 @@ class Node_DriveControl():
             motor_rb = self.motor_speed(correct_rb)
 
             
-            print(f"Motor values: {[motor_lf, motor_lb, motor_rf, motor_rb]}")
+            motor_val.data.append(motor_rb * 100)  # rb
+            motor_val.data.append(motor_lf * 58)  # lf, too fast
+            motor_val.data.append(motor_lb * -100)  # lb, tpo slow
+            motor_val.data.append(motor_rf * 88)  # rf
+
+            print(motor_val)
 
             self.angular_velocity_publisher.publish(cmd)
+            self.motor_pubisher.publish(motor_val)
 
             self.rate.sleep()
             print(cmd)
-        
-    # def motor_speed(self, cur_val):
-                
-    # TODO: CHECK MOTOR VALUES AND VERIFY CALCULATIONS.
+                        
+
     def motor_speed(self, cur_val):
         motor_val = cur_val / Node_DriveControl.MAX_NO_STEER
         if motor_val < 1 and motor_val > 0:

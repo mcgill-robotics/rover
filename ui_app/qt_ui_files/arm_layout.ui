@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>368</width>
+    <width>496</width>
     <height>619</height>
    </rect>
   </property>
@@ -353,16 +353,6 @@
     <string>Z:</string>
    </property>
   </widget>
-  <widget class="QTextBrowser" name="error_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>510</y>
-     <width>231</width>
-     <height>91</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLabel" name="error_message_label">
    <property name="geometry">
     <rect>
@@ -379,6 +369,19 @@
    </property>
    <property name="text">
     <string>Error Message</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="error_label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>520</y>
+     <width>461</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Currenly no error</string>
    </property>
   </widget>
  </widget>

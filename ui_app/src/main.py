@@ -17,12 +17,13 @@ from drive_backend import Drive_Backend
 from arm_backend import Arm_Backend
 from science_backend import Science_Backend
 from power_backend import Power_Backend
+from gps_backend import GPS_Backend
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from arm_control.msg import ArmControllerInput
 from std_msgs.msg import Float32MultiArray
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import String
 
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
@@ -45,11 +46,20 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.arm_backend = Arm_Backend(self.Arm)
         self.science_backend = Science_Backend(self.Science)
         self.power_backend = Power_Backend(self.Power)
+        self.gps_backend = GPS_Backend(self.GPS)
 
         # power
-        self.control_selector.currentTextChanged.connect(self.on_control_changed)
-        self.Power.kill_power_button.clicked.connect(self.power_backend.on_kill_power)
+        self.Power.drive_enabled.toggled.connect(self.power_backend.get_drive_enabled)
+        self.Power.science_enabled.toggled.connect(self.power_backend.get_science_enabled)
+        self.Power.lower_arm_enabled.toggled.connect(self.power_backend.get_lower_arm_enabled)
+        self.Power.upper_arm_enabled.toggled.connect(self.power_backend.get_upper_arm_enabled)
+
+
         # self.power_state_subscriber = rospy.Subscriber("power_state_data", PowerFeedback,self.power_backend.on_power_feedback)
+        self.killswitch_subscriber = rospy.Subscriber("killswitchFB", Float32MultiArray, self.power_backend.power_feedback)
+        self.power_state_subscriber = rospy.Subscriber("powerFB", Float32MultiArray, self.power_backend.system_feedback)
+        self.power_state_publisher = rospy.Publisher("powerCmd", Float32MultiArray, queue_size=1)
+
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_cmd)
@@ -57,14 +67,18 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.science_module_publisher = rospy.Publisher("scienceCmd", Float32MultiArray, queue_size=10)
 
         # drive
-        self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed,self.drive_backend.update_wheel_velocities)
-        self.drive_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist,self.drive_backend.update_twist_data)
+        self.drive_wheel_velocity_subscriber = rospy.Subscriber("driveFB", Float32MultiArray, self.drive_backend.update_wheel_velocities)
         self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
 
         # arm
         self.arm_brushed_subscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.arm_backend.update_joints_brushed)
         self.arm_brushless_subscriber = rospy.Subscriber("armBrushlessCmd", Float32MultiArray, self.arm_backend.update_joints_brushless)
         self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control)
+        self.arm_error_subscriber = rospy.Subscriber("armError", String, self.arm_backend.set_error)
+
+        #gps
+        self.gps_subscriber = rospy.Subscriber("roverGPSData", Float32MultiArray, self.gps_backend.plot_gps_figure)
+        
 
         # TODO: KillSwitch Publisher
 

@@ -3,6 +3,7 @@
 from std_msgs.msg import Float32MultiArray
 from numpy import pi
 import rospy
+import numpy as np
 import pybullet as p
 import pybullet_data
 import sys
@@ -46,9 +47,9 @@ class Node_ArmSim():
         rospy.init_node("arm_sim", anonymous=False)
 
         self.armBrushedSubscriber = rospy.Subscriber(
-            "armBrushedCmd", Float32MultiArray, self.updatearmBrushedSim)
+            "armBrushedCmd", Float32MultiArray, self.updateArmBrushedSim)
         self.armBrushlessSubscriber = rospy.Subscriber(
-            "armBrushlessCmd", Float32MultiArray, self.updatearmBrushlessSim)
+            "armBrushlessCmd", Float32MultiArray, self.updateArmBrushlessSim)
         self.armBrushedPublisher = rospy.Publisher(
             "armBrushedFB", Float32MultiArray, queue_size=10)
         self.armBrushlessPublisher = rospy.Publisher(
@@ -56,12 +57,13 @@ class Node_ArmSim():
 
         self.run()
 
+    def updateArmBrushedSim(self, cmds: Float32MultiArray):
+        self.desiredJointPos[4], self.desiredJointPos[3] = tuple(x * (pi/180) for x in cmds.data[1:])
+        self.desiredJointPos[5] = np.clip(self.desiredJointPos[5] + cmds.data[0], -0.3, 0.11)
+        self.desiredJointPos[6] = self.desiredJointPos[5]
 
-    def updatearmBrushedSim(self, cmds: Float32MultiArray):
-        self.desiredJointPos[6], self.desiredJointPos[5], self.desiredJointPos[4], self.desiredJointPos[3] = tuple([cmds.data[0] * (pi/180)]) + tuple(x * (pi/180) for x in cmds.data) 
 
-
-    def updatearmBrushlessSim(self, cmds: Float32MultiArray):
+    def updateArmBrushlessSim(self, cmds: Float32MultiArray):
         self.desiredJointPos[2], self.desiredJointPos[1], self.desiredJointPos[0] = tuple(x * (pi/180) for x in cmds.data)
 
 
@@ -95,7 +97,7 @@ class Node_ArmSim():
                 self.jointTorq[i] = states[i][3]
 
             state_brushed_msg = Float32MultiArray()
-            state_brushed_msg.data = self.jointPoses[5], self.jointPoses[4], self.jointPoses[3]
+            state_brushed_msg.data = self.jointPoses[4], self.jointPoses[3]
 
             state_brushless_msg = Float32MultiArray()
             state_brushless_msg.data = self.jointPoses[2], self.jointPoses[1], self.jointPoses[0]

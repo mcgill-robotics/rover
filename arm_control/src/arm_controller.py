@@ -8,6 +8,7 @@ import math
 from arm_control.msg import ArmControllerInput
 from std_msgs.msg import Float32MultiArray
 from arm_kinematics import jointLowerLimits, jointUpperLimits
+from std_msgs.msg import String
 
 
 class Node_ArmControl():
@@ -49,6 +50,8 @@ class Node_ArmControl():
         self.armBrushlessSubscriber = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.updateArmBrushlessState)
         self.armBrushedPublisher = rospy.Publisher("armBrushedCmd", Float32MultiArray, queue_size=10)
         self.armBrushlessPublisher = rospy.Publisher("armBrushlessCmd", Float32MultiArray, queue_size=10)
+
+        self.arm_error_publisher = rospy.Publisher("armError", String, queue_size=10)
 
         # Control Frequency of the arm controller
         self.rate = rospy.Rate(100)
@@ -128,7 +131,7 @@ class Node_ArmControl():
                 or
                 (self.q[i] < jointLowerLimits[i] and self.dq_d[i] < 0 )
             ): 
-                print(f"Joint {i} reached the limit: {self.q[i]} {self.dq_d[i]}")
+                self.displayError(f"Joint {i} reached the limit: {self.q[i]} {self.dq_d[i]}")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -139,7 +142,7 @@ class Node_ArmControl():
                 or
                 (self.q_d[i] < jointLowerLimits[i] and self.dq_d[i] < jointLowerLimits[i])
             ):
-                print(f"Joint {i} reached the second limit: {self.q_d[i]} {self.dq_d[i]}")
+                self.displayError(f"Joint {i} reached the second limit: {self.q_d[i]} {self.dq_d[i]}")
                 if self.mode == 0:
                     self.dq_d = [0] * self.nbJoints
 
@@ -243,6 +246,11 @@ class Node_ArmControl():
         self.dx_d = Jv.dot(self.dq_d)
 
         return self.dq_d, self.dx_d 
+
+
+    def displayError(self, msg: str):
+        print(msg)
+        self.arm_error_publisher.publish(msg)
 
 
 if __name__ == "__main__":

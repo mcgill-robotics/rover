@@ -74,7 +74,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         # arm
         self.arm_brushed_subscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.arm_backend.update_joints_brushed)
-        self.arm_brushless_subscriber = rospy.Subscriber("armBrushlessCmd", Float32MultiArray, self.arm_backend.update_joints_brushless)
+        self.arm_brushless_subscriber = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.arm_backend.update_joints_brushless)
         self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control)
         self.arm_error_subscriber = rospy.Subscriber("armError", String, self.arm_backend.set_error)
 

@@ -97,7 +97,7 @@ class Node_ArmSim():
                 self.jointTorq[i] = states[i][3]
 
             state_brushed_msg = Float32MultiArray()
-            state_brushed_msg.data = self.jointPoses[4], self.jointPoses[3]
+            state_brushed_msg.data = self.jointPoses[5], self.jointPoses[4], self.jointPoses[3]
 
             state_brushless_msg = Float32MultiArray()
             state_brushless_msg.data = self.jointPoses[2], self.jointPoses[1], self.jointPoses[0]

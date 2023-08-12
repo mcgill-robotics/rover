@@ -79,10 +79,12 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.arm_error_subscriber = rospy.Subscriber("armError", String, self.arm_backend.set_error)
 
         #gps
-        self.gps_subscriber = rospy.Subscriber("roverGPSData", Float32MultiArray, self.gps_backend.plot_gps_figure)
-        
+        self.gps_subscriber = rospy.Subscriber("roverGPSData", Float32MultiArray, self.set_gps_data)
+        self.pan_tilt_angle_subscriber = rospy.Subscriber("panTiltAngles", Float32MultiArray, self.set_pan_tilt_angle)
+        self.gps_data = []
+        self.pan_tilt_angle = []
 
-        # TODO: KillSwitch Publisher
+        self.save_button.clicked.connect(self.save_image)
 
         # camera selection
         self.timer_camera = qtc.QTimer()  # set up a timer, this is used to control frame rate
@@ -94,6 +96,19 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.timer_camera.start(33)
         self.count = 0
 
+    def set_gps_data(self, gps_data):
+        self.gps_data = gps_data.data
+        self.gps_backend.plot_gps_figure(gps_data)
+    
+    def set_pan_tilt_angle(self, angle_data):
+        self.pan_tilt_angle = angle_data.data
+
+    def save_image(self):
+        save_image = self.cam_image
+        image_name = f"lat: {self.gps_data[0]}, long: {self.gps_data[1]} v-angle: {self.pan_tilt_angle[0]}, h-angle: {self.pan_tilt_angle[1]}"
+        image_path = self.save_path.text() + image_name + ".jpg"
+        print(image_path)
+        cv2.imwrite(image_path, save_image)
 
     def send_science_cmd(self):
         msg = self.science_backend.set_science_cmd()

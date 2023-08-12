@@ -115,7 +115,7 @@ class Node_ArmControl():
         
         # Control of EOAT
         elif (self.mode == 5):
-            self.claw_state = ctrlInput.X_dir * 100
+            self.claw_state = ctrlInput.X_dir * 99.9999999
 
         else:
             # Joint Velocity Control
@@ -138,9 +138,9 @@ class Node_ArmControl():
                 else:
                     self.dq_d[i] = 0
 
-            if ((self.q_d[i] > jointUpperLimits[i] and self.dq_d[i] > jointUpperLimits[i]) 
+            if ((self.q_d[i] > jointUpperLimits[i] and self.dq_d[i] > 0) 
                 or
-                (self.q_d[i] < jointLowerLimits[i] and self.dq_d[i] < jointLowerLimits[i])
+                (self.q_d[i] < jointLowerLimits[i] and self.dq_d[i] < 0)
             ):
                 self.displayError(f"Joint {i} reached the second limit: {self.q_d[i]} {self.dq_d[i]}")
                 if self.mode == 0:

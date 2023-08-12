@@ -4,6 +4,8 @@ import numpy as np
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
+import time
+import datetime
 
 class GPS_Backend():
 
@@ -19,9 +21,22 @@ class GPS_Backend():
 
         self.robot_marmathker = None
         self.first_gps_data = []
+
+         # Logger for sensor data
+        self.gps_log_path = os.path.dirname(__file__) + f"/../../rover_out/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        os.makedirs(self.gps_log_path, exist_ok=True)
+        self.gps_log_filename = self.gps_log_path + "/gps_data.log"
+
         
 
     def plot_gps_figure(self,gps_data):
+
+        # Log new data feedback
+        log_file = open(self.gps_log_filename, "a")
+        log_file.write(f"{time.time()},{gps_data.data[0]},{gps_data.data[1]}\n")
+        log_file.close()
+
+
         self.first_gps_data.append([gps_data.data[0], gps_data.data[1]])
         
 

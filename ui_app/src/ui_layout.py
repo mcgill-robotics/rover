@@ -91,6 +91,9 @@ class Ui_MainWindow(object):
         self.overall_feedback_messagebox.setObjectName("text_browser")
         self.overall_feedback_messagebox.clear()
 
+        self.save_path = QtWidgets.QLineEdit(self.centralwidget)
+        self.save_path.setGeometry(QtCore.QRect(800, 585, 80, 25))
+        self.save_path.setObjectName("image_name")
         self.save_button = QtWidgets.QPushButton(self.centralwidget)
         self.save_button.setGeometry(QtCore.QRect(900, 585, 80, 25))
         self.save_button.setObjectName("save_image")

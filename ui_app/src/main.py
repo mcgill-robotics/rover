@@ -105,8 +105,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
     def save_image(self):
         save_image = self.cam_image
-        image_name = f"lat: {self.gps_data[0]}, long: {self.gps_data[1]} v angle: {self.pan_tilt_angle[0]}, h angle: {self.pan_tilt_angle[1]}"
-        cv2.imwrite(image_name, save_image)
+        image_name = f"lat: {self.gps_data[0]}, long: {self.gps_data[1]} v-angle: {self.pan_tilt_angle[0]}, h-angle: {self.pan_tilt_angle[1]}"
+        image_path = self.save_path.text() + image_name + ".jpg"
+        print(image_path)
+        cv2.imwrite(image_path, save_image)
 
     def send_science_cmd(self):
         msg = self.science_backend.set_science_cmd()

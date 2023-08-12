@@ -13,6 +13,7 @@ catkin_python_setup()
 add_message_files(
   FILES
   Realsense_imu_data.msg
+  Realsense_computed_angle.msg
 )
 
 generate_messages(

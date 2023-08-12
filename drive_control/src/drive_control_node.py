@@ -37,10 +37,10 @@ class Node_DriveControl():
         self.basis = self.gkern(kernlen=50)
 
         # Filter samples for four wheels
-        self.front_left = np.zeros(self.sample_size).tolist()
-        self.back_left = np.zeros(self.sample_size).tolist()
-        self.front_right = np.zeros(self.sample_size).tolist()
-        self.back_right = np.zeros(self.sample_size).tolist()
+        # self.front_left = np.zeros(self.sample_size).tolist()
+        # self.back_left = np.zeros(self.sample_size).tolist()
+        # self.front_right = np.zeros(self.sample_size).tolist()
+        # self.back_right = np.zeros(self.sample_size).tolist()
         
         rospy.init_node('drive_controller')
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
@@ -74,45 +74,45 @@ class Node_DriveControl():
         
             print(f"Desired speed: {self.wheel_speed}")
             
-            # Velocity filtering:
-            self.front_left.append(self.wheel_speed[0])
-            self.back_left.append(self.wheel_speed[0])
-            self.front_right.append(self.wheel_speed[1])
-            self.back_right.append(self.wheel_speed[1])
+            # # Velocity filtering:
+            # self.front_left.append(self.wheel_speed[0])
+            # self.back_left.append(self.wheel_speed[0])
+            # self.front_right.append(self.wheel_speed[1])
+            # self.back_right.append(self.wheel_speed[1])
 
-            self.front_left.pop(0)
-            self.back_left.pop(0)
-            self.front_right.pop(0)
-            self.back_right.pop(0)
+            # self.front_left.pop(0)
+            # self.back_left.pop(0)
+            # self.front_right.pop(0)
+            # self.back_right.pop(0)
             
-            front_left = np.asarray(self.front_left)
-            back_left = np.asarray(self.back_left)
-            front_right = np.asarray(self.front_right)
-            back_right = np.asarray(self.back_right)
+            # front_left = np.asarray(self.front_left)
+            # back_left = np.asarray(self.back_left)
+            # front_right = np.asarray(self.front_right)
+            # back_right = np.asarray(self.back_right)
             
-            # Interpolating the veloctities according to gaussian kernel.
-            correct_lf = np.sum(front_left * self.basis)
-            correct_lb = np.sum(back_left * self.basis)
-            correct_rf = np.sum(front_right * self.basis)
-            correct_rb = np.sum(back_right * self.basis)
+            # # Interpolating the veloctities according to gaussian kernel.
+            # correct_lf = np.sum(front_left * self.basis)
+            # correct_lb = np.sum(back_left * self.basis)
+            # correct_rf = np.sum(front_right * self.basis)
+            # correct_rb = np.sum(back_right * self.basis)
 
             # Send out the correct values.
-            cmd.left[0], cmd.left[1] = correct_lf, correct_lb
-            cmd.right[0], cmd.right[1] = correct_rf, correct_rb
+            cmd.left[0], cmd.left[1] = self.wheel_speed[0], self.wheel_speed[0]
+            cmd.right[0], cmd.right[1] = self.wheel_speed[1], self.wheel_speed[1]
 
             # print(f"Corrected speed: {correct_lf}, {correct_lb}, {correct_rf}, {correct_rb}")
 
-            motor_lf = self.motor_speed(correct_lf)
-            motor_lb = self.motor_speed(correct_lb)
-            motor_rf = self.motor_speed(correct_rf)
-            motor_rb = self.motor_speed(correct_rb)
+            motor_lf = self.motor_speed(cmd.left[0])
+            motor_lb = self.motor_speed(cmd.left[1])
+            motor_rf = self.motor_speed(cmd.right[0])
+            motor_rb = self.motor_speed(cmd.right[1])
 
             # Final if statement to make sure that in place steering works.
-            if correct_lf == correct_lb and correct_rf == correct_rb and motor_rb == - motor_lb:
-                motor_lf = correct_lf/Node_DriveControl.MAX_PURE_STEER
-                motor_lb = correct_lb/Node_DriveControl.MAX_PURE_STEER
-                motor_rf = correct_rf/Node_DriveControl.MAX_PURE_STEER
-                motor_rb = correct_rb/Node_DriveControl.MAX_PURE_STEER
+            if motor_lf == motor_lb and motor_rf == motor_rb and motor_rb == - motor_lb:
+                motor_lf = motor_lf/Node_DriveControl.MAX_PURE_STEER
+                motor_lb = motor_lb/Node_DriveControl.MAX_PURE_STEER
+                motor_rf = motor_rf/Node_DriveControl.MAX_PURE_STEER
+                motor_rb = motor_rb/Node_DriveControl.MAX_PURE_STEER
             
 
             motor_val.data.append(motor_rb * 100)  # rb

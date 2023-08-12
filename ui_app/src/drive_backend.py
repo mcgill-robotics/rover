@@ -11,14 +11,20 @@ class Drive_Backend():
 
         self.latitude = 0.0
         self.longitude = 0.0
-        self.heading = 0.0
 
         self.antenna_message = Float32MultiArray()
         self.antenna_message.data.append(self.latitude)
         self.antenna_message.data.append(self.longitude)
-        self.antenna_message.data.append(self.heading)
+
+        self.rover_gps_data = [0.0]
 
         self.antenna_publisher = rospy.Publisher("/antennaData", Float32MultiArray, queue_size=1)
+        self.gps_subscriber = rospy.Subscriber("/roverGPSData", Float32MultiArray, self.on_gps_data)
+
+
+    def on_gps_data(self, x):
+        self.rover_gps_data = x.data
+
 
     def euler_from_quaternion(self, x, y, z, w):
         """
@@ -67,19 +73,14 @@ class Drive_Backend():
         self.ui.robot_location_yaw.display(yaw)
     
     def on_send(self):
-        latitude = self.ui.latitude_val.text()
-        latitude = float(latitude)
+        antenna_latitude = float(self.ui.latitude_val.text())
+        antenna_longitude = float(self.ui.longitude_val.text())
 
-        longitude = self.ui.longitude_val.text()
-        longitude = float(longitude)
+        self.antenna_message.data = [
+            antenna_latitude, 
+            antenna_longitude,
+            self.rover_gps_data[0],
+            self.rover_gps_data[1]
+        ]
 
-        heading = self.ui.heading_val.text()
-        heading = float(heading)
-
-        self.antenna_message.data[0] = latitude
-        self.antenna_message.data[1] = longitude
-        self.antenna_message.data[2] = heading
         self.antenna_publisher.publish(self.antenna_message)
-
-
-

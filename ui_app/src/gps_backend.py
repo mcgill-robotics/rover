@@ -14,13 +14,13 @@ class GPS_Backend():
             [45.50539779663086, -73.5755615234375],
             [45.50568771362305, -73.5759506225586],
             [45.50548771362305, -73.5756506225586],
-            [45.51548771362305, -73.5766506225586]
         ]
 
         self.robot_marker = None
         
 
     def plot_gps_figure(self,gps_data):
+        self.ui.gps_data.setText("latitude: " + str(gps_data.data[0])+ "\nlongitude: " + str(gps_data.data[1]))
 
         self.ui.gps_fig.clear()
         

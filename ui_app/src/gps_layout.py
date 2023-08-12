@@ -18,7 +18,7 @@ class Ui_GPS(QtWidgets.QWidget):
         GPS.setObjectName("GPS")
         GPS.resize(506, 648)
         self.verticalLayoutWidget = QtWidgets.QWidget(GPS)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 20, 481, 435))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 20, 481, 600))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -30,6 +30,14 @@ class Ui_GPS(QtWidgets.QWidget):
         self.GPS_Plot.setObjectName("GPS_Plot")
         self.verticalLayout.addWidget(self.GPS_Plot)
 
+        self.GPS_data_lable = QtWidgets.QLabel(GPS)
+        self.GPS_data_lable.setGeometry(QtCore.QRect(10, 580, 479, 18))
+        self.GPS_data_lable.setObjectName("GPS_data_lable")
+        self.gps_data = QtWidgets.QLabel(GPS)
+        self.gps_data.setGeometry(QtCore.QRect(10, 630, 479, 37))
+        self.gps_data.setObjectName("gps_data")
+        self.gps_data.setFont(font)
+        self.verticalLayout.addWidget(self.gps_data)
         self.gps_fig = plt.figure()
         self.gps_canvas = FigureCanvas(self.gps_fig)
         self.gps_plotter = self.gps_canvas
@@ -39,6 +47,7 @@ class Ui_GPS(QtWidgets.QWidget):
         self.gps_plotter.setStyleSheet("background-color: rgb(0, 0, 0);")
         self.gps_plotter.setObjectName("gps_plotter")
         self.verticalLayout.addWidget(self.gps_plotter)
+
 
         self.retranslateUi(GPS)
         QtCore.QMetaObject.connectSlotsByName(GPS)

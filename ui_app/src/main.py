@@ -82,7 +82,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.gps_subscriber = rospy.Subscriber("roverGPSData", Float32MultiArray, self.gps_backend.plot_gps_figure)
         
 
-        # TODO: KillSwitch Publisher
+        self.save_button.clicked.connect(self.save_image)
 
         # camera selection
         self.timer_camera = qtc.QTimer()  # set up a timer, this is used to control frame rate
@@ -94,6 +94,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.timer_camera.start(33)
         self.count = 0
 
+    def save_image(self):
+        save_image = self.cam_image
+        image_name = self.image_name.text()
+        cv2.imwrite(image_name, save_image)
 
     def send_science_cmd(self):
         msg = self.science_backend.set_science_cmd()

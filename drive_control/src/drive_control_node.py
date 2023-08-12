@@ -15,10 +15,12 @@ import scipy.stats as st
 class Node_DriveControl():
 
     MAX_NO_STEER = 21.333
-    MAX_WITH_STEER = 24.32
+    MAX_WITH_STEER = 27.30
     MIN_NO_STEER = -MAX_NO_STEER
     MIN_WITH_STEER_1 = -MAX_NO_STEER
     MIN_WITH_STEER_2 = -MAX_WITH_STEER
+
+    MAX_PURE_STEER = 5.97
 
 
     def __init__(self):
@@ -98,12 +100,21 @@ class Node_DriveControl():
             cmd.left[0], cmd.left[1] = correct_lf, correct_lb
             cmd.right[0], cmd.right[1] = correct_rf, correct_rb
 
+            # print(f"Corrected speed: {correct_lf}, {correct_lb}, {correct_rf}, {correct_rb}")
+
             motor_lf = self.motor_speed(correct_lf)
             motor_lb = self.motor_speed(correct_lb)
             motor_rf = self.motor_speed(correct_rf)
             motor_rb = self.motor_speed(correct_rb)
 
+            # Final if statement to make sure that in place steering works.
+            if correct_lf == correct_lb and correct_rf == correct_rb and motor_rb == - motor_lb:
+                motor_lf = correct_lf/Node_DriveControl.MAX_PURE_STEER
+                motor_lb = correct_lb/Node_DriveControl.MAX_PURE_STEER
+                motor_rf = correct_rf/Node_DriveControl.MAX_PURE_STEER
+                motor_rb = correct_rb/Node_DriveControl.MAX_PURE_STEER
             
+
             motor_val.data.append(motor_rb * 100)  # rb
             motor_val.data.append(motor_lf * 58)  # lf, too fast
             motor_val.data.append(motor_lb * -100)  # lb, tpo slow

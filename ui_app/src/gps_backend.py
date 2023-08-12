@@ -20,7 +20,7 @@ class GPS_Backend():
         
 
     def plot_gps_figure(self,gps_data):
-        self.ui.gps_data.setText("latitude: " + str(gps_data.data[0])+ "\nlongitude: " + str(gps_data.data[1]))
+        self.ui.update_gps_data(gps_data)
 
         self.ui.gps_fig.clear()
         

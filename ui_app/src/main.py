@@ -79,8 +79,10 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.arm_error_subscriber = rospy.Subscriber("armError", String, self.arm_backend.set_error)
 
         #gps
-        self.gps_subscriber = rospy.Subscriber("roverGPSData", Float32MultiArray, self.gps_backend.plot_gps_figure)
-        
+        self.gps_subscriber = rospy.Subscriber("roverGPSData", Float32MultiArray, self.set_gps_data)
+        self.pan_tilt_angle_subscriber = rospy.Subscriber("panTiltAngles", Float32MultiArray, self.set_pan_tilt_angle)
+        self.gps_data = []
+        self.pan_tilt_angle = []
 
         self.save_button.clicked.connect(self.save_image)
 
@@ -94,9 +96,16 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.timer_camera.start(33)
         self.count = 0
 
+    def set_gps_data(self, gps_data):
+        self.gps_data = gps_data.data
+        self.gps_backend.plot_gps_figure(gps_data)
+    
+    def set_pan_tilt_angle(self, angle_data):
+        self.pan_tilt_angle = angle_data.data
+
     def save_image(self):
         save_image = self.cam_image
-        image_name = self.image_name.text()
+        image_name = f"lat: {self.gps_data[0]}, long: {self.gps_data[1]} v angle: {self.pan_tilt_angle[0]}, h angle: {self.pan_tilt_angle[1]}"
         cv2.imwrite(image_name, save_image)
 
     def send_science_cmd(self):

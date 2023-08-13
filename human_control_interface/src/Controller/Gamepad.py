@@ -51,10 +51,48 @@ class Gamepad():
 
         if pygame.joystick.get_count() == 1:
             # Take the only Gamepad available
+            print("only one joystick")
             self.controller = pygame.joystick.Joystick(0)
             self.controller.init()
+            print(pygame.joystick.get_count())
+
+        elif pygame.joystick.get_count() == 2:
+            try:
+                controller1 = pygame.joystick.Joystick(0)
+                controller1.init()
+            except:
+                print("controller not intialised")
+            try:
+                controller2 = pygame.joystick.Joystick(1)
+                controller2.init()
+                print ("DOUBLE CONTROLL DETECTED")
+            except:
+                print("two failed")
+        
+            if controller1.get_id() == 0:
+                self.controller = controller1
+                #print("gamepad initalize success")
+            else:
+                self.controller = controller2
+
+            # while True:
+                
+            #     pygame.event.get()
+            #     print("DEVICE ID > "+str(controller1.get_id()))
+            #     #GET_NAME(pygame.joystick.Joystick.get_name)
+            #     print ("DEVICE NAME" + str(controller1.get_name()))
+            #     #GET NUM AXES(pygame.joystick.Joystick.get_numaxes)
+            #     print ("NUMAXES > "+str(controller1.get_numaxes()))
+            #     print("DEVICE ID > "+str(controller2.get_id()))
+            #     #GET_NAME(pygame.joystick.Joystick.get_name)
+            #     print ("DEVICE NAME" + str(controller2.get_name()))
+            #     #GET NUM AXES(pygame.joystick.Joystick.get_numaxes)
+            #     print ("NUMAXES > "+str(controller2.get_numaxes()))
+                
+
+                            
         else:
-            # Either no Gamepad found or multiple detected (currently unsupported)
+            # Either no Gamepad found 
             print(pygame.joystick.get_count())
             
             self.controller = None
@@ -151,3 +189,5 @@ class GamepadData():
         self.a4 = 0
         self.a5 = 0
         self.a6 = 0
+
+Gamepad()

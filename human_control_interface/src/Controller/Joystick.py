@@ -181,9 +181,30 @@ class Joystick():
         pygame.joystick.init()
 
         if pygame.joystick.get_count() == 1:
-            # Take the only Joystick available
+            # Take the only joystick available
+            print("only one joystick")
             self.controller = pygame.joystick.Joystick(0)
             self.controller.init()
+            print(pygame.joystick.get_count())
+
+        elif pygame.joystick.get_count() == 2:
+            try:
+                controller1 = pygame.joystick.Joystick(0)
+                controller1.init()
+            except:
+                print("controller not intialised")
+            try:
+                controller2 = pygame.joystick.Joystick(1)
+                controller2.init()
+                print ("DOUBLE CONTROLL DETECTED")
+            except:
+                print("two failed")
+        
+            if controller1.get_id() == 1:
+                self.controller = controller1
+                #print("gamepad initalize success")
+            else:
+                self.controller = controller2
         else:
             # Either no Joystick found or multiple detected (currently unsupported)
             self.controller = None

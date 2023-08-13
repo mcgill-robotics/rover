@@ -189,22 +189,21 @@ class Joystick():
 
         elif pygame.joystick.get_count() == 2:
             try:
-                controller1 = pygame.joystick.Joystick(0)
-                controller1.init()
+                controller = pygame.joystick.Joystick(0)
+                controller.init()
+                print ("SINGLE CONTROLL DETECTED ", controller.get_id(), " ", controller.get_name())
             except:
                 print("controller not intialised")
             try:
-                controller2 = pygame.joystick.Joystick(1)
-                controller2.init()
-                print ("DOUBLE CONTROLL DETECTED")
+                controller = pygame.joystick.Joystick(1)
+                controller.init()
+                print ("DOUBLE CONTROLL DETECTED ", controller.get_id(), " ", controller.get_name())
             except:
                 print("two failed")
         
-            if controller1.get_id() == 1:
-                self.controller = controller1
+            if controller.get_id() == 0 or controller.get_name() == "Logitech Extreme 3D":
+                self.controller = controller
                 #print("gamepad initalize success")
-            else:
-                self.controller = controller2
         else:
             # Either no Joystick found or multiple detected (currently unsupported)
             self.controller = None
@@ -215,37 +214,38 @@ class Joystick():
     def update(self):
         """Gets the latest data from the joystick from event information received from the joystick
         """
-        for an_event in pygame.event.get():
-            try:
-                # Get event information
-                if an_event.type == pygame.JOYBUTTONDOWN or an_event.type == pygame.JOYBUTTONUP:
-                    self.data.b1 = self.controller.get_button(0)
-                    self.data.b2 = self.controller.get_button(1)
-                    self.data.b3 = self.controller.get_button(2)
-                    self.data.b4 = self.controller.get_button(3)
-                    self.data.b5 = self.controller.get_button(4)
-                    self.data.b6 = self.controller.get_button(5)
-                    self.data.b7 = self.controller.get_button(6)
-                    self.data.b8 = self.controller.get_button(7)
-                    self.data.b9 = self.controller.get_button(8)
-                    self.data.b10 = self.controller.get_button(9)
-                    self.data.b11 = self.controller.get_button(10)
-                    self.data.b12 = self.controller.get_button(11)
-                elif an_event.type == pygame.JOYAXISMOTION:
-                    self.data.a1 = self.controller.get_axis(0)
-                    self.data.a2 = -1 * self.controller.get_axis(1)
-                    self.data.a3 = self.controller.get_axis(2)
-                    self.data.a4 = -1 * self.controller.get_axis(3)
-                else:
-                    self.data.hat = self.controller.get_hat(0)
+        if self.controller.get_id() == 0 or controller1.get_name() == "Logitech Extreme 3D":
+            for an_event in pygame.event.get():
+                try:
+                    # Get event information
+                    if an_event.type == pygame.JOYBUTTONDOWN or an_event.type == pygame.JOYBUTTONUP:
+                        self.data.b1 = self.controller.get_button(0)
+                        self.data.b2 = self.controller.get_button(1)
+                        self.data.b3 = self.controller.get_button(2)
+                        self.data.b4 = self.controller.get_button(3)
+                        self.data.b5 = self.controller.get_button(4)
+                        self.data.b6 = self.controller.get_button(5)
+                        self.data.b7 = self.controller.get_button(6)
+                        self.data.b8 = self.controller.get_button(7)
+                        self.data.b9 = self.controller.get_button(8)
+                        self.data.b10 = self.controller.get_button(9)
+                        self.data.b11 = self.controller.get_button(10)
+                        self.data.b12 = self.controller.get_button(11)
+                    elif an_event.type == pygame.JOYAXISMOTION:
+                        self.data.a1 = self.controller.get_axis(0)
+                        self.data.a2 = -1 * self.controller.get_axis(1)
+                        self.data.a3 = self.controller.get_axis(2)
+                        self.data.a4 = -1 * self.controller.get_axis(3)
+                    else:
+                        self.data.hat = self.controller.get_hat(0)
 
-                    self.data.hat_x = self.data.hat[0]
-                    self.data.hat_y = self.data.hat[1]
+                        self.data.hat_x = self.data.hat[0]
+                        self.data.hat_y = self.data.hat[1]
 
-            except pygame.error:
-                pass
-            finally:
-                pass
+                except pygame.error:
+                    pass
+                finally:
+                    pass
 
     def printData(self):
         """Sends copy of joystick data to the standard output (sys.out)

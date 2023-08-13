@@ -60,6 +60,7 @@ class Gamepad():
             try:
                 controller1 = pygame.joystick.Joystick(0)
                 controller1.init()
+                print ("SINGLE CONTROLL DETECTED")
             except:
                 print("controller not intialised")
             try:

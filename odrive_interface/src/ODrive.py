@@ -22,7 +22,7 @@ class Node_ODriveInterface():
         self.run()
 
     def handle_drive_command(self, command):
-        self.speed_cmd = command.left[0]
+        self.speed_cmd = (command.left[0])*0.159155
         pass
 
 

@@ -162,5 +162,5 @@ class Node_GamepadProcessing:
 
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(6, 10)
+    gamepadProcess = Node_GamepadProcessing(10, 10)
     #rospy.spin()

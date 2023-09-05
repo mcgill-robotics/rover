@@ -20,6 +20,15 @@ error_codes = {1: "INITIALIZING", 2: "SYSTEM_LEVEL", 4: "TIMING_ERROR",
                268435456: "THERMISTOR_DISCONNECTED", 1073741824: "CALIBRATION_ERROR"}
 
 def decode_errors(n):
+    """
+    Decodes the error code received by an ODrive. Errors in an ODrive are encoded bitwise, where
+    each error is a power of 2, and the final error code is obtained by adding them up. On the ROS end,
+    this is decoded by masking the bits one by one and referring to the error_codes dictionary. This is
+    converted to a string, because it will be transmitted like that to the rest of the nodes.
+
+    :param n: Error code to be decoded, would be an uint32_t if this wasn't Python
+    :returns: A string representing the active errors on the ODrive in comma-separated format
+    """
     num_bits = n.bit_length()
     errors_string = ""
     for i in range(num_bits):
@@ -27,10 +36,11 @@ def decode_errors(n):
         if n & mask:
             errors_string += (error_codes[mask] + ", ")
 
+    # Strip the last two characters (", ") before returning the error string
     return errors_string[:-2]
 
 def enumerate_motors():
-    # TODO: Write enumeration code with multiple motors
+    # TODO: Write enumeration code with multiple motors, verifying that each one is connected
     print("Waiting for ODrives...")
     odrv0 = odrive.find_any(timeout=10)
     if odrv0 is None:
@@ -39,7 +49,16 @@ def enumerate_motors():
     odrv0.clear_errors()
     return odrv0
 
+
 def calibrate_motors(motor_array):
+    """
+    Calibrates all motors in motor_array at once. On failure, this function sets all listed motors to
+    idle and immediately return False.
+
+    :param motor_array: Array of ODrive objects
+    :returns: A boolean to flag success/failure of setup
+
+    """
     # Ask the devices to calibrate if it isn't calibrating already, and wait for a short time for them to respond
     print("Calibrating encoders...")
     for odrv in motor_array:

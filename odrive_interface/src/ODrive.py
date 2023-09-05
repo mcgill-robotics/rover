@@ -2,15 +2,12 @@ import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import init_functions
-# import odrive
 import rospy
 from drive_control.msg import WheelSpeed
 from odrive.enums import AxisState
 
 class Node_ODriveInterface():
     def __init__(self):
-        # Start the connection with odrives
-
         # Initialize node and subscribe to whatever needs to be subscribed to
         self.speed_cmd = 0.0
         rospy.init_node('odrive_interface')
@@ -27,8 +24,7 @@ class Node_ODriveInterface():
 
 
     def run(self):
-        # Enumerate the devices
-        # TODO: Replace the signature with something that actually finds more than one ODrive
+        # TODO: Expand enumerate_motors() to something that actually finds more than one ODrive
         drive_lb = init_functions.enumerate_motors()
         if drive_lb is None:
             raise TimeoutError("No ODrive found")
@@ -51,10 +47,12 @@ class Node_ODriveInterface():
             feedback.right[0], feedback.right[1] = measured_speed_rb, measured_speed_rf
             print(f"\rMeasured Speed: {measured_speed_lb}", end='')
 
-            # See if there are any errors, try to clear them once
+            # See if there are any errors
             if drive_lb.axis0.active_errors != 0:
                 print(f"\nError(s) occurred: ", init_functions.decode_errors(drive_lb.axis0.active_errors))
-                drive_lb.clear_errors()
+                # TODO: Determine with software what to do with errors. Do we clear them and try to move on?
+                # Or do we quit the process and try again from scratch?
+                # drive_lb.clear_errors()
 
             self.rate.sleep()
         

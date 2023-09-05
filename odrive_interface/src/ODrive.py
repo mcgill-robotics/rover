@@ -10,7 +10,7 @@ from odrive.enums import AxisState
 class Node_ODriveInterface():
     def __init__(self):
         # Initialize node and subscribe to whatever needs to be subscribed to
-        self.speed_cmd = 0.0
+        self.lb_speed_cmd = 0.0
         rospy.init_node('odrive_interface')
         self.feedback_publisher = rospy.Publisher("/wheel_velocity_feedback", WheelSpeed, queue_size=1)
         self.command_subscriber = rospy.Subscriber("/wheel_velocity_cmd", WheelSpeed, self.handle_drive_command)
@@ -22,24 +22,26 @@ class Node_ODriveInterface():
         self.run()
 
     def handle_drive_command(self, command):
-        self.speed_cmd = (command.left[0])*0.159155
+        self.lb_speed_cmd = (command.left[0])*0.159155
         pass
 
 
     def run(self):
-        # TODO: Expand enumerate_motors() to something that actually finds more than one ODrive
-        drive_lb = init_functions.enumerate_motors()
-        if drive_lb is None:
-            raise TimeoutError("No ODrive found")
+        # Discover motors on startup and assign variables for each
+        motors_dict = init_functions.enumerate_motors()
+        if not motors_dict:
+            raise IOError("Motor enumeration failed")
+        drive_lb = motors_dict["DRIVE_LB"]
 
+        # Calibrate all motors
         if not init_functions.calibrate_motors([drive_lb]):
             raise IOError("Motor initialization failed")
         
         while not rospy.is_shutdown():
             # Put in speed command
-            drive_lb.axis0.controller.input_vel = self.speed_cmd
+            drive_lb.axis0.controller.input_vel = self.lb_speed_cmd
 
-            # Get feedback
+            # Get feedback and publish it to "/wheel_velocity_feedback"
             feedback = WheelSpeed()
             measured_speed_lb = drive_lb.encoder_estimator0.vel_estimate
             measured_speed_lf = 0
@@ -49,6 +51,7 @@ class Node_ODriveInterface():
             feedback.left[0], feedback.left[1] = measured_speed_lb, measured_speed_lf
             feedback.right[0], feedback.right[1] = measured_speed_rb, measured_speed_rf
             print(f"\rMeasured Speed: {measured_speed_lb}", end='')
+            self.feedback_publisher.publish(feedback)
 
             # See if there are any errors
             if drive_lb.axis0.active_errors != 0:

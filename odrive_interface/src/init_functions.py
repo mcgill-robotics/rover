@@ -1,13 +1,23 @@
 import rospy
 import odrive
-from odrive.enums import AxisState, ProcedureResult
+from odrive.enums import AxisState, ProcedureResult 
+
+"""
+Placeholders for now. In enumerate_motors, these motors will be returned in this order. Serial numbers are also strings,
+because ODrive API requires them to be that way. Note: these serial numbers are hex values, while odrivetool returns
+decimal. So before putting the numbers in here, you should first convert them to hex.
+"""
+drive_serial_numbers = {"DRIVE_LB": "387134683539", "DRIVE_LF": "1", "DRIVE_RB": "2", "DRIVE_RF": "3"}
+arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
 
 
+# Procedure codes are simple indices to this array
 procedure_codes = ["SUCCESS", "BUSY", "CANCELLED", "DISARMED", "NO_RESPONSE", "POLE_PAIR_CPR_MISMATCH",
                    "PHASE_RESISTANCE_OUT_OF_RANGE", "PHASE_INDUCTANCE_OUT_OF_RANGE", "UNBALANCED_PHASES",
                    "UNBALANCED_PHASES", "INVALID_MOTOR_TYPE", "ILLEGAL_HALL_STATE", "TIMEOUT", "HOMING_WITHOUT_ENDSTOP",
                    "INVALID_STATE", "NOT_CALIBRATED", "NOT_CONVERGING"]
 
+# Errors are bitwise encoded
 error_codes = {1: "INITIALIZING", 2: "SYSTEM_LEVEL", 4: "TIMING_ERROR",
                8: "MISSING_ESTIMATE", 16: "BAD_CONFIG", 32: "DRV_FAULT",
                64: "MISSING_INPUT", 256: "DC_BUS_OVER_VOLTAGE",
@@ -39,21 +49,40 @@ def decode_errors(n):
     # Strip the last two characters (", ") before returning the error string
     return errors_string[:-2]
 
-def enumerate_motors():
-    # TODO: Write enumeration code with multiple motors, verifying that each one is connected
-    print("Waiting for ODrives...")
-    odrv0 = odrive.find_any(timeout=10)
-    if odrv0 is None:
-        print("Timeout: no ODrives found")
-        return None
-    odrv0.clear_errors()
-    return odrv0
+def enumerate_motors(search_timeout=5):
+    """
+    Finds all motors by their serial numbers as given in the drive_serial_numbers dict. It will search each
+    motor for search_timeout seconds, after which it returns an empty dict signifying an error. This error should
+    be caught and handled downstream in the main ODrive node. On success, it returns a dict where keys are the
+    motor names and values are the corresponding ODrive objects.
+    
+    :param search_timeout: Timeout for a single motor search. Keep in mind that the search is blocking. Default is 5 seconds.
+    :returns: Dict{"LB_MOTOR": ODrive, "LF_MOTOR": ODrive...}
+    """
+    print("Waiting for motors...")
+    found_motors = {}
+
+    # Keep things limited to the drive motors for now.
+    # TODO: Discuss with software what to do with the arm motors
+    for key, value in drive_serial_numbers.items():
+        print(f"Searching for motor {key} with serial number {value}...")
+        found_motor = odrive.find_any(serial_number=value, timeout=search_timeout)
+        if found_motor is not None:
+            print(f"Motor {key} found.")
+            found_motors[key] = found_motor
+            # Secret hidden debug thing to quit after a single ODrive is found
+            return found_motors
+        else:
+            print(f"Motor {key} not found. Motor enumeration failed!")
+            return {}
+    
+    return found_motors
 
 
 def calibrate_motors(motor_array):
     """
     Calibrates all motors in motor_array at once. On failure, this function sets all listed motors to
-    idle and immediately return False.
+    idle and immediately return False. The errors will be handled downstream in the ODrive node.
 
     :param motor_array: Array of ODrive objects
     :returns: A boolean to flag success/failure of setup

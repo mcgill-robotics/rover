@@ -3,8 +3,8 @@ import odrive
 from odrive.enums import AxisState, ProcedureResult 
 
 """
-Placeholders for now. In enumerate_motors, these motors will be returned in this order. Serial numbers are also strings,
-because ODrive API requires them to be that way. Note: these serial numbers are hex values, while odrivetool returns
+Placeholders for now. In enumerate_motors(), these motors will be returned in this order. Serial numbers are also strings,
+because ODrive API requires them to be that way. Note: correct serial numbers are hex values, while odrivetool returns
 decimal. So before putting the numbers in here, you should first convert them to hex.
 """
 drive_serial_numbers = {"DRIVE_LB": "387134683539", "DRIVE_LF": "1", "DRIVE_RB": "2", "DRIVE_RF": "3"}
@@ -86,7 +86,6 @@ def calibrate_motors(motor_array):
 
     :param motor_array: Array of ODrive objects
     :returns: A boolean to flag success/failure of setup
-
     """
     # Ask the devices to calibrate if it isn't calibrating already, and wait for a short time for them to respond
     print("Calibrating encoders...")

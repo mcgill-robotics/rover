@@ -6,6 +6,7 @@ import rospy
 from drive_control.msg import WheelSpeed
 from odrive.enums import AxisState
 
+# TODO: Once drive is working well, expand this node to include the three arm motors
 class Node_ODriveInterface():
     def __init__(self):
         # Initialize node and subscribe to whatever needs to be subscribed to
@@ -13,6 +14,8 @@ class Node_ODriveInterface():
         rospy.init_node('odrive_interface')
         self.feedback_publisher = rospy.Publisher("/wheel_velocity_feedback", WheelSpeed, queue_size=1)
         self.command_subscriber = rospy.Subscriber("/wheel_velocity_cmd", WheelSpeed, self.handle_drive_command)
+        # TODO: Discuss with software what new topic(s) to create for communicating motor errors as well as motor
+        # meta-commands (e.g. recalibrate, clear errors etc.)
 
         # Frequency of the ODrive I/O
         self.rate = rospy.Rate(100)
@@ -50,7 +53,7 @@ class Node_ODriveInterface():
             # See if there are any errors
             if drive_lb.axis0.active_errors != 0:
                 print(f"\nError(s) occurred: ", init_functions.decode_errors(drive_lb.axis0.active_errors))
-                # TODO: Determine with software what to do with errors. Do we clear them and try to move on?
+                # TODO: Discuss with software what to do with errors. Do we clear them and try to move on?
                 # Or do we quit the process and try again from scratch?
                 # drive_lb.clear_errors()
 

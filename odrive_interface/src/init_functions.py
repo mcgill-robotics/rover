@@ -22,9 +22,9 @@ error_codes = {1: "INITIALIZING", 2: "SYSTEM_LEVEL", 4: "TIMING_ERROR",
 def decode_errors(n):
     """
     Decodes the error code received by an ODrive. Errors in an ODrive are encoded bitwise, where
-    each error is a power of 2, and the final error code is obtained by adding them up. On the ROS end,
-    this is decoded by masking the bits one by one and referring to the error_codes dictionary. This is
-    converted to a string, because it will be transmitted like that to the rest of the nodes.
+    each error is a power of 2, and the final error code is obtained by adding them up to a single uint32_t.
+    On the ROS end, this is decoded by masking the bits one by one and referring to the error_codes dictionary.
+    This is converted to a string, because it will be transmitted like that to the rest of the nodes.
 
     :param n: Error code to be decoded, would be an uint32_t if this wasn't Python
     :returns: A string representing the active errors on the ODrive in comma-separated format

@@ -71,7 +71,8 @@ def calibrate_motors(motor_array):
         if odrv.axis0.current_state != AxisState.ENCODER_OFFSET_CALIBRATION:
             print("Motor {} could not enter calibration mode, calibration aborted. Error(s) occurred: {}".format(odrv.serial_number, decode_errors(odrv.axis0.active_errors)))
             for odrv in motor_array:
-                    odrv.axis0.requested_state = AxisState.IDLE
+                odrv.axis0.requested_state = AxisState.IDLE
+            break
     
     # Wait until calibration is done, abort on failure
     all_done = False

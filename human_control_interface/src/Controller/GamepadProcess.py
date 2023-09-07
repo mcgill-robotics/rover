@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rospy
+from pynput import keyboard
 from human_control_interface.msg import Gamepad_input
 from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
@@ -29,7 +30,17 @@ class Node_GamepadProcessing:
         rospy.init_node("gamepad_process_node")
         
         # Initialize a Gamepad object
-        self.gamepad = Gamepad()
+        self.gamepad_init_successful = False
+        try:
+            self.gamepad = Gamepad()
+            self.gamepad_init_successful = True
+        except:
+            print("Controller not found. Falling back to debug keyboard control")
+            self.listener = keyboard.Listener(on_press=self.keyboardProcessCall)
+            self.keyboard_accumulator_linear = 0.0
+            self.keyboard_accumulator_twist = 0.0
+            self.keyboard_sensitivity = 0.05
+            self.listener.start()
 
 
         # initialize variables for velocity
@@ -63,18 +74,21 @@ class Node_GamepadProcessing:
 
         self.run()
 
-
-
     # The run loop that updates a controller's value.
     def run(self):
         while not rospy.is_shutdown():
             if rospy.is_shutdown():
                 exit()
             try:
+
+                # Skip the rest of the loop if gamepad is not connected
+                if not self.gamepad_init_successful:
+                    continue
+
                 self.gamepad.update()
                 msg = Gamepad_input()
 
-                    # Transfer Data into msg
+                # Transfer Data into msg
                 msg.B1 = self.gamepad.data.b1
                 msg.B2 = self.gamepad.data.b2
                 msg.B3 = self.gamepad.data.b3
@@ -102,6 +116,40 @@ class Node_GamepadProcessing:
             self.rate.sleep()
 
         exit()
+    
+    def keyboardProcessCall(self, key):
+        if key == keyboard.Key.up:
+            # self.roverLinearVelocity = 10
+            self.keyboard_accumulator_linear += self.keyboard_sensitivity
+        if key == keyboard.Key.down:
+            # self.roverLinearVelocity = -10
+            self.keyboard_accumulator_linear -= self.keyboard_sensitivity
+        if key == keyboard.Key.left:
+            self.keyboard_accumulator_twist -= self.keyboard_sensitivity
+        if key == keyboard.Key.right:
+            self.keyboard_accumulator_twist += self.keyboard_sensitivity
+        if key == keyboard.KeyCode.from_char('0'):
+            self.keyboard_accumulator_linear = 0.0
+            self.keyboard_accumulator_twist = 0.0
+        
+        if self.keyboard_accumulator_linear > 1.0:
+            self.keyboard_accumulator_linear = 1.0
+        elif self.keyboard_accumulator_linear < -1.0:
+            self.keyboard_accumulator_linear = -1.0
+
+        if self.keyboard_accumulator_twist > 1.0:
+            self.keyboard_accumulator_twist = 1.0
+        elif self.keyboard_accumulator_twist < -1.0:
+            self.keyboard_accumulator_twist= -1.0  
+        self.roverLinearVelocity = self.maxLinearVelocity * self.keyboard_accumulator_linear
+        self.roverAngularVelocity = self.maxAngularVelocity * self.keyboard_accumulator_twist
+        
+        roverTwist = Twist()
+        roverTwist.linear.x = self.roverLinearVelocity
+        roverTwist.angular.z = self.roverAngularVelocity
+
+        #time.sleep(0.5)
+        self.drive_publisher.publish(roverTwist)
     
     # Poll the gamepad data and then call the respective process call.
     def gamepadProcessCall(self, msg):

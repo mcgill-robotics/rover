@@ -122,8 +122,6 @@ class Node_ArmControl():
             i = self.mode - 1
             self.dq_d[i] = ctrlInput.X_dir * self.jointVelLimits[i]
 
-        # print(f"Angles: {[round(x, 2) for x in self.q]} \nVelocities: {[round(x, 2) for x in self.dq_d]} \n q_d: {[round(x, 2) for x in self.q_d]} \n dx: {[round(x, 2) for x in self.dx]} \n dx_d: {[round(x, 2) for x in self.dx_d]} \n")
-
         # Check Joint Limits of arm joints
         for i in range(self.nbJointsArm):
             if(

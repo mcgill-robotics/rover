@@ -25,23 +25,6 @@ def Pose2Mat(pose):
         T : np.array(4,4)
             DH transform
     """
-    # x = pose[0]
-    # y = pose[1]
-    # z = pose[2]
-    # alpha_x = pose[3]
-    # alpha_y = pose[4]
-    # alpha_z = pose[5]
-
-    # T = np.array([
-    #     np.array([math.cos(alpha_y) * math.cos(alpha_z), -math.cos(alpha_y) * math.sin(alpha_z), math.sin(alpha_y), x]),
-    #     np.array([math.sin(alpha_x) * math.sin(alpha_y) * math.cos(alpha_z) + math.cos(alpha_x) * math.sin(alpha_z),
-    #               -math.sin(alpha_x) * math.sin(alpha_y) * math.sin(alpha_z) + math.cos(alpha_x) * math.cos(alpha_z),
-    #               -math.sin(alpha_x) * math.cos(alpha_y), y]),
-    #     np.array([-math.cos(alpha_x) * math.sin(alpha_y) * math.cos(alpha_z) + math.sin(alpha_x) * math.sin(alpha_z),
-    #               math.cos(alpha_x) * math.sin(alpha_y) * math.sin(alpha_z) + math.sin(alpha_x) * math.cos(alpha_z),
-    #               math.cos(alpha_x) * math.cos(alpha_y), z]),
-    #     np.array([0, 0, 0, 1])
-    # ])
 
     alpha = pose[3]
     beta = pose[4]
@@ -84,22 +67,6 @@ def Mat2Pose(T):
         np.array(6, 1)
             [x, y, z, alpha_x, alpha_y, alpha_z]
     """
-    # if(T[0][2] < 1):
-    #     if(T[0][2] > -1):
-    #         alpha_x = math.atan2(-T[1][2], T[2][2])
-    #         alpha_y = math.atan2(T[0][2], math.sqrt(1-pow(T[0][2], 2)))
-    #         alpha_z = math.atan2(-T[0][1], T[0][0])
-    #     else:
-    #         alpha_x = math.atan2(-T[1][0], T[1][1])
-    #         alpha_y = -math.pi/2
-    #         alpha_z = 0
-
-    # else:
-    #     alpha_x = math.atan2(T[1][0], T[1][1])
-    #     alpha_y = math.pi/2
-    #     alpha_z = 0
-
-    # return np.array([T[0][3], T[1][3], T[2][3], alpha_x, alpha_y, alpha_z])
 
     if abs(T[2,0]) != 1:
         beta = -math.asin(T[2,0])
@@ -312,13 +279,6 @@ def project(line, vector):
         length *= -1
 
     return length
-    """
-    line = np.array(line)
-    vector = np.array(vector)
-
-    val = (np.dot(vector, line)/np.sqrt(sum(line **2))**2)*line 
-    print(val)
-    return val"""
     
 def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, chose_lower):
     """Calculates the necessary angles of all joints to achieve the target end effector position
@@ -469,18 +429,12 @@ def inverseKinematicsAngleOptions(hand_pose, cur_pose): #, joint_truth
     elbow_pose_1 = poses[0][1]
     elbow_pose_2 = poses[1][1]
 
-    # return (
-    #     [shoulder_pose, elbow_pose_1, wrist_pose, wrist_pose, hand_pose[:3]],
-    #     [shoulder_pose, elbow_pose_2, wrist_pose, wrist_pose, hand_pose[:3]],
-    # )
-
     return (
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, 0),
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, 180),
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, 0),
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, 180)
     )
-# calculate_angles(hand_pose, wrist_pose, elbow_pose, chose_lower)
 
 def legalIKPositionPicker(poses, cur_pose):
     """ Determines which of the given poses is the best choice. 

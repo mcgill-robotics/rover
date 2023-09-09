@@ -5,10 +5,10 @@ jointUpperLimits = [90*np.pi/180, 70*np.pi/180, 70*np.pi/180, 38*np.pi/180, 85*n
 jointLowerLimits = [-90*np.pi/180, -60*np.pi/180, -20*np.pi/180, -35*np.pi/180, -85*np.pi/180] # rad
 
 arm_DH = [
-    [0.0575,                0,     0, -90*math.pi/180], #vertical offset from base
-    [     0, -90*math.pi/180,   0.5,               0], #first link
-    [     0,  90*math.pi/180,   0.4,               0], #second link
-    [     0,  90*math.pi/180,     0,  90*math.pi/180], 
+    [0.0575,                0,     0, -90*math.pi/180], #waist - shoulder : vertical offset from base
+    [     0, -90*math.pi/180,   0.5,               0], #shoulder - elbow
+    [     0,  90*math.pi/180,   0.4,               0], #elbow - wrist
+    [     0,  90*math.pi/180,     0,  90*math.pi/180], # wrist - hand
     [ 0.034,               0,     0,               0] #hand 
 ]
 
@@ -255,7 +255,7 @@ def inverseVelocity(q, dx):
 
     return dq
 
-def project(line, vector):
+def projection_length(line, vector):
     """
     Parameters
     --------
@@ -266,8 +266,8 @@ def project(line, vector):
         
     Returns
     --------
-        proj_coord : float
-            horizontal coordinate on the projection plane
+        length : float
+            length of projected vector
     """
     
     dot_product = line[0] * vector[0] + line[1] * vector[1]
@@ -295,13 +295,13 @@ def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, c
             the last joint
     """
     projection_line = [ee_target[0], ee_target[1]]
-    hand_proj = project(projection_line, ee_target[:2])
+    hand_proj = projection_length(projection_line, ee_target[:2])
     hand_coordinates = (hand_proj, ee_target[2])
 
-    wrist_proj = project(projection_line, wrist_target[:2])
+    wrist_proj = projection_length(projection_line, wrist_target[:2])
     wrist_coordinates = (wrist_proj, wrist_target[2])
 
-    elbow_proj = project(projection_line, elbow_target[:2])
+    elbow_proj = projection_length(projection_line, elbow_target[:2])
     elbow_coordinates = (elbow_proj, elbow_target[2])
 
     true_base_coordinates = (0, 0, arm_DH[0][0])

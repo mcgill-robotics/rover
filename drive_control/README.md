@@ -2,6 +2,7 @@
 
 ## Messages manipulated
 /wheel_velocity_cmd - Message from user's end. Wheel velocities from drive_control_node steering calculations. Units: rad/s
+
 /rover_velocity_controller/cmd_vel - Twist velocities from gamepad inputs. Units: rad/s
 
 /feedback_velocity - Rover computer feedback velocities from firmware.

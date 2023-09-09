@@ -1,0 +1,5 @@
+<launch>
+    <!-- Take launch file from arm_control -->
+    <include file="$(find arm_control)/launch/arm_sim.launch" />
+
+</launch>

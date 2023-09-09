@@ -1,0 +1,13 @@
+<launch>
+    <!-- Node for the Game controller -->
+    <node pkg="human_control_interface" type="GamepadProcess.py" name="gamepad" output="screen">
+    </node>
+
+    <!-- Node for the drive controller -->
+    <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
+    </node>
+
+    <!-- Set the gamepad to send command to the arm system initially -->
+    <node pkg="rostopic" type="rostopic" name="system_selection" args="pub system_selection std_msgs/Int16 'data: 0'"/>
+    
+</launch>

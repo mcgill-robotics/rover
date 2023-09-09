@@ -1,0 +1,5 @@
+<launch>
+    <!-- Take launch file from rover_gazebo -->
+    <include file="$(find rover_gazebo)/launch/rover_drive_sim.launch" />
+
+</launch>

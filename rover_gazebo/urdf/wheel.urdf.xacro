@@ -1,64 +1,66 @@
 <?xml version="1.0"?>
 
-<robot name="wheel" xmlns:xacro="http://ros.org/wiki/xacro" >
-
-
-  	<xacro:property name="wheel_kp" value="600000" />
-    <xacro:property name="wheel_kd" value="3" />
-    <xacro:property name="wheel_mu1" value="10000000" />
-    <xacro:property name="wheel_mu2" value="10000000" />
+<robot name="wheel" xmlns:xacro="http://ros.org/wiki/xacro">
+	<xacro:property name="wheel_kp" value="10000000.0" />
+	<xacro:property name="wheel_kd" value="1.0" />
+	<xacro:property name="wheel_mu1" value="5" />
+	<xacro:property name="wheel_mu2" value="5" />
 	<xacro:property name="M_PI" value="3.14159265" />
 
-<xacro:macro name="wheel" params="wheel_prefix parent_link *joint_pose">
-
+	<xacro:macro name="wheel" params="wheel_prefix parent_link *joint_pose">
 		<!-- Wheel Link -->
 		<link name="${wheel_prefix}_wheel_link">
 			<inertial>
-				<mass value="0.144" />
+				<mass value="1.2" />
 				<origin xyz="0 0 0" />
-				<inertia  ixx="0.00108333333333" ixy="0" ixz="0" iyy="0.00108333333333" iyz="0" izz="0.002" />
+				<!-- <inertia  ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" /> -->
+				<inertia ixx="0.142" ixy="0.0003118" ixz="0.0000392177" iyy="0.14155823"
+					iyz="-0.000062645" izz="1.3729" />
 			</inertial>
 			<visual>
-				<xacro:if value="$(arg mesh_enabled)">
-					<origin xyz="0 0 0" rpy="0 0 ${M_PI/2}" />
-					<geometry>
-						<mesh filename="package://rover_gazebo/meshes/wheel.dae" />
-					</geometry> 
-				</xacro:if>
-				<xacro:unless value="$(arg mesh_enabled)">
-					<origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
-					<geometry>
-						<cylinder length="0.02" radius="0.04688" />
-					</geometry>
-				</xacro:unless>
-			</visual>
-			<collision>
 				<origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
 				<geometry>
-						<cylinder length="0.02" radius="0.04688" />
+					<mesh filename="package://rover_gazebo/meshes/full_wheel_assembly_fixed.dae" />
+				</geometry>
+			</visual>
+			<collision>
+				<origin xyz="0.03 0 0" rpy="0 ${M_PI/2} 0" />
+				<geometry>
+					<cylinder length="0.2" radius="0.14" />
 				</geometry>
 			</collision>
 		</link>
 
 		<!-- Wheel Joint -->
 		<joint name="${wheel_prefix}_wheel" type="continuous">
-			<parent link="${parent_link}"/>
-			<child link="${wheel_prefix}_wheel_link"/>
-			<xacro:insert_block name="joint_pose"/>
-			<axis xyz="0 1 0" rpy="0 0 0" />
-			<dynamics damping="1" friction="100.0" />
+			<parent link="${parent_link}" />
+			<child link="${wheel_prefix}_wheel_link" />
+			<xacro:insert_block name="joint_pose" />
+			<xacro:if value="${wheel_prefix == 'left'}">
+				<axis xyz="-1 0 0" rpy="0 0 0" />
+			</xacro:if>
+			<xacro:if value="${wheel_prefix == 'right'}">
+				<axis xyz="1 0 0" rpy="0 0 0" />
+			</xacro:if>
+			<xacro:if value="${wheel_prefix == 'rear_left'}">
+				<axis xyz="-1 0 0" rpy="0 0 0" />
+			</xacro:if>
+			<xacro:if value="${wheel_prefix == 'rear_right'}">
+				<axis xyz="1 0 0" rpy="0 0 0" />
+			</xacro:if>
+			<limit effort="300" velocity="50.0" />
+			<!-- <dynamics damping="1" friction="100.0" /> -->
 		</joint>
-  
+
 		<gazebo reference="${wheel_prefix}_wheel_link">
-			<mu1 value="${wheel_mu1}"/>			
-			<mu2 value="${wheel_mu2}"/>
-			<kp>${wheel_kp}</kp>
-    		<kd>${wheel_kd}</kd>
-			<dampingFactor>0.05</dampingFactor>
-			<fdir1 value="1 0 0"/>
+			<mu1 value="${wheel_mu1}" />
+			<mu2 value="${wheel_mu2}" />
+			<kp value="${wheel_kp}" />
+			<kd value="${wheel_kd}" />
+			<material>Gazebo/Grey</material>
 		</gazebo>
 
-		<transmission name="${wheel_prefix}_wheel_trans" type="SimpleTransmission">
+		<transmission name="${wheel_prefix}_wheel_trans">
 			<type>transmission_interface/SimpleTransmission</type>
 			<actuator name="${wheel_prefix}_wheel_motor">
 				<mechanicalReduction>1</mechanicalReduction>
@@ -68,6 +70,6 @@
 			</joint>
 		</transmission>
 
-</xacro:macro>
+	</xacro:macro>
 
 </robot>

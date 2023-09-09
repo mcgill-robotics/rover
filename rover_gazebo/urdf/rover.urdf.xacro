@@ -1,5 +1,50 @@
 <?xml version="1.0"?>
 <robot name="myfirst" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <transmission name="right_transmission">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="right_wheel">
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="right_motor">
+            <mechanicalReduction>1.0</mechanicalReduction>
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </actuator>
+    </transmission>
+
+    <transmission name="left_transmission">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="left_wheel">
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="left_motor">
+            <mechanicalReduction>1.0</mechanicalReduction>
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </actuator>
+    </transmission>
+
+    <transmission name="rear_right_transmission">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="rear_right_wheel">
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="rear_right_motor">
+            <mechanicalReduction>1.0</mechanicalReduction>
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </actuator>
+    </transmission>
+
+    <transmission name="rear_left_transmission">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="rear_left_wheel">
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="rear_left_motor">
+            <mechanicalReduction>1.0</mechanicalReduction>
+            <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+        </actuator>
+    </transmission>
+
     <xacro:include filename="$(find rover_gazebo)/urdf/wheel.urdf.xacro" />
     <xacro:include filename="$(find rover_gazebo)/urdf/depth_camera.urdf.xacro" />
     <link name="base_link">
@@ -55,7 +100,9 @@
 
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
             <robotNamespace>/</robotNamespace>
         </plugin>
     </gazebo>
+
 </robot>

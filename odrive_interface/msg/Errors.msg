@@ -1,7 +1,0 @@
-string drive_lb_errors
-string drive_rb_errors
-string drive_lf_errors
-string drive_rf_errors
-string arm_waist_errors
-string arm_tumor_errors
-string arm_elbow_errors

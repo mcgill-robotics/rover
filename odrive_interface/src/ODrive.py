@@ -6,6 +6,7 @@ sys.path.append(currentdir)
 # import init_functions
 import rospy
 from drive_control.msg import WheelSpeed
+from odrive_interface.msg import MotorError, MotorState
 import odrive
 from odrive.enums import AxisState, ProcedureResult
 
@@ -13,9 +14,15 @@ from odrive.enums import AxisState, ProcedureResult
 Placeholders for now. In enumerate_motors(), these motors will be returned in this order. Serial numbers are also strings,
 because ODrive API requires them to be that way. Note: correct serial numbers are hex values, while odrivetool returns
 decimal. So before putting the numbers in here, you should first convert them to hex.
+
+drive_ids and arm_ids exist to make reverse searching easier. Compared to iterating through the original array values to
+find keys, this is an ugly but efficient solution.
 """
 drive_serial_numbers = {"DRIVE_LB": "387134683539", "DRIVE_LF": "1", "DRIVE_RB": "2", "DRIVE_RF": "3"}
 arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
+
+drive_ids = {'387134683539': 'DRIVE_LB', '1': 'DRIVE_LF', '2': 'DRIVE_RB', '3': 'DRIVE_RF'}
+arm_ids = {'4': 'ARM_WAIST', '5': 'ARM_TUMOR', '6': 'ARM_ELBOW'}
 
 
 # Procedure codes are simple indices to this array
@@ -206,21 +213,34 @@ def calibrate_motors(motor_array):
 # TODO: Once drive is working well, expand this node to include the three arm motors
 class Node_ODriveInterface():
     def __init__(self):
-        # Initialize node and subscribe to whatever needs to be subscribed to
+        self.drive_lb = None
+        self.drive_rb = None
         self.lb_speed_cmd = 0.0
+        self.rb_speed_cmd = 0.0
+        self.lf_speed_cmd = 0.0
+        self.rf_speed_cmd = 0.0
+
+        self.active_errors = {"DRIVE_LB": 0, "DRIVE_LF": 0, "DRIVE_RB": 0, "DRIVE_RF": 0}
+
+        # Subscriptions
         rospy.init_node('odrive_interface')
         self.feedback_publisher = rospy.Publisher("/wheel_velocity_feedback", WheelSpeed, queue_size=1)
+        self.error_publisher = rospy.Publisher("/odrive_error", MotorError, queue_size=1)
+        self.state_publisher = rospy.Publisher("/odrive_state", MotorState, queue_size=1)
         self.command_subscriber = rospy.Subscriber("/wheel_velocity_cmd", WheelSpeed, self.handle_drive_command)
-        # TODO: Discuss with software what new topic(s) to create for communicating motor errors as well as motor
-        # meta-commands (e.g. recalibrate, clear errors etc.)
+        # TODO: Determine what metacommands software want to use
+        # self.metacommand_subscriber = rospy.Subscriber("/odrive_meta_cmd")
+        
 
         # Frequency of the ODrive I/O
         self.rate = rospy.Rate(100)
         self.run()
 
     def handle_drive_command(self, command):
-        self.lb_speed_cmd = (command.left[0])*0.159155
-        pass
+        self.lb_speed_cmd = command.left[0] * 0.159155
+        self.lf_speed_cmd = command.left[1] * 0.159155
+        self.rb_speed_cmd = command.right[0] * 0.159155
+        self.rf_speed_cmd = command.right[1] * 0.159155
 
 
     def run(self):
@@ -228,40 +248,91 @@ class Node_ODriveInterface():
         motors_dict = enumerate_motors()
         if not motors_dict:
             raise IOError("Motor enumeration failed")
+        
         drive_lb = motors_dict["DRIVE_LB"]
+        # drive_lf = motors_dict["DRIVE_LF"]
+        # drive_rb = motors_dict["DRIVE_RB"]
+        # drive_rf = motors_dict["DRIVE_RF"]
+        drive_motors = [drive_lb]
 
         # Calibrate all motors
-        if not calibrate_motors([drive_lb]):
+        if not calibrate_motors(drive_motors):
             raise IOError("Motor initialization failed")
         
         while not rospy.is_shutdown():
             # Put in speed command
             drive_lb.axis0.controller.input_vel = self.lb_speed_cmd
+            # drive_lf.axis0.controller.input_vel = self.lb_speed_cmd
+            # drive_rb.axis0.controller.input_vel = self.lb_speed_cmd
+            # drive_rf.axis0.controller.input_vel = self.lb_speed_cmd
 
             # Get feedback and publish it to "/wheel_velocity_feedback"
             feedback = WheelSpeed()
             measured_speed_lb = drive_lb.encoder_estimator0.vel_estimate
-            measured_speed_lf = 0
-            measured_speed_rb = 0
-            measured_speed_rf = 0
+            measured_speed_lf = 0.0
+            measured_speed_rb = 0.0
+            measured_speed_rf = 0.0
 
             feedback.left[0], feedback.left[1] = measured_speed_lb, measured_speed_lf
             feedback.right[0], feedback.right[1] = measured_speed_rb, measured_speed_rf
-            print(f"\rMeasured Speed: {measured_speed_lb}", end='')
             self.feedback_publisher.publish(feedback)
 
-            # See if there are any errors
-            if drive_lb.axis0.active_errors != 0:
-                print(f"\nError(s) occurred: ", decode_errors(drive_lb.axis0.active_errors))
-                # TODO: Discuss with software what to do with errors. Do we clear them and try to move on?
-                # Or do we quit the process and try again from scratch?
-                # drive_lb.clear_errors()
+            print(f"\rDRIVE_LB: {round(measured_speed_lb, 2)}, DRIVE_LF: {round(measured_speed_lf, 2)}, \
+                  DRIVE_RB: {round(measured_speed_rb, 2)}, DRIVE_RF: {round(measured_speed_rf, 2)}", end='')
+
+            # Poll the ODrives for their states and check for errors
+            for motor in drive_motors:
+                state_fb = MotorState()
+                state_fb.id = drive_ids[motor.serial_number]
+                # state_fb.state =
+                self.state_publisher.publish(state_fb)
+
+                if motor.axis0.active_errors != 0:
+                    # Tell the rover to stop
+                    for motor in drive_motors:
+                        motor.axis0.controller.input_vel = 0
+                    
+                    # Wait until it actually stops
+                    motor_stopped = False
+                    while not motor_stopped:
+                        motor_stopped = True
+                        for motor in drive_motors:
+                            if abs(motor.encoder_estimator0.vel_estimate) >= 0.01:
+                                motor_stopped = False
+                        if rospy.is_shutdown():
+                            print("Shutdown prompt received. Setting all motors to idle state.")
+                            for motor in drive_motors:
+                                motor.axis0.requested_state = AxisState.IDLE
+                            break
+                    
+                    # Wait for two seconds while all the transient currents and voltages calm down
+                    rospy.sleep(2)
+                    
+                    # Now try to recover from the error. This will always succeed the first time, but if
+                    # the error persists, the ODrive will not allow the transition to closed loop control, and
+                    # re-throw the error.
+                    motor.clear_errors()
+                    rospy.sleep(0.5)
+                    motor.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
+                    rospy.sleep(0.5)
+
+                    # If the motor cannot recover successfully publish a message about the error, then print to console
+                    if motor.active_errors != 0:
+                        error_fb = MotorError()
+                        error_fb.id = drive_ids[motor.serial_number]
+                        error_fb.error = decode_errors(motor.axis0.active_errors)
+                        self.error_publisher.publish(error_fb)
+                        print(f"\nError(s) occurred. Motor ID: {error_fb.id}, Error(s): {error_fb.error}")
+                    
+                    # After this point, what to do is up to the pilot's judgement. If the wheels failed diagonally, it
+                    # might be worth trying to move!
 
             self.rate.sleep()
         
         # On shutdown, bring motors to idle state
         print("Shutdown prompt received. Setting all motors to idle state.")
-        drive_lb.axis0.requested_state = AxisState.IDLE
+        for motor in drive_motors:
+            motor.axis0.requested_state = AxisState.IDLE
 
 
 if __name__ == "__main__":

@@ -1,0 +1,33 @@
+#!/usr/bin/python
+
+import argparse
+
+from ros_introspection.util import get_packages
+
+from roscompile import get_functions
+from roscompile.diff import preview_changes
+from roscompile.terminal import query_yes_no
+from roscompile.util import get_config
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--interactive', action='store_true')
+    args = parser.parse_args()
+
+    pkgs = get_packages()
+    config = get_config()
+    skip_fixes = config.get('skip_fixes', [])
+
+    for package in pkgs:
+        for name, fne in get_functions().items():
+            if name in skip_fixes:
+                continue
+            if args.interactive:
+                if preview_changes(package, name, fne, len(pkgs) > 1):
+                    if query_yes_no('Would you like to make this change?'):
+                        fne(package)
+                        package.write()
+                    print('')
+            else:
+                fne(package)
+        package.write()

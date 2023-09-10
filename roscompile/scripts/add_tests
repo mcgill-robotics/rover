@@ -1,0 +1,82 @@
+#!/usr/bin/python
+
+import argparse
+import os
+
+from ros_introspection.cmake import Command
+from ros_introspection.util import get_packages
+
+from roscompile.cmake import check_cmake_dependencies_helper
+
+
+def add_test_command(test_section, cmd_name, values=None):
+    if len(test_section.content_map[cmd_name]) != 0:
+        return
+    cmd = Command(cmd_name)
+    if values is not None:
+        cmd.add_section('', values)
+    test_section.add_command(cmd)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-r', '--roslaunch', action='store_true', help='Add roslaunch tests')
+parser.add_argument('-l', '--lint', action='store_true', help='Add roslint tests')
+parser.add_argument('-a', '--all', action='store_true', help='Add roslaunch and roslint tests')
+args = parser.parse_args()
+
+if not args.roslaunch and not args.lint and not args.all:
+    print('Error! No tests specified.')
+    exit(0)
+if args.all:
+    args.roslaunch = True
+    args.lint = True
+
+pkgs = get_packages()
+
+for package in pkgs:
+    print(package.name)
+    dependencies = set()
+
+    if len(package.launches) != 0 and args.roslaunch:
+        dependencies.add('roslaunch')
+
+    if args.lint:
+        dependencies.add('roslint')
+
+    if len(dependencies) == 0:
+        continue
+
+    package.manifest.add_packages(set(), set(), dependencies)
+    test_section = package.cmake.get_test_section(create_if_needed=True)
+    check_cmake_dependencies_helper(test_section, dependencies, check_catkin_pkg=False)
+
+    if 'roslaunch' in dependencies:
+        add_test_command(test_section, 'roslaunch_add_file_check', ['launch'])
+        # TODO: Assumes that the launch files are in the launch folder
+
+    if args.lint:
+        python_source = package.source_code.get_source_by_language('python')
+        if python_source:
+            # Split into two sections, things with the .py extension and those without
+            py_extension = []
+            without = []
+
+            for src in python_source:
+                fn = src.rel_fn
+                ext = os.path.splitext(fn)[-1]
+                if ext == '.py':
+                    py_extension.append(fn)
+                else:
+                    without.append(fn)
+
+            if py_extension:
+                add_test_command(test_section, 'roslint_python')
+            if without:
+                add_test_command(test_section, 'roslint_python', without)
+
+        if package.source_code.get_source_by_language('c++'):
+            add_test_command(test_section, 'roslint_cpp')
+
+        add_test_command(test_section, 'roslint_add_test')
+
+    package.write()

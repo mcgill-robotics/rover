@@ -14,8 +14,9 @@ class Node_CameraFrameSub():
 
     def __init__(self):
         self.frames = None 
-        rospy.init_node('camera_frame_subscriber')
-        self.camera_frame_subscriber = rospy.Subscriber('/camera_frames', Image, self.display_frames)
+        rclpy.init()
+        node = rclpy.create_node('camera_frame_subscriber')
+        self.camera_frame_subscriber = node.create_subscription(Image, '/camera_frames', self.display_frames)
 
 
     def display_frames(self, frame):

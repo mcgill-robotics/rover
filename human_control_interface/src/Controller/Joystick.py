@@ -40,9 +40,10 @@ class Node_Joystick():
             rospy.logerr(str(error))
 
         # Initialize ROS
-        rospy.init_node("joystick", anonymous=False)
-        self.joystick_publisher = rospy.Publisher("joystick_data", Joystick_input, queue_size=1)
-        self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
+        rclpy.init()
+        node = rclpy.create_node("joystick", anonymous=False)
+        self.joystick_publisher = node.create_publisher(Joystick_input, queue_size=1, "joystick_data")
+        self.arm_publisher = node.create_publisher(ArmControllerInput, queue_size=1, "arm_controller_input")
 
         self.prevB3 = 0
         self.prevB4 = 0

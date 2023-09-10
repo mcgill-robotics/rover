@@ -11,9 +11,11 @@ class Node_ScienceSim():
 
   def __init__(self):
 
-    rospy.init_node("science_sim", anonymous=False)
-    self.science_cmd_subscriber = rospy.Subscriber("scienceCmd", Float32MultiArray, self.update_sim)
-    self.science_state_publisher = rospy.Publisher("scienceFB", Float32MultiArray, queue_size=1)
+    rclpy.init()
+
+    node = rclpy.create_node("science_sim", anonymous=False)
+    self.science_cmd_subscriber = node.create_subscription(Float32MultiArray, "scienceCmd", self.update_sim)
+    self.science_state_publisher = node.create_publisher(Float32MultiArray, queue_size=1, "scienceFB")
 
     # Carousel dimensions and info
     self.carousel_disk_center = (105,0)

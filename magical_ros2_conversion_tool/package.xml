@@ -12,4 +12,7 @@
   <depend>ros_introspection</depend>
   <depend>roscompile</depend>
   <test_depend>roslint</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
 </package>

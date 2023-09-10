@@ -43,16 +43,18 @@ class Node_ArmSim():
 
         self.desiredJointPos = [0]*self.numJoints
 
-        rospy.init_node("arm_sim", anonymous=False)
+        rclpy.init()
 
-        self.armBrushedSubscriber = rospy.Subscriber(
-            "armBrushedCmd", Float32MultiArray, self.updatearmBrushedSim)
-        self.armBrushlessSubscriber = rospy.Subscriber(
-            "armBrushlessCmd", Float32MultiArray, self.updatearmBrushlessSim)
-        self.armBrushedPublisher = rospy.Publisher(
-            "armBrushedFB", Float32MultiArray, queue_size=10)
-        self.armBrushlessPublisher = rospy.Publisher(
-            "armBrushlessFB", Float32MultiArray, queue_size=10)
+        node = rclpy.create_node("arm_sim", anonymous=False)
+
+        self.armBrushedSubscriber = node.create_subscription(Float32MultiArray, 
+            "armBrushedCmd", self.updatearmBrushedSim)
+        self.armBrushlessSubscriber = node.create_subscription(Float32MultiArray, 
+            "armBrushlessCmd", self.updatearmBrushlessSim)
+        self.armBrushedPublisher = node.create_publisher(Float32MultiArray, queue_size=10, 
+            "armBrushedFB")
+        self.armBrushlessPublisher = node.create_publisher(Float32MultiArray, queue_size=10, 
+            "armBrushlessFB")
 
         self.run()
 

@@ -39,7 +39,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         # Setup the UI from Ui_MainWindow
         super().__init__(*args, **kwargs)
         self.setupUi(self)
-        rospy.init_node("UINode", anonymous=True)
+        rclpy.init()
+        node = rclpy.create_node("UINode", anonymous=True)
 
         self.drive_backend = Drive_Backend(self.Drive)
         self.arm_backend = Arm_Backend(self.Arm)
@@ -53,8 +54,8 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
 
         # science
         self.Science.send_button.clicked.connect(self.send_science_cmd)
-        self.science_module_subscriber = rospy.Subscriber("scienceFB", Float32MultiArray, self.science_backend.on_science_feedback)
-        self.science_module_publisher = rospy.Publisher("scienceCmd", Float32MultiArray, queue_size=10)
+        self.science_module_subscriber = node.create_subscription(Float32MultiArray, "scienceFB", self.science_backend.on_science_feedback)
+        self.science_module_publisher = node.create_publisher(Float32MultiArray, queue_size=10, "scienceCmd")
 
         # drive
         self.drive_wheel_velocity_subscriber = rospy.Subscriber('/wheel_velocity_cmd', WheelSpeed,self.drive_backend.update_wheel_velocities)
@@ -62,19 +63,19 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         self.drive_location_subscriber = rospy.Subscriber('/position_pose', Pose,self.drive_backend.update_robot_location)
 
         # arm
-        self.arm_brushed_subscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.arm_backend.update_joints_brushed)
-        self.arm_brushless_subscriber = rospy.Subscriber("armBrushlessCmd", Float32MultiArray, self.arm_backend.update_joints_brushless)
-        self.arm_control_subscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.arm_backend.update_control)
+        self.arm_brushed_subscriber = node.create_subscription(Float32MultiArray, "armBrushedFB", self.arm_backend.update_joints_brushed)
+        self.arm_brushless_subscriber = node.create_subscription(Float32MultiArray, "armBrushlessCmd", self.arm_backend.update_joints_brushless)
+        self.arm_control_subscriber = node.create_subscription(ArmControllerInput, "arm_controller_input", self.arm_backend.update_control)
 
         # TODO: KillSwitch Publisher
 
         # camera selection
         self.timer_camera = qtc.QTimer()  # set up a timer, this is used to control frame rate
         self.cam_image = None
-        self.camera_index_publisher = rospy.Publisher("camera_selection", Int16, queue_size=1)
+        self.camera_index_publisher = node.create_publisher(Int16, queue_size=1, "camera_selection")
         self.camera_selector.currentTextChanged.connect(self.on_camera_changed)
 
-        self.camera_frame_subscriber = rospy.Subscriber('/camera_frames', Image, self.set_image)
+        self.camera_frame_subscriber = node.create_subscription(Image, '/camera_frames', self.set_image)
         self.timer_camera.start(33)
         self.count = 0
 

@@ -22,10 +22,12 @@ class Node_CameraFramePub():
         self.video_capture = cv2.VideoCapture(0, cv2.CAP_V4L2)
         self.video_capture.open(0)
 
-        rospy.init_node('camera_frame_publisher')
-        self.camera_select_subscriber = rospy.Subscriber("camera_selection", Int16, self.select_camera)
+        rclpy.init()
+
+        node = rclpy.create_node('camera_frame_publisher')
+        self.camera_select_subscriber = node.create_subscription(Int16, "camera_selection", self.select_camera)
         self.timer = rospy.Timer(rospy.Duration(0.03), self.timer_callback)
-        self.camera_frame_publisher = rospy.Publisher('/camera_frames', Image, queue_size=10)
+        self.camera_frame_publisher = node.create_publisher(Image, queue_size=10, '/camera_frames')
 
     def timer_callback(self, event):
         try:

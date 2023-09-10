@@ -12,8 +12,9 @@ def parse_pointcloud2_message(msg):
     print([points[:3]])
     
 def listener():
-    rospy.init_node('listener', anonymous=True)
-    rospy.Subscriber("camera/depth/points", PointCloud2, parse_pointcloud2_message)
+    rclpy.init()
+    node = rclpy.create_node('listener', anonymous=True)
+    node.create_subscription(PointCloud2, "camera/depth/points", parse_pointcloud2_message)
     rospy.spin()
 
 if __name__ == '__main__':

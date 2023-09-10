@@ -39,14 +39,15 @@ class Node_ArmControl():
         self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
 
         # Initialize ROS
-        rospy.init_node("arm_control", anonymous=False)
-        self.controllerSubscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
+        rclpy.init()
+        node = rclpy.create_node("arm_control", anonymous=False)
+        self.controllerSubscriber = node.create_subscription(ArmControllerInput, "arm_controller_input", self.controlLoop)
 
         # Arduino message 
-        self.armBrushedPublisher = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.update_arm_brushed_state)
-        self.armBrushlessPublisher = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.update_arm_brushless_state)
-        self.armBrushedPublisher = rospy.Publisher("armBrushedCmd", Float32MultiArray, queue_size=10)
-        self.armBrushlessPublisher = rospy.Publisher("armBrushlessCmd", Float32MultiArray, queue_size=10)
+        self.armBrushedPublisher = node.create_subscription(Float32MultiArray, "armBrushedFB", self.update_arm_brushed_state)
+        self.armBrushlessPublisher = node.create_subscription(Float32MultiArray, "armBrushlessFB", self.update_arm_brushless_state)
+        self.armBrushedPublisher = node.create_publisher(Float32MultiArray, queue_size=10, "armBrushedCmd")
+        self.armBrushlessPublisher = node.create_publisher(Float32MultiArray, queue_size=10, "armBrushlessCmd")
 
         # Control Frequency of the arm controller
         self.rate = rospy.Rate(100)

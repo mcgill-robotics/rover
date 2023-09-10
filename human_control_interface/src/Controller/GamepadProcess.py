@@ -25,7 +25,8 @@ class Node_GamepadProcessing:
 
         """
         # initialize ROS node
-        rospy.init_node("gamepad_process_node")
+        rclpy.init()
+        node = rclpy.create_node("gamepad_process_node")
         
         # Initialize a Gamepad object
         self.gamepad = Gamepad()
@@ -51,8 +52,8 @@ class Node_GamepadProcessing:
         self.active_system = 0
 
         # initialize a subscriber for grabbing data from gamepad
-        self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        self.camera_publisher = rospy.Publisher("camera_controller_input", Camera_Orientation, queue_size=1)
+        self.drive_publisher = node.create_publisher(Twist, queue_size=1, "rover_velocity_controller/cmd_vel")
+        self.camera_publisher = node.create_publisher(Camera_Orientation, queue_size=1, "camera_controller_input")
 
         # Control frequency of the node
         self.rate = rospy.Rate(100)

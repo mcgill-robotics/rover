@@ -29,6 +29,9 @@
   <test_depend>roslint</test_depend>
   <test_depend>rviz_plugin_tutorials</test_depend>
   <test_depend>stereo_msgs</test_depend>
-  <test_depend>tf</test_depend>
+  <test_depend>tf2_ros</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
 
 </package>

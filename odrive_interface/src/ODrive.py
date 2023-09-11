@@ -284,6 +284,7 @@ class Node_ODriveInterface():
             for motor in drive_motors:
                 state_fb = MotorState()
                 state_fb.id = drive_ids[format(motor.serial_number, "x").upper()]
+                # TODO: Decode and add state information
                 # state_fb.state =
                 self.state_publisher.publish(state_fb)
 

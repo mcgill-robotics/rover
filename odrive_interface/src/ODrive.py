@@ -311,15 +311,15 @@ class Node_ODriveInterface():
                     # Now try to recover from the error. This will always succeed the first time, but if
                     # the error persists, the ODrive will not allow the transition to closed loop control, and
                     # re-throw the error.
-                    # motor.clear_errors()
+                    motor.clear_errors()
                     # odrive.dump_errors(motor, True)
-                    motor.axis0.active_errors = 0
+                    # motor.axis0.active_errors = 0
                     rospy.sleep(0.5)
                     motor.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
                     rospy.sleep(0.5)
 
                     # If the motor cannot recover successfully publish a message about the error, then print to console
-                    if motor.active_errors != 0:
+                    if motor.axis0.active_errors != 0:
                         error_fb = MotorError()
                         error_fb.id = drive_ids[format(motor.serial_number, "x").upper()]
                         error_fb.error = decode_errors(motor.axis0.active_errors)

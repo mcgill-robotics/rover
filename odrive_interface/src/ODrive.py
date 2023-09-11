@@ -283,7 +283,7 @@ class Node_ODriveInterface():
             # Poll the ODrives for their states and check for errors
             for motor in drive_motors:
                 state_fb = MotorState()
-                state_fb.id = drive_ids[motor.serial_number]
+                state_fb.id = drive_ids[format(motor.serial_number, "x").upper()]
                 # state_fb.state =
                 self.state_publisher.publish(state_fb)
 
@@ -319,7 +319,7 @@ class Node_ODriveInterface():
                     # If the motor cannot recover successfully publish a message about the error, then print to console
                     if motor.active_errors != 0:
                         error_fb = MotorError()
-                        error_fb.id = drive_ids[motor.serial_number]
+                        error_fb.id = drive_ids[format(motor.serial_number, "x").upper()]
                         error_fb.error = decode_errors(motor.axis0.active_errors)
                         self.error_publisher.publish(error_fb)
                         print(f"\nError(s) occurred. Motor ID: {error_fb.id}, Error(s): {error_fb.error}")

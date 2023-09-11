@@ -324,13 +324,15 @@ class Node_ODriveInterface():
                         self.error_publisher.publish(error_fb)
                         print(f"\nError(s) occurred. Motor ID: {error_fb.id}, Error(s): {error_fb.error}")
                     
-                    # Finally, hang the node and keep trying to recover until the error is gone or the shutdown signal is received
-                    print(f"\nMotor {error_fb.id} could not recover from error(s) {error_fb.error}. Will keep trying until shutdown signal is received.")
-                    while motor.axis0.active_errors != 0 and not rospy.is_shutdown():
-                        motor.clear_errors()
-                        rospy.sleep(0.5)
-                        motor.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
-                        rospy.sleep(5.5)
+                        # Finally, hang the node and keep trying to recover until the error is gone or the shutdown signal is received
+                        print(f"\nMotor {error_fb.id} could not recover from error(s) {error_fb.error}. Press R to retry.")
+                        while motor.axis0.active_errors != 0 and not rospy.is_shutdown():
+                            motor.clear_errors()
+                            rospy.sleep(0.5)
+                            motor.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
+                            rospy.sleep(0.5)
+                            if motor.axis0.active_errors == 0:
+                                break
 
             self.rate.sleep()
         

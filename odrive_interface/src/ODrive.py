@@ -306,7 +306,7 @@ class Node_ODriveInterface():
                             break
                     
                     # Wait for two seconds while all the transient currents and voltages calm down
-                    rospy.sleep(2)
+                    rospy.sleep(5)
                     
                     # Now try to recover from the error. This will always succeed the first time, but if
                     # the error persists, the ODrive will not allow the transition to closed loop control, and
@@ -324,8 +324,7 @@ class Node_ODriveInterface():
                         self.error_publisher.publish(error_fb)
                         print(f"\nError(s) occurred. Motor ID: {error_fb.id}, Error(s): {error_fb.error}")
                     
-                    # After this point, what to do is up to the pilot's judgement. If the wheels failed diagonally, it
-                    # might be worth trying to move!
+                    # After this point
 
             self.rate.sleep()
         

@@ -189,20 +189,23 @@ class Joystick():
 
         elif pygame.joystick.get_count() == 2:
             try:
-                controller = pygame.joystick.Joystick(0)
-                controller.init()
-                print ("SINGLE CONTROLL DETECTED ", controller.get_id(), " ", controller.get_name())
+                controller1 = pygame.joystick.Joystick(0)
+                controller1.init()
+                print ("SINGLE CONTROLL DETECTED ", controller1.get_id(), " ", controller1.get_name())
             except:
                 print("controller not intialised")
             try:
-                controller = pygame.joystick.Joystick(1)
-                controller.init()
-                print ("DOUBLE CONTROLL DETECTED ", controller.get_id(), " ", controller.get_name())
+                controller2 = pygame.joystick.Joystick(1)
+                controller2.init()
+                print ("DOUBLE CONTROLL DETECTED ", controller2.get_id(), " ", controller2.get_name())
             except:
                 print("two failed")
         
-            if controller.get_id() == 0 or controller.get_name() == "Logitech Extreme 3D":
-                self.controller = controller
+            #if controller.get_id() == 0 or controller.get_name() == "Logitech Extreme 3D":
+            if controller1.get_name() == "Logitech Extreme 3D":
+                self.controller = controller1
+            else:
+                self.controller = controller2
                 #print("gamepad initalize success")
         else:
             # Either no Joystick found or multiple detected (currently unsupported)
@@ -214,7 +217,7 @@ class Joystick():
     def update(self):
         """Gets the latest data from the joystick from event information received from the joystick
         """
-        if self.controller.get_id() == 0 or controller1.get_name() == "Logitech Extreme 3D":
+        if  self.controller.get_name() == "Logitech Extreme 3D":
             for an_event in pygame.event.get():
                 try:
                     # Get event information

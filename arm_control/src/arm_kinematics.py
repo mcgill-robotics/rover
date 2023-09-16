@@ -294,33 +294,38 @@ def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, c
             list of angles in radians of joints from base to end effector, relative to 
             the last joint
     """
-    projection_line = [ee_target[0], ee_target[1]]
+    projection_line = [ee_target[0], ee_target[1]] # To turn from 3D to 2D, we project onto the plane defined by this line and the Y axis.
+
+    # Refactor hand coordinates from 3D to 2D
     hand_proj = projection_length(projection_line, ee_target[:2])
     hand_coordinates = (hand_proj, ee_target[2])
 
+    # Refactor wrist coordinates from 3D to 2D
     wrist_proj = projection_length(projection_line, wrist_target[:2])
     wrist_coordinates = (wrist_proj, wrist_target[2])
 
+    # Refactor elbow coordinates from 3D to 2D
     elbow_proj = projection_length(projection_line, elbow_target[:2])
     elbow_coordinates = (elbow_proj, elbow_target[2])
 
-    true_base_coordinates = (0, 0, arm_DH[0][0])
+    true_base_coordinates = (0, 0, arm_DH[0][0]) # Shoulder coordinates
 
-    d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[2]) ** 2)
-    theta_d = math.acos(wrist_coordinates[0] / d)
+    d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[2]) ** 2) # Length of line between wrist and shoulder
 
-    theta_l1_l2 = math.acos(round((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2), 2) / (-2 * arm_DH[1][2] * arm_DH[2][2]))
-    theta_b = math.asin(elbow_coordinates[0] / arm_DH[1][2])
+    theta_l1_l2 = math.acos(round((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2), 2) / (-2 * arm_DH[1][2] * arm_DH[2][2])) # Elbow inner angle with cosine law
+    theta_b = math.asin(elbow_coordinates[0] / arm_DH[1][2]) # Shoulder angle based on elbow coordinates
 
-    l = math.sqrt((hand_coordinates[0] - elbow_coordinates[0]) ** 2 + (hand_coordinates[1] - elbow_coordinates[1]) ** 2)
-    theta_h = math.acos((l ** 2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2) / (-2 * arm_DH[-1][0] * arm_DH[2][2]))
+    l = math.sqrt((hand_coordinates[0] - elbow_coordinates[0]) ** 2 + (hand_coordinates[1] - elbow_coordinates[1]) ** 2) # Length of line between hand and elbow
+    theta_h = math.acos((l ** 2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2) / (-2 * arm_DH[-1][0] * arm_DH[2][2])) # Wrist inner angle with cosine law
     
+    # Calculation of adjustment to wrist required to align with wrist standard 0
     robot_normal = np.cross(np.array([0,0,1]), np.array([ee_target[0], ee_target[1],0]))
     eh_normal = np.cross(np.array(ee_target[:3]) - np.array(elbow_target), robot_normal)
     tmp = eh_normal @ (np.array(wrist_target) - np.array(elbow_target))
     if ee_target[0] < 0:
         tmp = -tmp # Negative if wrist below hand-elbow line, positive if above
 
+    # Calculates waist rotation with inverse tangent and adjusts to align with waist standard 0 position
     if ee_target[0] >= 0:
         rotation = math.atan2(ee_target[1], ee_target[0])
     elif ee_target[1] >= 0:
@@ -329,17 +334,17 @@ def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, c
         rotation = math.pi + math.atan2(ee_target[1],  ee_target[0])
 
     joint_angles = [
-        rotation, # base z
-        theta_b, # base angle relative to z axis
-        math.pi / 2 - theta_l1_l2, # inner angle between L1 and L2
-        np.sign(tmp) * np.abs(theta_h - math.pi),  # inner angle between L2 and hand
-        0
-    ] # wrist rotation 
+        rotation, # waist
+        theta_b, # shoulder relative to z axis
+        math.pi / 2 - theta_l1_l2, # elbow angle adjusted for elbow standard 0
+        np.sign(tmp) * np.abs(theta_h - math.pi),  # wrist angle adjusted for wrist sandard 0
+        0 # hand
+    ] 
 
+    # Applies rotation if in a reversed position
     if chose_lower != 0:
-        joint_angles[0] += chose_lower * math.pi / 180
-        #If the next one is producing angles ABOVE 180, add a negation checker. Doubt that'll happen tho
-        joint_angles[1] = -joint_angles[1]
+        joint_angles[0] += chose_lower * math.pi / 180 # Reverses waist
+        joint_angles[1] = -joint_angles[1] # Adjusts shoulder to point along the same line despite rotated waist
 
     return joint_angles
 
@@ -405,7 +410,7 @@ def inverseKinematicsJointPositions(hand_pose):
         [shoulder_pose, elbow_pose_2, wrist_pose, wrist_pose, hand_pose[:3]],
     )
 
-def inverseKinematicsAngleOptions(hand_pose, cur_pose): #, joint_truth
+def inverseKinematicsAngleOptions(hand_pose, cur_pose): 
     """Calculates the necessary joint positions and selects ideal elbow
 
     Parameters
@@ -424,7 +429,6 @@ def inverseKinematicsAngleOptions(hand_pose, cur_pose): #, joint_truth
     """
 
     poses = inverseKinematicsJointPositions(hand_pose)
-    shoulder_pose = poses[0][0]
     wrist_pose = poses[0][2]
     elbow_pose_1 = poses[0][1]
     elbow_pose_2 = poses[1][1]

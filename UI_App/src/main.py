@@ -28,7 +28,7 @@ from PyQt5 import QtCore as qtc
 from embedded_bridge.msg import PowerFeedback
 from science_module.msg import SciencePilot, ScienceFeedback
 
-
+msg = "test"
 class UI(qtw.QMainWindow, Ui_MainWindow):
     '''
     Main application interface. It inherits from Ui_MainWindow which is the base layout for the
@@ -126,7 +126,7 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
             self.Camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
         except:
             msg = f"no image {self.count // 30}"
-            # print(msg, end="\r")
+            print(msg, end="\r")
             self.Camera.setText(msg)  # if you don't feel comfortable displaying error message on camera screen, comment out this line and enable the line above
             self.count += 1
 
@@ -135,10 +135,9 @@ class UI(qtw.QMainWindow, Ui_MainWindow):
         try:
             frames = self.ros_to_openCV_image(msg)
             frames = cv2.imdecode(frames, 1)
-            self.cam_image = cv2.resize(frames, (1000, 562))
+            self.cam_image = cv2.resize(frames, (1000, 880))
             print("image set")
             self.show_image()
-        #     todo need test: call show_image here rather than use timer
         except:
             print("cannot set image correctly")
 

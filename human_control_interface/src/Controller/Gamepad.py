@@ -60,13 +60,13 @@ class Gamepad():
             try:
                 controller1 = pygame.joystick.Joystick(0)
                 controller1.init()
-                print ("SINGLE CONTROLL DETECTED")
+                print ("SINGLE CONTROLL DETECTED", controller1.get_id(), " ", controller1.get_name())
             except:
                 print("controller not intialised")
             try:
                 controller2 = pygame.joystick.Joystick(1)
                 controller2.init()
-                print ("DOUBLE CONTROLL DETECTED")
+                print ("DOUBLE CONTROLL DETECTED", controller2.get_id(), " ", controller2.get_name())
             except:
                 print("two failed")
         

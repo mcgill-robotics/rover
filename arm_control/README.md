@@ -23,5 +23,3 @@ Then, we use the measured "0" of each joint to adjust the calculated angles. Thi
 Once all the angle sets are collected, they are routed into legalIKPositionPicker. Although we previously assumed all joints could rotate 360 degrees, this is not the case. This function begins with a loop that checks each angle in an angle set for whether it is physically achievable and discards the set if it is not. Typically, this leaves only one position, assuming an achievable position was possible. If it produces multiple, we choose the position that is closest to the current position, and this is the final output of the function. 
 
 **TL;DR** we calculate the four possible arrangements of joints using cosine law and inverse tangent, then pick whichever one obeys the physical limits of the joints.
-
-## Pathfinding

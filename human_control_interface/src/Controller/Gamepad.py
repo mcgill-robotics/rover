@@ -54,7 +54,7 @@ class Gamepad():
             print("only one joystick")
             self.controller = pygame.joystick.Joystick(0)
             self.controller.init()
-            print(pygame.joystick.get_count())
+            print(pygame.joystick.get_count(),self.controller.get_id(), " ", self.controller.get_name())
 
         elif pygame.joystick.get_count() == 2:
             try:

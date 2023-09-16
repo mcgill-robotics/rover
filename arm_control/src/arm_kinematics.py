@@ -280,13 +280,22 @@ def projection_length(line, vector):
 
     return length
     
-def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, chose_lower):
+def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, rotate_waist):
     """Calculates the necessary angles of all joints to achieve the target end effector position
 
     Parameters
     --------
         ee_target : np.array(6, 1)
             end effector Cartesian coordinates and XYZ Euler angles
+        
+        wrist_target: list(float)
+            wrist position Cartesian coordinates [x, y, z]
+        
+        elbow_target: list(float)
+            elbow position Cartesian coordinates [x, y, z]
+
+        rotate_waist: boolean
+            True if the waist is to be rotated 180, False otherwise
         
     Returns
     --------
@@ -342,8 +351,8 @@ def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, c
     ] 
 
     # Applies rotation if in a reversed position
-    if chose_lower != 0:
-        joint_angles[0] += chose_lower * math.pi / 180 # Reverses waist
+    if rotate_waist:
+        joint_angles[0] += math.pi  # Reverses waist
         joint_angles[1] = -joint_angles[1] # Adjusts shoulder to point along the same line despite rotated waist
 
     return joint_angles
@@ -355,25 +364,17 @@ def inverseKinematicsJointPositions(hand_pose):
     --------
         hand_pose : np.array(6, 1)
             end effector Cartesian coordinates and XYZ Euler angles
-
-
-        cur_pose : list
-            current joint angles 
-        
-        
-        cur_pose : list
-            current joint angles 
         
     Returns
     --------
         tuple[list[np.array, np.array, np.array, np.array, np.array]]
             tuple of lists containing the possible joint reference frames of the arm
             Arrays:
-                - shoulder reference position
-                - elbow reference position
-                - wrist reference position
-                - wrist reference position
-                - hand reference position
+                - shoulder reference position [x, y, z]
+                - elbow reference position [x, y, z]
+                - wrist reference position [x, y, z]
+                - wrist reference position [x, y, z]
+                - hand reference position [x, y, z]
     """
 
     hand_pose = np.array(hand_pose)
@@ -434,10 +435,10 @@ def inverseKinematicsAngleOptions(hand_pose, cur_pose):
     elbow_pose_2 = poses[1][1]
 
     return (
-        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, 0),
-        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, 180),
-        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, 0),
-        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, 180)
+        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, False),
+        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, True),
+        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, False),
+        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, True)
     )
 
 def legalIKPositionPicker(poses, cur_pose):

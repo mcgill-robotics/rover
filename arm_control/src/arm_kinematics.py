@@ -411,16 +411,13 @@ def inverseKinematicsJointPositions(hand_pose):
         [shoulder_pose, elbow_pose_2, wrist_pose, wrist_pose, hand_pose[:3]],
     )
 
-def inverseKinematicsAngleOptions(hand_pose, cur_pose): 
+def inverseKinematicsAngleOptions(hand_pose): 
     """Calculates the necessary joint positions and selects ideal elbow
 
     Parameters
     --------
         hand_pose : np.array(6, 1)
             end effector Cartesian coordinates and XYZ Euler angles
-
-        cur_pose : list
-            current joint angles 
         
     Returns
     --------
@@ -481,4 +478,4 @@ def legalIKPositionPicker(poses, cur_pose):
 
 def inverseKinematics(hand_pose, cur_pose):
 
-    return legalIKPositionPicker(inverseKinematicsAngleOptions(hand_pose, cur_pose), cur_pose)
+    return legalIKPositionPicker(inverseKinematicsAngleOptions(hand_pose), cur_pose)

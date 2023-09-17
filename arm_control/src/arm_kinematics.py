@@ -455,6 +455,7 @@ def legalIKPositionPicker(poses, cur_pose):
     """
     legal_poses = []
     for pose in poses:
+        # Removes positions from contention if they don't abide by the joint limits
         legal = True
         for i in range(len(pose)):
             if pose[i] > jointUpperLimits[i] or pose[i] < jointLowerLimits[i]:
@@ -462,12 +463,14 @@ def legalIKPositionPicker(poses, cur_pose):
         if legal:
             legal_poses.append(np.array(pose))
 
-    if len(legal_poses) == 0:
+    if len(legal_poses) == 0: 
         raise AssertionError("Unreachable Position")
     
+
+    # Typically there should only be one pose in legal_poses, but if not this picks the one closest to cur_pose
     cur_pose = np.array(cur_pose)
     best_pose = legal_poses[0]
-    best_difference = np.sum((cur_pose[:-1] - best_pose[:-1])**2)
+    best_difference = np.sum((cur_pose[:-1] - best_pose[:-1])**2) 
     for pose in legal_poses:
         if np.sum((cur_pose[:-1] - pose[:-1])**2) < best_difference:
             best_pose = pose

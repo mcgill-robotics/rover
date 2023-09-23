@@ -16,6 +16,7 @@ import numpy as np
 
 stop = False
 
+
 class Node_CameraFramePub():
 
     def __init__(self):
@@ -46,34 +47,56 @@ class Node_CameraFramePub():
             ret3, frame3 = self.video_capture3.read()
             ret4, frame4 = self.video_capture4.read()
             ret5, frame5 = self.video_capture5.read()
-        except: pass
-        try:
             frames = []
             ret_values = [ret0, ret1, ret2, ret3, ret4, ret5]
             frame_values = [frame0, frame1, frame2, frame3, frame4, frame5]
             for i in range(6):
                 if ret_values[i]:
                     frames.append(frame_values[i])
-        except: pass
-        if len(frame_values) <=3:
-
-            img1 = cv2.resize(frame_values[0], (1000,292))
-            img2 = cv2.resize(frame_values[1], (1000,292))
-            img3 = cv2.resize(frame_values[2], (1000,292))
-
+        except:
+            pass
+        have_picture_cameras = len(frames)
+        if 0 < have_picture_cameras <= 3:
+            empty_picture_num = 3 - have_picture_cameras
+            empty_picture = np.zeros((1000, 292), dtype=np.uint8)
+            # resize frames to connect
+            frames_resized = []
+            for i in range(len(frames)):
+                frames_resized.append(cv2.resize(frames[i], (1000, 292)))
             # connect pictures
-            image = np.hstack((img1, img2,img3))
+            frames_resized = tuple(frames_resized)
+            image = np.vstack(frames)
+            # connect empty pictures to makesure 3 pictures connected
+            for i in range(empty_picture_num):
+                image = np.vstack((image, empty_picture))
+            # convert to ros format and publish
             encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
             result, frame = cv2.imencode(".jpg", image, encode_params)
             self.frames = self.openCV_to_ros_image(frame)
             self.camera_frame_publisher.publish(self.frames)
-            # if ret:
-            #     print("Publishing frame")
-            #     self.camera_frame_publisher.publish(self.frames)
-        # except:
-        #
-        # finally:
-        #     pass
+
+        elif 6 > len(frame_values) > 3:
+            empty_picture_num = 6 - have_picture_cameras
+            empty_picture = np.zeros((500, 292), dtype=np.uint8)
+            # resize frames to connect
+            frames_resized = []
+            for i in range(len(frames)):
+                frames_resized.append(cv2.resize(frames[i], (500, 292)))
+            frames = tuple(frames)
+            # connect pictures
+            image_line1 = np.hstack(frames[0, 1])
+            image_line_2 = np.hstack(frames[2, 3])
+            if empty_picture_num == 1:
+                image_line_3 = np.hstack((frames[4],empty_picture))
+            elif empty_picture_num == 2:
+                image_line_3 = np.hstack((empty_picture, empty_picture))
+            # connect empty pictures to makesure 3 pictures connected
+            image = np.vstack(image_line1,image_line_2,image_line_3)
+            # convert to ros format and publish
+            encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+            result, frame = cv2.imencode(".jpg", image, encode_params)
+            self.frames = self.openCV_to_ros_image(frame)
+            self.camera_frame_publisher.publish(self.frames)
 
     def openCV_to_ros_image(self, cv_image):
         try:

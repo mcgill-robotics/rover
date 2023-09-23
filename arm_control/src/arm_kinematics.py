@@ -1,9 +1,11 @@
 import numpy as np
 import math
 
+# Define joint limits in Radians
 jointUpperLimits = [90*np.pi/180, 70*np.pi/180, 70*np.pi/180, 38*np.pi/180, 85*np.pi/180]      # rad
 jointLowerLimits = [-90*np.pi/180, -60*np.pi/180, -20*np.pi/180, -35*np.pi/180, -85*np.pi/180] # rad
 
+# Define Denavit-Hartenberg parameters for the robot arm
 arm_DH = [
     [0.0575,                0,     0, -90*math.pi/180], #waist - shoulder : vertical offset from base
     [     0, -90*math.pi/180,   0.5,               0], #shoulder - elbow
@@ -12,6 +14,7 @@ arm_DH = [
     [ 0.034,               0,     0,               0] #hand 
 ]
 
+# Function to convert pose (position and Euler angles) to a transformation matrix
 def Pose2Mat(pose):
     """Converts the pose respecting the XYZ euler convention into a transformation matrix
 
@@ -26,11 +29,15 @@ def Pose2Mat(pose):
             DH transform
     """
 
+    # Extract position and Euler angles from the input
     alpha = pose[3]
     beta = pose[4]
     gamma = pose[5]
 
+    # Initialize a 4x4 identity matrix
     T = np.eye(4)
+
+    # Create rotation matrices for each axis (X, Y, Z)
     Rx = np.array([
         [1,0,0],
         [0,math.cos(alpha), -math.sin(alpha)],
@@ -47,12 +54,13 @@ def Pose2Mat(pose):
         [0, 0, 1],
     ])
 
+    # Combine the rotation matrices and set the translation components
     T[:3,:3] = Rz @ Ry @ Rx
     T[:3,3] = pose[:3]
     
     return T
 
-
+# Function to convert a transformation matrix to pose (position and Euler angles)
 def Mat2Pose(T):
     """Converts the transformation matrix into it's Cartesian coordinates
     and Euler angles in the XYZ Euler convention
@@ -68,6 +76,7 @@ def Mat2Pose(T):
             [x, y, z, alpha_x, alpha_y, alpha_z]
     """
 
+    # Compute Euler angles from the rotation matrix
     if abs(T[2,0]) != 1:
         beta = -math.asin(T[2,0])
         alpha = math.atan2(T[2,1]/math.cos(beta), T[2,2]/math.cos(beta))
@@ -81,9 +90,11 @@ def Mat2Pose(T):
             beta = -math.pi/2
             alpha = math.atan2(-T[0,1], -T[0,2])
 
+    #return Euler angles and translation into a pose array
     return np.array([T[0][3], T[1][3], T[2][3], alpha, beta, gamma])
 
 
+# Function to compute the transformation matrix for a DH parameter set
 def dhToMat(d, theta, a, alpha):
     """Computes the transformation matrix corresponding
     to the Denavit-Hartenberg parameters
@@ -111,7 +122,7 @@ def dhToMat(d, theta, a, alpha):
         [0, 0, 0, 1]
     ])
 
-
+# Function to compute the forward kinematics of the arm
 def forwardKinematics(q):
     """Computes the forward kinematics of the arm
 
@@ -128,7 +139,7 @@ def forwardKinematics(q):
     Ts = _FK(q)
     return Ts[-1]
 
-
+# Function to compute a list of transformation matrices for the arm joints
 def _FK(q):
     """Build and performs the matrix multiplication of the transformation matrices
     needed in the forward kinematics of the arm
@@ -147,6 +158,8 @@ def _FK(q):
     """
     numJoints = len(arm_DH)
     matrices = []
+
+    # Iterate through the DH parameters and compute transformation matrices
     for i in range(numJoints):
         T = dhToMat(arm_DH[i][0], arm_DH[i][1] + q[i], arm_DH[i][2], arm_DH[i][3])
         if len(matrices) > 0:
@@ -157,7 +170,7 @@ def _FK(q):
 
     return matrices
 
-
+# Function to compute the Jacobian matrix for a given set of joint angles
 def Jacobian(q):
     """Jacobian matrix of the arm for a given set of angles
 
@@ -197,7 +210,7 @@ def Jacobian(q):
 
     return J, Jv, Jw
 
-
+# Function to compute the forward Cartesian velocity of the arm
 def forwardVelocity(q, dq):
     """Computes the cartesian velocity of the arm
 
@@ -219,7 +232,7 @@ def forwardVelocity(q, dq):
     
     return dx
 
-
+# Function to compute the inverse velocity of the arm
 def inverseVelocity(q, dx):
     """Computes the joint velocity of the arm given a desired
     cartesian velocity
@@ -255,6 +268,7 @@ def inverseVelocity(q, dx):
 
     return dq
 
+# Function to compute the projection length of a vector onto a line
 def projection_length(line, vector):
     """
     Parameters
@@ -279,7 +293,8 @@ def projection_length(line, vector):
         length *= -1
 
     return length
-    
+
+# Function to compute the joint angles to achieve a target end effector position
 def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, rotate_waist):
     """Calculates the necessary angles of all joints to achieve the target end effector position
 

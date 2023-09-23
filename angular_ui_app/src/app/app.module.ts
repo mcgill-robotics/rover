@@ -6,6 +6,8 @@ import { MainFrameComponent } from './main-frame/main-frame.component';
 import { RosService } from './ros.service';
 import { CamerasWidgetComponent } from './cameras-widget/cameras-widget.component';
 import { CameraBoxComponent } from './cameras-widget/camera-box/camera-box.component';
+import { TurtlesimComponent } from './sandbox/turtlesim/turtlesim.component';
+import { AppRoutingModule } from './app-routing.module';
 
 
 @NgModule({
@@ -13,10 +15,12 @@ import { CameraBoxComponent } from './cameras-widget/camera-box/camera-box.compo
     AppComponent,
     MainFrameComponent,
     CamerasWidgetComponent,
-    CameraBoxComponent
+    CameraBoxComponent,
+    TurtlesimComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    AppRoutingModule
   ],
   providers: [RosService],
   bootstrap: [AppComponent]

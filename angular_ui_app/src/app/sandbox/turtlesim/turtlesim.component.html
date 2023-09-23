@@ -1,0 +1,20 @@
+<p>turtlesim works!</p>
+<p>{{rosBridgeStatus}}</p>
+    <button (click)="publish()">Publish the value</button>
+
+    <button (click)="listen()">Listen</button>
+    <!-- <button onclick="stopListening()">Stop Listen</button> -->
+    <div id="myListener">Default</div>
+
+    <H3>Motion</H3>
+    <div>
+      <button (mousedown)="up()">Forward</button>
+      <button (keypress)="turtleMotion($event)"></button>
+    </div>
+    <!-- <button onclick="listen()">Left</button> -->
+    <!-- <button onclick="right()">Right</button> -->
+    <div>
+      <!-- <button onclick="listen()">Down</button> -->
+    </div>
+<h2>{{myDisplay}}</h2>
+<h2>CLI listenter{{myDisplay2}}</h2>

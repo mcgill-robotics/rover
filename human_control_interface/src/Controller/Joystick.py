@@ -199,7 +199,7 @@ class Joystick():
                 controller2.init()
                 print ("DOUBLE CONTROLL DETECTED ", controller2.get_id(), " ", controller2.get_name())
             except:
-                print("two failed")
+                print(controller2.get_name(), " failed")
         
             #if controller.get_id() == 0 or controller.get_name() == "Logitech Extreme 3D":
             if controller1.get_name() == "Logitech Extreme 3D":

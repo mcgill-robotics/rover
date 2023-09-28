@@ -18,10 +18,10 @@ decimal. So before putting the numbers in here, you should first convert them to
 drive_ids and arm_ids exist to make reverse searching easier. Compared to iterating through the original array values to
 find keys, this is an ugly but efficient solution.
 """
-drive_serial_numbers = {"DRIVE_LB": "387134683539", "DRIVE_LF": "1", "DRIVE_RB": "2", "DRIVE_RF": "3"}
+drive_serial_numbers = {"DRIVE_LB": "384E346E3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
 arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
 
-drive_ids = {'387134683539': 'DRIVE_LB', '1': 'DRIVE_LF', '2': 'DRIVE_RB', '3': 'DRIVE_RF'}
+drive_ids = {'384E346E3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}
 arm_ids = {'4': 'ARM_WAIST', '5': 'ARM_TUMOR', '6': 'ARM_ELBOW'}
 
 
@@ -85,7 +85,7 @@ def enumerate_motors(search_timeout=5):
             print(f"Motor {key} found.")
             found_motors[key] = found_motor
             # Secret hidden debug thing to quit after a single ODrive is found
-            return found_motors
+            # return found_motors
         else:
             print(f"Motor {key} not found. Motor enumeration failed!")
             return {}
@@ -250,10 +250,10 @@ class Node_ODriveInterface():
             raise IOError("Motor enumeration failed")
         
         drive_lb = motors_dict["DRIVE_LB"]
-        # drive_lf = motors_dict["DRIVE_LF"]
-        # drive_rb = motors_dict["DRIVE_RB"]
-        # drive_rf = motors_dict["DRIVE_RF"]
-        drive_motors = [drive_lb]
+        drive_lf = motors_dict["DRIVE_LF"]
+        drive_rb = motors_dict["DRIVE_RB"]
+        drive_rf = motors_dict["DRIVE_RF"]
+        drive_motors = [drive_lb, drive_lf, drive_rb, drive_rf]
 
         # Calibrate all motors
         if not calibrate_motors(drive_motors):
@@ -261,17 +261,17 @@ class Node_ODriveInterface():
         
         while not rospy.is_shutdown():
             # Put in speed command
-            drive_lb.axis0.controller.input_vel = self.lb_speed_cmd
-            # drive_lf.axis0.controller.input_vel = self.lb_speed_cmd
-            # drive_rb.axis0.controller.input_vel = self.lb_speed_cmd
-            # drive_rf.axis0.controller.input_vel = self.lb_speed_cmd
+            drive_lb.axis0.controller.input_vel = -self.lb_speed_cmd
+            drive_lf.axis0.controller.input_vel = -self.lf_speed_cmd
+            drive_rb.axis0.controller.input_vel = self.rb_speed_cmd
+            drive_rf.axis0.controller.input_vel = self.rf_speed_cmd
 
             # Get feedback and publish it to "/wheel_velocity_feedback"
             feedback = WheelSpeed()
-            measured_speed_lb = drive_lb.encoder_estimator0.vel_estimate
-            measured_speed_lf = 0.0
-            measured_speed_rb = 0.0
-            measured_speed_rf = 0.0
+            measured_speed_lb = -drive_lb.encoder_estimator0.vel_estimate
+            measured_speed_lf = -drive_lf.encoder_estimator0.vel_estimate
+            measured_speed_rb = drive_rb.encoder_estimator0.vel_estimate
+            measured_speed_rf = drive_rf.encoder_estimator0.vel_estimate
 
             feedback.left[0], feedback.left[1] = measured_speed_lb, measured_speed_lf
             feedback.right[0], feedback.right[1] = measured_speed_rb, measured_speed_rf

@@ -1,20 +1,26 @@
-<p>turtlesim works!</p>
-<p>{{rosBridgeStatus}}</p>
-    <button (click)="publish()">Publish the value</button>
+<!-- <p>turtlesim works!</p> -->
+<!-- <p>{{rosBridgeStatus}}</p> -->
 
-    <button (click)="listen()">Listen</button>
-    <!-- <button onclick="stopListening()">Stop Listen</button> -->
-    <div id="myListener">Default</div>
+<!-- <button (click)="listen()">Listen</button> -->
+<!-- <button onclick="stopListening()">Stop Listen</button> -->
+<!-- <div id="myListener">Default</div> -->
 
     <H3>Motion</H3>
-    <div>
-      <button (mousedown)="up()">Forward</button>
-      <button (keypress)="turtleMotion($event)"></button>
+    
+    <div style="display: flex; flex-wrap: wrap; align-items: center;">
+   
+      <button (mousedown)="foward()" style="flex: 1 1 100%;">Forward</button>
+      
+      <div style="display: flex; width: 100%;">
+        <button (mousedown)="left()" style="flex: 1 1 50%;">Turn Left</button>
+        
+        <button (mousedown)="right()" style="flex: 1 1 50%;">Turn Right</button>
+      </div>
+      <button (click)="publish()" style="width: 100%;">Publish the value</button>
     </div>
-    <!-- <button onclick="listen()">Left</button> -->
-    <!-- <button onclick="right()">Right</button> -->
     <div>
-      <!-- <button onclick="listen()">Down</button> -->
+
+      <button (keypress)="turtleMotion($event)" class="btn btn-success" style="width: 100%;">Use awd control</button>
     </div>
-<h2>{{myDisplay}}</h2>
-<h2>CLI listenter{{myDisplay2}}</h2>
+
+<h4>Listener: {{myDisplay}}</h4>

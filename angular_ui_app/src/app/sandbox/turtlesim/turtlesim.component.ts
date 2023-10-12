@@ -10,18 +10,15 @@ import * as ROSLIB from 'roslib';
 export class TurtlesimComponent {
   rosBridgeStatus: string;
   ros: ROSLIB.Ros;
-  cmdVel: ROSLIB.Topic;
-  cmdList: ROSLIB.Topic;
-  listener: ROSLIB.Topic;
-  twist: ROSLIB.Message;
+  twist: ROSLIB.Message; //payload type
+  cmdList: ROSLIB.Topic; 
+  cmdVel: ROSLIB.Topic; //request 
+  listener: ROSLIB.Topic; //response
   myDisplay: string;
-  myDisplay2: string;
-
 
   constructor(private rosService: RosService) {
     this.ros = this.rosService.getRos();
   }
-
 
   ngOnInit() {
     this.cmdVel = new ROSLIB.Topic({
@@ -36,49 +33,56 @@ export class TurtlesimComponent {
       messageType : 'turtlesim/Pose'
     });
   
-    this.cmdList = new ROSLIB.Topic({
-      ros : this.ros,
-      name : '/turtle1/cmd_vel',
-      messageType : 'geometry_msgs/Twist'
-    });
+    // this.cmdList = new ROSLIB.Topic({
+    //   ros : this.ros,
+    //   name : '/turtle1/cmd_vel',
+    //   messageType : 'geometry_msgs/Twist'
+    // });
 
-    this.cmdList.subscribe((message:any) => {
-      // console.log('Received message on ' +this.listener.name + ': ' + message.y + message.x);
-      this.myDisplay2 = ('Received message on ' +this.cmdList.name + 'linear : ' + message.linear.x +"and angular: " + message.angular.z);
-    });
+    // this.cmdList.subscribe((message:any) => {
+    //   // console.log('Received message on ' +this.listener.name + ': ' + message.y + message.x);
+    //   this.myDisplay2 = ('Received message on ' +this.cmdList.name + 'linear : ' + message.linear.x +"and angular: " + message.angular.z);
+    // });
 
+    // instantiate a msg 
     this.twist = new ROSLIB.Message({
       linear : {
-        x : 0.1,
-        y : 0.2,
-        z : 0.3
+        x : 0.0,
+        y : 0.0,
+        z : 0.0
       },
       angular : {
-        x : -0.1,
-        y : -0.2,
-        z : -0.3
+        x : 0.0,
+        y : 0.0,
+        z : 0.0
       }
     });
+    this.listen();
   }
 
+  // publish the msg to the predefined Topic
   publish() {
     this.cmdVel.publish(this.twist);
   }
 
-  up() {
+  foward() {
     this.twist =  {linear : {
-      x : 0.5,
+      x : 1.0,
       y : 0.0,
       z : 0.0
     },
     angular : {
-      x : -0.0,
-      y : -0.0,
-      z : -0.0
+      x : 0.0,
+      y : 0.0,
+      z : 0.0
     }}
-
-    // this.cmdVel.publish(this.twist);
   }
+
+
+//   back() {
+//     this.twist.linear.x =  -1.0;
+// }
+
   right() {
     this.twist =  {linear : {
       x : 0.0,
@@ -86,13 +90,12 @@ export class TurtlesimComponent {
       z : 0.0
     },
     angular : {
-      x : -0.0,
-      y : -0.0,
-      z : -0.5
+      x : 0.0,
+      y : 0.0,
+      z : -1.0
     }}
-
-    // this.cmdVel.publish(this.twist);
   }
+
   left() {
     this.twist =  {
       linear : {
@@ -101,20 +104,19 @@ export class TurtlesimComponent {
       z : 0.0
     },
     angular : {
-      x : -0.0,
-      y : -0.0,
-      z : 0.5
+      x : 0.0,
+      y : 0.0,
+      z : 1.0
     }}
-
-    // this.cmdVel.publish(this.twist);
   }
 
+
   turtleMotion(event:any) {
-  // console.log(event.key)
+  console.log(event.key)
 
 switch(event.key) {
   case "w":
-    this.up();
+    this.foward();
     break;
   case "d":
     this.right();
@@ -128,10 +130,10 @@ this.cmdVel.publish(this.twist);
   }
 
 
-  listen(){
+  listen() {
   this.listener.subscribe((message:any) => {
-    console.log('Received message on ' +this.listener.name + ': ' + message.y + message.x);
-    this.myDisplay = ('Received message on ' +this.listener.name + ' y : ' + message.y +"and x: " + message.x);
+    // console.log('Received message on ' +this.listener.name + ': ' + message.y + message.x);
+    this.myDisplay = ('Received message on ' + this.listener.name + ' y : ' + message.y +"and x: " + message.x);
   });
   }
 

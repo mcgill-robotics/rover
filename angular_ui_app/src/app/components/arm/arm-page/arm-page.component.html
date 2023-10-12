@@ -1,0 +1,47 @@
+<!-- <p>arm-page works! </p> -->
+<!-- <div style="display: flex; flex-wrap: wrap;"> -->
+    
+    <div class="Joints">
+        <h2>Joints</h2>
+
+        <div style="display: flex; align-content: space-between; flex-wrap: wrap;">
+            <div *ngFor="let joint of joints" style="flex: 0 0 30%;">
+                <!-- works -->
+                {{joint}}
+                <!-- {{test}} -->
+            </div>
+        </div>
+    </div>
+
+    <div class="Hand">
+        <h2>Hand Position</h2>
+        <div class="list" style="display: flex; align-content: space-between;">
+        <div *ngFor="let i of [1,2,3]" style="flex: 1 1 10px;">
+            <!-- works -->
+            {{i}}
+            <!-- {{test}} -->
+        </div>
+    </div>
+    </div>
+
+
+    <div class="Orientation">
+        <h2>Orientation</h2>
+        <div class="list" style="display: flex; align-content: space-between; ">
+            <div *ngFor="let i of ['x','y','z']" style="flex: 1 0 10px;
+        ">
+                <!-- works -->
+                {{i}}
+            </div>
+            <!-- {{test}} -->
+        </div>
+    </div>
+
+    <div class="Error">
+        <h2>Error</h2>
+        <textarea name="" id="" cols="30" rows="10" disabled style="flex: 1 0 100%; width: fit-content">
+            {{error}}
+        </textarea>
+    </div>
+
+

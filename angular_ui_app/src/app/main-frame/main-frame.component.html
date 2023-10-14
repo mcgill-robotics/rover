@@ -1,6 +1,6 @@
 <div style="width: 99vw; height: 99vh; margin: auto;">
     <div style="display: flex; flex-wrap: wrap;">
-       
+
 
         <div class="main-page" style="flex: 2 0 200px; border: 2px solid grey; border-radius: 10px;">
             <div #rosBridgeMainDiv style="height: 15%;">
@@ -17,30 +17,31 @@
                     <option value="4">4</option>
                     <option value="5">5</option>
                     <option value="6">6</option>
-                    
+
                 </select>
-                
+
                 <select>
                     <!-- <option *ngFor="let i in 6" value="{{i}}">{{i}}</option> -->
                     <option value="1">Science</option>
                     <option value="2">Arm</option>
-                <option value="3">Drive</option>
-                <option value="4">Power</option>
-                <!-- <option value="5">GPS</option> -->
-                <option value="6">6</option>
+                    <option value="3">Drive</option>
+                    <option value="4">Power</option>
+                    <!-- <option value="5">GPS</option> -->
+                    <option value="6">6</option>
 
-            </select>
-            
-            <textarea name="feedback" id="" cols="30" rows="10">
+                </select>
+
+                <!-- <textarea name="feedback" id="" cols="30" rows="10" value="{{ros.isConnected}}"> -->
+                    <textarea name="feedback" id="" cols="30" rows="10" value="{{ros.isConnected}}">
             </textarea>
-            <button>Save</button>
-        </div>
+                <button>Save</button>
+            </div>
 
         </div>
 
         <div class="side-page" style="flex: 1.5 0 20px; border: 2px solid grey; border-radius: 10px; flex-wrap: wrap;">
 
-            <div class="navbar" style="flex-wrap: wrap; align-content: space-around; padding: 0 10%;" >
+            <div class="navbar" style="flex-wrap: wrap; align-content: space-around; padding: 0 10%;">
                 <nav routerLink="/">Home</nav>
                 <nav routerLink="/turtlesim">TurtleSim</nav>
                 <nav routerLink="/power">Power</nav>
@@ -52,7 +53,7 @@
 
             <router-outlet style="flex: 1 1 100px; display: flex;"></router-outlet>
         </div>
-        
+
         <!-- <div class="navbar" style="flex-wrap: wrap; align-content: space-between;" >
             <nav routerLink="/">Home</nav>
             <nav routerLink="/turtlesim">TurtleSim</nav>

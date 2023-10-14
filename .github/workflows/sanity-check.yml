@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-20.04
     name: Catkin Build Test
     steps:    
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -39,8 +42,9 @@ jobs:
 
       - name: Setup Repo
         run: |
+          cd ~
           mkdir --parents catkin_ws/src
-          git clone https://github.com/mcgill-robotics/rover.git
+          ln -s $GITHUB_WORKSPACE
           cd ..
           
       - name: Catkin Build
@@ -53,6 +57,5 @@ jobs:
       - name: Settle Test
         shell: bash
         run: |
-            cd catkin_ws
             source devel/setup.bash
             rostest planner settle.test

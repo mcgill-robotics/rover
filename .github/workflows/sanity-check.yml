@@ -52,4 +52,4 @@ jobs:
             source /opt/ros/noetic/setup.bash
             cd ~/catkin_ws
             catkin init
-            catkin build
+            catkin build -DPYTHON_EXECUTABLE=/usr/bin/python3

@@ -13,10 +13,7 @@ jobs:
   test:
     runs-on: ubuntu-20.04
     name: Catkin Build Test
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-      
+    steps:    
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -39,12 +36,18 @@ jobs:
           wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
           sudo apt-get update
           sudo apt-get install python3-catkin-tools
+
+      - name: Setup Repo
+        run: |
+          mkdir --parents catkin_ws/src
+          git clone https://github.com/mcgill-robotics/rover.git
+          cd ..
           
       - name: Catkin Build
         shell: bash
         run: |
             source /opt/ros/noetic/setup.bash
-            cd catkin_ws
+            catkin init
             catkin build
             
       - name: Settle Test

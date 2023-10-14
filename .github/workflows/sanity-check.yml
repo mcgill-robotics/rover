@@ -49,7 +49,7 @@ jobs:
       - name: Catkin Build
         shell: bash
         run: |
+            source /opt/ros/noetic/setup.bash
             cd ~/catkin_ws
-            source devel/setup.bash
             catkin init
             catkin build

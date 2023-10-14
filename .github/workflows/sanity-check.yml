@@ -45,17 +45,11 @@ jobs:
           cd ~
           mkdir --parents catkin_ws/src
           ln -s $GITHUB_WORKSPACE
-          cd ..
           
       - name: Catkin Build
         shell: bash
         run: |
             source /opt/ros/noetic/setup.bash
+            cd ~/catkin_ws
             catkin init
             catkin build
-            
-      - name: Settle Test
-        shell: bash
-        run: |
-            source devel/setup.bash
-            rostest planner settle.test

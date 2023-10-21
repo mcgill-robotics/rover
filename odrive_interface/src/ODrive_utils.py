@@ -7,9 +7,12 @@ Placeholders for now. In enumerate_motors(), these motors will be returned in th
 because ODrive API requires them to be that way. Note: correct serial numbers are hex values, while odrivetool returns
 decimal. So before putting the numbers in here, you should first convert them to hex.
 """
-drive_serial_numbers = {"DRIVE_LB": "387134683539", "DRIVE_LF": "1", "DRIVE_RB": "2", "DRIVE_RF": "3"}
+
+drive_serial_numbers = {"DRIVE_LB": "384E346E3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
 arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
 
+drive_ids = {'384E346E3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}
+arm_ids = {'4': 'ARM_WAIST', '5': 'ARM_TUMOR', '6': 'ARM_ELBOW'}
 
 # Procedure codes are simple indices to this array
 procedure_codes = ["SUCCESS", "BUSY", "CANCELLED", "DISARMED", "NO_RESPONSE", "POLE_PAIR_CPR_MISMATCH",

@@ -15,6 +15,7 @@ import { SciencePageComponent } from './components/science/science-page/science-
 import { GpsPageComponent } from './components/gps/gps-page/gps-page.component';
 import { Button1Component } from './sandbox/buttons/button1/button1.component';
 import { CameraTestComponent } from './sandbox/camera-test/camera-test.component';
+import { ArmTestComponent } from './sandbox/arm-test/arm-test.component';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { CameraTestComponent } from './sandbox/camera-test/camera-test.component
     SciencePageComponent,
     GpsPageComponent,
     Button1Component,
-    CameraTestComponent
+    CameraTestComponent,
+    ArmTestComponent
   ],
   imports: [
     BrowserModule,

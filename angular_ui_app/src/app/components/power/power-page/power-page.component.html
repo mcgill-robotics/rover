@@ -1,0 +1,38 @@
+<p>power-page works!</p>
+<div class="battery" style=" display: flex;">
+ <div style="width: 50%;">
+<h2>
+
+    {{b1.name}}: {{b1.value}}
+</h2>
+ 
+ </div>
+    <div style="width: 50%;">
+        <h2>
+            Battery 2
+        </h2>
+        {{b2}}
+    </div>
+
+</div>
+
+<div >
+    <h2>System Embedded</h2>
+        <div style="display: flex; align-content: space-around; flex-wrap: wrap;">
+            <div *ngFor="let i of [0,1,2,3]" style="flex: 1 1 50%;">
+                {{i}} {{sys[i]}} 
+                <input type="checkbox" value="{{sys[i]}}" (click)="toggleSys(i)">
+                <!-- {{u}} -->
+                <!-- {{sys[i]}} -->
+            </div>
+        </div>
+
+</div>
+
+<div class>
+    <h2>Power distribution</h2>
+    <div style="display: flex; flex-wrap: wrap;">
+        <div *ngFor="let i of pd; let k = index" style="flex: 1 1 50%;">{{k}}. {{i}}</div>
+    </div>
+
+</div>

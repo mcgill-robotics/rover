@@ -116,7 +116,7 @@ def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1], 
     print("-------------------------test_pathfind----------------------------")
     print("------------------------------------------------------------------")
     num_failed = 0
-    for i in num_samples:
+    for i in range(num_samples):
         failed = False
 
         start_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
@@ -204,7 +204,7 @@ def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1], 
         
 
 if __name__=="__main__":
-    test_pathfind()
+    test_pathfind(verbose=True)
     test_inverseKinematicsJointPositions()
     test_inverseKinematicsComputeJointAngles()
     test_inverseKinematics()

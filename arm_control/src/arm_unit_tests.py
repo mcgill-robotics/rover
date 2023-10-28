@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import arm_kinematics
+import arm_pathfinding
 
 jointUpperLimits = [118.76*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
 jointLowerLimits = [-125.97*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
@@ -110,7 +111,7 @@ def test_inverseKinematics(num_samples = 1000, verbose=False):
     print(f"Ratio: {(num_samples - failed) / num_samples * 100}%")
     return failed
 
-def test_pathfind(n_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
+def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
     print("------------------------------------------------------------------")
     print("-------------------------test_pathfind----------------------------")
     print("------------------------------------------------------------------")
@@ -118,11 +119,29 @@ def test_pathfind(n_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
     for i in num_samples:
         start_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
         end_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
-        min_time = max([abs((start_joints-end_joints)/max_velocities[i]) for i in range(5)])
+        differences = [start_joints[i] - end_joints[i] for i in range(5)]
+        min_time = max([abs((differences[i])/max_velocities[i]) for i in range(5)])
         # TODO: figure out how to calculate max time???
-        max_distance = max(abs(start_joints[i] - end_joints[i]) for i in range(5)) # Using furthest distance to get a reasonable max time
+        max_distance = max(abs(differences[i]) for i in range(5)) # Using furthest distance to get a reasonable max time
         time = min_time + np.random.random() * max_distance * 10
-        
+
+        polynomials = arm_pathfinding.pathfiningPolynomial(start_joints, end_joints, time)
+        for i, polynomial in enumerate(polynomials):
+            if sum([polynomial[j] * math.pow(time, 6 - j) for j in range(4)]) != differences[i]: # Checking final position
+                failed += 1
+                break
+            
+            if sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)]) != max_velocities[i]: # Checking max velocity
+                failed += 1
+                break
+
+            if sum([polynomial[j] * (6 - j) * math.pow(time, 5 - j) for j in range(4)]) != 0: # Checking final velocity
+                failed += 1
+                break
+
+            if sum([polynomial[j] * (6 - j) * (5 - j) * math.pow(time/2, 4 - j) for j in range(4)]) != 0:
+                failed += 1
+                break
 
 
 if __name__=="__main__":

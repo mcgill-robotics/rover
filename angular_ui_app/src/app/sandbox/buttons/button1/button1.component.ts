@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
 // import * as jQuery from 'jquery';
 
 
-import * as $ from 'jquery';
+// import * as $ from 'jquery';
 
 // window['$'] = window['jQuery'] = $;
 
@@ -22,14 +22,14 @@ export class Button1Component {
   increment() {
     console.log("calling ajax")
   
-    $.ajax({
-      type: "POST",
-      url: "count.py",
-      data: {param: this.counter}
-    }).done(function(m) {
-      console.log("return of ajax")
-      console.log(m);
-    })
+    // $.ajax({
+    //   type: "POST",
+    //   url: "count.py",
+    //   data: {param: this.counter}
+    // }).done(function(m) {
+    //   console.log("return of ajax")
+    //   console.log(m);
+    // })
   }
   
 

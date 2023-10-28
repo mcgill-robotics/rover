@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
-import numpy as np
-import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
 
 def _points_in_one_dimension(xy):

@@ -72,7 +72,7 @@ def pathfiningPolynomial(start_joints, end_joints, time):
 
     return polynomials
 
-def nextJointPosition(start_position, time_elapsed, polynomial):
+def nextJointPosition(start_position, time_elapsed, polynomials):
     joints = [] #Calculating positions
     for i in range(len(polynomials)):
         polynomial = polynomials[i]

@@ -111,7 +111,7 @@ def test_inverseKinematics(num_samples = 1000, verbose=False):
     print(f"Ratio: {(num_samples - failed) / num_samples * 100}%")
     return failed
 
-def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
+def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1], verbose=False):
     print("------------------------------------------------------------------")
     print("-------------------------test_pathfind----------------------------")
     print("------------------------------------------------------------------")
@@ -126,39 +126,77 @@ def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
         # TODO: figure out how to calculate max time???
         max_distance = max(abs(differences[i]) for i in range(5)) # Using furthest distance to get a reasonable max time
         time = min_time + np.random.random() * max_distance * 10
+    
+        if verbose:
+            print(f"Start Joints: {start_joints} End Joints: {end_joints} Time: {time}")
 
         polynomials = arm_pathfinding.pathfiningPolynomial(start_joints, end_joints, time)
-        for i, polynomial in enumerate(polynomials):
-            if sum([polynomial[j] * math.pow(time, 6 - j) for j in range(4)]) != differences[i]: # Checking final position
+        for k, polynomial in enumerate(polynomials):
+            if sum([polynomial[j] * math.pow(time, 6 - j) for j in range(4)]) != differences[k]: # Checking final position
                 failed = True
+                if verbose:
+                    given = sum([polynomial[j] * math.pow(time, 6 - j) for j in range(4)])
+                    print("Polynoial failed final position.")
+                    print(f"Result: {given} Difference: {differences[k] - given}")
                 break
             
-            if sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)]) != max_velocities[i]: # Checking max velocity
+            if sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)]) != max_velocities[k]: # Checking max velocity
                 failed = True
+                if verbose:
+                    given = sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)])
+                    print("Polynoial failed midway velocity.")
+                    print(f"Result: {given} Difference: {max_velocities[k] - given}")
                 break
 
             if sum([polynomial[j] * (6 - j) * math.pow(time, 5 - j) for j in range(4)]) != 0: # Checking final velocity
                 failed = True
+                if verbose:
+                    given = sum([polynomial[j] * (6 - j) * math.pow(time, 5 - j) for j in range(4)])
+                    print("Polynoial failed final velocity.")
+                    print(f"Result: {given}")
                 break
 
             if sum([polynomial[j] * (6 - j) * (5 - j) * math.pow(time/2, 4 - j) for j in range(4)]) != 0: # Check halfway acceleration
                 failed = True
+                if verbose:
+                    given = sum([polynomial[j] * (6 - j) * (5 - j) * math.pow(time/2, 4 - j) for j in range(4)])
+                    print("Polynoial failed midway acceleration.")
+                    print(f"Result: {given}")
                 break
         
         if not failed and end_joints != arm_pathfinding.nextJointPosition(start_joints, time, polynomials):
             failed = True
+            if verbose:
+                    given = arm_pathfinding.nextJointPosition(start_joints, time, polynomials)
+                    print("nextJointPosition failed final position.")
+                    print(f"Result: {given} Difference: {[end_joints[j] - given[j] for j in range(5)]}")
         
         if not failed and end_joints != arm_pathfinding.pathfind(start_joints, end_joints, time):
             failed = True
-
+            if verbose:
+                    given = arm_pathfinding.pathfind(start_joints, end_joints, time)
+                    print("Pathfind failed final position.")
+                    print(f"Result: {given} Difference: {[end_joints[j] - given[j] for j in range(5)]}")
+        
         if not failed and start_joints != arm_pathfinding.nextJointPosition(start_joints, 0, polynomials):
             failed = True
+            if verbose:
+                    given = arm_pathfinding.nextJointPosition(start_joints, 0, polynomials)
+                    print("nextJointPosition failed initial position.")
+                    print(f"Result: {given} Difference: {[start_joints[j] - given[j] for j in range(5)]}")
         
         if not failed and start_joints != arm_pathfinding.pathfind(start_joints, end_joints, 0):
             failed = True
-
+            if verbose:
+                    given = arm_pathfinding.pathfind(start_joints, end_joints, 0)
+                    print("Pathfnd failed initial position.")
+                    print(f"Result: {given} Difference: {[start_joints[j] - given[j] for j in range(5)]}")
+        
         if failed:
             num_failed += 1
+            print("------------------------------------------------------------------")
+            print(f"Test Case {i} failed.")
+            print("------------------------------------------------------------------")
     
     print(f"Ratio: {(num_samples - num_failed) / num_samples * 100}%")
     return num_failed

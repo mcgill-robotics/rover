@@ -24,7 +24,8 @@
       "dom"
     ],
     "types": [
-      "webpack-env"
+      "webpack-env",
+      "jquery" //added
     ]
   },
   "angularCompilerOptions": {

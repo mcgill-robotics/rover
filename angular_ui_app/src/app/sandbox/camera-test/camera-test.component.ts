@@ -27,6 +27,8 @@ export class CameraTestComponent {
     imageSubscriber.subscribe((message: any) => {
       // console.log(message.data);
       this.imagePath = 'data:image/jpeg;base64,' + message.data;
+
+      // create a request to python code
     });
   }
 }

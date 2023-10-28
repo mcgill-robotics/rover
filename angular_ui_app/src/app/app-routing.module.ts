@@ -7,6 +7,7 @@ import { DrivePageComponent } from './components/drive/drive-page/drive-page.com
 import { SciencePageComponent } from './components/science/science-page/science-page.component';
 import { ArmPageComponent } from './components/arm/arm-page/arm-page.component';
 import { GpsPageComponent } from './components/gps/gps-page/gps-page.component';
+import { TestPageComponent } from './sandbox/test-page/test-page.component';
 
 
 const routes: Routes = [
@@ -16,6 +17,7 @@ const routes: Routes = [
   {path: 'science', component: SciencePageComponent},
   {path: 'arm', component: ArmPageComponent},
   {path: 'gps', component: GpsPageComponent},
+  {path: 'test', component: TestPageComponent},
 
 
   

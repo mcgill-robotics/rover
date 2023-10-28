@@ -16,7 +16,10 @@ import { GpsPageComponent } from './components/gps/gps-page/gps-page.component';
 import { Button1Component } from './sandbox/buttons/button1/button1.component';
 import { CameraTestComponent } from './sandbox/camera-test/camera-test.component';
 import { ArmTestComponent } from './sandbox/arm-test/arm-test.component';
+import { TestPageComponent } from './sandbox/test-page/test-page.component';
 
+// jquery
+import * as $ from "jquery";
 
 @NgModule({
   declarations: [
@@ -32,7 +35,8 @@ import { ArmTestComponent } from './sandbox/arm-test/arm-test.component';
     GpsPageComponent,
     Button1Component,
     CameraTestComponent,
-    ArmTestComponent
+    ArmTestComponent,
+    TestPageComponent
   ],
   imports: [
     BrowserModule,

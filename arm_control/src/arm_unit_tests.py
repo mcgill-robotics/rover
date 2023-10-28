@@ -110,7 +110,23 @@ def test_inverseKinematics(num_samples = 1000, verbose=False):
     print(f"Ratio: {(num_samples - failed) / num_samples * 100}%")
     return failed
 
+def test_pathfind(n_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
+    print("------------------------------------------------------------------")
+    print("-------------------------test_pathfind----------------------------")
+    print("------------------------------------------------------------------")
+    failed = 0
+    for i in num_samples:
+        start_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
+        end_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
+        min_time = max([abs((start_joints-end_joints)/max_velocities[i]) for i in range(5)])
+        # TODO: figure out how to calculate max time???
+        max_distance = max(abs(start_joints[i] - end_joints[i]) for i in range(5)) # Using furthest distance to get a reasonable max time
+        time = min_time + np.random.random() * max_distance * 10
+        
+
+
 if __name__=="__main__":
+    test_pathfind()
     test_inverseKinematicsJointPositions()
     test_inverseKinematicsComputeJointAngles()
     test_inverseKinematics()

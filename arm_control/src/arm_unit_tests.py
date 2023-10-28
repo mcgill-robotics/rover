@@ -115,8 +115,10 @@ def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
     print("------------------------------------------------------------------")
     print("-------------------------test_pathfind----------------------------")
     print("------------------------------------------------------------------")
-    failed = 0
+    num_failed = 0
     for i in num_samples:
+        failed = False
+
         start_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
         end_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
         differences = [start_joints[i] - end_joints[i] for i in range(5)]
@@ -128,21 +130,40 @@ def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1]):
         polynomials = arm_pathfinding.pathfiningPolynomial(start_joints, end_joints, time)
         for i, polynomial in enumerate(polynomials):
             if sum([polynomial[j] * math.pow(time, 6 - j) for j in range(4)]) != differences[i]: # Checking final position
-                failed += 1
+                failed = True
                 break
             
             if sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)]) != max_velocities[i]: # Checking max velocity
-                failed += 1
+                failed = True
                 break
 
             if sum([polynomial[j] * (6 - j) * math.pow(time, 5 - j) for j in range(4)]) != 0: # Checking final velocity
-                failed += 1
+                failed = True
                 break
 
-            if sum([polynomial[j] * (6 - j) * (5 - j) * math.pow(time/2, 4 - j) for j in range(4)]) != 0:
-                failed += 1
+            if sum([polynomial[j] * (6 - j) * (5 - j) * math.pow(time/2, 4 - j) for j in range(4)]) != 0: # Check halfway acceleration
+                failed = True
                 break
+        
+        if not failed and end_joints != arm_pathfinding.nextJointPosition(start_joints, time, polynomials):
+            failed = True
+        
+        if not failed and end_joints != arm_pathfinding.pathfind(start_joints, end_joints, time):
+            failed = True
 
+        if not failed and start_joints != arm_pathfinding.nextJointPosition(start_joints, 0, polynomials):
+            failed = True
+        
+        if not failed and start_joints != arm_pathfinding.pathfind(start_joints, end_joints, 0):
+            failed = True
+
+        if failed:
+            num_failed += 1
+    
+    print(f"Ratio: {(num_samples - num_failed) / num_samples * 100}%")
+    return num_failed
+        
+        
 
 if __name__=="__main__":
     test_pathfind()

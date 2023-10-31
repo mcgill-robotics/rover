@@ -115,6 +115,10 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import KDTree
+import matplotlib
+# Use the Qt5Agg backend for real-time plotting and to make it visible on my computer
+matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt
 
 # parameter
 N_SAMPLE = 500  # number of sample_points
@@ -129,15 +133,24 @@ class Node:
     Node class for dijkstra search
     """
 
-    def __init__(self, x, y, cost, parent_index):
+    def __init__(self, x, y, distance, parent_index):
         self.x = x
         self.y = y
-        self.cost = cost
+        self.distance = distance
         self.parent_index = parent_index
 
     def __str__(self):
         return str(self.x) + "," + str(self.y) + "," +\
-               str(self.cost) + "," + str(self.parent_index)
+               str(self.distance) + "," + str(self.parent_index)
+
+
+def pythagorean_distance(s_x, s_y, g_x, g_y):
+    '''
+    s_x, s_y: the x and y coordinate of the starting point
+    g_x, g_y: the x and y coodinate of the end point
+    Returns: the hypthenus/ distance between the 2 points
+    Computes the pythagorean distance between 2 points'''
+    return np.hypot(abs(g_x-s_x), abs(g_y-s_y))
 
 
 def prm_planning(start_x, start_y, goal_x, goal_y,
@@ -155,19 +168,26 @@ def prm_planning(start_x, start_y, goal_x, goal_y,
     :param rng: (Optional) Random generator
     :return:
     """
+    # Initialises the obstacles
     obstacle_kd_tree = KDTree(np.vstack((obstacle_x_list, obstacle_y_list)).T)
 
+    # Creates a list of sample points for the prm
     sample_x, sample_y = sample_points(start_x, start_y, goal_x, goal_y,
                                        robot_radius,
                                        obstacle_x_list, obstacle_y_list,
                                        obstacle_kd_tree, rng)
+    
+    # plots the sample points
     if show_animation:
         plt.plot(sample_x, sample_y, ".b")
 
+    # Generates a road map from the sample points
+    # The roadmap is a list, where every index represents a sample point and the content of every
+    # index represents the indexes of its neighboring points
     road_map = generate_road_map(sample_x, sample_y,
                                  robot_radius, obstacle_kd_tree)
 
-    rx, ry = dijkstra_planning(
+    rx, ry = greedy_planning(
         start_x, start_y, goal_x, goal_y, road_map, sample_x, sample_y)
 
     return rx, ry
@@ -238,7 +258,7 @@ def generate_road_map(sample_x, sample_y, rr, obstacle_kd_tree):
     return road_map
 
 
-def dijkstra_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
+def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
     """
     s_x: start x position [m]
     s_y: start y position [m]
@@ -247,31 +267,37 @@ def dijkstra_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
     obstacle_x_list: x position list of Obstacles [m]
     obstacle_y_list: y position list of Obstacles [m]
     robot_radius: robot radius [m]
-    road_map: ??? [m]
-    sample_x: ??? [m]
-    sample_y: ??? [m]
+    road_map: A list containing lists, where the indexes represent sample points, and the nested lists contains the indexes of neighboring sample points
+    sample_x: List containing the x values of every sample point [m]
+    sample_y: List containing the y values of every sample point [m]
 
     @return: Two lists of path coordinates ([x1, x2, ...], [y1, y2, ...]), empty list when no path was found
     """
-
-    start_node = Node(sx, sy, 0.0, -1)
+    # Defining the start points and end points as nodes
+    start_node = Node(sx, sy, pythagorean_distance(sx, sy, gx, gy), -1)
     goal_node = Node(gx, gy, 0.0, -1)
 
+    # Creates a dictionary mapping indees to the nodes
+    # Open set will contain nodes to be visited, while closed_set's nodes are already visited
     open_set, closed_set = dict(), dict()
     open_set[len(road_map) - 2] = start_node
 
     path_found = True
-
+    
+    # Start of the loop
     while True:
+        
+        # If no nodes are in the open set, and we haven't arrived at the goal, then it is impossible to 
+        # find a path
         if not open_set:
             print("Cannot find path")
             path_found = False
             break
-
-        c_id = min(open_set, key=lambda o: open_set[o].cost)
-        current = open_set[c_id]
-
-        # show graph
+        
+        c_id = min(open_set, key=lambda o: open_set[o].distance)
+        current = open_set[c_id] #current is the node being checked
+        
+        # shows the on the graph
         if show_animation and len(closed_set.keys()) % 2 == 0:
             # for stopping simulation with the esc key.
             plt.gcf().canvas.mpl_connect(
@@ -280,10 +306,11 @@ def dijkstra_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
             plt.plot(current.x, current.y, "xg")
             plt.pause(0.001)
 
+        # if the index is the same as the goal, we found the goal
         if c_id == (len(road_map) - 1):
             print("goal is found!")
             goal_node.parent_index = current.parent_index
-            goal_node.cost = current.cost
+            goal_node.distance = current.distance
             break
 
         # Remove the item from the open set
@@ -291,25 +318,26 @@ def dijkstra_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
         # Add it to the closed set
         closed_set[c_id] = current
 
-        # expand search grid based on motion model
+        # Checks every point neighboring the current point
         for i in range(len(road_map[c_id])):
-            n_id = road_map[c_id][i]
-            dx = sample_x[n_id] - current.x
-            dy = sample_y[n_id] - current.y
-            d = math.hypot(dx, dy)
-            node = Node(sample_x[n_id], sample_y[n_id],
-                        current.cost + d, c_id)
-
+            n_id = road_map[c_id][i] # n_id represents the index of the neighbor
+            # Sets the distance as the distance to the goal
+            distance = pythagorean_distance(sample_x[n_id], sample_y[n_id], gx, gy)
+            node = Node(sample_x[n_id], sample_y[n_id], distance, c_id)
+            
+            # If already checked, we don't do anything
             if n_id in closed_set:
                 continue
-            # Otherwise if it is already in the open set
+            # Otherwise if it is already in the open set, update it
             if n_id in open_set:
-                if open_set[n_id].cost > node.cost:
-                    open_set[n_id].cost = node.cost
+                if open_set[n_id].distance > node.distance:
+                    open_set[n_id].distance = node.distance
                     open_set[n_id].parent_index = c_id
             else:
+                # If it isn't in the open set, now we add it
                 open_set[n_id] = node
 
+    # returns an empty list if nothing was found
     if path_found is False:
         return [], []
 
@@ -411,7 +439,7 @@ def main(rng=None):
 
     rx, ry = prm_planning(sx, sy, gx, gy, ox, oy, robot_size, rng=rng)
 
-    assert rx, 'Cannot found path'
+    assert rx, 'Cannot find path'
 
     if show_animation:
         plt.plot(rx, ry, "-r")

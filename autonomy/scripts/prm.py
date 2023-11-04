@@ -133,15 +133,15 @@ class Node:
     Node class for dijkstra search
     """
 
-    def __init__(self, x, y, distance, parent_index):
+    def __init__(self, x, y, distanceToGoal, parent_index):
         self.x = x
         self.y = y
-        self.distance = distance
+        self.distanceToGoal = distanceToGoal
         self.parent_index = parent_index
 
     def __str__(self):
         return str(self.x) + "," + str(self.y) + "," +\
-               str(self.distance) + "," + str(self.parent_index)
+               str(self.distanceToGoal) + "," + str(self.parent_index)
 
 
 def pythagorean_distance(s_x, s_y, g_x, g_y):
@@ -294,7 +294,7 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
             path_found = False
             break
         
-        c_id = min(open_set, key=lambda o: open_set[o].distance)
+        c_id = min(open_set, key=lambda o: open_set[o].distanceToGoal)
         current = open_set[c_id] #current is the node being checked
         
         # shows the on the graph
@@ -310,7 +310,7 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
         if c_id == (len(road_map) - 1):
             print("goal is found!")
             goal_node.parent_index = current.parent_index
-            goal_node.distance = current.distance
+            goal_node.distanceToGoal = current.distanceToGoal
             break
 
         # Remove the item from the open set
@@ -322,16 +322,16 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
         for i in range(len(road_map[c_id])):
             n_id = road_map[c_id][i] # n_id represents the index of the neighbor
             # Sets the distance as the distance to the goal
-            distance = pythagorean_distance(sample_x[n_id], sample_y[n_id], gx, gy)
-            node = Node(sample_x[n_id], sample_y[n_id], distance, c_id)
+            distanceToGoal = pythagorean_distance(sample_x[n_id], sample_y[n_id], gx, gy)
+            node = Node(sample_x[n_id], sample_y[n_id], distanceToGoal, c_id)
             
             # If already checked, we don't do anything
             if n_id in closed_set:
                 continue
             # Otherwise if it is already in the open set, update it
             if n_id in open_set:
-                if open_set[n_id].distance > node.distance:
-                    open_set[n_id].distance = node.distance
+                if open_set[n_id].distanceToGoal > node.distanceToGoal:
+                    open_set[n_id].distanceToGoal = node.distanceToGoal
                     open_set[n_id].parent_index = c_id
             else:
                 # If it isn't in the open set, now we add it

@@ -19,7 +19,7 @@ import { ArmTestComponent } from './sandbox/arm-test/arm-test.component';
 import { TestPageComponent } from './sandbox/test-page/test-page.component';
 
 // jquery
-import * as $ from "jquery";
+// import * as $ from "jquery";
 
 @NgModule({
   declarations: [

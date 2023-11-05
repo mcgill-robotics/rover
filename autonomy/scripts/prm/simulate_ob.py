@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from scipy.spatial import ConvexHull
 
+# This file contains functions useful functions for simulated map generation and border defining
+
 def _points_in_one_dimension(xy):
     x_values = xy[:, 0]  # extract all x values
     y_values = xy[:, 1]  # extract all y values
@@ -80,24 +82,21 @@ def plot_groups(groups):
         plt.legend()
         plt.show()
 
-# Example usage
-num_groups = 2
-num_points = 100
-shapes = ['circle', 'square']
-radii = [15, 10.0]
-centers = [(20, 40), (80, 60)]
-groups = generate_groups(num_groups, num_points, shapes, radii, centers)
-#print(groups)
-map1_ox = []
-map1_oy = []
-for group_idx, group in enumerate(groups):
-    #print("$$")
-    #print(group)
-    for shape_idx, points in enumerate(group):
-        #print("%%")
-        #print(points)
-        for point in points:
 
-            map1_ox.append(point[0])
-            map1_oy.append(point[1])
-#print(ox)
+def generate_rectangle_borders(ox, oy, bottom, top, left, right, precision):
+    # the o in ox, oy stands for obstacle
+    for i in range(precision):
+        # Add bottom border
+        ox.append(i)
+        oy.append(bottom)
+        # Add Top border
+        ox.append(top)
+        oy.append(i)
+        # Add left border
+        ox.append(left)
+        oy.append(i)
+        # Add right border
+        ox.append(i)
+        oy.append(right)
+    
+

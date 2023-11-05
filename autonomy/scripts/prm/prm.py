@@ -1,11 +1,6 @@
-
-"""
-
-Probabilistic Road Map (PRM) Planner
-
+"""Probabilistic Road Map (PRM) Planner
 author: Atsushi Sakai (@Atsushi_twi)
-
-"""
+Edited by Joseph Saliba, Eric Deng, Helen Deng and Garett"""
 
 import math
 import numpy as np
@@ -15,16 +10,22 @@ import matplotlib
 # Use the Qt5Agg backend for real-time plotting and to make it visible on my computer
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
-import simulate_ob
+from generate_maps import *
 
 # parameter
 N_SAMPLE = 500  # number of sample_points
 N_KNN = 10  # number of edge from one sampled point
 MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
-# import simulate obstacles
-ox = simulate_ob.map1_ox 
-oy = simulate_ob.map1_oy
+# Simulated world
+CHOSEN_MAP = map1()
+# start and goal position
+SX = 10.0  # [m]
+SY = 10.0  # [m]
+GX = 20.0  # [m]
+GY = 70.0  # [m]
+ROBOT_SIZE = 5.0  # [m]
+
 
 show_animation = True
 
@@ -295,50 +296,17 @@ def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):
 
 def main(rng=None):
     print(__file__ + " start!!")
-
-    # start and goal position
-    sx = 10.0  # [m]
-    sy = 10.0  # [m]
-    gx = 20.0  # [m]
-    gy = 70.0  # [m]
-    robot_size = 5.0  # [m]
-
-    # ox = []
-    # oy = []
-    #
-    for i in range(100):
-        ox.append(i)
-        oy.append(0.0)
-    for i in range(100):
-        ox.append(100.0)
-        oy.append(i)
-    for i in range(100):
-        ox.append(0.0)
-        oy.append(i)
-    for i in range(100):
-        ox.append(i)
-        oy.append(100)
-    # for i in range(61):
-    #     ox.append(i)
-    #     oy.append(60.0)
-    # for i in range(61):
-    #     ox.append(0.0)
-    #     oy.append(i)
-    # for i in range(40):
-    #     ox.append(20.0)
-    #     oy.append(i)
-    # for i in range(40):
-    #     ox.append(40.0)
-    #     oy.append(60.0 - i)
+    # ox, oy are the coordinates of the obstacle and map borders
+    ox, oy = CHOSEN_MAP[0], CHOSEN_MAP[1]
 
     if show_animation:
         plt.plot(ox, oy, ".k")
-        plt.plot(sx, sy, "^r")
-        plt.plot(gx, gy, "^c")
+        plt.plot(SX, SY, "^r")
+        plt.plot(GX, GY, "^c")
         plt.grid(True)
         plt.axis("equal")
 
-    rx, ry = prm_planning(sx, sy, gx, gy, ox, oy, robot_size, rng=rng)
+    rx, ry = prm_planning(SX, SY, GX, GY, ox, oy, ROBOT_SIZE, rng=rng)
 
     assert rx, 'Cannot find path'
 
@@ -346,7 +314,6 @@ def main(rng=None):
         plt.plot(rx, ry, "-r")
         plt.pause(0.001)
         plt.show()
-
 
 if __name__ == '__main__':
     main()

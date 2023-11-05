@@ -20,13 +20,7 @@ class PointCloudTracker:
         self.convex_hulls: List[ConvexHull] = []
         self.rviz_pc2_pub = rospy.Publisher('parsed_point_cloud', PointCloud2, queue_size=10)
         self.rviz_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
-        self.rviz_polygon_pub_lst = [
-            rospy.Publisher('obstacle_polygons/1', PolygonStamped, queue_size=10),
-            rospy.Publisher('obstacle_polygons/2', PolygonStamped, queue_size=10),
-            rospy.Publisher('obstacle_polygons/3', PolygonStamped, queue_size=10),
-            rospy.Publisher('obstacle_polygons/4', PolygonStamped, queue_size=10),
-            rospy.Publisher('obstacle_polygons/5', PolygonStamped, queue_size=10),
-        ]
+        self.rviz_polygon_pub_lst = {}  #Dictionary Containing n publishers
 
 
     def listener(self) -> None:
@@ -148,15 +142,20 @@ class PointCloudTracker:
         X = np.array([(t[0], t[1]) for t in self.obstacle_points])
 
         for e, hull in enumerate(get_all_hulls_vertices(X)):
+            # Setting up the polygonStamped
             polygon_stamped_msg = PolygonStamped()
             polygon_stamped_msg.header.stamp = rospy.Time.now()
             polygon_stamped_msg.header.frame_id = FIXED_FRAME_ID
             polygon_stamped_msg.polygon.points = [Point32(x=x, y=y, z=0.5) for x, y in hull]
             polygon_stamped_msg.header.seq = e
-            if (e < len(self.rviz_polygon_pub_lst)):
-                self.rviz_polygon_pub_lst[e].publish(polygon_stamped_msg)
+            if e+1 > len(self.rviz_polygon_pub_lst):
+                for _ in range(e+1-len(self.rviz_polygon_pub_lst)):
+                    self.rviz_polygon_pub_lst[e] = rospy.Publisher(f'obstacle_polygons/{e}', PolygonStamped, queue_size=10)
+            self.rviz_polygon_pub_lst[e].publish(polygon_stamped_msg)
+            print(f"Polygon count: {len(self.rviz_polygon_pub_lst)}")
+            '''
             else:
-                print(f'WARNING: {e=} is out of range of {len(self.rviz_polygon_pub_lst)=}')
+                print(f'WARNING: {e=} is out of range of {len(self.rviz_polygon_pub_lst)=}')'''
 
     def quaternion_rotation_matrix(self, Q: tuple):
         """

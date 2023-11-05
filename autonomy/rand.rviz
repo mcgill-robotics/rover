@@ -140,6 +140,852 @@ Visualization Manager:
       Topic: /obstacle_polygons/5
       Unreliable: false
       Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/6      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/7      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/8      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/9      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/10      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/11      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/12      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/13      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/14      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/15      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/16      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/17      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/18      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/19      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/20      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/21      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/22      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/23      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/24      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/25      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/26      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/27      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/28      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/29      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/30      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/31      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/32      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/33      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/34      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/35      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/36      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/37      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/38      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/39      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/40      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/41      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/42      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/43      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/44      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/45      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/46      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/47      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/48      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/49      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/50      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/51      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/52      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/53      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/54      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/55      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/56      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/57      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/58      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/59      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/60      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/61      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/62      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/63      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/64      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/65      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/66      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/67      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/68      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/69      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/70      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/71      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/72      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/73      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/74      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/75      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/76      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/77      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/78      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/79      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/80      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/81      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/82      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/83      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/84      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/85      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/86      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/87      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/88      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/89      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/90      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/91      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/92      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/93      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/94      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/95      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/96      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/97      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/98      
+      Unreliable: false      
+      Value: true
+    - Alpha: 1      
+      Class: rviz/Polygon      
+      Color: 25; 255; 0      
+      Enabled: true      
+      Name: Polygon      
+      Queue Size: 10      
+      Topic: /obstacle_polygons/99      
+      Unreliable: false      
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

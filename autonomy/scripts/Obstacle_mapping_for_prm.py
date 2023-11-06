@@ -1,16 +1,10 @@
 import rospy
 from geometry_msgs.msg import Point32
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Qt5Agg')
 import time
 import json
 
-a = time.time()
-
+# This is a Subscriber that retrieves obstacle and location information, which then saves it as a json file
 map_grid = {}
-
-
 def sub(point: Point32):
     x = round(point.x, 1)
     y = round(point.y, 1)

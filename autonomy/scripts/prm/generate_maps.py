@@ -11,8 +11,9 @@ LEFT = -40
 RIGHT = 40
 PRECISION = 1
 
-def test_map():
+def actual_obstacle_map():
     ox, oy = [], []
+    # Takes the obstacle info from json and adds them to the obstacle list
     data = json.load(open('autonomy/scripts/prm/obstacles.json'))
     obstacles = data["map"]
     for key in obstacles.keys():

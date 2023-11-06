@@ -18,13 +18,14 @@ N_KNN = 10  # number of edge from one sampled point
 MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
 # Simulated world
-CHOSEN_MAP = map1()
+CHOSEN_MAP = test_map()
+
 # start and goal position
-SX = 10.0  # [m]
-SY = 10.0  # [m]
-GX = 20.0  # [m]
-GY = 70.0  # [m]
-ROBOT_SIZE = 5.0  # [m]
+SX = 30.0  # [m]
+SY = 30.0  # [m]
+GX = -35.0  # [m]
+GY = -35.0  # [m]
+ROBOT_SIZE = 2.0  # [m]
 
 
 show_animation = True

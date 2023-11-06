@@ -83,15 +83,16 @@ def plot_groups(groups):
         plt.show()
 
 
-def generate_rectangle_borders(ox, oy, bottom, top, left, right, precision):
+def generate_rectangle_borders(ox, oy, bottom, top, left, right):
     # the o in ox, oy stands for obstacle
-    for i in range(precision):
+    for i in range(left, right):
         # Add bottom border
         ox.append(i)
         oy.append(bottom)
         # Add Top border
         ox.append(top)
         oy.append(i)
+    for i in range(bottom, top):
         # Add left border
         ox.append(left)
         oy.append(i)

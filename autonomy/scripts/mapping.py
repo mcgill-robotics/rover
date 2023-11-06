@@ -21,7 +21,7 @@ class PointCloudTracker:
         self.rviz_pc2_pub = rospy.Publisher('parsed_point_cloud', PointCloud2, queue_size=10)
         self.rviz_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
         self.rviz_polygon_pub_lst = {}  #Dictionary Containing n publishers
-
+        self.prm_obstacle_pub = rospy.Publisher('prm_obstacles', Point32, queue_size = 10)
 
     def listener(self) -> None:
         rospy.init_node('pc2_publisher_and_listener', anonymous=True)
@@ -91,6 +91,7 @@ class PointCloudTracker:
         # ]
 
         for p in new_obstacle_points:
+            self.prm_obstacle_pub.publish(Point32(x=p[0], y=p[1], z=p[2]))
             self.obstacle_points.add(tuple((p[0], p[1], p[2])))
         
         self.publish_rover_position_to_rviz(rover_position_tuple)

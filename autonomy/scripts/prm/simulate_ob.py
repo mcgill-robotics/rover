@@ -5,45 +5,7 @@ from scipy.spatial import ConvexHull
 
 # This file contains functions useful functions for simulated map generation and border defining
 
-def _points_in_one_dimension(xy):
-    x_values = xy[:, 0]  # extract all x values
-    y_values = xy[:, 1]  # extract all y values
-    return (x_values == x_values[0]).all() or (y_values == y_values[0]).all()
-
-def get_all_hulls_vertices(X: np.ndarray):
-    # X is (n, 2) numpy ndarray where n is number of points
-    db = DBSCAN(eps=0.3, min_samples=5).fit(X)
-    labels = db.labels_
-
-    # Number of clusters in labels, ignoring noise if present.
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise_ = list(labels).count(-1)
-
-    unique_labels = set(labels)
-
-    for k in unique_labels:
-        if k == -1 or _points_in_one_dimension(X[labels == k]):
-            # Black used for noise.
-            col = [0, 0, 0, 1]
-
-        class_member_mask = labels == k
-
-        xy = X[class_member_mask]
-
-        if k != -1 and not _points_in_one_dimension(xy):
-            hull = ConvexHull(xy)
-            yield hull.points[hull.vertices]
-
-
-def display_bounding_boxes(X: np.ndarray):
-    for hull_points in get_all_hulls_vertices(X):
-        plt.plot(hull_points[:, 0], hull_points[:, 1], 'r--', lw=2)
-        plt.plot(hull_points[:, 0], hull_points[:, 1], 'ro')
-
-    # plt.title(f"Estimated number of clusters: {n_clusters_}")
-    plt.show()
-
-def generate_points(n, shape='circle', center=(0, 0), radius=1):
+def generate_points(n, shape='circle', center=(0, 0)):
     if shape == 'circle':
         angles = np.linspace(0, 2*np.pi, n)
         x = center[0] + radius * np.cos(angles)
@@ -69,7 +31,6 @@ def generate_groups(num_groups, num_points, shapes, radii, centers):
             points = generate_points(num_points, shape, center=center, radius=radius)
             group.append(points)
         groups.append(group)
-        #print(groups)
     return groups
 
 def plot_groups(groups):
@@ -81,6 +42,31 @@ def plot_groups(groups):
         plt.title(f'Group {group_idx+1}')
         plt.legend()
         plt.show()
+    
+def generate_line(start_point,end_point, num_point =80):
+    if len(start_point) !=2 or len(end_point) !=2: 
+        raise ValueError("need 2d coordinates")
+    if num_point < 2:
+        raise ValueError("need at least 2 points to create line")
+    x = np.linspace(start_point[0], end_point[0],num_point)
+    y = np.linspace(start_point[1],end_point[1],num_point)
+    return np.column_stack((x, y))
+
+def generate_rectangle(left_top_point,width,length,num_point=80):
+    if len(left_top_point) !=2 : 
+        raise ValueError("need 2d coordinates")
+    rectangle = []
+    left_bottom = [left_top_point[0],left_top_point[1]-width]
+    right_top = [left_top_point[0]+length,left_top_point[1]]
+    right_bottom = [left_top_point[0]+length,left_top_point[1]-width]
+
+    rectangle.append(generate_line(left_top_point,right_top,num_point))
+    rectangle.append(generate_line(left_top_point,left_bottom,num_point))
+    rectangle.append(generate_line(left_bottom,right_bottom,num_point))
+    rectangle.append(generate_line(right_top,right_bottom,num_point))
+    
+    return np.concatenate(rectangle,axis = 0)
+
 
 
 def generate_rectangle_borders(ox, oy, bottom, top, left, right):
@@ -99,5 +85,3 @@ def generate_rectangle_borders(ox, oy, bottom, top, left, right):
         # Add right border
         ox.append(i)
         oy.append(right)
-    
-

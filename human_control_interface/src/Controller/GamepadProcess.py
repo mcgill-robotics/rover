@@ -21,8 +21,6 @@ class Node_GamepadProcessing:
         maxLinearVelocity: The upper limit set for linear velocity.
         maxAngularVelocity: The lower limit set for angular velocity
 
-        active_system: What data the ROS COM system is polling (drive data, arm data, science data...)
-
         NOTE: Twist measurements are in SI units. (m/s, m, ...)
 
         """
@@ -51,23 +49,12 @@ class Node_GamepadProcessing:
         self.maxLinearVelocity = v_max
         self.maxAngularVelocity = w_max
 
-        # Initialize variables for the rover arm
-        self.prevB1 = 0
-        self.prevB2 = 0
-        self.modeState = False
-        self.clawState = False
-
-        # Initialize variables for cameras
+        # Initialize variables for camera
         self.cam_ctrl = Float32MultiArray()
+        self.cam_ctrl.data = [0, 0] # Elements: [X-axis, Y-axis]
 
-        # System Selection variables
-        self.active_system = 0
-
-        # initialize a subscriber for grabbing data from gamepad
-        self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        self.camera_publisher = rospy.Publisher("panTiltAngles", Float32MultiArray, queue_size=1)
-
-        self.cam_ctrl.data = [0, 0]
+        self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1) # Publisher for twist values.
+        self.camera_publisher = rospy.Publisher("panTiltAngles", Float32MultiArray, queue_size=1) # Publisher for pan tilt camera angles.
 
         # Control frequency of the node
         self.rate = rospy.Rate(100)
@@ -158,8 +145,8 @@ class Node_GamepadProcessing:
 
     def driveProcessCall(self, msg):
         
-        # A2 is the left stick moving up and down.
-        # A4 is the right stick moving left and right.
+        # A2 is the left stick moving up and down. Drives forwards or backwards.
+        # A4 is the right stick that moves left and right. Steers left or right.
 
         if abs(msg.A4) < 0.1:
             msg.A4 = 0
@@ -169,18 +156,17 @@ class Node_GamepadProcessing:
         drive = msg.A2
         steer = msg.A4
 
-        # # calc. for linear velocity
+        # calc. for linear velocity
         self.roverLinearVelocity = self.maxLinearVelocity * drive
 
-        # # calc. for angular velocity
+        # calc. for angular velocity
         self.roverAngularVelocity = self.maxAngularVelocity * steer
 
-        # # assigns values to a Twist msg, then publish it to ROS
+        # Assigns values to a Twist msg, then publish it to ROS
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
 
-        #time.sleep(0.5)
         self.drive_publisher.publish(roverTwist)
 
 

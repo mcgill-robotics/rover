@@ -91,30 +91,10 @@ class Node_DriveControl():
             # Populate the message with the averaged values.
             cmd.left[0], cmd.left[1] = correct_lf, correct_lb
             cmd.right[0], cmd.right[1] = correct_rf, correct_rb
-            # print(f"Corrected speed: {correct_lf}, {correct_lb}, {correct_rf}, {correct_rb}")
-
-            # motor_lf = self.motor_speed(correct_lf)
-            # motor_lb = self.motor_speed(correct_lb)
-            # motor_rf = self.motor_speed(correct_rf)
-            # motor_rb = self.motor_speed(correct_rb)
-
-            # Final if statement to make sure that in place steering works.
-            # if correct_lf == correct_lb and correct_rf == correct_rb and motor_rb == - motor_lb:
-            #    motor_lf = correct_lf/Node_DriveControl.MAX_PURE_STEER
-            #    motor_lb = correct_lb/Node_DriveControl.MAX_PURE_STEER
-            #    motor_rf = correct_rf/Node_DriveControl.MAX_PURE_STEER
-            #    motor_rb = correct_rb/Node_DriveControl.MAX_PURE_STEER
-            
-
-            # motor_val.data.append(motor_rb * 100)  # rb
-            # motor_val.data.append(motor_lf * 58)  # lf, too fast
-            # motor_val.data.append(motor_lb * -100)  # lb, tpo slow
-            # motor_val.data.append(motor_rf * 88)  # rf
 
             print(cmd)
 
             self.angular_velocity_publisher.publish(cmd) # Send the angular speeds.
-            # self.motor_pubisher.publish(motor_val)
 
             self.rate.sleep()
             print(cmd)     

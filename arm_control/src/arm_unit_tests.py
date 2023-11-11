@@ -141,7 +141,7 @@ def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1], 
                     print(f"Result: {given} Expected: {differences[k]} Difference: {differences[k] - given}")
                 break
             
-            if abs(sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)]) - max_velocities[k]) > 0.001: # Checking max velocity
+            if abs(abs(sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)])) - max_velocities[k]) > 0.001: # Checking max velocity
                 failed = True
                 if verbose:
                     given = sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)])

@@ -32,13 +32,19 @@ def pathfind(start_joints, end_joints, time):
     """
     if end_joints != previous_end_joints: #Setting up polynomials and saved variables
         half = time / 2
+        vels = [max_acc[i] * half for i in range(5)] # waist shoulder elbow wrist hand maximum velocities 
+        for i in range(5):
+            if vels[i] > max_vels[i]:
+                vels[i] = max_vels[i]
+            if end_joints[i] < start_joints[i]:
+                vels[i] = -vels[i]
         matrix = np.array([[time ** 6, time ** 5, time ** 4, time ** 3], 
         [6 * time ** 5, 5 * time ** 4, 4 * time ** 3, 3 * time ** 2],
         [6 * half ** 5, 5 * half ** 4, 4 * half ** 3, 3 * half ** 2],
         [30 * half ** 4, 20 * half ** 3, 12 * half ** 2, 6 * half]])
 
         for i in range(len(polynomials)):
-            points = np.array([end_joints[i] - start_joints[i], 0, max_vels[i], 0])
+            points = np.array([end_joints[i] - start_joints[i], 0, vels[i], 0])
             poly = np.linalg.solve(matrix, points)
             for j in range(4):
                 polynomials[i][j] = poly[j]
@@ -83,6 +89,8 @@ def pathfiningPolynomial(start_joints, end_joints, time):
     for i in range(5):
         if vels[i] > max_vels[i]:
             vels[i] = max_vels[i]
+        if end_joints[i] < start_joints[i]:
+            vels[i] = -vels[i]
     polynomials = [[0 for j in range(4)] for i in range(5)]
     matrix = np.array([[time ** 6, time ** 5, time ** 4, time ** 3], 
         [6 * time ** 5, 5 * time ** 4, 4 * time ** 3, 3 * time ** 2],

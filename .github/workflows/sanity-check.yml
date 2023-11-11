@@ -1,0 +1,55 @@
+name: Integration Test
+
+on:
+  push:
+    branches:
+      - main
+      - CI
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    name: Catkin Build Test
+    steps:    
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Setup ROS
+        run: |
+            sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+            sudo apt install curl 
+            curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+            sudo apt update
+            sudo apt install ros-noetic-desktop-full
+            sudo apt install python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+
+      - name: Setup Catkin
+        run: |
+          sudo sh \
+            -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" \
+              > /etc/apt/sources.list.d/ros-latest.list'
+          wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install python3-catkin-tools
+
+      - name: Setup Repo
+        run: |
+          cd ~
+          mkdir --parents catkin_ws/src
+          ln -s $GITHUB_WORKSPACE ~/catkin_ws/src
+          
+      - name: Catkin Build
+        shell: bash
+        run: |
+            source /opt/ros/noetic/setup.bash
+            cd ~/catkin_ws
+            catkin init
+            catkin build -DPYTHON_EXECUTABLE=/usr/bin/python3

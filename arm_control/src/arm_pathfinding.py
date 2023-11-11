@@ -1,15 +1,16 @@
 import numpy as np
 import math
 
-max_vels = [.1, .1, .1, .1, .1] # waist shoulder elbow wrist hand maximum velocities (TEMPORARY VALUES)
-previous_end_joints = [0 for i in range(5)]
+max_acc = [1, 1, 1, 1, 1] # waist shoulder elbow wrist hand maximum accelerations (TEMPORARY VALUES)
+max_vels = [0.1, 0.1, 0.1, 0.1, 0.1] # waist shoulder elbow wrist hand maximum accelerations (TEMPORARY VALUES)
+previous_end_joints = [None for i in range(5)]
 polynomials = [[0 for j in range(4)] for i in range(5)]
 total_motion_time = 0
 original_start_joints = [0 for i in range(5)]
 
 def pathfind(start_joints, end_joints, time):
     """
-    Generates the path polynomial for each joints and calculates the required position for a given time remaining.
+    Generates the path polynomial for each joint and calculates the required position for a given time remaining.
     Note: If time is too long or maximum velocity is too high, it will reverse and then overshoot before landing
     on the desired position.
 
@@ -57,7 +58,31 @@ def pathfind(start_joints, end_joints, time):
     return joints
 
 def pathfiningPolynomial(start_joints, end_joints, time):
-    half = time/2
+    """
+    Generates the path polynomial for each joint. Does NOT store these polynomials as global variables.
+    Note: If time is too long or maximum velocity is too high, it will reverse and then overshoot before landing
+    on the desired position.
+
+    Parameters
+    ----------
+        start_joints : list(5)
+            Current [waist, shoulder, elbow, wrist, hand] in radians
+        end_joints : list(5)
+            Desired [waist, shoulder, elbow, wrist, hand] in radians
+        time : float
+            Time until the arm should be at end_joints. 
+    
+    Returns
+    -------
+        polynomials : list(5)(4)
+            The polynomial coefficients governing the motion of the waist, shoudler, elbow, 
+            wrist, and hand respectively.
+    """
+    half = time / 2
+    vels = [max_acc[i] * half for i in range(5)] # waist shoulder elbow wrist hand maximum velocities 
+    for i in range(5):
+        if vels[i] > max_vels[i]:
+            vels[i] = max_vels[i]
     polynomials = [[0 for j in range(4)] for i in range(5)]
     matrix = np.array([[time ** 6, time ** 5, time ** 4, time ** 3], 
         [6 * time ** 5, 5 * time ** 4, 4 * time ** 3, 3 * time ** 2],
@@ -65,7 +90,7 @@ def pathfiningPolynomial(start_joints, end_joints, time):
         [30 * half ** 4, 20 * half ** 3, 12 * half ** 2, 6 * half]])
 
     for i in range(len(polynomials)):
-        points = np.array([end_joints[i] - start_joints[i], 0, max_vels[i], 0])
+        points = np.array([end_joints[i] - start_joints[i], 0, vels[i], 0])
         poly = np.linalg.solve(matrix, points)
         for j in range(4):
             polynomials[i][j] = poly[j]
@@ -73,6 +98,25 @@ def pathfiningPolynomial(start_joints, end_joints, time):
     return polynomials
 
 def nextJointPosition(start_position, time_elapsed, polynomials):
+    """ Calculates the desired joint positions after time_elapsed time has passed since the
+    motion began, as govenerned by the polynomials.
+
+    Params
+    ------
+        start_joints : list(5)
+            The original position [waist, shoulder, elbow, wrist, hand] in radians when the
+            motion began.
+        time_elapsed : int
+            The time since the motion began
+        polynomials : list(5)(4)
+            The polynomial coefficients governing the motion of the waist, shoudler, elbow, 
+            wrist, and hand respectively.
+    
+    Returns
+    -------
+        joints : list(5)
+            The next position the arm should move to in accordance with the path
+    """
     joints = [] #Calculating positions
     for i in range(len(polynomials)):
         polynomial = polynomials[i]

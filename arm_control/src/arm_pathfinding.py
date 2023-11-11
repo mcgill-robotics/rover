@@ -1,8 +1,8 @@
 import numpy as np
 import math
 
-max_acc = [1, 1, 1, 1, 1] # waist shoulder elbow wrist hand maximum accelerations (TEMPORARY VALUES)
-max_vels = [0.1, 0.1, 0.1, 0.1, 0.1] # waist shoulder elbow wrist hand maximum accelerations (TEMPORARY VALUES)
+max_acc = [500, 500, 500, 500, 500] # waist shoulder elbow wrist hand maximum accelerations (TEMPORARY VALUES)
+max_vels = [5, 5, 5, 5, 5] # waist shoulder elbow wrist hand maximum accelerations (TEMPORARY VALUES)
 previous_end_joints = [None for i in range(5)]
 polynomials = [[0 for j in range(4)] for i in range(5)]
 total_motion_time = 0

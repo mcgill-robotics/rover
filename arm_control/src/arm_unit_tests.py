@@ -208,7 +208,7 @@ def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1], 
         
 
 if __name__=="__main__":
-    test_pathfind(verbose=True)
+    test_pathfind(num_samples=1000)
     test_inverseKinematicsJointPositions()
     test_inverseKinematicsComputeJointAngles()
     test_inverseKinematics()

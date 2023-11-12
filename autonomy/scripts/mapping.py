@@ -12,6 +12,7 @@ import numpy as np
 from typing import Set, Tuple, List
 from scipy.spatial import ConvexHull
 from bounding_boxes import get_all_hulls_vertices
+import json
 
 class PointCloudTracker:
     def __init__(self) -> None:
@@ -21,12 +22,18 @@ class PointCloudTracker:
         self.rviz_pc2_pub = rospy.Publisher('parsed_point_cloud', PointCloud2, queue_size=10)
         self.rviz_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
         self.rviz_polygon_pub_lst = {}  #Dictionary Containing n publishers
-        self.prm_obstacle_pub = rospy.Publisher('prm_obstacles', Point32, queue_size = 10)
-
+        self.map_grid = {}
     def listener(self) -> None:
         rospy.init_node('pc2_publisher_and_listener', anonymous=True)
         rospy.Subscriber("camera/depth/points", PointCloud2, self.parse_pointcloud2_message)
         rospy.spin()
+
+    def update_json(self):
+        location = self.get_rover_pose()[0] # Rover coordinates
+        location_output = (round(location[0], 1), round(location[1], 1))
+        print("Updating Map")
+        with open ('autonomy/scripts/prm/obstacles.json', "w") as jsonfile:
+            json.dump({"map":self.map_grid, "location": location_output}, jsonfile)        
 
     def get_rover_pose(self) -> tuple:
         data = rospy.wait_for_message("/gazebo/model_states", ModelStates)
@@ -91,8 +98,11 @@ class PointCloudTracker:
         # ]
 
         for p in new_obstacle_points:
-            self.prm_obstacle_pub.publish(Point32(x=p[0], y=p[1], z=p[2]))
+            point = str(f"{round(p[0], 1)} {round(p[1], 1)}")
+            if point not in self.map_grid:
+                self.map_grid[point] = True
             self.obstacle_points.add(tuple((p[0], p[1], p[2])))
+        self.update_json()
         
         self.publish_rover_position_to_rviz(rover_position_tuple)
         if (len(self.obstacle_points) > 0):

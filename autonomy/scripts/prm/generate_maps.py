@@ -4,12 +4,6 @@ sys.path.append(currentdir)
 from simulate_ob import *
 import json
 
-# Map Scale
-TOP = 40
-BOTTOM = -40
-LEFT = -40
-RIGHT = 40
-PRECISION = 1
 
 def actual_obstacle_map():
     ox, oy = [], []
@@ -20,14 +14,12 @@ def actual_obstacle_map():
         point = key.split()
         ox.append(float(point[0]))
         oy.append(float(point[1]))
-    generate_rectangle_borders(ox, oy, BOTTOM, TOP, LEFT, RIGHT)
-    
-    return ox, oy
+    sx, sy = data["location"][0], data["location"][1]
+    return ox, oy, sx, sy
 
 def map1():
     map1_ox, map1_oy = [], []
     # Adds the borders as obstacles inside ox,oy
-    generate_rectangle_borders(map1_ox, map1_oy, BOTTOM, TOP, LEFT, RIGHT)
     num_groups = 2
     num_points = 100
     shapes = ['circle', 'square']

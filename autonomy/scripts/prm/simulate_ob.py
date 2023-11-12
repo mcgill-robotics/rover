@@ -69,19 +69,19 @@ def generate_rectangle(left_top_point,width,length,num_point=80):
 
 
 
-def generate_rectangle_borders(ox, oy, bottom, top, left, right):
+def generate_rectangle_borders(ox: list, oy: list, bottom, top, left, right, precision):
     # the o in ox, oy stands for obstacle
-    for i in range(left, right):
+    for i in range(round(abs(right-left))*precision):
         # Add bottom border
-        ox.append(i)
+        ox.append(i/precision +left)
         oy.append(bottom)
         # Add Top border
-        ox.append(top)
-        oy.append(i)
-    for i in range(bottom, top):
+        ox.append(i/precision + left)
+        oy.append(top)
+    for i in range(round(abs(top-bottom))*precision):
         # Add left border
         ox.append(left)
-        oy.append(i)
+        oy.append(i/precision + bottom)
         # Add right border
-        ox.append(i)
-        oy.append(right)
+        ox.append(right)
+        oy.append(i/precision + bottom)

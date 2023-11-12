@@ -19,15 +19,37 @@ MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
 # Simulated world
 CHOSEN_MAP = actual_obstacle_map()
+
+USE_ACTUAL_COORDS = True
 # start and goal position
+#For testing
 SX = 30.0  # [m]
 SY = 30.0  # [m]
-GX = -30.0  # [m]
-GY = -30.0  # [m]
-ROBOT_SIZE = 5.0  # [m]
+GX = -10.0  # [m]
+GY = 8.0  # [m]
+ROBOT_SIZE = 0.2  # [m]
 
+MAP__SCALING = True
+
+#Map Size
+UP = 40
+DOWN = -40
+LEFT = -40
+RIGHT = 40
+PRECISION = 10
 
 show_animation = True
+
+if USE_ACTUAL_COORDS:
+    SX, SY = CHOSEN_MAP[2], CHOSEN_MAP[3]
+
+if MAP__SCALING:
+    l, r, u, d = min([SX, GX, min(CHOSEN_MAP[0])]), max([SX, GX, max(CHOSEN_MAP[0])]), max([SY, GY, max(CHOSEN_MAP[1])]), min([SY, GY, min(CHOSEN_MAP[1])])
+    map_scale = 3 # meters added to each side
+    LEFT, RIGHT, UP, DOWN = l - map_scale, r + map_scale, u + map_scale, d - map_scale
+
+generate_rectangle_borders(CHOSEN_MAP[0], CHOSEN_MAP[1], DOWN, UP, LEFT, RIGHT, PRECISION)
+OX, OY = CHOSEN_MAP[0], CHOSEN_MAP[1]
 
 
 class Node:
@@ -297,16 +319,15 @@ def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):
 def main(rng=None):
     print(__file__ + " start!!")
     # ox, oy are the coordinates of the obstacle and map borders
-    ox, oy = CHOSEN_MAP[0], CHOSEN_MAP[1]
 
     if show_animation:
-        plt.plot(ox, oy, ".k")
+        plt.plot(OX, OY, ".k")
         plt.plot(SX, SY, "^r")
         plt.plot(GX, GY, "^c")
         plt.grid(True)
         plt.axis("equal")
 
-    rx, ry = prm_planning(SX, SY, GX, GY, ox, oy, ROBOT_SIZE, rng=rng)
+    rx, ry = prm_planning(SX, SY, GX, GY, OX, OY, ROBOT_SIZE, rng=rng)
 
     assert rx, 'Cannot find path'
 

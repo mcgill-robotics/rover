@@ -83,6 +83,8 @@ def pathfiningPolynomial(start_joints, end_joints, time):
     for i in range(5):
         if vels[i] > max_vels[i]:
             vels[i] = max_vels[i]
+        if end_joints[i] < start_joints[i]:
+            vels[i] = -vels[i]
     polynomials = [[0 for j in range(4)] for i in range(5)]
     matrix = np.array([[time ** 6, time ** 5, time ** 4, time ** 3], 
         [6 * time ** 5, 5 * time ** 4, 4 * time ** 3, 3 * time ** 2],

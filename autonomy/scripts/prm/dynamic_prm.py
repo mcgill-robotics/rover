@@ -18,7 +18,7 @@ Find_path = False
 rospy.init_node("prm", anonymous=False)
 
 # parameter
-N_SAMPLE = 500  # number of sample_points
+N_SAMPLE = 1000  # number of sample_points
 N_KNN = 10  # number of edge from one sampled point
 MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
@@ -160,6 +160,13 @@ def generate_road_map(sample_x, sample_y, rr, obstacle_kd_tree):
     return road_map
 
 
+def smooth(y, box_pts = 3): #Increasing box points increases smoothness, but affects the start
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    y_smooth[0] = y[0]
+    return y_smooth
+
+
 def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
     """
     s_x: start x position [m]
@@ -251,7 +258,7 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
         rx.append(n.x)
         ry.append(n.y)
         parent_index = n.parent_index
-
+    ry = smooth(ry)
     return rx, ry
 
 

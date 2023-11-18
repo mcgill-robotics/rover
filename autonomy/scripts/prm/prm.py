@@ -273,7 +273,7 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
         rx.append(n.x)
         ry.append(n.y)
         parent_index = n.parent_index
-
+    ry = smooth(ry)
     return rx, ry
 
 
@@ -285,6 +285,13 @@ def plot_road_map(road_map, sample_x, sample_y):  # pragma: no cover
 
             plt.plot([sample_x[i], sample_x[ind]],
                      [sample_y[i], sample_y[ind]], "-k")
+
+
+def smooth(y, box_pts=3): # Suggested to use box_pts = 3
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    y_smooth[0] = y[0]
+    return y_smooth
 
 
 def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):

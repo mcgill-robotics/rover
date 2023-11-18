@@ -8,7 +8,7 @@ import json
 def actual_obstacle_map():
     ox, oy = [], []
     # Takes the obstacle info from json and adds them to the obstacle list
-    data = json.load(open('obstacles.json'))
+    data = json.load(open("autonomy/scripts/prm/obstacles.json"))
     obstacles = data["map"]
     for key in obstacles.keys():
         point = key.split()

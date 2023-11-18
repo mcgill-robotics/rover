@@ -91,6 +91,9 @@ class Node_DriveControl():
             # Populate the message with the averaged values.
             cmd.left[0], cmd.left[1] = correct_lf, correct_lb
             cmd.right[0], cmd.right[1] = correct_rf, correct_rb
+
+            print(cmd)
+
             self.angular_velocity_publisher.publish(cmd) # Send the angular speeds.
 
             self.rate.sleep()

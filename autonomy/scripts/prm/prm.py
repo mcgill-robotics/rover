@@ -1,6 +1,6 @@
 """Probabilistic Road Map (PRM) Planner
 author: Atsushi Sakai (@Atsushi_twi)
-Edited by Joseph Saliba, Eric Deng, Helen Deng and Garett"""
+Edited by Joseph Saliba, Eric Deng, Helen Deng and Garett Woodson"""
 
 import math
 import numpy as np

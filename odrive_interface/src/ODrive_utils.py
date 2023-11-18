@@ -1,6 +1,8 @@
 import rospy
 import odrive
-from odrive.enums import AxisState, ProcedureResult 
+from odrive.enums import AxisState, ProcedureResult, MotorType, ControlMode, InputMode, EncoderId
+
+
 
 """
 Placeholders for now. In enumerate_motors(), these motors will be returned in this order. Serial numbers are also strings,
@@ -8,10 +10,10 @@ because ODrive API requires them to be that way. Note: correct serial numbers ar
 decimal. So before putting the numbers in here, you should first convert them to hex.
 """
 
-drive_serial_numbers = {"DRIVE_LB": "384E346E3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
+drive_serial_numbers = {"DRIVE_LB": "385C347A3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
 arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
 
-drive_ids = {'384E346E3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}
+drive_ids = {'385C347A3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}
 arm_ids = {'4': 'ARM_WAIST', '5': 'ARM_TUMOR', '6': 'ARM_ELBOW'}
 
 # Procedure codes are simple indices to this array
@@ -74,12 +76,118 @@ def enumerate_motors(search_timeout=5):
             print(f"Motor {key} found.")
             found_motors[key] = found_motor
             # Secret hidden debug thing to quit after a single ODrive is found
-            return found_motors
         else:
             print(f"Motor {key} not found. Motor enumeration failed!")
             return {}
     
     return found_motors
+
+
+# to be run for each odrive
+# If we change motor types, revise numerical inputs
+
+def configure_LBmotor(odrv0, cm, im, vrr, vl, vlt):
+    
+    if cm == "d":
+        cm = ControlMode.VELOCITY_CONTROL
+    
+    if im == "d":
+        im = InputMode.VEL_RAMP
+
+    if vrr == "d":
+        vrr = 60
+
+    if vl == "d":
+        vl = 1000
+
+    if vlt == "d":
+        vlt = 1.251
+    
+    odrv = odrv0
+    odrv.config.dc_bus_overvoltage_trip_level = 30
+    odrv.config.dc_bus_undervoltage_trip_level = 10.5
+    odrv.config.dc_max_positive_current = 5
+    odrv.config.dc_max_negative_current = -1
+    odrv.config.brake_resistor0.enable = True
+    odrv.config.brake_resistor0.resistance = 2
+    odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+    odrv.axis0.config.motor.torque_constant = 0.026006289308176098
+    odrv.axis0.config.motor.pole_pairs = 7
+    odrv.axis0.config.motor.current_soft_max = 5
+    odrv.axis0.config.motor.current_hard_max = 9
+    odrv.axis0.config.motor.calibration_current = 5
+    odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+    odrv.axis0.config.calibration_lockin.current = 10
+    odrv.axis0.controller.config.control_mode = cm
+    odrv.axis0.controller.config.input_mode = im
+    odrv.axis0.controller.config.vel_ramp_rate = vrr
+    odrv.axis0.controller.config.vel_limit = vl
+    odrv.axis0.controller.config.vel_limit_tolerance = vlt
+
+    odrv.inc_encoder0.config.cpr = 2400
+    odrv.inc_encoder0.config.enabled = True
+    odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+    odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+
+    return 
+
+def configure_motor(odrv0, cm, im, vrr, vl, vlt):
+
+    if cm == "d":
+        cm = ControlMode.VELOCITY_CONTROL
+    
+    if im == "d":
+        im = InputMode.VEL_RAMP
+
+    if vrr == "d":
+        vrr = 60
+
+    if vl == "d":
+        vl = 1000
+
+    if vlt == "d":
+        vlt = 1.25125
+
+    odrv = odrv0
+    odrv.config.dc_bus_overvoltage_trip_level = 30
+    odrv.config.dc_bus_undervoltage_trip_level = 10.5
+    odrv.config.dc_max_positive_current = 5
+    odrv.config.dc_max_negative_current = -0.1
+    odrv.config.brake_resistor0.enable = True
+    odrv.config.brake_resistor0.resistance = 2
+    odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+    odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+    odrv.axis0.config.motor.pole_pairs = 7
+    odrv.axis0.config.motor.current_soft_max = 5
+    odrv.axis0.config.motor.current_hard_max = 9
+    odrv.axis0.config.motor.calibration_current = 5
+    odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+    odrv.axis0.config.calibration_lockin.current = 10
+    odrv.axis0.controller.config.control_mode = cm
+    odrv.axis0.controller.config.input_mode = im
+    odrv.axis0.controller.config.vel_ramp_rate = vrr
+    odrv.axis0.controller.config.vel_limit = vl
+    odrv.axis0.controller.config.vel_limit_tolerance = vlt
+    odrv.inc_encoder0.config.cpr = 2400
+    odrv.inc_encoder0.config.enabled = True
+    odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+    odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+
+    return 
+
+
+def check_is_num(input):
+    try:
+        # Convert it into integer
+        val = int(input)
+        return True
+    except ValueError:
+        try:
+            # Convert it into float
+            val = float(input)
+            return True
+        except ValueError:
+            return False
 
 
 def calibrate_motors(motor_array):

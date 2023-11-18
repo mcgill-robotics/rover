@@ -7,14 +7,14 @@ sys.path.append(currentdir)
 import rospy
 from drive_control.msg import WheelSpeed
 from odrive_interface.msg import MotorError, MotorState
-from odrive_interface.src.ODrive_utils import *
+from ODrive_utils import *
 from odrive.enums import AxisState, ProcedureResult 
 
 # TODO: Once drive is working well, expand this node to include the three arm motors
 class Node_ODriveInterface():
     def __init__(self):
         self.drive_lb = None
-        self.drive_rb = None
+        self.drive_rb= None
         self.lb_speed_cmd = 0.0
         self.rb_speed_cmd = 0.0
         self.lf_speed_cmd = 0.0
@@ -54,6 +54,48 @@ class Node_ODriveInterface():
         drive_rb = motors_dict["DRIVE_RB"]
         drive_rf = motors_dict["DRIVE_RF"]
         drive_motors = [drive_lb, drive_lf, drive_rb, drive_rf]
+
+
+        # Check if user wants to change default inputs for configuration
+        change_input = input("Defaults are used for control_mode, input_mode, vel_ramp_rate, vel_limit, and vel_limt_tolerance. Do you want change these inputs? Y,N?")
+        
+        # Check valid input
+        while change_input != "Y" and change_input != "N":
+            change_input = input("Invalid input. Please enter Y or N")
+
+        # Set all values to default
+        cm = "d"
+        im = "d"
+        vrr = "d"
+        vl = "d"
+        vlt = "d"
+
+        if change_input == "Y":
+            # Check which values to change and keep default
+            cm = input("Enter new value for control mode (or enter d to keep default value): ")
+            while cm != "d" and check_is_num(cm) == False:
+                cm = input("Invalid input. Please enter a numerical value for input, or d for default.")
+            im = input("Enter new value for input mode (or enter d to keep default value): ")
+            while im != "d" and check_is_num(cm) == False:
+                im = input("Invalid input. Please enter a numerical value for input, or d for default.")
+            vrr = input("Enter new value for velocity ramp rate (or enter d to keep default value): ")
+            while vrr != "d" and check_is_num(cm) == False:
+                vrr = input("Invalid input. Please enter a numerical value for input, or d for default.")
+            vl = input("Enter new value for velocity limit (or enter d to keep default value): ")
+            while vl != "d" and check_is_num(cm) == False:
+                vl = input("Invalid input. Please enter a numerical value for input, or d for default.")
+            vlt = input("Enter new value for velocity limit tolerance (or enter d to keep default value): ")
+            while vlt != "d" and check_is_num(cm) == False:
+                vlt = input("Invalid input. Please enter a numerical value for input, or d for default.")
+
+        print("works till here")
+        # Configure all motors
+        configure_LBmotor(drive_lb, cm, im, vrr, vl, vlt)
+        configure_motor(drive_lf, cm, im, vrr, vl, vlt)
+        configure_motor(drive_rb, cm, im, vrr, vl, vlt)
+        configure_motor(drive_rf, cm, im, vrr, vl, vlt)
+
+        
 
         # Calibrate all motors
         if not calibrate_motors(drive_motors):
@@ -152,3 +194,4 @@ class Node_ODriveInterface():
 if __name__ == "__main__":
     driver = Node_ODriveInterface()
     rospy.spin()
+

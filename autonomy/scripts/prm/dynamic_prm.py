@@ -18,14 +18,14 @@ Find_path = False
 rospy.init_node("prm", anonymous=False)
 
 # parameter
-N_SAMPLE = 500  # number of sample_points
+N_SAMPLE = 1000  # number of sample_points
 N_KNN = 10  # number of edge from one sampled point
 MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
 CHOSEN_MAP = actual_obstacle_map()
 
 USE_ACTUAL_COORDS = True
-GX = -10.0  # [m]
+GX = 10.0  # [m]
 GY = 8.0  # [m]
 ROBOT_SIZE = 0.2  # [m]
 
@@ -255,6 +255,7 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
     return rx, ry
 
 
+
 def plot_road_map(road_map, sample_x, sample_y):  # pragma: no cover
 
     for i, _ in enumerate(road_map):
@@ -322,7 +323,7 @@ if __name__ == '__main__':
  
     def update (frame):
         CHOSEN_MAP = actual_obstacle_map()
-
+        
         if USE_ACTUAL_COORDS:
             SX, SY = CHOSEN_MAP[2], CHOSEN_MAP[3]
 

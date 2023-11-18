@@ -32,7 +32,7 @@ class PointCloudTracker:
         location = self.get_rover_pose()[0] # Rover coordinates
         location_output = (round(location[0], 1), round(location[1], 1))
         print("Updating Map")
-        with open ('autonomy/scripts/prm/obstacles.json', "w") as jsonfile:
+        with open ('prm/obstacles.json', "w") as jsonfile:
             json.dump({"map":self.map_grid, "location": location_output}, jsonfile)        
 
     def get_rover_pose(self) -> tuple:

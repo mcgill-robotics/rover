@@ -49,6 +49,10 @@ jobs:
       - name: Catkin Build
         shell: bash
         run: |
+            sudo apt-get install ros-noetic-ddynamic-reconfigure
+            cd $GITHUB_WORKSPACE/SETUP_SCRIPTS
+            ./installLibrealsense.sh
+            ./buildLibrealsense.sh
             source /opt/ros/noetic/setup.bash
             cd ~/catkin_ws
             catkin init

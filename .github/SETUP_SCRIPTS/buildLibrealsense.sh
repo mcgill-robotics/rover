@@ -82,13 +82,6 @@ green=`tput setaf 2`
 reset=`tput sgr0`
 # e.g. echo "${red}The red tail hawk ${green}loves the green grass${reset}"
 
-
-echo ""
-echo "Please make sure that no RealSense cameras are currently attached"
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
-echo ""
-
 if [ ! -d "$LIBREALSENSE_DIRECTORY" ] ; then
   # clone librealsense
   cd ${HOME}

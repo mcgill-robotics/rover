@@ -49,7 +49,7 @@ jobs:
       - name: Install Intel Realsense SDK
         run: |
             sudo apt-get install ros-noetic-ddynamic-reconfigure
-            cd SETUP_SCRIPTS
+            cd .github/SETUP_SCRIPTS
             ./installLibrealsense.sh
             ./buildLibrealsense.sh
           

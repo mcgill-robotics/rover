@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-20.04
     name: Catkin Build Test
     steps:
-    
+
       - name: Install Cuda Toolkit
-      - uses: Jimver/cuda-toolkit@v0.2.11
+        uses: Jimver/cuda-toolkit@v0.2.11
         id: cuda-toolkit
         with:
           cuda: '12.1.0'   

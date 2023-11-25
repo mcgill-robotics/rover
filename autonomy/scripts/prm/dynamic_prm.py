@@ -65,11 +65,13 @@ def pythagorean_distance(s_x, s_y, g_x, g_y):
     return np.hypot(abs(g_x-s_x), abs(g_y-s_y))
 
 
-def prm_planning(sample_x,sample_y, start_x, start_y, goal_x, goal_y,
+def prm_planning(check, plot_sam, start_x, start_y, goal_x, goal_y,
                  obstacle_x_list, obstacle_y_list, robot_radius, *, rng=None):
     """
     Run probabilistic road map planning
 
+    :param check: to update the checked points in the plot
+    :param plot_sam: to update the sample points on the plot
     :param start_x: start x position
     :param start_y: start y position
     :param goal_x: goal x position
@@ -83,6 +85,16 @@ def prm_planning(sample_x,sample_y, start_x, start_y, goal_x, goal_y,
     # Initialises the obstacles
     obstacle_kd_tree = KDTree(np.vstack((obstacle_x_list, obstacle_y_list)).T)
 
+    # Creates a list of sample points for the prm
+    sample_x, sample_y = sample_points(start_x, start_y, goal_x, goal_y,
+                                       robot_radius,
+                                       obstacle_x_list, obstacle_y_list,
+                                       obstacle_kd_tree, rng)
+    
+    # plots the sample points
+    if show_animation:
+        plot_sam.set_data(sample_x,sample_y)
+
     # Generates a road map from the sample points
     # The roadmap is a list, where every index represents a sample point and the content of every
     # index represents the indexes of its neighboring points
@@ -90,7 +102,7 @@ def prm_planning(sample_x,sample_y, start_x, start_y, goal_x, goal_y,
                                  robot_radius, obstacle_kd_tree)
 
     rx, ry = greedy_planning(
-        start_x, start_y, goal_x, goal_y, road_map, sample_x, sample_y)
+        check, start_x, start_y, goal_x, goal_y, road_map, sample_x, sample_y)
 
     return rx, ry
 
@@ -167,8 +179,10 @@ def smooth(y, box_pts = 3): #Increasing box points increases smoothness, but aff
     return y_smooth
 
 
-def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
+def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
     """
+
+    check: for plot the checked points
     s_x: start x position [m]
     s_y: start y position [m]
     goal_x: goal x position [m]
@@ -190,6 +204,8 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
     # Open set will contain nodes to be visited, while closed_set's nodes are already visited
     open_set, closed_set = dict(), dict()
     open_set[len(road_map) - 2] = start_node
+    check_x = []
+    check_y =[]
 
     path_found = True
     
@@ -212,7 +228,9 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
             plt.gcf().canvas.mpl_connect(
                 'key_release_event',
                 lambda event: [exit(0) if event.key == 'escape' else None])
-            plt.plot(current.x, current.y, "xg")
+            check_x.append(current.x)
+            check_y.append(current.y)
+            check.set_data(check_x, check_y)
             plt.pause(0.001)
 
         # if the index is the same as the goal, we found the goal
@@ -307,7 +325,8 @@ if __name__ == '__main__':
 
     print(__file__ + " start!!")
 
-    
+    # Using animation to continue plot and running prm
+    # initalize the plot
     fig,ax = plt.subplots()
     OX = []
     OY = []
@@ -317,18 +336,21 @@ if __name__ == '__main__':
     ry = []
     sample_x = []
     sample_y = []
+    check_x = []
+    check_y = []
 
+    #give the initial plot
     if show_animation:
-        scat, = ax.plot(OX, OY, ".k")
-        scat2, = ax.plot(SX, SY, "^r")
-        scat3, = ax.plot(rx, ry, "-r")
-        scat4, = ax.plot(sample_x, sample_y, ".b")
+        ob, = ax.plot(OX, OY, ".k")
+        c_pos, = ax.plot(SX, SY, "^r")
+        path, = ax.plot(rx, ry, "-r")
+        sam, = ax.plot(sample_x, sample_y, ".b")
         ax.plot(GX, GY, "^c")
+        check, = ax.plot(check_x, check_y, "xg")
         ax.set_aspect('equal')
         
-
- 
     def update (frame):
+        #get currrent map info from jason file
         CHOSEN_MAP = actual_obstacle_map()
         
         if USE_ACTUAL_COORDS:
@@ -342,20 +364,14 @@ if __name__ == '__main__':
         generate_rectangle_borders(CHOSEN_MAP[0], CHOSEN_MAP[1], DOWN, UP, LEFT, RIGHT, PRECISION)
         OX, OY = CHOSEN_MAP[0], CHOSEN_MAP[1]
 
-        obstacle_kd_tree = KDTree(np.vstack((OX, OY)).T)
+        rx, ry = prm_planning(check, sam,SX, SY, GX, GY, OX, OY, ROBOT_SIZE, rng=None)
 
-        sample_x, sample_y = sample_points(SX, SY, GX, GY,
-                                       ROBOT_SIZE,
-                                       OX, OY,
-                                       obstacle_kd_tree, rng=None)
-
-        rx, ry = prm_planning(sample_x,sample_y,SX, SY, GX, GY, OX, OY, ROBOT_SIZE, rng=None)
-
-        scat.set_data(OX,OY)
-        scat2.set_data(SX,SY)
-        scat3.set_data(rx,ry)
-        scat4.set_data(sample_x,sample_y)
-        return(scat, scat2, scat3)
+        ob.set_data(OX,OY)
+        c_pos.set_data(SX,SY)
+        path.set_data(rx,ry)
+        ax.set_xlim(LEFT,RIGHT)
+        ax.set_ylim(DOWN,UP)
+        return(ob, c_pos, path,sam,check)
     
     ani = animation.FuncAnimation(fig=fig, func = update, frames = range(200))
     plt.show()

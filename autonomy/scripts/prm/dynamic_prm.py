@@ -1,18 +1,20 @@
-import os, sys
+import scipy.interpolate as sci
+import random
+import matplotlib.animation as animation
+from generate_maps import *
+import matplotlib.pyplot as plt
+import matplotlib
+from scipy.spatial import KDTree
+import math
+import rospy
+import time
+import numpy as np
+import os
+import sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
-import numpy as np
-import time
-import rospy
-import math
-from scipy.spatial import KDTree
-import matplotlib
 # Use the Qt5Agg backend for real-time plotting and to make it visible on my computer
 matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
-from generate_maps import *
-import matplotlib.animation as animation
-import random
 
 
 Find_path = False
@@ -29,10 +31,10 @@ USE_ACTUAL_COORDS = True
 GX = 10.0  # [m]
 GY = 8.0  # [m]
 ROBOT_SIZE = 1  # [m]
-SEED= [random.randint(1, 1000)]
+SEED = [random.randint(1, 1000)]
 MAP__SCALING = True
 
-#Map Size
+# Map Size
 UP = 40
 DOWN = -40
 LEFT = -40
@@ -40,6 +42,7 @@ RIGHT = 40
 PRECISION = 10
 
 show_animation = True
+
 
 class Node:
     """
@@ -54,7 +57,7 @@ class Node:
 
     def __str__(self):
         return str(self.x) + "," + str(self.y) + "," +\
-               str(self.distanceToGoal) + "," + str(self.parent_index)
+            str(self.distanceToGoal) + "," + str(self.parent_index)
 
 
 def pythagorean_distance(s_x, s_y, g_x, g_y):
@@ -91,10 +94,10 @@ def prm_planning(check, plot_sam, start_x, start_y, goal_x, goal_y,
                                        robot_radius,
                                        obstacle_x_list, obstacle_y_list,
                                        obstacle_kd_tree, rng)
-    
+
     # plots the sample points
     if show_animation:
-        plot_sam.set_data(sample_x,sample_y)
+        plot_sam.set_data(sample_x, sample_y)
 
     # Generates a road map from the sample points
     # The roadmap is a list, where every index represents a sample point and the content of every
@@ -173,11 +176,50 @@ def generate_road_map(sample_x, sample_y, rr, obstacle_kd_tree):
     return road_map
 
 
-def smooth(y, box_pts = 3): #Increasing box points increases smoothness, but affects the start
-    box = np.ones(box_pts)/box_pts
-    y_smooth = np.convolve(y, box, mode='same')
-    y_smooth[0] = y[0]
-    return y_smooth
+def smooth(x, y, precision=2, spline=False):
+    '''
+    Parameters:
+        x: list
+        y: list
+        precision: int
+        spline: Bool
+
+    output:
+        If spline is False:
+            smoothed_x: list
+            smoothed_y: list
+        If spline is True:
+            The spline: scipy.interpolate._fitpack2.LSQUnivariateSpline
+
+    conditions:
+        len(x) == len(y)
+        precision > 0
+
+    Time complexity:
+        O((n*2^precision)+splining complexity)
+    '''
+    master = sorted([[x[i], y[i]] for i in range(len(x))])
+    x = [a[0] for a in master]
+    y = [a[1] for a in master]
+
+    def increase_dim(ls, n):
+        if n == 1:
+            return ls
+        for _ in range(n-1):
+            output = [ls[0]]
+            for i in range(1, len(ls)):
+                output.append((ls[i]-ls[i-1])/2+ls[i-1])
+                output.append(ls[i])
+            ls = output
+        return output
+
+    x = increase_dim(x, precision)
+    y = increase_dim(y, precision)
+    spl = sci.UnivariateSpline(x, y, k=5)
+    spl.set_smoothing_factor(0.6)
+    if spline:
+        return spl
+    return x, spl(x)
 
 
 def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
@@ -206,24 +248,24 @@ def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
     open_set, closed_set = dict(), dict()
     open_set[len(road_map) - 2] = start_node
     check_x = []
-    check_y =[]
+    check_y = []
 
     path_found = True
-    
+
     # Start of the loop
     while True:
-        
-        # If no nodes are in the open set, and we haven't arrived at the goal, then it is impossible to 
+
+        # If no nodes are in the open set, and we haven't arrived at the goal, then it is impossible to
         # find a path
         if not open_set:
             print("Cannot find path")
-            SEED[0] = random.randint(1,1000)
+            SEED[0] = random.randint(1, 1000)
             path_found = False
             break
-        
+
         c_id = min(open_set, key=lambda o: open_set[o].distanceToGoal)
-        current = open_set[c_id] #current is the node being checked
-        
+        current = open_set[c_id]  # current is the node being checked
+
         # shows the on the graph
         if show_animation and len(closed_set.keys()) % 2 == 0:
             # for stopping simulation with the esc key.
@@ -249,11 +291,13 @@ def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
 
         # Checks every point neighboring the current point
         for i in range(len(road_map[c_id])):
-            n_id = road_map[c_id][i] # n_id represents the index of the neighbor
+            # n_id represents the index of the neighbor
+            n_id = road_map[c_id][i]
             # Sets the distance as the distance to the goal
-            distanceToGoal = pythagorean_distance(sample_x[n_id], sample_y[n_id], gx, gy)
+            distanceToGoal = pythagorean_distance(
+                sample_x[n_id], sample_y[n_id], gx, gy)
             node = Node(sample_x[n_id], sample_y[n_id], distanceToGoal, c_id)
-            
+
             # If already checked, we don't do anything
             if n_id in closed_set:
                 continue
@@ -278,9 +322,8 @@ def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
         rx.append(n.x)
         ry.append(n.y)
         parent_index = n.parent_index
-    #ry = smooth(ry)
+    rx, ry = smooth(rx, ry, 2)
     return rx, ry
-
 
 
 def plot_road_map(road_map, sample_x, sample_y):  # pragma: no cover
@@ -322,14 +365,13 @@ def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):
     return sample_x, sample_y
 
 
-
 if __name__ == '__main__':
 
     print(__file__ + " start!!")
 
     # Using animation to continue plot and running prm
     # initalize the plot
-    fig,ax = plt.subplots()
+    fig, ax = plt.subplots()
     OX = []
     OY = []
     SX = []
@@ -341,7 +383,7 @@ if __name__ == '__main__':
     check_x = []
     check_y = []
 
-    #give the initial plot
+    # give the initial plot
     if show_animation:
         ob, = ax.plot(OX, OY, ".k")
         c_pos, = ax.plot(SX, SY, "^r")
@@ -350,36 +392,35 @@ if __name__ == '__main__':
         ax.plot(GX, GY, "^c")
         check, = ax.plot(check_x, check_y, "xg")
         ax.set_aspect('equal')
-        
-    def update (frame):
-        #get currrent map info from jason file
+
+    def update(frame):
+        # get currrent map info from jason file
         CHOSEN_MAP = actual_obstacle_map()
-        
+
         if USE_ACTUAL_COORDS:
             SX, SY = CHOSEN_MAP[2], CHOSEN_MAP[3]
 
         if MAP__SCALING:
-            l, r, u, d = min([SX, GX, min(CHOSEN_MAP[0])]), max([SX, GX, max(CHOSEN_MAP[0])]), max([SY, GY, max(CHOSEN_MAP[1])]), min([SY, GY, min(CHOSEN_MAP[1])])
-            map_scale = 3 # meters added to each side
-            LEFT, RIGHT, UP, DOWN = l - map_scale, r + map_scale, u + map_scale, d - map_scale
+            l, r, u, d = min([SX, GX, min(CHOSEN_MAP[0])]), max([SX, GX, max(CHOSEN_MAP[0])]), max(
+                [SY, GY, max(CHOSEN_MAP[1])]), min([SY, GY, min(CHOSEN_MAP[1])])
+            map_scale = 3  # meters added to each side
+            LEFT, RIGHT, UP, DOWN = l - map_scale, r + \
+                map_scale, u + map_scale, d - map_scale
 
-        generate_rectangle_borders(CHOSEN_MAP[0], CHOSEN_MAP[1], DOWN, UP, LEFT, RIGHT, PRECISION)
+        generate_rectangle_borders(
+            CHOSEN_MAP[0], CHOSEN_MAP[1], DOWN, UP, LEFT, RIGHT, PRECISION)
         OX, OY = CHOSEN_MAP[0], CHOSEN_MAP[1]
 
-        rx, ry = prm_planning(check, sam,SX, SY, GX, GY, OX, OY, ROBOT_SIZE, rng=None)
-        print(rx,ry)
+        rx, ry = prm_planning(check, sam, SX, SY, GX, GY,
+                              OX, OY, ROBOT_SIZE, rng=None)
+        print(rx, ry)
 
-        ob.set_data(OX,OY)
-        c_pos.set_data(SX,SY)
-        path.set_data(rx,ry)
-        ax.set_xlim(LEFT,RIGHT)
-        ax.set_ylim(DOWN,UP)
-        return(ob, c_pos, path,sam,check)
-    
-    ani = animation.FuncAnimation(fig=fig, func = update, frames = range(200))
+        ob.set_data(OX, OY)
+        c_pos.set_data(SX, SY)
+        path.set_data(rx, ry)
+        ax.set_xlim(LEFT, RIGHT)
+        ax.set_ylim(DOWN, UP)
+        return (ob, c_pos, path, sam, check)
+
+    ani = animation.FuncAnimation(fig=fig, func=update, frames=range(200))
     plt.show()
-
-
-    
-    
-

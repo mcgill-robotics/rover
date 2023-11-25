@@ -14,6 +14,10 @@ def actual_obstacle_map():
         point = key.split()
         ox.append(float(point[0]))
         oy.append(float(point[1]))
+    in_one = generate_rectangle([-10,10], 5,20)
+    for i in range(150):
+        ox.append(5)
+        oy.append(i/4.5-6)
     sx, sy = data["location"][0], data["location"][1]
     return ox, oy, sx, sy
 

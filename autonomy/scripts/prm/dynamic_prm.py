@@ -367,6 +367,7 @@ if __name__ == '__main__':
         OX, OY = CHOSEN_MAP[0], CHOSEN_MAP[1]
 
         rx, ry = prm_planning(check, sam,SX, SY, GX, GY, OX, OY, ROBOT_SIZE, rng=None)
+        print(rx,ry)
 
         ob.set_data(OX,OY)
         c_pos.set_data(SX,SY)

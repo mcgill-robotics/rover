@@ -12,13 +12,14 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from generate_maps import *
 import matplotlib.animation as animation
+import random
 
 
 Find_path = False
 rospy.init_node("prm", anonymous=False)
 
 # parameter
-N_SAMPLE = 1000  # number of sample_points
+N_SAMPLE = 200  # number of sample_points
 N_KNN = 10  # number of edge from one sampled point
 MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
@@ -27,8 +28,8 @@ CHOSEN_MAP = actual_obstacle_map()
 USE_ACTUAL_COORDS = True
 GX = 10.0  # [m]
 GY = 8.0  # [m]
-ROBOT_SIZE = 0.2  # [m]
-
+ROBOT_SIZE = 1  # [m]
+SEED= [random.randint(1, 1000)]
 MAP__SCALING = True
 
 #Map Size
@@ -216,6 +217,7 @@ def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
         # find a path
         if not open_set:
             print("Cannot find path")
+            SEED[0] = random.randint(1,1000)
             path_found = False
             break
         
@@ -276,7 +278,7 @@ def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
         rx.append(n.x)
         ry.append(n.y)
         parent_index = n.parent_index
-    ry = smooth(ry)
+    #ry = smooth(ry)
     return rx, ry
 
 
@@ -300,7 +302,7 @@ def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):
     sample_x, sample_y = [], []
 
     if rng is None:
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed=SEED[0])
 
     while len(sample_x) <= N_SAMPLE:
         tx = (rng.random() * (max_x - min_x)) + min_x

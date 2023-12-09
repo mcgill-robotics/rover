@@ -14,7 +14,9 @@ jobs:
     runs-on: ubuntu-20.04
     name: Catkin Build Test
     steps:
-
+      - name: Clean Root Workspace
+        uses: AutoModality/action-clean@v1
+        
       - name: Install Cuda Toolkit
         uses: Jimver/cuda-toolkit@v0.2.11
         id: cuda-toolkit

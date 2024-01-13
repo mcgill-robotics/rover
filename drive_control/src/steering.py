@@ -3,7 +3,7 @@ class Steering:
         self.rWheel=rWheel  # radius of wheel
         self.base_length=base_length # wheel base length
         
-        
+    # See link for more information: http://wiki.ros.org/diff_drive_controller
     def steering_control(self, vR, wR, maxLin=3.0, maxAng=3.0): # R = rover
         
         # Equations based on differential drive controller.

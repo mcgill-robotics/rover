@@ -112,6 +112,16 @@ def prm_planning(check, plot_sam, start_x, start_y, goal_x, goal_y,
 
 
 def is_collision(sx, sy, gx, gy, rr, obstacle_kd_tree):
+    """
+    When connected two sample points, check is there obstacles between them
+
+    :param sx: one sample point x position
+    :param sy: one sample point y position
+    :param gx: one sample point x position
+    :param gy: one sample point y position
+    :param rr: the robot size
+    :param obstacle_kd_tree: KDTree object of obstacles
+    """
     x = sx
     y = sy
     dx = gx - sx

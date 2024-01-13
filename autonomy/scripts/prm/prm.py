@@ -11,6 +11,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from generate_maps import *
+import scipy.interpolate as sci
 
 # parameter
 N_SAMPLE = 500  # number of sample_points
@@ -273,7 +274,7 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
         rx.append(n.x)
         ry.append(n.y)
         parent_index = n.parent_index
-    ry = smooth(ry)
+    rx, ry = smooth(rx, ry, 2)
     return rx, ry
 
 
@@ -287,11 +288,50 @@ def plot_road_map(road_map, sample_x, sample_y):  # pragma: no cover
                      [sample_y[i], sample_y[ind]], "-k")
 
 
-def smooth(y, box_pts=3): # Suggested to use box_pts = 3
-    box = np.ones(box_pts)/box_pts
-    y_smooth = np.convolve(y, box, mode='same')
-    y_smooth[0] = y[0]
-    return y_smooth
+def smooth(x, y, precision=2, spline=False):
+    '''
+    Parameters:
+        x: list
+        y: list
+        precision: int
+        spline: Bool
+
+    output:
+        If spline is False:
+            smoothed_x: list
+            smoothed_y: list
+        If spline is True:
+            The spline: scipy.interpolate._fitpack2.LSQUnivariateSpline
+
+    conditions:
+        len(x) == len(y)
+        precision > 0
+
+    Time complexity:
+        O((n*2^precision)+splining complexity)
+    '''
+    master = sorted([[x[i], y[i]] for i in range(len(x))])
+    x = [a[0] for a in master]
+    y = [a[1] for a in master]
+
+    def increase_dim(ls, n):
+        if n == 1:
+            return ls
+        for _ in range(n-1):
+            output = [ls[0]]
+            for i in range(1, len(ls)):
+                output.append((ls[i]-ls[i-1])/2+ls[i-1])
+                output.append(ls[i])
+            ls = output
+        return output
+
+    x = increase_dim(x, precision)
+    y = increase_dim(y, precision)
+    spl = sci.UnivariateSpline(x, y, k=5)
+    spl.set_smoothing_factor(0.6)
+    if spline:
+        return spl
+    return x, spl(x)
 
 
 def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):

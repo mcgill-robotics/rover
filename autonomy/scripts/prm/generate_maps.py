@@ -14,10 +14,12 @@ def actual_obstacle_map():
         point = key.split()
         ox.append(float(point[0]))
         oy.append(float(point[1]))
+    # get the rover current location 
     sx, sy = data["location"][0], data["location"][1]
     return ox, oy, sx, sy
 
 def map1():
+    # A map that contains one circle and one square
     map1_ox, map1_oy = [], []
     # Adds the borders as obstacles inside ox,oy
     num_groups = 2
@@ -36,6 +38,7 @@ def map1():
 
 
 def map2():
+    # A maze shape obstacles map
     map2_ox, map2_oy = [], []
     group = []
     group.append(generate_rectangle([20,80],20,80))

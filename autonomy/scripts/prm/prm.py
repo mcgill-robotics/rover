@@ -119,6 +119,17 @@ def prm_planning(start_x, start_y, goal_x, goal_y,
 
 
 def is_collision(sx, sy, gx, gy, rr, obstacle_kd_tree):
+    """
+    When connected two sample points, check is there obstacles between them
+
+    :param sx: one sample point x position
+    :param sy: one sample point y position
+    :param gx: one sample point x position
+    :param gy: one sample point y position
+    :param rr: the robot size
+    :param obstacle_kd_tree: KDTree object of obstacles
+    :return: True if collision, False if not
+    """
     x = sx
     y = sy
     dx = gx - sx
@@ -278,7 +289,8 @@ def greedy_planning(sx, sy, gx, gy, road_map, sample_x, sample_y):
     return rx, ry
 
 
-def plot_road_map(road_map, sample_x, sample_y):  # pragma: no cover
+def plot_road_map(road_map, sample_x, sample_y):  
+    # plot all the conneted edges between sample points, currently not use
 
     for i, _ in enumerate(road_map):
         for ii in range(len(road_map[i])):

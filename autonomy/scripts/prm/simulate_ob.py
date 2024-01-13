@@ -6,6 +6,14 @@ from scipy.spatial import ConvexHull
 # This file contains functions useful functions for simulated map generation and border defining
 
 def generate_points(n, shape='circle', center=(0, 0)):
+    """
+    Generate points to create circle or square
+
+    :param n: the number of points generated
+    :param shape: take shape circle and square to generate points
+    :param center: the center of circle or square
+    :return: np.column_stack of x,y points
+    """
     if shape == 'circle':
         angles = np.linspace(0, 2*np.pi, n)
         x = center[0] + radius * np.cos(angles)
@@ -24,6 +32,16 @@ def generate_points(n, shape='circle', center=(0, 0)):
         raise ValueError('Unsupported shape.')
 
 def generate_groups(num_groups, num_points, shapes, radii, centers):
+    """
+    Generate group of circles and squares
+
+    :param num_groups: the number of groups generated
+    :param num_points: the number of points to generate for each shape
+    :param shapes: an array of different shapes name
+    :param radii: an array of radius of differents shapes
+    :param centers: an array of center points of circle or square
+    :return: an array of np.column_stack of x,y points for different shapes
+    """
     groups = []
     for _ in range(num_groups):
         group = []
@@ -34,6 +52,11 @@ def generate_groups(num_groups, num_points, shapes, radii, centers):
     return groups
 
 def plot_groups(groups):
+    """
+    Plot groups of shapes
+
+    :param: an array of np.column_stack of x,y points for different shapes
+    """
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     for group_idx, group in enumerate(groups):
         for shape_idx, points in enumerate(group):
@@ -44,6 +67,13 @@ def plot_groups(groups):
         plt.show()
     
 def generate_line(start_point,end_point, num_point =80):
+    """
+    Generate lines
+
+    :param start_point: the start point of the line
+    :param end_point: the end point of the line
+    :param num_point: the number of points generate
+    """
     if len(start_point) !=2 or len(end_point) !=2: 
         raise ValueError("need 2d coordinates")
     if num_point < 2:
@@ -70,6 +100,18 @@ def generate_rectangle(left_top_point,width,length,num_point=80):
 
 
 def generate_rectangle_borders(ox: list, oy: list, bottom, top, left, right, precision):
+    """
+    Generate rectangle border of the overall map
+
+    :param ox: given array to add obstacles x position in
+    :param oy: given array to add obstacles y position in
+    :param bottom: the min y value of the map
+    :param top: the max y value of the map
+    :param left: the min x value of the map
+    :param right: the max x value of the map
+    :param precision: the number of points within each line
+
+    """
     # the o in ox, oy stands for obstacle
     for i in range(round(abs(right-left))*precision):
         # Add bottom border

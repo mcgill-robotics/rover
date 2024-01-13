@@ -121,6 +121,7 @@ def is_collision(sx, sy, gx, gy, rr, obstacle_kd_tree):
     :param gy: one sample point y position
     :param rr: the robot size
     :param obstacle_kd_tree: KDTree object of obstacles
+    :return: True if collision, False if not
     """
     x = sx
     y = sy
@@ -336,7 +337,7 @@ def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
     return rx, ry
 
 
-def plot_road_map(road_map, sample_x, sample_y):  # pragma: no cover
+def plot_road_map(road_map, sample_x, sample_y): 
 
     for i, _ in enumerate(road_map):
         for ii in range(len(road_map[i])):

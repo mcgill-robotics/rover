@@ -25,11 +25,12 @@ N_SAMPLE = 200  # number of sample_points
 N_KNN = 10  # number of edge from one sampled point
 MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
+# Get real data from json file
 CHOSEN_MAP = actual_obstacle_map()
 
 USE_ACTUAL_COORDS = True
 GX = 10.0  # [m]
-GY = 8.0  # [m]
+GY = -10.0  # [m]
 ROBOT_SIZE = 1  # [m]
 SEED = [random.randint(1, 1000)]
 MAP__SCALING = True
@@ -187,7 +188,7 @@ def generate_road_map(sample_x, sample_y, rr, obstacle_kd_tree):
     return road_map
 
 
-def smooth(x, y, precision=2, spline=False):
+def smooth(x, y, precision=3, spline=False):
     '''
     Parameters:
         x: list
@@ -338,6 +339,7 @@ def greedy_planning(check, sx, sy, gx, gy, road_map, sample_x, sample_y):
 
 
 def plot_road_map(road_map, sample_x, sample_y): 
+    # plot all the conneted edges between sample points, currently not use
 
     for i, _ in enumerate(road_map):
         for ii in range(len(road_map[i])):
@@ -348,6 +350,24 @@ def plot_road_map(road_map, sample_x, sample_y):
 
 
 def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):
+    '''
+    Generates a set of random sample points within a given environment, excluding points within obstacle regions.
+
+    Parameters:
+        sx (float): Start point x-coordinate.
+        sy (float): Start point y-coordinate.
+        gx (float): Goal point x-coordinate.
+        gy (float): Goal point y-coordinate.
+        rr (float): Robot radius.
+        ox (list): List of obstacle x-coordinates.
+        oy (list): List of obstacle y-coordinates.
+        obstacle_kd_tree (scipy.spatial.cKDTree): KD tree representing the obstacle positions.
+        rng (numpy.random.Generator, optional): Random number generator. If None, a default RNG is used.
+
+    Returns:
+        tuple: Two lists containing the generated x and y coordinates of the sample points.
+    '''
+
     max_x = max(ox)
     max_y = max(oy)
     min_x = min(ox)
@@ -405,6 +425,16 @@ if __name__ == '__main__':
         ax.set_aspect('equal')
 
     def update(frame):
+        '''
+        Update function for animation frames. It refreshes the visualization based on the current state of the map and robot motion planning.
+
+        Parameters:
+            frame (int): Frame number (used in animation).
+
+        Returns:
+            tuple: Updated visual elements (obstacles, current position marker, planned path, sampling points, check points).
+
+        '''
         # get currrent map info from jason file
         CHOSEN_MAP = actual_obstacle_map()
 
@@ -424,7 +454,7 @@ if __name__ == '__main__':
 
         rx, ry = prm_planning(check, sam, SX, SY, GX, GY,
                               OX, OY, ROBOT_SIZE, rng=None)
-        print(rx, ry)
+
 
         ob.set_data(OX, OY)
         c_pos.set_data(SX, SY)

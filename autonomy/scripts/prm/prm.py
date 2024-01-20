@@ -19,6 +19,7 @@ N_KNN = 10  # number of edge from one sampled point
 MAX_EDGE_LEN = 30.0  # [m] Maximum edge length
 
 # Simulated world
+# Get real data from json file
 CHOSEN_MAP = actual_obstacle_map()
 
 USE_ACTUAL_COORDS = True
@@ -347,6 +348,24 @@ def smooth(x, y, precision=2, spline=False):
 
 
 def sample_points(sx, sy, gx, gy, rr, ox, oy, obstacle_kd_tree, rng):
+    '''
+    Generates a set of random sample points within a given environment, excluding points within obstacle regions.
+
+    Parameters:
+        sx (float): Start point x-coordinate.
+        sy (float): Start point y-coordinate.
+        gx (float): Goal point x-coordinate.
+        gy (float): Goal point y-coordinate.
+        rr (float): Robot radius.
+        ox (list): List of obstacle x-coordinates.
+        oy (list): List of obstacle y-coordinates.
+        obstacle_kd_tree (scipy.spatial.cKDTree): KD tree representing the obstacle positions.
+        rng (numpy.random.Generator, optional): Random number generator. If None, a default RNG is used.
+
+    Returns:
+        tuple: Two lists containing the generated x and y coordinates of the sample points.
+    '''
+   
     max_x = max(ox)
     max_y = max(oy)
     min_x = min(ox)

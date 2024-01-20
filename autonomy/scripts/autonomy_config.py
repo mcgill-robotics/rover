@@ -1,3 +1,5 @@
+# parameters for mapping.py
+
 # name of the rover model in gazebo
 ROVER_MODEL_NAME = '/'
 

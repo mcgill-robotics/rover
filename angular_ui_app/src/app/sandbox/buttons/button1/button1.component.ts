@@ -1,21 +1,15 @@
 import { Component } from '@angular/core';
-// import { data } from 'jquery';
-// import * as $ from "jquery";
-// import * as jQuery from 'jquery';
 
-
-import * as $ from 'jquery';
 import * as ROSLIB from 'roslib';
 import { RosService } from 'src/app/ros.service';
 
-// window['$'] = window['jQuery'] = $;
 
 
 
 @Component({
   selector: 'app-button1',
   templateUrl: './button1.component.html',
-  styleUrls: ['./button1.component.scss']
+  styleUrls: ['./button1.component.scss'],
 })
 export class Button1Component {
   counter: number = 0;

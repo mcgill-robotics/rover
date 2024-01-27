@@ -1,0 +1,13 @@
+<p>Antenna Component</p>
+<label for="">Longitude</label>
+<input type="number" [(ngModel)]="longitude" default="longitude">
+<label for="">Latitude</label>
+<input type="number" [(ngModel)]="latitude" default="latitude">
+<button (click)="sendInstruction()">Send info</button>
+<!-- Preview content before sent -->
+<!-- <Textarea>Instruction Preview: {{antennaInstruction}}</Textarea> -->
+
+<!-- Sent payload to topic -->
+<Textarea>Antenna Instruction sent: {{payload}}</Textarea>
+
+

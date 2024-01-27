@@ -1,5 +1,7 @@
 import { NoopAnimationPlayer } from '@angular/animations';
 import { Component } from '@angular/core';
+import * as ROSLIB from 'roslib';
+import { RosService } from 'src/app/ros.service';
 
 @Component({
   selector: 'app-power-page',
@@ -7,31 +9,47 @@ import { Component } from '@angular/core';
   styleUrls: ['./power-page.component.scss']
 })
 export class PowerPageComponent {
-  b1:{
-    name: string,
-    value: number,
-  };
-  b2: number;
-  s1: boolean;
-  s2: boolean;
-  s3: boolean;
-  s4: boolean;
-  sys: boolean[];
-  pd: number[];
+  rosBridgeStatus: string;
+  ros: ROSLIB.Ros;
+  String: ROSLIB.Topic; //payload type
+  Pub: ROSLIB.Topic; //payload type
+  
+  Results: string;
+    
+  constructor(private rosService: RosService) {
+    this.ros = this.rosService.getRos();
+  }
 
-  constructor() {
-    this.sys = [false,false,false, false];
-    this.pd = [1,2,3,4,5,6,7,8];
-    this.b1 = {name:"Battery 1", value:100};
+  ngOnInit() {
+
+    this.String = new ROSLIB.Topic({
+      ros : this.ros,
+      name : '/chatter',
+      messageType : 'std_msgs/String'
+    });
+
+    this.Pub = new ROSLIB.Topic({
+      ros : this.ros,
+      name : 'lol',
+      messageType : 'std_msgs/String'
+    });
+
+    this.listen()
   }
   
-  toggleSys(i:number) {
-    console.log(i);
-    // console.log(this.sys[i]);
-    
-    this.sys[i] = !this.sys[i];
-    // console.log(this.sys[i]);
+  publish() {
+    this.Pub.publish({data:"YYOYOYY"+this.Results});
   }
 
+  listen() {
+    this.String.subscribe((message:any) => {
+      // console.log('Received message on ' +this.listener.name + ': ' + message.y + message.x);
+      this.Results = ('Received message on ' + this.String.name +"and the message.data"+  message.data);
+      this.publish();
+    });
+    }
 
+
+  
 }
+

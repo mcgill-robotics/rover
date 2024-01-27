@@ -25,7 +25,6 @@
     ],
     "types": [
       "webpack-env",
-      "jquery" //added
     ]
   },
   "angularCompilerOptions": {

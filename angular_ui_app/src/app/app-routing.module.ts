@@ -8,10 +8,12 @@ import { SciencePageComponent } from './components/science/science-page/science-
 import { ArmPageComponent } from './components/arm/arm-page/arm-page.component';
 import { GpsPageComponent } from './components/gps/gps-page/gps-page.component';
 import { TestPageComponent } from './sandbox/test-page/test-page.component';
+import { AntennaComponent } from './components/antenna/antenna.component';
 
 
 const routes: Routes = [
   {path: 'turtlesim', component: TurtlesimComponent},
+  {path: 'antenna', component: AntennaComponent},
   {path: 'power', component: PowerPageComponent},
   {path: 'drive', component: DrivePageComponent},
   {path: 'science', component: SciencePageComponent},

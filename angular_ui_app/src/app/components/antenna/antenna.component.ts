@@ -18,7 +18,8 @@ export class AntennaComponent {
   payload2: string = "";
   payload: string = "";
   latitude: string = "";
-  longitue: string = "";
+  longitude: string = "";
+  antennaInstruction: string;
   
   constructor(private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -69,6 +70,10 @@ export class AntennaComponent {
       this.payload2 = ('Received message on ' + this.sub2.name +"and the message.data"+  message.data);
       
     });
+    }
+
+    sendInstruction() {
+      this.antennaInstruction = this.longitude + this.latitude;
     }
 
 }

@@ -1,9 +1,10 @@
 <p>antenna works!</p>
-<input type="text">
-<input type="text" value="{}">
-<button>Send info</button>
+<input type="text" [(ngModel)]="longitude" default="longitude">
+<input type="text" [(ngModel)]="latitude" default="latitude">
+<button (click)="sendInstruction()">Send info</button>
+<Textarea>Antenna instruction sent: {{antennaInstruction}}</Textarea>
 
 
 
-<div>{{payload}}</div>
-<div>Payload2: {{payload2}}</div>
+<!-- <div>{{payload}}</div>
+<div>Payload2: {{payload2}}</div> -->

@@ -18,12 +18,15 @@ import { CameraTestComponent } from './sandbox/camera-test/camera-test.component
 import { ArmTestComponent } from './sandbox/arm-test/arm-test.component';
 import { TestPageComponent } from './sandbox/test-page/test-page.component';
 
+import { FormsModule } from '@angular/forms'
+import { AntennaComponent } from './components/antenna/antenna.component';
 // jquery
 // import * as $ from "jquery";
 
 @NgModule({
   declarations: [
     AppComponent,
+    AntennaComponent,
     MainFrameComponent,
     CamerasWidgetComponent,
     CameraBoxComponent,
@@ -39,8 +42,9 @@ import { TestPageComponent } from './sandbox/test-page/test-page.component';
     TestPageComponent
   ],
   imports: [
+    FormsModule,
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
   ],
   providers: [RosService],
   bootstrap: [AppComponent]

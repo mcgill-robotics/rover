@@ -1,4 +1,4 @@
-# python 
+# python
 __pycache__/
 
 # logs
@@ -10,3 +10,6 @@ __pycache__/
 # CLion
 .idea/
 
+# OS
+.DS_Store
+Thumbs.db

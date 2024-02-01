@@ -1,0 +1,15 @@
+string elbow_id
+string elbow_state
+float32 elbow_pos_rel
+float32 elbow_pos_abs
+float32 elbow_input_pos
+string shoulder_id
+string shoulder_state
+float32 shoulder_pos_rel
+float32 shoulder_pos_abs
+float32 shoulder_input_pos
+string waist_id
+string waist_state
+float32 waist_pos_rel
+float32 waist_pos_abs
+float32 waist_input_pos

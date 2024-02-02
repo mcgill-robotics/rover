@@ -105,14 +105,11 @@ class Node_odrive_interface_arm:
                 arm_joint_dict[key] = ODrive_Joint(
                     gear_ratio=arm_gear_ratios[key],
                 )
-                if value != "0":
-                    try:
-                        odrv = odrive.find_any(serial_number=value, timeout=5)
-                        arm_joint_dict[key].attach_odrive(odrv)
-                        print(f"Connected joint: {key}, serial_number: {value}")
-                    except:
-                        odrv = None
-            except TimeoutError:
+                odrv = odrive.find_any(serial_number=value, timeout=5)
+                arm_joint_dict[key].attach_odrive(odrv)
+                print(f"Connected joint: {key}, serial_number: {value}")
+            except:
+                odrv = None
                 print(f"Cannot connect joint: {key}, serial_number: {value}")
                 arm_joint_dict[key] = None
 

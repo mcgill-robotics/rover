@@ -21,11 +21,15 @@ class FeedbackMode(Enum):
 
 # CONFIGURATION
 # Serial number of the ODrive controlling the joint
-# TODO Elbow and waist motors
 arm_serial_numbers = {
     "elbow_joint": "383834583539",  # 0x383834583539 = 61814047520057 in decimal
     "shoulder_joint": "386434413539",  # 0x386434413539 = 62003024573753 in decimal
     "waist_joint": "0",
+}
+arm_gear_ratios = {
+    "elbow_joint": 1,
+    "shoulder_joint": 1,
+    "waist_joint": 1,
 }
 current_mode = FeedbackMode.FROM_ODRIVE
 
@@ -38,7 +42,6 @@ arm_joint_dict = {
 }
 
 
-# TODO: Once drive is working well, expand this node to include the three arm motors
 class Node_odrive_interface_arm:
     def __init__(self):
         # FEEDBACK VARIABLES
@@ -47,10 +50,6 @@ class Node_odrive_interface_arm:
             "shoulder_joint": None,
             "waist_joint": None,
         }
-        # LEGACY CODE
-        # self.elbow_pos_outshaft = 0.0
-        # self.shoulder_pos_outshaft = 0.0
-        # self.waist_pos_outshaft = 0.0
 
         # SETPOINT VARIABLES
         self.joint_setpoint_dict = {
@@ -58,10 +57,6 @@ class Node_odrive_interface_arm:
             "shoulder_joint": None,
             "waist_joint": None,
         }
-        # LEGACY CODE
-        # self.elbow_pos_setpoint = 0.0
-        # self.shoulder_pos_setpoint = 0.0
-        # self.waist_pos_setpoint = 0.0
 
         # Subscriptions
         rospy.init_node("odrive_interface_arm")
@@ -80,7 +75,7 @@ class Node_odrive_interface_arm:
         )
         # Could be from the ODrive or from the outshaft, depending on configuration
         self.feedback_publisher = rospy.Publisher(
-            "/armBrushlessFB",  # Change this to your desired topic name
+            "/armBrushlessFB",
             Float32MultiArray,
             queue_size=10,
         )
@@ -94,10 +89,6 @@ class Node_odrive_interface_arm:
         self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
         self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
         self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
-        # LEGACY CODE
-        # self.elbow_pos_outshaft = msg.data[0]
-        # self.shoulder_pos_outshaft = msg.data[1]
-        # self.waist_pos_outshaft = msg.data[2]
         if current_mode == FeedbackMode.FROM_OUTSHAFT:
             self.feedback_publisher.publish(msg)
 
@@ -106,10 +97,6 @@ class Node_odrive_interface_arm:
         self.joint_setpoint_dict["elbow_joint"] = msg.data[0]
         self.joint_setpoint_dict["shoulder_joint"] = msg.data[1]
         self.joint_setpoint_dict["waist_joint"] = msg.data[2]
-        # LEGACY CODE
-        # self.elbow_pos_setpoint = msg.data[0]
-        # self.shoulder_pos_setpoint = msg.data[1]
-        # self.waist_pos_setpoint = msg.data[2]
 
     def run(self):
         # CONNECT TO ODRIVE
@@ -117,17 +104,13 @@ class Node_odrive_interface_arm:
             if value != "0":
                 try:
                     arm_joint_dict[key] = ODrive_Joint(
-                        odrive.find_any(serial_number=value, timeout=5)
+                        odrive.find_any(serial_number=value, timeout=5),
+                        arm_gear_ratios[key],
                     )
-                    print(f"Connected joint: {key} with serial_number: {value}")
+                    print(f"Connected joint: {key}, serial_number: {value}")
                 except TimeoutError:
-                    print(f"Could not connect joint: {key} with serial_number: {value}")
+                    print(f"Cannot connect joint: {key}, serial_number: {value}")
                     arm_joint_dict[key] = None
-
-        # LEGACY CODE for accessing ODrive_Joint objects
-        elbow_joint = arm_joint_dict.get("elbow_joint", None)
-        shoulder_joint = arm_joint_dict.get("shoulder_joint", None)
-        waist_joint = arm_joint_dict.get("waist_joint", None)
 
         # Predefine the order of joints for publishing feedback
         joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
@@ -153,18 +136,6 @@ class Node_odrive_interface_arm:
                 # Publish feedback
                 self.feedback_publisher.publish(feedback)
 
-                # LEGACY CODE
-                # shoulder_pos_fb = (
-                #     shoulder_joint.odrv.axis0.pos_vel_mapper.pos_abs
-                #     / shoulder_joint.gear_ratio
-                # )
-                # feedback.data = [
-                #     0,
-                #     shoulder_pos_fb,
-                #     0,
-                # ]
-                # self.feedback_publisher.publish(feedback)
-
             # APPLY SETPOINT
             for joint_name, joint_obj in arm_joint_dict.items():
                 if joint_obj is None:
@@ -177,31 +148,28 @@ class Node_odrive_interface_arm:
                     except:
                         print(f"Cannot apply setpoint to joint: {joint_name}")
 
-            # LEGACY CODE
-            # shoulder_pos_error = self.shoulder_pos_setpoint - self.shoulder_pos_outshaft
-            # shoulder_pos_increment = shoulder_pos_error * shoulder_joint.gear_ratio
-            # shoulder_pos_setpoint = (
-            #     shoulder_joint.odrv.axis0.pos_vel_mapper.pos_rel
-            #     + shoulder_pos_increment
-            # )
-            # shoulder_joint.odrv.axis0.controller.input_pos = shoulder_pos_setpoint
-
             # PRINT POSITIONS TO CONSOLE
+            # for joint_name, joint_obj in arm_joint_dict.items():
+            #     if joint_obj is None:
+            #         continue
+            #     try:
+            #         print(
+            #             f"\r{joint_name}: {round(self.joint_pos_outshaft_dict[joint_name], 2)}",
+            #             end="",
+            #         )
+            #     except:
+            #         print(f"Cannot print position of joint: {joint_name}")
             for joint_name, joint_obj in arm_joint_dict.items():
                 if joint_obj is None:
                     continue
-                try:
-                    print(
-                        f"\r{joint_name}: {round(self.joint_pos_outshaft_dict[joint_name], 2)}",
-                        end="",
-                    )
-                except:
-                    print(f"Cannot print position of joint: {joint_name}")
-
-            # print(
-            #     f"\rElbow: {round(self.elbow_pos_outshaft, 2)}, Shoulder: {round(self.shoulder_pos_outshaft, 2)}, Waist: {round(self.waist_pos_outshaft, 2)}",
-            #     end="",
-            # )
+                # Check if the joint is connected and prepare the status string
+                status = "connected" if joint_obj.odrv else "disconnected"
+                print(f"{joint_name} ({status})")
+                if joint_obj.odrv:
+                    print(f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
+                    print(f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                # Newline
+                print()
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
             for joint_name, joint_obj in arm_joint_dict.items():
@@ -276,7 +244,7 @@ class Node_odrive_interface_arm:
 
                             # Finally, hang the node and keep trying to recover until the error is gone or the shutdown signal is received
                             print(
-                                f"\nMotor {error_fb.id} could not recover from error(s) {error_fb.error}. R to retry, keyboard interrupt to shut down node."
+                                f"\nMotor {error_fb.id} Cannot recover from error(s) {error_fb.error}. R to retry, keyboard interrupt to shut down node."
                             )
                             while not rospy.is_shutdown():
                                 prompt = input(">").upper()
@@ -292,9 +260,7 @@ class Node_odrive_interface_arm:
                                     else:
                                         print("Recovery failed. Try again?")
                 except AttributeError:
-                    print(
-                        f"Cannot send ODrive info and handle errors for joint: {joint_name}"
-                    )
+                    print(f"{joint_name} is not connected")
 
             self.rate.sleep()
 

@@ -68,13 +68,13 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
 
 
 class ODrive_Joint:
-    def __init__(self, odrv):
+    def __init__(self, odrv, gear_ratio=1):
         self.odrv = odrv
         # odrv.serial_number is int, serial_number should be hex version in string
         self.serial_number = str(hex(self.odrv.serial_number)[2:])
         self.timeout = 5
         # gear_ratio is input revolutions / output revolutions
-        self.gear_ratio = 1
+        self.gear_ratio = gear_ratio
 
     def save_config(self):
         try:
@@ -297,26 +297,6 @@ def main():
     )
     watchdog_thread.start()
 
-    # PROMPT FOR SETPOINT (INCREMENTAL) ----------------------------------------------------------------
-    # while True:
-    #     try:
-    #         # Convert the input to float for position control
-    #         setpoint_increment = float(input("Enter setpoint_increment (rev): "))
-    #     except ValueError:
-    #         print("Invalid input. Please enter a numeric value.")
-    #         # Skip the rest of the loop and prompt for input again
-    #         continue
-    #     setpoint = odrv_shoulder.odrv.axis0.pos_vel_mapper.pos_rel + (
-    #         setpoint_increment * odrv_shoulder.gear_ratio
-    #     )
-    #     print(
-    #         f"INCREMENTING {setpoint_increment} to {setpoint}, currently at {odrv_shoulder.odrv.axis0.pos_vel_mapper.pos_rel}, state {odrv_shoulder.odrv.axis0.current_state}"
-    #     )
-    #     # Apply the setpoint
-    #     odrv_shoulder.odrv.axis0.controller.input_pos = setpoint
-    #     dump_errors(odrv_shoulder.odrv)
-    #     custom_sleep(0.01)
-
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
@@ -366,23 +346,6 @@ def main():
             continue
 
         custom_sleep(0.01)
-
-    # PROMPT FOR SETPOINT ----------------------------------------------------------------
-    # while True:
-    #     try:
-    #         setpoint = float(
-    #             input("Enter setpoint: ")
-    #         )  # Convert the input to float for position control
-    #     except ValueError:
-    #         print("Invalid input. Please enter a numeric value.")
-    #         continue  # Skip the rest of the loop and prompt for input again
-
-    #     print(
-    #         f"goto {int(setpoint)}, currently at {odrv_shoulder.odrv.rs485_encoder_group0.raw}, state {odrv_shoulder.odrv.axis0.current_state}"
-    #     )
-    #     odrv_shoulder.odrv.axis0.controller.input_pos = setpoint
-    #     dump_errors(odrv_shoulder.odrv)
-    #     custom_sleep(0.01)
 
     # Stop watchdog thread, when closing the script -------------------------------------------------
     watchdog_stop_event.set()

@@ -101,16 +101,20 @@ class Node_odrive_interface_arm:
     def run(self):
         # CONNECT TO ODRIVE
         for key, value in arm_serial_numbers.items():
-            if value != "0":
-                try:
-                    arm_joint_dict[key] = ODrive_Joint(
-                        odrive.find_any(serial_number=value, timeout=5),
-                        arm_gear_ratios[key],
-                    )
-                    print(f"Connected joint: {key}, serial_number: {value}")
-                except TimeoutError:
-                    print(f"Cannot connect joint: {key}, serial_number: {value}")
-                    arm_joint_dict[key] = None
+            try:
+                arm_joint_dict[key] = ODrive_Joint(
+                    gear_ratio=arm_gear_ratios[key],
+                )
+                if value != "0":
+                    try:
+                        odrv = odrive.find_any(serial_number=value, timeout=5)
+                        arm_joint_dict[key].attach_odrive(odrv)
+                        print(f"Connected joint: {key}, serial_number: {value}")
+                    except:
+                        odrv = None
+            except TimeoutError:
+                print(f"Cannot connect joint: {key}, serial_number: {value}")
+                arm_joint_dict[key] = None
 
         # Predefine the order of joints for publishing feedback
         joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
@@ -121,7 +125,7 @@ class Node_odrive_interface_arm:
                 feedback = Float32MultiArray()
                 for joint_name in joint_order:
                     joint_obj = arm_joint_dict.get(joint_name)
-                    if joint_obj is not None:
+                    try:
                         # Assuming .odrv.axis0.pos_vel_mapper.pos_abs and .gear_ratio are correct
                         feedback.data.append(
                             360
@@ -130,15 +134,15 @@ class Node_odrive_interface_arm:
                                 / joint_obj.gear_ratio
                             )
                         )
-                    else:
-                        # Append a default value or handle missing joint case
+                    # Default value in case lose connection to ODrive
+                    except AttributeError:
                         feedback.data.append(0.0)
                 # Publish feedback
                 self.feedback_publisher.publish(feedback)
 
             # APPLY SETPOINT
             for joint_name, joint_obj in arm_joint_dict.items():
-                if joint_obj is None:
+                if not joint_obj.odrv:
                     continue
                 if current_mode == FeedbackMode.FROM_ODRIVE:
                     try:
@@ -149,22 +153,10 @@ class Node_odrive_interface_arm:
                         print(f"Cannot apply setpoint to joint: {joint_name}")
 
             # PRINT POSITIONS TO CONSOLE
-            # for joint_name, joint_obj in arm_joint_dict.items():
-            #     if joint_obj is None:
-            #         continue
-            #     try:
-            #         print(
-            #             f"\r{joint_name}: {round(self.joint_pos_outshaft_dict[joint_name], 2)}",
-            #             end="",
-            #         )
-            #     except:
-            #         print(f"Cannot print position of joint: {joint_name}")
             for joint_name, joint_obj in arm_joint_dict.items():
-                if joint_obj is None:
-                    continue
-                # Check if the joint is connected and prepare the status string
+                # Check if the odrive is connected
                 status = "connected" if joint_obj.odrv else "disconnected"
-                print(f"{joint_name} ({status})")
+                print(f"{joint_name} {joint_obj.serial_number} ({status})")
                 if joint_obj.odrv:
                     print(f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
                     print(f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
@@ -173,7 +165,7 @@ class Node_odrive_interface_arm:
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
             for joint_name, joint_obj in arm_joint_dict.items():
-                if joint_obj is None:
+                if not joint_obj.odrv:
                     continue
                 try:
                     state_fb = MotorState()
@@ -188,7 +180,7 @@ class Node_odrive_interface_arm:
                     if joint_obj.odrv.axis0.active_errors != 0:
                         # Tell the rover to stop
                         for joint_name, joint_obj in arm_joint_dict.items():
-                            if joint_obj is None:
+                            if not joint_obj.odrv:
                                 continue
                             joint_obj.odrv.axis0.controller.input_vel = 0
 
@@ -197,7 +189,7 @@ class Node_odrive_interface_arm:
                         while not motor_stopped:
                             motor_stopped = True
                             for joint_name, joint_obj in arm_joint_dict.items():
-                                if joint_obj is None:
+                                if not joint_obj.odrv:
                                     continue
                                 if (
                                     abs(joint_obj.odrv.encoder_estimator0.vel_estimate)
@@ -209,7 +201,7 @@ class Node_odrive_interface_arm:
                                     "Shutdown prompt received. Setting all motors to idle state."
                                 )
                                 for joint_name, joint_obj in arm_joint_dict.items():
-                                    if joint_obj is None:
+                                    if not joint_obj.odrv:
                                         continue
                                     joint_obj.odrv.axis0.requested_state = (
                                         AxisState.IDLE
@@ -267,7 +259,7 @@ class Node_odrive_interface_arm:
         # On shutdown, bring motors to idle state
         print("Shutdown prompt received. Setting all motors to idle state.")
         for joint_name, joint_obj in arm_joint_dict.items():
-            if joint_obj is None:
+            if not joint_obj.odrv:
                 continue
             joint_obj.odrv.axis0.requested_state = AxisState.IDLE
 

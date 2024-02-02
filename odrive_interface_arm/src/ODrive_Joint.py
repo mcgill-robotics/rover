@@ -68,13 +68,21 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
 
 
 class ODrive_Joint:
-    def __init__(self, odrv, gear_ratio=1):
+    def __init__(self, odrv=None, gear_ratio=1):
         self.odrv = odrv
         # odrv.serial_number is int, serial_number should be hex version in string
-        self.serial_number = str(hex(self.odrv.serial_number)[2:])
+        if self.odrv:
+            self.serial_number = str(hex(self.odrv.serial_number)[2:])
+        else:
+            self.serial_number = None
         self.timeout = 5
         # gear_ratio is input revolutions / output revolutions
         self.gear_ratio = gear_ratio
+
+    def attach_odrive(self, odrv):
+        self.odrv = odrv
+        if self.odrv:
+            self.serial_number = str(hex(self.odrv.serial_number)[2:])
 
     def save_config(self):
         try:

@@ -101,17 +101,16 @@ class Node_odrive_interface_arm:
     def run(self):
         # CONNECT TO ODRIVE
         for key, value in arm_serial_numbers.items():
+            arm_joint_dict[key] = ODrive_Joint(
+                gear_ratio=arm_gear_ratios[key],
+            )
             try:
-                arm_joint_dict[key] = ODrive_Joint(
-                    gear_ratio=arm_gear_ratios[key],
-                )
                 odrv = odrive.find_any(serial_number=value, timeout=5)
                 arm_joint_dict[key].attach_odrive(odrv)
                 print(f"Connected joint: {key}, serial_number: {value}")
             except:
                 odrv = None
                 print(f"Cannot connect joint: {key}, serial_number: {value}")
-                arm_joint_dict[key] = None
 
         # Predefine the order of joints for publishing feedback
         joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
@@ -132,7 +131,7 @@ class Node_odrive_interface_arm:
                             )
                         )
                     # Default value in case lose connection to ODrive
-                    except AttributeError:
+                    except:
                         feedback.data.append(0.0)
                 # Publish feedback
                 self.feedback_publisher.publish(feedback)
@@ -166,8 +165,12 @@ class Node_odrive_interface_arm:
                 status = "connected" if joint_obj.odrv else "disconnected"
                 print(f"{joint_name} {joint_obj.serial_number} ({status})")
                 if joint_obj.odrv:
-                    print(f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
-                    print(f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                    try:
+                        print(f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
+                        print(f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                    except:
+                        print(f"-pos_rel=None")
+                        print(f"-pos_abs=None")
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
             # TODO trim error handling down
@@ -260,7 +263,7 @@ class Node_odrive_interface_arm:
                                         print("Recovery failed. Try again?")
                 except AttributeError:
                     print(f"{joint_name} is not connected")
-
+            print()
             self.rate.sleep()
 
         # On shutdown, bring motors to idle state

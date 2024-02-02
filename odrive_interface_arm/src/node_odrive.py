@@ -1,5 +1,4 @@
 import os, sys
-from enum import Enum
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
@@ -7,20 +6,12 @@ sys.path.append(currentdir)
 # TODO: Figure out why catkin on the Jetson isn't playing nice with this import. It worked on my PC -Eren
 # import init_functions
 import rospy
+from enum import Enum
 from odrive.enums import AxisState, ProcedureResult
 from odrive.utils import dump_errors
 from std_msgs.msg import Float32MultiArray
-from ODrive_utils import *
 from ODrive_Joint import *
 from odrive_interface_arm.msg import MotorState, MotorError
-
-# try:
-#     from odrive_interface_arm.msg import MotorState, MotorError
-# except ImportError:
-#     current_dir = os.path.dirname(os.path.realpath(__file__))
-#     msg_dir = os.path.join(current_dir, '..', 'msg')
-#     sys.path.append(msg_dir)
-#     from your_module import *
 
 
 class FeedbackMode(Enum):
@@ -131,7 +122,11 @@ class Node_odrive_interface_arm:
                     if joint is not None:
                         # Assuming .odrv.axis0.pos_vel_mapper.pos_abs and .gear_ratio are correct
                         feedback.data.append(
-                            joint.odrv.axis0.pos_vel_mapper.pos_abs / joint.gear_ratio
+                            360
+                            * (
+                                joint.odrv.axis0.pos_vel_mapper.pos_abs
+                                / joint.gear_ratio
+                            )
                         )
                     else:
                         # Append a default value or handle missing joint case

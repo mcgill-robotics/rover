@@ -12,6 +12,7 @@ from odrive.utils import dump_errors
 from std_msgs.msg import Float32MultiArray
 from ODrive_Joint import *
 from odrive_interface_arm.msg import MotorState, MotorError
+import threading
 
 
 class FeedbackMode(Enum):
@@ -40,6 +41,8 @@ arm_joint_dict = {
     "shoulder_joint": None,
     "waist_joint": None,
 }
+# Predefine the order of joints for publishing feedback
+joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
 
 
 class Node_odrive_interface_arm:
@@ -98,6 +101,16 @@ class Node_odrive_interface_arm:
         self.joint_setpoint_dict["shoulder_joint"] = msg.data[1]
         self.joint_setpoint_dict["waist_joint"] = msg.data[2]
 
+    def odrive_reconnect_watchdog(self):
+        for key, value in arm_serial_numbers.items():
+            try:
+                odrv = odrive.find_any(serial_number=value, timeout=5)
+                arm_joint_dict[key].attach_odrive(odrv)
+                print(f"Connected joint: {key}, serial_number: {value}")
+            except:
+                odrv = None
+                print(f"Cannot connect joint: {key}, serial_number: {value}")
+
     def run(self):
         # CONNECT TO ODRIVE
         for key, value in arm_serial_numbers.items():
@@ -112,11 +125,14 @@ class Node_odrive_interface_arm:
                 odrv = None
                 print(f"Cannot connect joint: {key}, serial_number: {value}")
 
-        # Predefine the order of joints for publishing feedback
-        joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
+        self.watchdog_stop_event = threading.Event()
+        self.watchdog_thread = threading.Thread(target=self.odrive_reconnect_watchdog)
+        self.watchdog_thread.start()
 
         # MAIN LOOP
         while not rospy.is_shutdown():
+            # PRINT TIMESTAMP
+            print(f"Time: {rospy.get_time()}")
             if current_mode == FeedbackMode.FROM_ODRIVE:
                 feedback = Float32MultiArray()
                 for joint_name in joint_order:

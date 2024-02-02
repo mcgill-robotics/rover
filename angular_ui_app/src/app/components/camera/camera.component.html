@@ -1,0 +1,7 @@
+<app-generic *ngIf="camera_size === 'large'" height="480px" width="640px">
+    <app-camera-box cameraTopic="/camera_frames"></app-camera-box>
+</app-generic>
+    
+<app-generic *ngIf="camera_size === 'small'" height="375px" width="500px">
+    <app-camera-box cameraTopic="/camera_frames"></app-camera-box>
+</app-generic>

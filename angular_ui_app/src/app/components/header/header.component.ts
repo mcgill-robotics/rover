@@ -19,17 +19,17 @@ export class HeaderComponent {
   ngOnInit(): void {
     this.ros.on('connection', () => {
       this.rosBridgeStatus = 'Connected to ROSbridge';
-      // this.rosBridgeMainDiv.nativeElement.className = 'alert alert-primary';
+      this.rosBridgeMainDiv.nativeElement.style.color = 'green';
     });
 
     this.ros.on('error', (error) => {
       this.rosBridgeStatus = `ROSBridgeError: ${error}`;
-      // this.rosBridgeMainDiv.nativeElement.className = 'alert alert-danger';
+      this.rosBridgeMainDiv.nativeElement.style.color = 'red';
     });
 
     this.ros.on('close', () => {
       this.rosBridgeStatus = 'Connection closed';
-      // this.rosBridgeMainDiv.nativeElement.className = 'alert alert-danger';
+      this.rosBridgeMainDiv.nativeElement.style.color = 'red';
     });
   }
 }

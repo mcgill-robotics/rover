@@ -14,29 +14,21 @@ import scipy.stats as st
 
 class Node_DriveControl():
 
-    MAX_NO_STEER = 21.333
-    MAX_WITH_STEER = 27.30
-    MIN_NO_STEER = -MAX_NO_STEER
-    MIN_WITH_STEER_1 = -MAX_NO_STEER
-    MIN_WITH_STEER_2 = -MAX_WITH_STEER
-
-    MAX_PURE_STEER = 5.97
-
-
     def __init__(self):
         """
-        Hard-coded the simulation rover measurement, will need to adapt it towards the real model.
-        Drive control takes care interpolating velocities and publishing them.
+        Hard-coded the simulation rover measurement, need to adapt it towards the real model.
+        Script takes care of converting twist velocities from controller into rover wheel velocities.
+        Specifically, velocities are published to create an accelerating filter (local average filter for math geeks).
+        
         """
-        self.wheel_radius = 0.04688
-        self.wheel_base_length = 0.28
-        self.wheel_speed = [0, 0]
+        self.wheel_radius = 0.04688 # In meters.
+        self.wheel_base_length = 0.28 # In meters.
+        self.wheel_speed = [0, 0] # Array elements: Left wheel speed, right wheel speed.
         self.steering = Steering(self.wheel_radius, self.wheel_base_length)
-        self.sample_size = 50
-        # Gaussian kernel
-        self.basis = self.gkern(kernlen=50)
+        self.sample_size = 50 # The greater the value, the more "smoothing" of the wheel speeds.
+        self.basis = self.gkern(kernlen=50) # Gaussian kernel array. "kernlen" must be the same as "self.sample_size".
 
-        # Filter samples for four wheels
+        # Velocity samples for four wheels
         self.front_left = np.zeros(self.sample_size).tolist()
         self.back_left = np.zeros(self.sample_size).tolist()
         self.front_right = np.zeros(self.sample_size).tolist()
@@ -45,14 +37,13 @@ class Node_DriveControl():
         rospy.init_node('drive_controller')
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
         self.robot_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.twist_to_velocity)
-        self.motor_pubisher = rospy.Publisher("/driveCmd", Float32MultiArray, queue_size=1)
-        self.power_publisher = rospy.Publisher("/powerCmd", Float32MultiArray, queue_size=1)
 
         # Control Frequency of the drive controller
         self.rate = rospy.Rate(50)
 
         self.run()
     
+    # Function to receive twist velocities and call the steering function to get the rover wheel velocities.
     def twist_to_velocity(self, robot_twist):
         vR = robot_twist.linear.x
         wR = robot_twist.angular.z
@@ -69,17 +60,18 @@ class Node_DriveControl():
 
     def run(self):
         while not rospy.is_shutdown():
-            cmd = WheelSpeed()
-            motor_val = Float32MultiArray()
-        
+            cmd = WheelSpeed() # Create the wheel speed message.        
             print(f"Desired speed: {self.wheel_speed}")
             
             # Velocity filtering:
+
+            # Append the most recent steering values.
             self.front_left.append(self.wheel_speed[0])
             self.back_left.append(self.wheel_speed[0])
             self.front_right.append(self.wheel_speed[1])
             self.back_right.append(self.wheel_speed[1])
 
+            # Remove the oldest values to keep the array a constant length.
             self.front_left.pop(0)
             self.back_left.pop(0)
             self.front_right.pop(0)
@@ -90,67 +82,24 @@ class Node_DriveControl():
             front_right = np.asarray(self.front_right)
             back_right = np.asarray(self.back_right)
             
-            # Interpolating the veloctities according to gaussian kernel.
+            # Local average filter calculation.
             correct_lf = np.sum(front_left * self.basis)
             correct_lb = np.sum(back_left * self.basis)
             correct_rf = np.sum(front_right * self.basis)
             correct_rb = np.sum(back_right * self.basis)
 
-            # Send out the correct values.
+            # Populate the message with the averaged values.
             cmd.left[0], cmd.left[1] = correct_lf, correct_lb
             cmd.right[0], cmd.right[1] = correct_rf, correct_rb
 
-            # print(f"Corrected speed: {correct_lf}, {correct_lb}, {correct_rf}, {correct_rb}")
+            print(cmd)
 
-            motor_lf = self.motor_speed(correct_lf)
-            motor_lb = self.motor_speed(correct_lb)
-            motor_rf = self.motor_speed(correct_rf)
-            motor_rb = self.motor_speed(correct_rb)
-
-            # Final if statement to make sure that in place steering works.
-            if correct_lf == correct_lb and correct_rf == correct_rb and motor_rb == - motor_lb:
-                motor_lf = correct_lf/Node_DriveControl.MAX_PURE_STEER
-                motor_lb = correct_lb/Node_DriveControl.MAX_PURE_STEER
-                motor_rf = correct_rf/Node_DriveControl.MAX_PURE_STEER
-                motor_rb = correct_rb/Node_DriveControl.MAX_PURE_STEER
-            
-
-            motor_val.data.append(motor_rb * 100)  # rb
-            motor_val.data.append(motor_lf * 58)  # lf, too fast
-            motor_val.data.append(motor_lb * -100)  # lb, tpo slow
-            motor_val.data.append(motor_rf * 88)  # rf
-
-            print(motor_val)
-
-            self.angular_velocity_publisher.publish(cmd)
-            self.motor_pubisher.publish(motor_val)
+            self.angular_velocity_publisher.publish(cmd) # Send the angular speeds.
 
             self.rate.sleep()
-            print(cmd)
-                        
+            print(cmd)     
 
-    def motor_speed(self, cur_val):
-        motor_val = cur_val / Node_DriveControl.MAX_NO_STEER
-        if motor_val < 1 and motor_val > 0:
-            return motor_val
-
-        if motor_val > 1:
-            motor_val = cur_val / Node_DriveControl.MAX_WITH_STEER
-            return motor_val
-        
-        if motor_val < 0:
-            motor_val = -(cur_val / Node_DriveControl.MIN_NO_STEER)
-            if motor_val < -1:
-                motor_val = -(cur_val / Node_DriveControl.MIN_WITH_STEER_1)
-                if motor_val < -1:
-                    motor_val = -(cur_val / Node_DriveControl.MIN_WITH_STEER_2)
-            return motor_val
-        
-        return motor_val
-
-
-        
-
+# ROS runtime main entry point
 if __name__ == "__main__":
     driver = Node_DriveControl()
     rospy.spin()

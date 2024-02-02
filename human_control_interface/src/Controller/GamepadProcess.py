@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import rospy
+from pynput import keyboard
 from human_control_interface.msg import Gamepad_input
 from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
@@ -20,8 +21,6 @@ class Node_GamepadProcessing:
         maxLinearVelocity: The upper limit set for linear velocity.
         maxAngularVelocity: The lower limit set for angular velocity
 
-        active_system: What data the ROS COM system is polling (drive data, arm data, science data...)
-
         NOTE: Twist measurements are in SI units. (m/s, m, ...)
 
         """
@@ -29,7 +28,17 @@ class Node_GamepadProcessing:
         rospy.init_node("gamepad_process_node")
         
         # Initialize a Gamepad object
-        self.gamepad = Gamepad()
+        self.gamepad_init_successful = False
+        try:
+            self.gamepad = Gamepad()
+            self.gamepad_init_successful = True
+        except:
+            print("Controller not found. Falling back to debug keyboard control")
+            self.listener = keyboard.Listener(on_press=self.keyboardProcessCall)
+            self.keyboard_accumulator_linear = 0.0
+            self.keyboard_accumulator_twist = 0.0
+            self.keyboard_sensitivity = 0.05
+            self.listener.start()
 
 
         # initialize variables for velocity
@@ -40,30 +49,17 @@ class Node_GamepadProcessing:
         self.maxLinearVelocity = v_max
         self.maxAngularVelocity = w_max
 
-        # Initialize variables for the rover arm
-        self.prevB1 = 0
-        self.prevB2 = 0
-        self.modeState = False
-        self.clawState = False
-
-        # Initialize variables for cameras
+        # Initialize variables for camera
         self.cam_ctrl = Float32MultiArray()
+        self.cam_ctrl.data = [0, 0] # Elements: [X-axis, Y-axis]
 
-        # System Selection variables
-        self.active_system = 0
-
-        # initialize a subscriber for grabbing data from gamepad
-        self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1)
-        self.camera_publisher = rospy.Publisher("panTiltAngles", Float32MultiArray, queue_size=1)
-
-        self.cam_ctrl.data = [0, 0]
+        self.drive_publisher = rospy.Publisher("rover_velocity_controller/cmd_vel", Twist, queue_size=1) # Publisher for twist values.
+        self.camera_publisher = rospy.Publisher("panTiltAngles", Float32MultiArray, queue_size=1) # Publisher for pan tilt camera angles.
 
         # Control frequency of the node
         self.rate = rospy.Rate(100)
 
         self.run()
-
-
 
     # The run loop that updates a controller's value.
     def run(self):
@@ -71,10 +67,15 @@ class Node_GamepadProcessing:
             if rospy.is_shutdown():
                 exit()
             try:
+
+                # Skip the rest of the loop if gamepad is not connected
+                if not self.gamepad_init_successful:
+                    continue
+
                 self.gamepad.update()
                 msg = Gamepad_input()
 
-                    # Transfer Data into msg
+                # Transfer Data into msg
                 msg.B1 = self.gamepad.data.b1
                 msg.B2 = self.gamepad.data.b2
                 msg.B3 = self.gamepad.data.b3
@@ -103,6 +104,40 @@ class Node_GamepadProcessing:
 
         exit()
     
+    def keyboardProcessCall(self, key):
+        if key == keyboard.Key.up:
+            # self.roverLinearVelocity = 10
+            self.keyboard_accumulator_linear += self.keyboard_sensitivity
+        if key == keyboard.Key.down:
+            # self.roverLinearVelocity = -10
+            self.keyboard_accumulator_linear -= self.keyboard_sensitivity
+        if key == keyboard.Key.left:
+            self.keyboard_accumulator_twist -= self.keyboard_sensitivity
+        if key == keyboard.Key.right:
+            self.keyboard_accumulator_twist += self.keyboard_sensitivity
+        if key == keyboard.KeyCode.from_char('0'):
+            self.keyboard_accumulator_linear = 0.0
+            self.keyboard_accumulator_twist = 0.0
+        
+        if self.keyboard_accumulator_linear > 1.0:
+            self.keyboard_accumulator_linear = 1.0
+        elif self.keyboard_accumulator_linear < -1.0:
+            self.keyboard_accumulator_linear = -1.0
+
+        if self.keyboard_accumulator_twist > 1.0:
+            self.keyboard_accumulator_twist = 1.0
+        elif self.keyboard_accumulator_twist < -1.0:
+            self.keyboard_accumulator_twist= -1.0  
+        self.roverLinearVelocity = self.maxLinearVelocity * self.keyboard_accumulator_linear
+        self.roverAngularVelocity = self.maxAngularVelocity * self.keyboard_accumulator_twist
+        
+        roverTwist = Twist()
+        roverTwist.linear.x = self.roverLinearVelocity
+        roverTwist.angular.z = self.roverAngularVelocity
+
+        #time.sleep(0.5)
+        self.drive_publisher.publish(roverTwist)
+    
     # Poll the gamepad data and then call the respective process call.
     def gamepadProcessCall(self, msg):
         self.driveProcessCall(msg)
@@ -110,8 +145,8 @@ class Node_GamepadProcessing:
 
     def driveProcessCall(self, msg):
         
-        # A2 is the left stick moving up and down.
-        # A4 is the right stick moving left and right.
+        # A2 is the left stick moving up and down. Drives forwards or backwards.
+        # A4 is the right stick that moves left and right. Steers left or right.
 
         if abs(msg.A4) < 0.1:
             msg.A4 = 0
@@ -121,18 +156,17 @@ class Node_GamepadProcessing:
         drive = msg.A2
         steer = msg.A4
 
-        # # calc. for linear velocity
+        # calc. for linear velocity
         self.roverLinearVelocity = self.maxLinearVelocity * drive
 
-        # # calc. for angular velocity
+        # calc. for angular velocity
         self.roverAngularVelocity = self.maxAngularVelocity * steer
 
-        # # assigns values to a Twist msg, then publish it to ROS
+        # Assigns values to a Twist msg, then publish it to ROS
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
 
-        #time.sleep(0.5)
         self.drive_publisher.publish(roverTwist)
 
 
@@ -162,5 +196,5 @@ class Node_GamepadProcessing:
 
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(1, 3)
+    gamepadProcess = Node_GamepadProcessing(10, 10)
     #rospy.spin()

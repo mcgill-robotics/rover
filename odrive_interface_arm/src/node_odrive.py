@@ -146,9 +146,20 @@ class Node_odrive_interface_arm:
                     continue
                 if current_mode == FeedbackMode.FROM_ODRIVE:
                     try:
-                        joint_obj.odrv.axis0.controller.input_pos = (
-                            self.joint_setpoint_dict[joint_name]
+                        setpoint = (
+                            self.joint_setpoint_dict[joint_name] * joint_obj.gear_ratio
                         )
+                        joint_obj.odrv.axis0.controller.input_pos = setpoint
+                    except:
+                        print(f"Cannot apply setpoint to joint: {joint_name}")
+                elif current_mode == FeedbackMode.FROM_OUTSHAFT:
+                    try:
+                        setpoint = (
+                            self.joint_setpoint_dict[joint_name]
+                            - self.joint_pos_outshaft_dict[joint_name]
+                        )
+                        setpoint *= joint_obj.gear_ratio
+                        joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
                         print(f"Cannot apply setpoint to joint: {joint_name}")
 
@@ -160,10 +171,9 @@ class Node_odrive_interface_arm:
                 if joint_obj.odrv:
                     print(f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
                     print(f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
-                # Newline
-                print()
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
+            # TODO trim error handling down
             for joint_name, joint_obj in arm_joint_dict.items():
                 if not joint_obj.odrv:
                     continue

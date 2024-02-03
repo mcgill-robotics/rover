@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-arm-page',
-  templateUrl: './arm-page.component.html',
-  styleUrls: ['./arm-page.component.scss']
+  selector: 'app-arm-component',
+  templateUrl: './arm.component.html',
+  styleUrls: ['./arm.component.scss']
 })
-export class ArmPageComponent {
+export class ArmComponent {
   joints: number[];
   test: string;
   error: boolean;

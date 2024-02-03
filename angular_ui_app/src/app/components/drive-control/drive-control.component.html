@@ -23,13 +23,13 @@
     <div id="armInfo" style="height: 235px; width: 645px; background-color: gray;">
         <h4>Arm Info</h4>
         <div>
-            <p id="Wrist">Wrist: {{ counter }}</p>
+            <p id="Wrist">Wrist: {{ array[0] }}</p>
             <div id="buttons">
-            <button (click)="increment()">+</button>
-            <button (click)="decrement()">-</button>
+            <button id="wrist1" (click)="increment(1)">+</button>
+            <button id="wrist2" (click)="decrement(1)">-</button>
             </div>
         </div>
-
+<!-- 
         <div>
             <p id="Elbow">Elbow: {{ counter }}</p>
             <div id="buttons">
@@ -44,7 +44,7 @@
                 <button (click)="increment()">+</button>
                 <button (click)="decrement()">-</button>
             </div>
-        </div>
+        </div> -->
 </div>
 </div>
 

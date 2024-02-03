@@ -6,7 +6,6 @@ var rAF = window.mozRequestAnimationFrame ||
   window.requestAnimationFrame;
 
 function connecthandler(e) {
-  var connection = new WebSocket('ws://localhost:9090/', 'echo-protocol');
   addgamepad(e.gamepad);
 }
 function addgamepad(gamepad) {

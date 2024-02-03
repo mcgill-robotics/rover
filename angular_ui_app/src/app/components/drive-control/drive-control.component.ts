@@ -7,22 +7,18 @@ import { Component, Input, Output, EventEmitter} from '@angular/core';
 })
 export class DriveControlComponent {
   @Input() initialValue: number = 0;
-  @Output() counterChange = new EventEmitter<number>();
 
-  counter: number = 0.00;
+  // array contains initial values 
+  array  : number[]= [0,0,0];
 
-  ngOnInit() {
-    this.counter = this.initialValue;
+  increment(id: number) {
+    console.log("id: ", id);
+    this.array[id] += 0.5;
+    console.log("val 0: ", this.array[id]);
   }
 
-  increment() {
-    this.counter += 0.5;
-    this.counterChange.emit(this.counter);
-  }
-
-  decrement() {
-    this.counter -= 0.5;
-    this.counterChange.emit(this.counter);
+  decrement(id: number) {
+    this.array[id] -= 0.5;
   }
 }
 

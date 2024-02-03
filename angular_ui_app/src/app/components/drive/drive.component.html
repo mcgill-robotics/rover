@@ -1,6 +1,30 @@
 <app-generic height="235px" width="640px">
-    <h5>Drive</h5>
-    <p>Raw input: {{msgstr}}</p>
-    <p>Computed value: {{cmpstr}}</p>
+    <div style="width: 640px;">
+
+        <h5>Drive feedback</h5>
+        <h6 style="text-align: center;">Position</h6>
+        <ul style="display: flex; justify-content: space-around; ">
+            <li>X: {{payload.position.x}}</li>
+            <li>Y: {{payload.position.y}}</li>
+            <li>Z: {{payload.position.z}}</li>
+        </ul>
+
+        <h6 style="text-align: center;">Orientation</h6>
+        <ul style="display: flex; justify-content: space-around; ">
+            <li>X: {{payload.orientation.x}}</li>
+            <li>Y: {{payload.orientation.y}}</li>
+            <li>Z: {{payload.orientation.z}}</li>
+            <li>W: {{payload.orientation.w}}</li>
+        </ul>
+        <ul style="display: flex; justify-content: space-around; ">
+            <li>Roll: {{computed.roll}}</li>
+            <li>Pitch: {{computed.pitch}}</li>
+            <li>Yaw :{{computed.yaw}}</li>
+        </ul>
+
+        <p>Raw input: {{msgstr}}</p>
+        <p>Computed value: {{cmpstr}}</p>
+
+    </div>
 
 </app-generic>

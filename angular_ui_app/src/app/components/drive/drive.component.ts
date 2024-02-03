@@ -25,7 +25,8 @@ export class DriveComponent {
   //   left_back: Number;
   // }
 
-  // Postion fields
+  // Postion fields 
+  // edit: may be deprecated
   payload: {
     orientation: {
       w: number;

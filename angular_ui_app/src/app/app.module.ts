@@ -21,6 +21,7 @@ import { GenericComponent } from './components/generic/genric.component';
 import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { TestPageComponent } from './pages/drive-page/test-page/test-page.component';
 // jquery
 // import * as $ from "jquery";
 
@@ -41,7 +42,8 @@ import { NavbarComponent } from './components/navbar/navbar.component';
     GenericComponent,
     HeaderComponent,
     DrivePageComponent,
-    NavbarComponent
+    NavbarComponent,
+    TestPageComponent
   ],
   imports: [
     FormsModule,

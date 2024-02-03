@@ -17,7 +17,8 @@ import { Button1Component } from './sandbox/buttons/button1/button1.component';
 import { CameraTestComponent } from './sandbox/camera-test/camera-test.component';
 import { ArmTestComponent } from './sandbox/arm-test/arm-test.component';
 import { TestPageComponent } from './sandbox/test-page/test-page.component';
-
+import { ArmControlComponent } from './components/arm-control/arm-control.component';
+import { DriveControlComponent } from './components/drive-control/drive-control.component';
 // jquery
 // import * as $ from "jquery";
 
@@ -36,13 +37,15 @@ import { TestPageComponent } from './sandbox/test-page/test-page.component';
     Button1Component,
     CameraTestComponent,
     ArmTestComponent,
-    TestPageComponent
+    TestPageComponent,
+    ArmControlComponent,
+    DriveControlComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule
   ],
-  providers: [RosService],
+  providers: [RosService],  
   bootstrap: [AppComponent]
 })
 export class AppModule { }

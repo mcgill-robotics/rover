@@ -1,5 +1,6 @@
 <app-generic height="235px" width="640px">
-    <div style="width: 640px;">
+    <div *ngIf="payload" style="width: 640px;">
+   
 
         <h5>Drive feedback</h5>
         <h6 style="text-align: center;">Position</h6>
@@ -26,5 +27,6 @@
         <p>Computed value: {{cmpstr}}</p>
 
     </div>
+    <div *ngIf="!payload">No payload</div>
 
 </app-generic>

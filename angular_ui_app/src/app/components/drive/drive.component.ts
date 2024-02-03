@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import * as ROSLIB from 'roslib';
 import { RosService } from 'src/app/ros.service';
+import { GamepadService } from '../../gamepad.service';
 
 @Component({
   selector: 'app-drive-component',
@@ -11,7 +12,9 @@ export class DriveComponent {
   // ROS fields
   ros: ROSLIB.Ros;
   wheels_sub: ROSLIB.Topic;
-  position_sub: ROSLIB.Topic
+  position_sub: ROSLIB.Topic;
+  
+  
 
   // to be deleted after test output
   msgstr: String;
@@ -47,13 +50,15 @@ export class DriveComponent {
     yaw: Number;
   }
 
-  constructor(private rosService: RosService) {
+  constructor(private rosService: RosService, private gamepadService: GamepadService) {
     this.ros = this.rosService.getRos();
   }
 
+
+
   // starting hook
   ngOnInit() {
-
+    this.gamepadService.enable_gamepad();
 
     this.position_sub = new ROSLIB.Topic({
       ros: this.ros,
@@ -109,4 +114,3 @@ export class DriveComponent {
     });
   }
 }
-

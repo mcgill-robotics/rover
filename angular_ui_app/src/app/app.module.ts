@@ -39,7 +39,7 @@ import { DrivePageComponent } from './pages/drive-page/drive-page.component';
     ArmTestComponent,
     GenericComponent,
     HeaderComponent,
-    DrivePageComponent
+    DrivePageComponent,
   ],
   imports: [
     FormsModule,

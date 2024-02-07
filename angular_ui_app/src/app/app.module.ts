@@ -22,8 +22,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { TestPageComponent } from './pages/drive-page/test-page/test-page.component';
-// jquery
-// import * as $ from "jquery";
+import { ODriveComponent } from './components/o-drive/o-drive.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +42,8 @@ import { TestPageComponent } from './pages/drive-page/test-page/test-page.compon
     HeaderComponent,
     DrivePageComponent,
     NavbarComponent,
-    TestPageComponent
+    TestPageComponent,
+    ODriveComponent
   ],
   imports: [
     FormsModule,

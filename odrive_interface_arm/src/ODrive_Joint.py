@@ -51,6 +51,12 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
                     + ", "
                     + "vel_estimate="
                     + str(joint.odrv.encoder_estimator0.vel_estimate)
+                    + ", "
+                    + "lower_limit_switch_pin_state="
+                    + f'{bin(joint.odrv.get_gpio_states())[2:]:0>12}'[0]
+                    + ", "
+                    + "upper_limit_switch_pin_state="
+                    + f'{bin(joint.odrv.get_gpio_states())[2:]:0>12}'[2]
                 )
             custom_sleep(1)
         except NameError:
@@ -78,6 +84,34 @@ class ODrive_Joint:
         self.timeout = 5
         # gear_ratio is input revolutions / output revolutions
         self.gear_ratio = gear_ratio
+    
+    def lower_limit_switch(self):
+        print("starting lower limit switch config...")
+        self.odrv.config.gpio12_mode = GpioMode.DIGITAL #the G12 pin is a configurable GPIO (see Odrive documentation)
+        self.odrv.axis0.min_endstop.config.gpio_num = 12
+        self.odrv.axis0.min_endstop.config.enabled = True
+        self.odrv.axis0.min_endstop.config.is_active_high = False
+        # while (not odrv_shoulder.odrv.axis0.min_endstop.endstop_state):
+        #     custom_sleep(0.1)
+            
+        print("lim switch pin is enabled")
+
+        # verify it is on mode high
+        print("initial state of limit switch pin 12 is : ", f'{bin(self.odrv.get_gpio_states())[2:]:0>12}'[0])
+
+    def upper_limit_switch(self):
+        print("starting upper limit switch config...")
+        self.odrv.config.gpio10_mode = GpioMode.DIGITAL #the G10 pin is a configurable GPIO (see Odrive documentation)
+        self.odrv.axis0.max_endstop.config.gpio_num = 10
+        self.odrv.axis0.max_endstop.config.enabled = True
+        self.odrv.axis0.max_endstop.config.is_active_high = False
+        # while (not odrv_shoulder.odrv.axis0.min_endstop.endstop_state):
+        #     custom_sleep(0.1)
+            
+        print("lim switch pin is enabled")
+
+        # verify it is on mode high
+        print("initial state of limit switch pin 12 is : ", f'{bin(self.odrv.get_gpio_states())[2:]:0>12}'[2])
 
     def attach_odrive(self, odrv):
         self.odrv = odrv
@@ -223,10 +257,14 @@ def main():
     }
 
     # Set to True if you want to reapply the config, False if you want to skip it
-    reapply_config = False
+    reapply_config = True
 
     # True by default, set to False if you don't want to calibrate
     do_calibration = True
+
+    # if there is a limit switch
+    set_up_lower_lim_switch = True
+    set_up_upper_lim_switch = False
 
     odrv_shoulder = ODrive_Joint(
         odrive.find_any(
@@ -269,6 +307,13 @@ def main():
     if reapply_config:
         print("SAVING CONFIG...")
         odrv_shoulder.save_config()
+
+    # CONFIG LIMIT SWITCH ---------------------------------------------------------------
+    if set_up_lower_lim_switch:
+        odrv_shoulder.lower_limit_switch()
+
+    if set_up_upper_lim_switch:
+        odrv_shoulder.upper_limit_switch()
 
     # CALIBRATE -------------------------------------------------------------------------
     if do_calibration:

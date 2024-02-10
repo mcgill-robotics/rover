@@ -21,7 +21,7 @@ import { GenericComponent } from './components/generic/genric.component';
 import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
-import { TestPageComponent } from './pages/drive-page/test-page/test-page.component';
+import { TestPageComponent } from './pages/test-page/test-page.component';
 import { ODriveComponent } from './components/o-drive/o-drive.component';
 
 @NgModule({

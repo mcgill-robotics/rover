@@ -8,7 +8,7 @@ FIXED_FRAME_ID = 'parsed_point_cloud_world'
 CAMERA_POSITION_OFFSET = (-0.285, 0, 1.1)
 
 # rounding coefficient for the points
-ROUNDING_COEF = 2
+ROUNDING_COEF = 10
 
 class PointsFilters:
     # filter out points that are too close to ground

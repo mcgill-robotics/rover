@@ -294,9 +294,11 @@ def main():
     # TODO find more serial, it is a string of hex of the serial number
     arm_serial_numbers = {
         "rover_arm_shoulder": "386434413539",  # 0x386434413539 = 62003024573753 in decimal
-        "rover_arm_elbow": "0",
+        "rover_arm_elbow": "386434413539",  # change as needed
         "rover_arm_waist": "0",
     }
+
+    test_joint_name = "rover_arm_elbow"
 
     # Set to True if you want to reapply the config, False if you want to skip it
     reapply_config = True
@@ -305,66 +307,96 @@ def main():
     do_calibration = True
 
     # if there is a limit switch
-    set_up_lower_lim_switch = True
-    set_up_upper_lim_switch = False
+    setup_lower_lim_switch = True
+    setup_upper_lim_switch = False
 
-    odrv_shoulder = ODrive_Joint(
-        odrive.find_any(
-            serial_number=arm_serial_numbers["rover_arm_shoulder"], timeout=5
-        )
+    test_odrv_joint = ODrive_Joint(
+        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
     if reapply_config:
         print("ERASING CONFIG...")
-        odrv_shoulder.erase_config()
+        test_odrv_joint.erase_config()
 
     # APPLY CONFIG -----------------------------------------------------------------------
-    odrv_shoulder.odrv.config.dc_bus_overvoltage_trip_level = 30
-    odrv_shoulder.odrv.config.dc_bus_undervoltage_trip_level = 10.5
-    odrv_shoulder.odrv.config.dc_max_positive_current = 10
-    odrv_shoulder.odrv.config.brake_resistor0.enable = True
-    odrv_shoulder.odrv.config.brake_resistor0.resistance = 2
-    odrv_shoulder.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
-    odrv_shoulder.odrv.axis0.config.motor.torque_constant = 0.06080882352941176
-    odrv_shoulder.odrv.axis0.config.motor.pole_pairs = 11
-    odrv_shoulder.odrv.axis0.config.motor.current_soft_max = 10
-    odrv_shoulder.odrv.axis0.config.motor.current_hard_max = 23
-    odrv_shoulder.odrv.axis0.config.motor.calibration_current = 2.5
-    odrv_shoulder.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
-    odrv_shoulder.odrv.axis0.config.calibration_lockin.current = 2.5
-    odrv_shoulder.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
-    odrv_shoulder.odrv.axis0.controller.config.control_mode = (
-        ControlMode.POSITION_CONTROL
-    )
-    odrv_shoulder.odrv.axis0.config.torque_soft_min = -0.12161764705882352
-    odrv_shoulder.odrv.axis0.config.torque_soft_max = 0.12161764705882352
-    odrv_shoulder.odrv.can.config.protocol = Protocol.NONE
-    odrv_shoulder.odrv.config.enable_uart_a = False
-    odrv_shoulder.odrv.rs485_encoder_group0.config.mode = Rs485EncoderMode.AMT21_POLLING
-    odrv_shoulder.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
-    odrv_shoulder.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
+    if test_joint_name == "rover_arm_shoulder":
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
+        test_odrv_joint.odrv.config.dc_max_positive_current = 10
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.06080882352941176
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 11
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 10
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 23
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 2.5
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 2.5
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.POSITION_CONTROL
+        )
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.12161764705882352
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.12161764705882352
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.config.enable_uart_a = False
+        test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
+            Rs485EncoderMode.AMT21_POLLING
+        )
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
+
+    if test_joint_name == "rover_arm_elbow":
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_max_positive_current = 5
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 3
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 5
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 16.5
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 2.5
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 2.5
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.POSITION_CONTROL
+        )
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 1
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.04543956043956044
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.config.enable_uart_a = False
+        test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
+            Rs485EncoderMode.AMT21_POLLING
+        )
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
 
     # SAVE CONFIG -----------------------------------------------------------------------
     if reapply_config:
         print("SAVING CONFIG...")
-        odrv_shoulder.save_config()
+        test_odrv_joint.save_config()
 
     # CONFIG LIMIT SWITCH ---------------------------------------------------------------
-    if set_up_lower_lim_switch:
-        odrv_shoulder.config_lower_limit_switch()
+    if setup_lower_lim_switch:
+        test_odrv_joint.config_lower_limit_switch()
 
-    if set_up_upper_lim_switch:
-        odrv_shoulder.config_upper_limit_switch()
+    if setup_upper_lim_switch:
+        test_odrv_joint.config_upper_limit_switch()
 
     # CALIBRATE -------------------------------------------------------------------------
     if do_calibration:
         print("CALIBRATING...")
-        odrv_shoulder.calibrate()
+        test_odrv_joint.calibrate()
 
     # ENTER CLOSED LOOP CONTROL ---------------------------------------------------------
     print("ENTERING CLOSED LOOP CONTROL...")
-    odrv_shoulder.enter_closed_loop_control()
+    test_odrv_joint.enter_closed_loop_control()
 
     # TODO untested
     # ENTER HOMING -----------------------------------------------------------------------
@@ -373,15 +405,15 @@ def main():
     # SAVE CALIBRATION -----------------------------------------------------------------
     if reapply_config:
         # odrv_shoulder.odrv.axis0.motor.config.pre_calibrated = True
-        odrv_shoulder.odrv.axis0.config.startup_motor_calibration = True
-        odrv_shoulder.odrv.axis0.config.startup_encoder_offset_calibration = True
-        odrv_shoulder.odrv.axis0.config.startup_closed_loop_control = True
-        odrv_shoulder.save_config()
+        test_odrv_joint.odrv.axis0.config.startup_motor_calibration = True
+        test_odrv_joint.odrv.axis0.config.startup_encoder_offset_calibration = True
+        test_odrv_joint.odrv.axis0.config.startup_closed_loop_control = True
+        test_odrv_joint.save_config()
 
     # SET ABSOLUTE POSITION ----------------------------------------------------------------
-    odrv_shoulder.odrv.axis0.set_abs_pos(6.9)
+    test_odrv_joint.odrv.axis0.set_abs_pos(6.9)
 
-    # TODO investigate more, this is not working
+    # TODO investigate more, this is not working, NOT A PRIORITY
     # odrv_shoulder.odrv.axis0.pos_vel_mapper.config.offset = 5.5
     # odrv_shoulder.odrv.axis0.pos_vel_mapper.config.offset_valid = True
     # odrv_shoulder.odrv.axis0.pos_vel_mapper.config.approx_init_pos = 0
@@ -389,7 +421,7 @@ def main():
     # odrv_shoulder.odrv.axis0.controller.config.absolute_setpoints = True
 
     # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
-    ODrive_Joint_lst = [odrv_shoulder]
+    ODrive_Joint_lst = [test_odrv_joint]
     watchdog_stop_event = threading.Event()
     watchdog_thread = threading.Thread(
         target=watchdog, args=(ODrive_Joint_lst, watchdog_stop_event)
@@ -413,31 +445,31 @@ def main():
             # Increment command
             if command == "i":  # Incremental command
                 setpoint_increment = value
-                setpoint = odrv_shoulder.odrv.axis0.pos_vel_mapper.pos_rel + (
-                    setpoint_increment * odrv_shoulder.gear_ratio
+                setpoint = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel + (
+                    setpoint_increment * test_odrv_joint.gear_ratio
                 )
                 print(
-                    f"INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={odrv_shoulder.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={odrv_shoulder.odrv.axis0.current_state}"
+                    f"INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}"
                 )
-                odrv_shoulder.odrv.axis0.controller.input_pos = setpoint
+                test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
 
             # Setpoint command
             elif command == "s":
                 setpoint = value
                 print(
-                    f"SETTING SETPOINT to {setpoint}, current_state={odrv_shoulder.odrv.axis0.current_state}"
+                    f"SETTING SETPOINT to {setpoint}, current_state={test_odrv_joint.odrv.axis0.current_state}"
                 )
-                odrv_shoulder.odrv.axis0.controller.input_pos = setpoint
+                test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
 
             # Absolute command
             elif command == "a":
                 print(
-                    f"SETTING ABSOLUTE POSITION to {value}, current_state={odrv_shoulder.odrv.axis0.current_state}"
+                    f"SETTING ABSOLUTE POSITION to {value}, current_state={test_odrv_joint.odrv.axis0.current_state}"
                 )
-                odrv_shoulder.odrv.axis0.set_abs_pos(value)
+                test_odrv_joint.odrv.axis0.set_abs_pos(value)
 
             # Apply the setpoint
-            dump_errors(odrv_shoulder.odrv)
+            dump_errors(test_odrv_joint.odrv)
 
         except ValueError as e:
             print(e)

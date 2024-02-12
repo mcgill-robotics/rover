@@ -91,7 +91,7 @@ class ODrive_Joint:
             GpioMode.DIGITAL
         )  # the G12 pin is a configurable GPIO (see Odrive documentation)
         self.odrv.axis0.min_endstop.config.gpio_num = 12
-        # min angle is -3, only for testing
+        # TODO untested, min angle is -3, only for testing
         self.odrv.axis0.min_endstop.config.offset = -3
         self.odrv.axis0.min_endstop.config.enabled = True
         self.odrv.axis0.min_endstop.config.is_active_high = False
@@ -112,6 +112,8 @@ class ODrive_Joint:
             GpioMode.DIGITAL
         )  # the G10 pin is a configurable GPIO (see Odrive documentation)
         self.odrv.axis0.max_endstop.config.gpio_num = 10
+        # TODO untested, does max_endstop have offset?
+        # self.odrv.axis0.max_endstop.config.offset = 3
         self.odrv.axis0.max_endstop.config.enabled = True
         self.odrv.axis0.max_endstop.config.is_active_high = False
         # while (not odrv_shoulder.odrv.axis0.min_endstop.endstop_state):
@@ -123,6 +125,34 @@ class ODrive_Joint:
         print(
             "initial state of limit switch pin 12 is : ",
             f"{bin(self.odrv.get_gpio_states())[2:]:0>12}"[2],
+        )
+
+    # TODO untested, call after entered closed loop control
+    def enter_homing(self):
+        self.odrv.axis0.requested_state = AxisState.HOMING
+        # TODO check if necessary
+        # <odrv>.<axis>.controller.config.vel_ramp_rate = ?
+        # <odrv>.<axis>.trap_traj.config.vel_limit = ?
+        # <odrv>.<axis>.trap_traj.config.accel_limit = ?
+        # <odrv>.<axis>.trap_traj.config.decel_limit = ?
+
+        while (
+            self.odrv.axis0.current_state != AxisState.HOMING
+            or self.odrv.axis0.current_state == AxisState.IDLE
+        ):
+            custom_sleep(0.5)
+            print(
+                "Motor {} is still entering homing. Current state: {}".format(
+                    self.odrv.serial_number,
+                    AxisState(self.odrv.axis0.current_state).name,
+                )
+            )
+            dump_errors(self.odrv)
+        print(
+            "SUCCESS: Motor {} is in state: {}.".format(
+                self.odrv.serial_number,
+                AxisState(self.odrv.axis0.current_state).name,
+            )
         )
 
     def attach_odrive(self, odrv):
@@ -335,6 +365,10 @@ def main():
     # ENTER CLOSED LOOP CONTROL ---------------------------------------------------------
     print("ENTERING CLOSED LOOP CONTROL...")
     odrv_shoulder.enter_closed_loop_control()
+
+    # TODO untested
+    # ENTER HOMING -----------------------------------------------------------------------
+    # odrv_shoulder.enter_homing()
 
     # SAVE CALIBRATION -----------------------------------------------------------------
     if reapply_config:

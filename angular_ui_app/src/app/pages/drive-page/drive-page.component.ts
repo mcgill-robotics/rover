@@ -8,9 +8,6 @@ import * as ROSLIB from 'roslib';
   styleUrls: ['./drive-page.component.scss']
 })
 export class DrivePageComponent {
-  ros: ROSLIB.Ros;
-  
-  constructor(private rosService: RosService) {
-    this.ros = this.rosService.getRos();
-  }
+
+  ngOnInit() {}
 }

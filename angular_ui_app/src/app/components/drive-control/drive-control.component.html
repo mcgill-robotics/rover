@@ -25,26 +25,26 @@
         <div>
             <p id="Wrist">Wrist: {{ array[0] }}</p>
             <div id="buttons">
-            <button id="wrist1" (click)="increment(1)">+</button>
-            <button id="wrist2" (click)="decrement(1)">-</button>
-            </div>
-        </div>
-<!-- 
-        <div>
-            <p id="Elbow">Elbow: {{ counter }}</p>
-            <div id="buttons">
-                <button (click)="increment()">+</button>
-                <button (click)="decrement()">-</button>
+            <button id="wrist1" (click)="increment(0)">+</button>
+            <button id="wrist2" (click)="decrement(0)">-</button>
             </div>
         </div>
 
         <div>
-            <p id="Shoulder">Shoulder: {{ counter }}</p>
+            <p id="Elbow">Elbow: {{ array[1] }}</p>
             <div id="buttons">
-                <button (click)="increment()">+</button>
-                <button (click)="decrement()">-</button>
+                <button (click)="increment(1)">+</button>
+                <button (click)="decrement(1)">-</button>
             </div>
-        </div> -->
+        </div>
+
+        <div>
+            <p id="Shoulder">Shoulder: {{ array[2] }}</p>
+            <div id="buttons">
+                <button (click)="increment(2)">+</button>
+                <button (click)="decrement(2)">-</button>
+            </div>
+        </div>
 </div>
 </div>
 

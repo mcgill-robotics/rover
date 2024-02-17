@@ -4,7 +4,7 @@ from pynput import keyboard
 from human_control_interface.msg import Gamepad_input
 from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
-from Gamepad import *
+# from Gamepad import *
 from std_msgs.msg import Float32MultiArray
 
 
@@ -26,19 +26,19 @@ class Node_GamepadProcessing:
         """
         # initialize ROS node
         rospy.init_node("gamepad_process_node")
-        
+    
         # Initialize a Gamepad object
         self.gamepad_init_successful = False
-        try:
-            self.gamepad = Gamepad()
-            self.gamepad_init_successful = True
-        except:
-            print("Controller not found. Falling back to debug keyboard control")
-            self.listener = keyboard.Listener(on_press=self.keyboardProcessCall)
-            self.keyboard_accumulator_linear = 0.0
-            self.keyboard_accumulator_twist = 0.0
-            self.keyboard_sensitivity = 0.05
-            self.listener.start()
+        #try:
+        #   self.gamepad = Gamepad()
+        #    self.gamepad_init_successful = True
+        #except:
+        print("Controller not found. Falling back to debug keyboard control")
+        self.listener = keyboard.Listener(on_press=self.keyboardProcessCall)
+        self.keyboard_accumulator_linear = 0.0
+        self.keyboard_accumulator_twist = 0.0
+        self.keyboard_sensitivity = 0.05
+        self.listener.start()
 
 
         # initialize variables for velocity

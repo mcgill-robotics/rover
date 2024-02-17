@@ -8,10 +8,10 @@ because ODrive API requires them to be that way. Note: correct serial numbers ar
 decimal. So before putting the numbers in here, you should first convert them to hex.
 """
 
-drive_serial_numbers = {"DRIVE_LB": "384E346E3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
+drive_serial_numbers = {"DRIVE_LB": "385C347A3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
 arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
 
-drive_ids = {'384E346E3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}
+drive_ids = {'385C347A3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}
 arm_ids = {'4': 'ARM_WAIST', '5': 'ARM_TUMOR', '6': 'ARM_ELBOW'}
 
 # Procedure codes are simple indices to this array
@@ -73,8 +73,6 @@ def enumerate_motors(search_timeout=5):
         if found_motor is not None:
             print(f"Motor {key} found.")
             found_motors[key] = found_motor
-            # Secret hidden debug thing to quit after a single ODrive is found
-            return found_motors
         else:
             print(f"Motor {key} not found. Motor enumeration failed!")
             return {}

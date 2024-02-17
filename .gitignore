@@ -4,6 +4,10 @@ __pycache__/
 # logs
 *.log
 
+# vim
+*.swp
+*.swo
+
 # Visual Studio code
 .vscode/
 

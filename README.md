@@ -13,6 +13,36 @@ To use ROS, you will need an Ubuntu system. For Windows users, options include d
 or WSL (Windows Subsystem for Linux). You can also try VPN'ing into McGill EMF (Engineering Microcomputing
 Facilities) PC's, but some of the steps will need sudo which might not be allowed.
 
+### Working on Mac
+It is also possible to install ROS with MacOS. To do so, one needs to use [RoboStack](https://robostack.github.io).
+RoboStack uses `conda`/`mamba` environments, and everything needed to get started is available directly on
+[RoboStack's documentation](https://robostack.github.io/GettingStarted.html).
+
+### Working with Docker
+An experimental alternative to work with Windows, or an alternative to RoboStack on MacOS is to use
+[Docker](https://www.docker.com/). A `Dockerfile` is available in the root of this directly, making it possible
+to directly build a ready-to-go docker image.
+
+Once docker is installed, run the following command to build the docker image:
+```bash
+docker build -t ros:mgr-rover .
+```
+
+This command builds the image and names it as `ros:mgr-rover`.
+
+Then, run the docker container in interactive mode :
+```bash
+docker run -itp 9090:9090 -v ./:/root/src ros:mgr-rover
+```
+
+- `-it` runs the container in interactive mode.
+- `-p 9090:9090` maps the port 9090 of the container to the host computer's 9090 port (for `rosbridge`).
+- `-v ./:/root/src` creates a bind mount in order to access the source code from the container.
+    __Important:__ if your `cwd` is not the root of this repository, you must change `./` (before `:`) to the
+    path leading to this repository.
+
+Now, running `catkin init` and `catkin build` inside the `root` will build the workspace.
+
 ### Installing ROS
 Follow [these steps](http://wiki.ros.org/noetic/Installation/Ubuntu) to install ROS. Next, follow [these steps](http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment) to see how to configure your shell and how to make a workspace. If you
 want, you can keep going with the tutorials to familiarize yourself with ROS and its commands. In addition, you

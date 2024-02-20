@@ -1,0 +1,12 @@
+<launch>
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+
+    <!-- Launch GamepadProcess.py -->
+    <node name="gamepad_process" pkg="human_control_interface" type="GamepadProcess.py" output="screen"/>
+
+    <!-- Launch drive_control_node.py -->
+    <node name="drive_control_node" pkg="drive_control" type="drive_control_node.py" output="screen"/>
+
+    <!-- Launch ODrive.py -->
+    <node name="odrive_interface" pkg="odrive_interface" type="ODrive.py" output="screen"/>
+</launch>

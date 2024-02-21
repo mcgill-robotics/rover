@@ -1,0 +1,10 @@
+<launch>
+    <!-- Node for the Game controller -->
+    <node pkg="ui_app" type="main.py" name="ui" output="screen">
+    </node>
+
+    <!-- Node for the science simulation -->
+    <node pkg="science_module" type="science_sim.py" name="science_module_sim" output="screen">
+    </node>
+ 
+</launch>

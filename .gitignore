@@ -1,6 +1,8 @@
 # python 
 __pycache__/
 
+# logs
+*.log
 
 # Visual Studio code
 .vscode/

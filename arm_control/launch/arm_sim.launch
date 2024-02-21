@@ -1,0 +1,14 @@
+<launch>
+    <!-- Node for the Game controller -->
+    <node pkg="human_control_interface" type="Joystick.py" name="gamepad" output="screen">
+    </node>
+
+    <!-- Node for the arm controller -->
+    <node pkg="arm_control" type="arm_controller.py" name="arm_controller" output="screen">
+    </node>
+  
+    <!-- Node for the arm simulation -->
+    <node pkg="arm_control" type="arm_sim.py" name="arm_sim" output="screen">
+    </node>
+
+</launch>

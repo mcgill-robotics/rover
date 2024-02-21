@@ -1,6 +1,6 @@
 rover_joint_state_controller:
-    type:joint_state_controller/JointStateController
-    publish_rate = 50
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
 
 rover_velocity_controller:
     type        : "diff_drive_controller/DiffDriveController"

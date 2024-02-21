@@ -1,0 +1,14 @@
+<launch>
+    <!-- Node for the arm controller -->
+    <node pkg="arm_control" type="arm_controller.py" name="arm_controller" output="screen">
+    </node>
+  
+    <!-- Node for the camera publisher -->
+    <node pkg="human_control_interface" type="Joystick.py" name="joystick" output="screen">
+    </node>
+
+    <!-- Nodes for the embedded system --> 
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_0" args="/dev/ttyACM0" ></node>
+    <node pkg="rosserial_python" type="serial_node.py" name="embedded_1" args="/dev/ttyACM1" ></node>
+
+</launch>

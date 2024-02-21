@@ -15,20 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
-## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  ScienceCmd.msg
-  ScienceFeedback.msg
-  SciencePilot.msg
-  CcdData.msg
-)
-
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
-
 catkin_package(
     CATKIN_DEPENDS 
     roscpp
@@ -39,7 +25,6 @@ catkin_package(
 )
 
 catkin_install_python(PROGRAMS
-  src/science_module_node.py
   sim/science_sim.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -7,6 +7,7 @@ import sensor_msgs.point_cloud2 as pc2
 from gazebo_msgs.msg._ModelStates import ModelStates
 from geometry_msgs.msg import Pose, PolygonStamped, Polygon, Point32
 from visualization_msgs.msg import Marker
+from nav_msgs.msg import Odometry
 from autonomy_config import FIXED_FRAME_ID, CAMERA_POSITION_OFFSET, ROUNDING_COEF, ROVER_MODEL_NAME, PointsFilters
 import numpy as np
 from typing import Set, Tuple, List
@@ -25,8 +26,9 @@ class PointCloudTracker:
         self.map_grid = {}
     def listener(self) -> None:
         rospy.init_node('pc2_publisher_and_listener', anonymous=True)
-        #rospy.Subscriber("camera/depth/points", PointCloud2, self.parse_pointcloud2_message)
+        # rospy.Subscriber("camera/depth/points", PointCloud2, self.parse_pointcloud2_message)
         rospy.Subscriber("/camera/depth/color/points", PointCloud2, self.parse_pointcloud2_message)
+        rospy.Subscriber("/track_cam/odom/sample", Odometry, self.update_rover_pos)
         rospy.spin()
 
     def update_json(self):
@@ -34,15 +36,21 @@ class PointCloudTracker:
         location_output = (round(location[0], 1), round(location[1], 1))
         print("Updating Map")
         with open ('prm/obstacles.json', "w") as jsonfile:
-            json.dump({"map":self.map_grid, "location": location_output}, jsonfile)        
+            json.dump({"map":self.map_grid, "location": location_output}, jsonfile)
+
+    def update_rover_pos(self, msg: Odometry):
+        self.rover_pose = msg
 
     def get_rover_pose(self) -> tuple:
-        data = rospy.wait_for_message("/gazebo/model_states", ModelStates)
-        model_names, model_poses = data.name, data.pose
-        if ROVER_MODEL_NAME not in model_names:
-            raise Exception(f"Rover model name not found: '{ROVER_MODEL_NAME}'")
-        rover_pose_quat = model_poses[model_names.index(ROVER_MODEL_NAME)].orientation 
-        rover_pose_obj = model_poses[model_names.index(ROVER_MODEL_NAME)].position
+        # data = rospy.wait_for_message("/gazebo/model_states", ModelStates)
+        data = self.rover_pose
+        # model_names, model_poses = data.name, data.pose
+        # if ROVER_MODEL_NAME not in model_names:
+        #     raise Exception(f"Rover model name not found: '{ROVER_MODEL_NAME}'")
+        # rover_pose_quat = model_poses[model_names.index(ROVER_MODEL_NAME)].orientation 
+        # rover_pose_obj = model_poses[model_names.index(ROVER_MODEL_NAME)].position
+        rover_pose_quat = data.pose.pose.orientation 
+        rover_pose_obj  = data.pose.pose.position
         return (
             rover_pose_obj.x, rover_pose_obj.y, rover_pose_obj.z
         ), (rover_pose_quat.x, rover_pose_quat.y, rover_pose_quat.z, rover_pose_quat.w)

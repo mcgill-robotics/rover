@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import arm_kinematics
+import arm_pathfinding
 
 jointUpperLimits = [118.76*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
 jointLowerLimits = [-125.97*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
@@ -110,7 +111,104 @@ def test_inverseKinematics(num_samples = 1000, verbose=False):
     print(f"Ratio: {(num_samples - failed) / num_samples * 100}%")
     return failed
 
+def test_pathfind(num_samples = 1000, max_velocities=[0.1, 0.1, 0.1, 0.1, 0.1], verbose=False):
+    print("------------------------------------------------------------------")
+    print("-------------------------test_pathfind----------------------------")
+    print("------------------------------------------------------------------")
+
+    joints = ["Waist", "Shoulder", "Elbow", "Wrist", "Hand"]
+    num_failed = 0
+    for i in range(num_samples):
+        failed = False
+
+        start_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
+        end_joints = [np.random.random() * (jointUpperLimits[i]-jointLowerLimits[i]) + jointLowerLimits[i] for i in range(5)]
+        differences = [end_joints[i] - start_joints[i] for i in range(5)]
+        min_time = max([abs((differences[i])/max_velocities[i]) for i in range(5)])
+        max_distance = max(abs(differences[i]) for i in range(5)) # Using furthest distance to get a reasonable max time
+        time = min_time + np.random.random() * max_distance * 10
+    
+        if verbose:
+            print(f"Start Joints: {start_joints} End Joints: {end_joints} Time: {time}")
+
+        polynomials = arm_pathfinding.pathfiningPolynomial(start_joints, end_joints, time)
+        for k, polynomial in enumerate(polynomials):
+            if abs(sum([polynomial[j] * math.pow(time, 6 - j) for j in range(4)]) - differences[k]) > 0.001: # Checking final position
+                failed = True
+                if verbose:
+                    given = sum([polynomial[j] * math.pow(time, 6 - j) for j in range(4)])
+                    print(f"{joints[k]} polynomial failed final position.")
+                    print(f"Result: {given} Expected: {differences[k]} Difference: {differences[k] - given}")
+                break
+            
+            if abs(abs(sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)])) - max_velocities[k]) > 0.001: # Checking max velocity
+                failed = True
+                if verbose:
+                    given = sum([polynomial[j] * (6 - j) * math.pow(time/2, 5 - j) for j in range(4)])
+                    print(f"{joints[k]} polynomial failed midway velocity.")
+                    print(f"Result: {given} Expected: {max_velocities[k]} Difference: {max_velocities[k] - given}")
+                break
+
+            if abs(sum([polynomial[j] * (6 - j) * math.pow(time, 5 - j) for j in range(4)])) > 0.001: # Checking final velocity
+                failed = True
+                if verbose:
+                    given = sum([polynomial[j] * (6 - j) * math.pow(time, 5 - j) for j in range(4)])
+                    print(f"{joints[k]} polynomial failed final velocity.")
+                    print(f"Result: {given} Expected: 0")
+                break
+
+            if abs(sum([polynomial[j] * (6 - j) * (5 - j) * math.pow(time/2, 4 - j) for j in range(4)])) > 0.001: # Check halfway acceleration
+                failed = True
+                if verbose:
+                    given = sum([polynomial[j] * (6 - j) * (5 - j) * math.pow(time/2, 4 - j) for j in range(4)])
+                    print(f"{joints[k]} polynomial failed midway acceleration.")
+                    print(f"Result: {given} Expected: 0")
+                break
+        
+        if not failed and abs(sum(start_joints[j] - arm_pathfinding.nextJointPosition(start_joints, 0, polynomials)[j] for j in range(5))) > 0.001:
+            failed = True
+            if verbose:
+                    given = arm_pathfinding.nextJointPosition(start_joints, 0, polynomials)
+                    print("nextJointPosition failed initial position.")
+                    print(f"Result: {given} Expected: {start_joints} Difference: {[start_joints[j] - given[j] for j in range(5)]}")
+        
+        if not failed and abs(sum(start_joints[j] - arm_pathfinding.pathfind(start_joints, end_joints, time)[j] for j in range(5))) > 0.001:
+            failed = True
+            if verbose:
+                    given = arm_pathfinding.pathfind(start_joints, end_joints, 0)
+                    print("Pathfnd failed initial position.")
+                    print(f"Result: {given} Expected: {start_joints} Difference: {[start_joints[j] - given[j] for j in range(5)]}")
+        
+        if not failed and abs(sum(end_joints[j] - arm_pathfinding.nextJointPosition(start_joints, time, polynomials)[j] for j in range(5))) > 0.001:
+            failed = True
+            if verbose:
+                    given = arm_pathfinding.nextJointPosition(start_joints, time, polynomials)
+                    print("nextJointPosition failed final position.")
+                    print(f"Result: {given} Expected: {end_joints} Difference: {[end_joints[j] - given[j] for j in range(5)]}")
+        
+        if not failed and abs(sum(end_joints[j] - arm_pathfinding.pathfind(start_joints, end_joints, 0)[j] for j in range(5))) > 0.001:
+            failed = True
+            if verbose:
+                    given = arm_pathfinding.pathfind(start_joints, end_joints, time)
+                    print("Pathfind failed final position.")
+                    print(f"Result: {given} Expected: {end_joints} Difference: {[end_joints[j] - given[j] for j in range(5)]}")
+
+        print("------------------------------------------------------------------")
+        if failed:
+            num_failed += 1
+            print(f"Test Case {i + 1} failed.")
+        else:
+            print(f"Test Case {i + 1} passed.")
+        
+        print("------------------------------------------------------------------")
+    
+    print(f"Ratio: {(num_samples - num_failed) / num_samples * 100}%")
+    return num_failed
+        
+        
+
 if __name__=="__main__":
+    test_pathfind(verbose=True)
     test_inverseKinematicsJointPositions()
     test_inverseKinematicsComputeJointAngles()
     test_inverseKinematics()

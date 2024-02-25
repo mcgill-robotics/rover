@@ -1,9 +1,10 @@
 import numpy as np
 import math
+from scipy.spatial.transform import Rotation as R
 
 # Define joint limits in Radians
-jointUpperLimits = [90*np.pi/180, 70*np.pi/180, 70*np.pi/180, 38*np.pi/180, 85*np.pi/180]      # rad
-jointLowerLimits = [-90*np.pi/180, -60*np.pi/180, -20*np.pi/180, -35*np.pi/180, -85*np.pi/180] # rad
+jointUpperLimits = [118.76*np.pi/180, 90*np.pi/180, 75*np.pi/180, 75*np.pi/180, np.pi]      # rad
+jointLowerLimits = [-118*np.pi/180, -60*np.pi/180, -70*np.pi/180, -75*np.pi/180, -np.pi] # rad
 
 # Define Denavit-Hartenberg parameters for the robot arm
 arm_DH = [
@@ -406,8 +407,8 @@ def inverseKinematicsJointPositions(hand_pose):
     basis_x = wrist_pose - shoulder_pose
     d = np.linalg.norm(basis_x)
     if not np.isclose(d, 0): 
-        basis_x = basis_x / d
-    w = np.linalg.norm(wrist_pose)
+        basis_x = basis_x / d #Unit vector
+    w = np.linalg.norm(wrist_pose) #length of vector
     if np.isclose(w, 0):
         pass
     arm_plane_normal = np.cross(basis_x, wrist_pose)
@@ -415,6 +416,7 @@ def inverseKinematicsJointPositions(hand_pose):
     basis_y = basis_y / np.linalg.norm(basis_y)
 
     # Get Position of Link intersections (circles)
+    #Notes: d points from wrist to shoulder
     elbow_basis_x = (d**2 - arm_DH[2][2]**2 + arm_DH[1][2]**2) / (2*d)
     elbow_basis_y = np.sqrt(arm_DH[1][2]**2 - elbow_basis_x**2) 
 
@@ -495,5 +497,4 @@ def legalIKPositionPicker(poses, cur_pose):
 
 
 def inverseKinematics(hand_pose, cur_pose):
-
     return legalIKPositionPicker(inverseKinematicsAngleOptions(hand_pose), cur_pose)

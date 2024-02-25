@@ -15,13 +15,7 @@ jobs:
     name: Catkin Build Test
     steps:
       - name: Clean Root Workspace
-        uses: AutoModality/action-clean@v1
-        
-      - name: Install Cuda Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.11
-        id: cuda-toolkit
-        with:
-          cuda: '12.1.0'   
+        uses: AutoModality/action-clean@v1 
 
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -54,13 +48,6 @@ jobs:
           cd ~
           mkdir --parents catkin_ws/src
           ln -s $GITHUB_WORKSPACE ~/catkin_ws/src
-
-      - name: Install Intel Realsense SDK
-        run: |
-            sudo apt-get install ros-noetic-ddynamic-reconfigure
-            cd .github/SETUP_SCRIPTS
-            ./installLibrealsense.sh
-            ./buildLibrealsense.sh
           
       - name: Catkin Build
         shell: bash
@@ -68,4 +55,5 @@ jobs:
             source /opt/ros/noetic/setup.bash
             cd ~/catkin_ws
             catkin init
+            catkin config --skiplist realsense2_camera realsense2_description
             catkin build -DPYTHON_EXECUTABLE=/usr/bin/python3

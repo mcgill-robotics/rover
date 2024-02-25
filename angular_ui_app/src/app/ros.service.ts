@@ -12,7 +12,7 @@ export class RosService {
       // url: 'ws://192.168.0.100:9090' //replace with your ip for port forwarding 
       // user ng serve --host 0.0.0.0
       // works over LAN, must later be tested with an access point without wifi
-      url: 'ws://10.122.34.34:9090'
+      url: 'ws://10.122.8.160:9090'
     });
 
     this.ros.on('connection', () => {

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import rospy
-from pynput import keyboard
+# from pynput import keyboard
 from human_control_interface.msg import Gamepad_input
 from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
-from Gamepad import *
+# from Gamepad import Gamepad
+from AngularGamepad import AngularGamepad
+# from Gamepad import *
 from std_msgs.msg import Float32MultiArray
 
 
@@ -26,11 +28,11 @@ class Node_GamepadProcessing:
         """
         # initialize ROS node
         rospy.init_node("gamepad_process_node")
-        
+
         # Initialize a Gamepad object
         self.gamepad_init_successful = False
         try:
-            self.gamepad = Gamepad()
+            self.gamepad = AngularGamepad()
             self.gamepad_init_successful = True
         except:
             print("Controller not found. Falling back to debug keyboard control")
@@ -103,7 +105,7 @@ class Node_GamepadProcessing:
             self.rate.sleep()
 
         exit()
-    
+
     def keyboardProcessCall(self, key):
         if key == keyboard.Key.up:
             # self.roverLinearVelocity = 10
@@ -118,7 +120,7 @@ class Node_GamepadProcessing:
         if key == keyboard.KeyCode.from_char('0'):
             self.keyboard_accumulator_linear = 0.0
             self.keyboard_accumulator_twist = 0.0
-        
+
         if self.keyboard_accumulator_linear > 1.0:
             self.keyboard_accumulator_linear = 1.0
         elif self.keyboard_accumulator_linear < -1.0:
@@ -127,24 +129,23 @@ class Node_GamepadProcessing:
         if self.keyboard_accumulator_twist > 1.0:
             self.keyboard_accumulator_twist = 1.0
         elif self.keyboard_accumulator_twist < -1.0:
-            self.keyboard_accumulator_twist= -1.0  
+            self.keyboard_accumulator_twist= -1.0
         self.roverLinearVelocity = self.maxLinearVelocity * self.keyboard_accumulator_linear
         self.roverAngularVelocity = self.maxAngularVelocity * self.keyboard_accumulator_twist
-        
+
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
 
         #time.sleep(0.5)
         self.drive_publisher.publish(roverTwist)
-    
+
     # Poll the gamepad data and then call the respective process call.
     def gamepadProcessCall(self, msg):
         self.driveProcessCall(msg)
         self.cameraProcessCall(msg)
 
     def driveProcessCall(self, msg):
-        
         # A2 is the left stick moving up and down. Drives forwards or backwards.
         # A4 is the right stick that moves left and right. Steers left or right.
 
@@ -183,18 +184,18 @@ class Node_GamepadProcessing:
         if (msg.B4 == 1 or msg.B2 == 1) and (self.cam_ctrl.data[1] + msg.B2 <= 180) and (self.cam_ctrl.data[1] - msg.B4 >= 0):
             self.cam_ctrl.data[1] = self.cam_ctrl.data[1] + msg.B2 - msg.B4
             print(f"horizontal: {self.cam_ctrl.data[1]}")
-        
+
         self.camera_publisher.publish(self.cam_ctrl)
-        
+
 
     def risingEdge(self, prevSignal, nextSignal):
         if prevSignal < nextSignal:
             return True
-        else: 
+        else:
             return False
-        
+
 
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(10, 10)
+    gamepadProcess = Node_GamepadProcessing(20, 10)
     #rospy.spin()

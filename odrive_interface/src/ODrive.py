@@ -7,7 +7,7 @@ sys.path.append(currentdir)
 import rospy
 from drive_control.msg import WheelSpeed
 from odrive_interface.msg import MotorError, MotorState
-from odrive_interface.src.ODrive_utils import *
+from ODrive_utils import *
 from odrive.enums import AxisState, ProcedureResult 
 
 # TODO: Once drive is working well, expand this node to include the three arm motors
@@ -37,10 +37,10 @@ class Node_ODriveInterface():
         self.run()
 
     def handle_drive_command(self, command):
-        self.lb_speed_cmd = command.left[0] * 0.159155
-        self.lf_speed_cmd = command.left[1] * 0.159155
-        self.rb_speed_cmd = command.right[0] * 0.159155
-        self.rf_speed_cmd = command.right[1] * 0.159155
+        self.lb_speed_cmd = command.left[0]
+        self.lf_speed_cmd = command.left[1]
+        self.rb_speed_cmd = command.right[0]
+        self.rf_speed_cmd = command.right[1]
 
 
     def run(self):

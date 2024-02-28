@@ -174,5 +174,3 @@ class GamepadData():
         self.a4 = 0
         self.a5 = 0
         self.a6 = 0
-
-Gamepad()

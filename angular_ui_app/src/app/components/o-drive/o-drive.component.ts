@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import * as ROSLIB from 'roslib';
 import { RosService } from 'src/app/ros.service';
-import { GamepadService } from '../../gamepad.service';
 
 @Component({
   selector: 'app-o-drive',
@@ -20,20 +19,15 @@ export class ODriveComponent {
     left: Number[];
   }
 
-  // gamepad data
-  g: GamepadButton[]|null;
-
-  constructor(private rosService: RosService, private gamepadService: GamepadService) {
+  constructor(private rosService: RosService) {
     this.ros = this.rosService.getRos();
   }
 
   ngOnInit() {
-    this.gamepadService.enable_gamepad(); 
-
     this.wheels_sub = new ROSLIB.Topic({
       ros: this.ros,
       name: '/wheel_velocity_cmd', //using sent odrive cmd, should we use odrive feedback instead, not tested yet
-      messageType: 'drive_control/WheelSpeed'
+      messageType: 'drive_control/WheelSpeed' //to be implemented
     });
 
     this.wheel_listen(); 
@@ -43,8 +37,6 @@ export class ODriveComponent {
   wheel_listen() {
     this.wheels_sub.subscribe((message: any) => {
       this.wheels = message;
-      console.log(this.gamepadService.gp_buttons); //trying to get gamepad value
-      this.g = this.gamepadService.gp_buttons
     });
 
   }

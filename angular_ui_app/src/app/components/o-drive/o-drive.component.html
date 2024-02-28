@@ -1,6 +1,7 @@
-<p>o-drive works!</p>
-<div *ngIf="wheels">
-    <h5>Right: {{wheels.right}}</h5>
-    <h5>Left: {{wheels.left}}</h5>
-</div>
-<h5>Gamepad: {{g}}</h5>
+<app-generic height="235px" width="640px">
+    <p style="font-size: x-large; margin: auto;">O-drive feedback</p>
+    <div *ngIf="wheels">
+        <h5>Right: {{wheels.right}}</h5>
+        <h5>Left: {{wheels.left}}</h5>
+    </div>
+</app-generic>

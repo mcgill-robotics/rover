@@ -58,17 +58,19 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
                     + "upper_limit_switch_pin_state="
                     + f"{bin(joint.odrv.get_gpio_states())[2:]:0>12}"[2]
                 )
+                dump_errors(joint.odrv)
+
             custom_sleep(1)
         except NameError:
             pass
         except fibre.libfibre.ObjectLostError:
             print(" lost connection in watchdog() ...")
-            for odrv_shoulder in ODrive_Joint_lst:
-                odrv_shoulder.odrv = odrive.find_any(
-                    serial_number=odrv_shoulder.serial_number,
-                    timeout=odrv_shoulder.timeout,
+            for joint_obj in ODrive_Joint_lst:
+                joint_obj.odrv = odrive.find_any(
+                    serial_number=joint_obj.serial_number,
+                    timeout=joint_obj.timeout,
                 )
-                if odrv_shoulder.odrv:
+                if joint_obj.odrv:
                     print("  re-connected in watchdog()")
             pass
 
@@ -95,7 +97,7 @@ class ODrive_Joint:
         self.odrv.axis0.min_endstop.config.offset = -3
         self.odrv.axis0.min_endstop.config.enabled = True
         self.odrv.axis0.min_endstop.config.is_active_high = False
-        # while (not odrv_shoulder.odrv.axis0.min_endstop.endstop_state):
+        # while (not test_odrv_joint.odrv.axis0.min_endstop.endstop_state):
         #     custom_sleep(0.1)
 
         print("lim switch pin is enabled")
@@ -116,7 +118,7 @@ class ODrive_Joint:
         # self.odrv.axis0.max_endstop.config.offset = 3
         self.odrv.axis0.max_endstop.config.enabled = True
         self.odrv.axis0.max_endstop.config.is_active_high = False
-        # while (not odrv_shoulder.odrv.axis0.min_endstop.endstop_state):
+        # while (not test_odrv_joint.odrv.axis0.min_endstop.endstop_state):
         #     custom_sleep(0.1)
 
         print("lim switch pin is enabled")
@@ -154,6 +156,16 @@ class ODrive_Joint:
                 AxisState(self.odrv.axis0.current_state).name,
             )
         )
+        # block until homing is done
+        while self.odrv.axis0.current_state == AxisState.HOMING:
+            custom_sleep(1)
+            print(
+                "Motor {} is still homing. Current state: {}".format(
+                    self.odrv.serial_number,
+                    AxisState(self.odrv.axis0.current_state).name,
+                )
+            )
+            dump_errors(self.odrv)
 
     def attach_odrive(self, odrv):
         self.odrv = odrv
@@ -285,7 +297,8 @@ class ODrive_Joint:
     def print_gpio_voltages(self):
         for i in [1, 2, 3, 4]:
             print(
-                "voltage on GPIO{} is {} Volt".format(i, self.odrv.get_adc_voltage(i))
+                "voltage on GPIO{} is {} Volt".format(
+                    i, self.odrv.get_adc_voltage(i))
             )
 
 
@@ -293,12 +306,13 @@ class ODrive_Joint:
 def main():
     # TODO find more serial, it is a string of hex of the serial number
     arm_serial_numbers = {
-        "rover_arm_shoulder": "386434413539",  # 0x386434413539 = 62003024573753 in decimal
+        # 0x386434413539 = 62003024573753 in decimal
+        "rover_arm_shoulder": "386434413539",
         "rover_arm_elbow": "386434413539",  # change as needed
         "rover_arm_waist": "0",
     }
 
-    test_joint_name = "rover_arm_elbow"
+    test_joint_name = "rover_arm_shoulder"
 
     # Set to True if you want to reapply the config, False if you want to skip it
     reapply_config = True
@@ -311,7 +325,8 @@ def main():
     setup_upper_lim_switch = False
 
     test_odrv_joint = ODrive_Joint(
-        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
+        odrive.find_any(
+            serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
@@ -400,25 +415,28 @@ def main():
 
     # TODO untested
     # ENTER HOMING -----------------------------------------------------------------------
-    # odrv_shoulder.enter_homing()
+    # test_odrv_joint.enter_homing()
 
     # SAVE CALIBRATION -----------------------------------------------------------------
     if reapply_config:
-        # odrv_shoulder.odrv.axis0.motor.config.pre_calibrated = True
+        print("SAVING CONFIG again...")
+        # test_odrv_joint.odrv.axis0.motor.config.pre_calibrated = True
         test_odrv_joint.odrv.axis0.config.startup_motor_calibration = True
         test_odrv_joint.odrv.axis0.config.startup_encoder_offset_calibration = True
         test_odrv_joint.odrv.axis0.config.startup_closed_loop_control = True
         test_odrv_joint.save_config()
 
     # SET ABSOLUTE POSITION ----------------------------------------------------------------
-    test_odrv_joint.odrv.axis0.set_abs_pos(6.9)
+    abs_pos = 6.9
+    print(f"SETTING ABSOLUTE POSITION to {abs_pos}")
+    test_odrv_joint.odrv.axis0.set_abs_pos(abs_pos)
 
     # TODO investigate more, this is not working, NOT A PRIORITY
-    # odrv_shoulder.odrv.axis0.pos_vel_mapper.config.offset = 5.5
-    # odrv_shoulder.odrv.axis0.pos_vel_mapper.config.offset_valid = True
-    # odrv_shoulder.odrv.axis0.pos_vel_mapper.config.approx_init_pos = 0
-    # odrv_shoulder.odrv.axis0.pos_vel_mapper.config.approx_init_pos_valid = True
-    # odrv_shoulder.odrv.axis0.controller.config.absolute_setpoints = True
+    # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.offset = 5.5
+    # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.offset_valid = True
+    # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.approx_init_pos = 0
+    # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.approx_init_pos_valid = True
+    # test_odrv_joint.odrv.axis0.controller.config.absolute_setpoints = True
 
     # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
     ODrive_Joint_lst = [test_odrv_joint]
@@ -431,7 +449,8 @@ def main():
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
-            user_input = input("Enter command (increment 'i X' or absolute 'a X'): ")
+            user_input = input(
+                "Enter command (increment 'i X' or absolute 'a X'): ")
             # Using regular expression to parse the input
             match = re.match(r"([ia])\s*(-?\d+(\.\d+)?)", user_input)
             if not match:

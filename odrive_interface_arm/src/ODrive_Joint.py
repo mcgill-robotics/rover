@@ -90,17 +90,17 @@ class ODrive_Joint:
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")
         self.odrv.config.gpio12_mode = (
-            GpioMode.DIGITAL
+            GpioMode.DIGITAL_PULL_UP
         )  # the G12 pin is a configurable GPIO (see Odrive documentation)
         self.odrv.axis0.min_endstop.config.gpio_num = 12
+        self.odrv.axis0.min_endstop.config.is_active_high = False
+        self.odrv.axis0.min_endstop.config.enabled = True
         # TODO untested, min angle is -3, only for testing
         self.odrv.axis0.min_endstop.config.offset = -3
-        self.odrv.axis0.min_endstop.config.enabled = True
-        self.odrv.axis0.min_endstop.config.is_active_high = False
         # while (not test_odrv_joint.odrv.axis0.min_endstop.endstop_state):
         #     custom_sleep(0.1)
 
-        print("lim switch pin is enabled")
+        print("lower limit pin is enabled")
 
         # verify it is on mode high
         print(
@@ -121,11 +121,11 @@ class ODrive_Joint:
         # while (not test_odrv_joint.odrv.axis0.min_endstop.endstop_state):
         #     custom_sleep(0.1)
 
-        print("lim switch pin is enabled")
+        print("upper limit pin is enabled")
 
         # verify it is on mode high
         print(
-            "initial state of limit switch pin 12 is : ",
+            "initial state of limit switch pin 10 is : ",
             f"{bin(self.odrv.get_gpio_states())[2:]:0>12}"[2],
         )
 
@@ -415,21 +415,33 @@ def main():
 
     # TODO untested
     # ENTER HOMING -----------------------------------------------------------------------
+    # use absolute position to home
+    # test_odrv_joint.odrv.axis0.config.startup_motor_calibration = True
+    # test_odrv_joint.odrv.axis0.config.startup_encoder_offset_calibration = True
+    # test_odrv_joint.odrv.axis0.config.startup_closed_loop_control = True
+    # test_odrv_joint.odrv.axis0.controller.config.absolute_setpoints = True
+
+    # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.offset_valid = True
+    # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.approx_init_pos = 0
+    # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.approx_init_pos_valid = True
+    
+    # test_odrv_joint.odrv.axis0.set_abs_pos(0)
+
     # test_odrv_joint.enter_homing()
 
     # SAVE CALIBRATION -----------------------------------------------------------------
-    if reapply_config:
-        print("SAVING CONFIG again...")
-        # test_odrv_joint.odrv.axis0.motor.config.pre_calibrated = True
-        test_odrv_joint.odrv.axis0.config.startup_motor_calibration = True
-        test_odrv_joint.odrv.axis0.config.startup_encoder_offset_calibration = True
-        test_odrv_joint.odrv.axis0.config.startup_closed_loop_control = True
-        test_odrv_joint.save_config()
+    # if reapply_config:
+    #     print("SAVING CONFIG again...")
+    #     # test_odrv_joint.odrv.axis0.motor.config.pre_calibrated = True
+    #     test_odrv_joint.odrv.axis0.config.startup_motor_calibration = True
+    #     test_odrv_joint.odrv.axis0.config.startup_encoder_offset_calibration = True
+    #     test_odrv_joint.odrv.axis0.config.startup_closed_loop_control = True
+    #     test_odrv_joint.save_config()
 
     # SET ABSOLUTE POSITION ----------------------------------------------------------------
-    abs_pos = 6.9
-    print(f"SETTING ABSOLUTE POSITION to {abs_pos}")
-    test_odrv_joint.odrv.axis0.set_abs_pos(abs_pos)
+    # abs_pos = 6.9
+    # print(f"SETTING ABSOLUTE POSITION to {abs_pos}")
+    # test_odrv_joint.odrv.axis0.set_abs_pos(abs_pos)
 
     # TODO investigate more, this is not working, NOT A PRIORITY
     # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.offset = 5.5

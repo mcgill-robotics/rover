@@ -76,7 +76,7 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
 
 
 class ODrive_Joint:
-    def __init__(self, odrv=None, gear_ratio=1):
+    def __init__(self, odrv=None, gear_ratio=1, zero_offset_deg=0):
         self.odrv = odrv
         # odrv.serial_number is int, serial_number should be hex version in string
         if self.odrv:
@@ -86,6 +86,7 @@ class ODrive_Joint:
         self.timeout = 5
         # gear_ratio is input revolutions / output revolutions
         self.gear_ratio = gear_ratio
+        self.zero_offset_deg = zero_offset_deg
 
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")
@@ -353,6 +354,7 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 1.5
         test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.12161764705882352
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.12161764705882352
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
@@ -424,7 +426,7 @@ def main():
     # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.offset_valid = True
     # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.approx_init_pos = 0
     # test_odrv_joint.odrv.axis0.pos_vel_mapper.config.approx_init_pos_valid = True
-    
+
     # test_odrv_joint.odrv.axis0.set_abs_pos(0)
 
     # test_odrv_joint.enter_homing()

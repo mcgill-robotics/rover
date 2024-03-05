@@ -1,18 +1,19 @@
-import os, sys
+import threading
+from odrive_interface_arm.msg import MotorState, MotorError
+from ODrive_Joint import *
+from std_msgs.msg import Float32MultiArray
+from odrive.utils import dump_errors
+from odrive.enums import AxisState, ProcedureResult
+from enum import Enum
+import rospy
+import os
+import sys
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 
 # TODO: Figure out why catkin on the Jetson isn't playing nice with this import. It worked on my PC -Eren
 # import init_functions
-import rospy
-from enum import Enum
-from odrive.enums import AxisState, ProcedureResult
-from odrive.utils import dump_errors
-from std_msgs.msg import Float32MultiArray
-from ODrive_Joint import *
-from odrive_interface_arm.msg import MotorState, MotorError
-import threading
 
 
 class FeedbackMode(Enum):
@@ -20,21 +21,28 @@ class FeedbackMode(Enum):
     FROM_OUTSHAFT = "fb_from_outshaft"
 
 
-# CONFIGURATION
+# CONFIGURATION ---------------------------------------------------------------
 # Serial number of the ODrive controlling the joint
 arm_serial_numbers = {
-    "elbow_joint": "383834583539",  # 0x383834583539 = 61814047520057 in decimal
+    "elbow_joint": "0",  # 0x383834583539 = 61814047520057 in decimal
     "shoulder_joint": "386434413539",  # 0x386434413539 = 62003024573753 in decimal
     "waist_joint": "0",
 }
 arm_gear_ratios = {
     "elbow_joint": 1,
-    "shoulder_joint": 1,
+    "shoulder_joint": 10,
     "waist_joint": 1,
 }
-current_mode = FeedbackMode.FROM_ODRIVE
 
-# VARIABLES
+arm_zero_offsets = {
+    "elbow_joint": 0,
+    "shoulder_joint": 45.0,
+    "waist_joint": 0,
+}
+
+current_mode = FeedbackMode.FROM_OUTSHAFT
+
+# VARIABLES -------------------------------------------------------------------
 # Dictionary of ODrive_Joint objects, key is the joint name in string format, value is the ODrive_Joint object
 arm_joint_dict = {
     "elbow_joint": None,
@@ -49,22 +57,23 @@ class Node_odrive_interface_arm:
     def __init__(self):
         # FEEDBACK VARIABLES
         self.joint_pos_outshaft_dict = {
-            "elbow_joint": None,
-            "shoulder_joint": None,
-            "waist_joint": None,
+            "elbow_joint": 0,
+            "shoulder_joint": 0,
+            "waist_joint": 0,
         }
 
         # SETPOINT VARIABLES
         self.joint_setpoint_dict = {
-            "elbow_joint": None,
-            "shoulder_joint": None,
-            "waist_joint": None,
+            "elbow_joint": 0,
+            "shoulder_joint": 0,
+            "waist_joint": 0,
         }
 
-        # Subscriptions
+        # Subscriptions, TODO: Change the topic names to match the actual topics
         rospy.init_node("odrive_interface_arm")
         self.outshaft_subscriber = rospy.Subscriber(
-            "/arm_outshaft_fb",
+            # "/arm_outshaft_fb",
+            "/armBrushlessFb",
             Float32MultiArray,
             self.handle_arm_outshaft_fb,
         )
@@ -76,12 +85,6 @@ class Node_odrive_interface_arm:
         self.state_publisher = rospy.Publisher(
             "/odrive_arm_state", MotorState, queue_size=1
         )
-        # Could be from the ODrive or from the outshaft, depending on configuration
-        self.feedback_publisher = rospy.Publisher(
-            "/armBrushlessFB",
-            Float32MultiArray,
-            queue_size=10,
-        )
 
         # Frequency of the ODrive I/O
         self.rate = rospy.Rate(100)
@@ -89,11 +92,16 @@ class Node_odrive_interface_arm:
 
     # Update encoder angle from external encoders
     def handle_arm_outshaft_fb(self, msg):
+        # only update if data[i] is not 0
+        # if msg.data[0] != 0:
+        #     self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
+        # if msg.data[1] != 0:
+        #     self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
+        # if msg.data[2] != 0:
+        #     self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
         self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
         self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
         self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
-        if current_mode == FeedbackMode.FROM_OUTSHAFT:
-            self.feedback_publisher.publish(msg)
 
     # Receive setpoint from external control node
     def handle_arm_command(self, msg):
@@ -112,21 +120,39 @@ class Node_odrive_interface_arm:
                 print(f"Cannot connect joint: {key}, serial_number: {value}")
 
     def run(self):
-        # CONNECT TO ODRIVE
         for key, value in arm_serial_numbers.items():
-            arm_joint_dict[key] = ODrive_Joint(
-                gear_ratio=arm_gear_ratios[key],
-            )
             try:
+                # CONNECT TO ODRIVE ---------------------------------------------------------------
                 odrv = odrive.find_any(serial_number=value, timeout=5)
-                arm_joint_dict[key].attach_odrive(odrv)
                 print(f"Connected joint: {key}, serial_number: {value}")
+                # Neccessary?
+                # if odrv is None:
+                #     print(
+                #         f"Cannot connect joint: {key}, serial_number: {value}")
+                #     continue
+                arm_joint_dict[key] = ODrive_Joint(
+                    gear_ratio=arm_gear_ratios[key],
+                    odrv=odrv,
+                )
+                # CALIBRATE -------------------------------------------------------------------------
+                print("CALIBRATING...")
+                arm_joint_dict[key].calibrate()
+
+                # ENTER CLOSED LOOP CONTROL ---------------------------------------------------------
+                print("ENTERING CLOSED LOOP CONTROL...")
+                arm_joint_dict[key].enter_closed_loop_control()
+
             except:
                 odrv = None
                 print(f"Cannot connect joint: {key}, serial_number: {value}")
+                arm_joint_dict[key] = ODrive_Joint(
+                    gear_ratio=arm_gear_ratios[key],
+                    odrv=odrv,
+                )
 
         self.watchdog_stop_event = threading.Event()
-        self.watchdog_thread = threading.Thread(target=self.odrive_reconnect_watchdog)
+        self.watchdog_thread = threading.Thread(
+            target=self.odrive_reconnect_watchdog)
         self.watchdog_thread.start()
 
         # MAIN LOOP
@@ -159,21 +185,25 @@ class Node_odrive_interface_arm:
                 if current_mode == FeedbackMode.FROM_ODRIVE:
                     try:
                         setpoint = (
-                            self.joint_setpoint_dict[joint_name] * joint_obj.gear_ratio
+                            self.joint_setpoint_dict[joint_name] *
+                            joint_obj.gear_ratio
                         )
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
-                        print(f"Cannot apply setpoint to joint: {joint_name}")
+                        print(
+                            f"Cannot apply setpoint {setpoint} to joint: {joint_name}")
                 elif current_mode == FeedbackMode.FROM_OUTSHAFT:
                     try:
-                        setpoint = (
+                        diff_deg = (
                             self.joint_setpoint_dict[joint_name]
                             - self.joint_pos_outshaft_dict[joint_name]
                         )
-                        setpoint *= joint_obj.gear_ratio
+                        setpoint = joint_obj.gear_ratio * diff_deg + \
+                            joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
-                        print(f"Cannot apply setpoint to joint: {joint_name}")
+                        print(
+                            f"Cannot apply setpoint {setpoint} to joint: {joint_name}")
 
             # PRINT POSITIONS TO CONSOLE
             for joint_name, joint_obj in arm_joint_dict.items():
@@ -182,8 +212,22 @@ class Node_odrive_interface_arm:
                 print(f"{joint_name} {joint_obj.serial_number} ({status})")
                 if joint_obj.odrv:
                     try:
-                        print(f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
-                        print(f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                        print(
+                            f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
+                        print(
+                            f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                        print(
+                            f"-input_pos={joint_obj.odrv.axis0.controller.input_pos}"
+                        )
+                        print(
+                            f"-setpoint_deg={self.joint_setpoint_dict[joint_name]}"
+                        )
+                        print(
+                            f"-outshaft_deg={self.joint_pos_outshaft_dict[joint_name]}"
+                        )
+                        print(
+                            f"diff_deg={self.joint_setpoint_dict[joint_name] - self.joint_pos_outshaft_dict[joint_name]}"
+                        )
                     except:
                         print(f"-pos_rel=None")
                         print(f"-pos_abs=None")
@@ -194,13 +238,13 @@ class Node_odrive_interface_arm:
                 if not joint_obj.odrv:
                     continue
                 try:
-                    state_fb = MotorState()
-                    state_fb.id = joint_obj.serial_number
-                    state_fb.state = joint_obj.odrv.axis0.current_state
-                    state_fb.pos_rel = joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
-                    state_fb.pos_abs = joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
-                    state_fb.input_pos = joint_obj.odrv.axis0.controller.input_pos
-                    self.state_publisher.publish(state_fb)
+                    # state_fb = MotorState()
+                    # state_fb.id = joint_obj.serial_number
+                    # state_fb.state = joint_obj.odrv.axis0.current_state
+                    # state_fb.pos_rel = joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
+                    # state_fb.pos_abs = joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
+                    # state_fb.input_pos = joint_obj.odrv.axis0.controller.input_pos
+                    # self.state_publisher.publish(state_fb)
 
                     # ERROR HANDLING
                     if joint_obj.odrv.axis0.active_errors != 0:

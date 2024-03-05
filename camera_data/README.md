@@ -1,6 +1,6 @@
 # Camera Data Module
 
-This module read and writes data from available camera feeds to the `/camera_frames` topic.
+This module read and writes data from available camera feeds in the `/camera_frames` topic.
 
 ### Messages
 

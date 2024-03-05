@@ -9,5 +9,5 @@ sys.path.insert(0,filename)
 import getCameraFeeds as gcf
 
 # Runnable to display camera feeds
-camHandler = gcf.CameraHandler()
-camHandler.run_feeds()
+camera_handler = gcf.CameraHandler()
+camera_handler.run_feeds()

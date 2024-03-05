@@ -14,13 +14,13 @@ class CameraHandler:
                 self.available_cameras.append(newCap)
 
     def get_all_feeds(self):
-        retAndFrame = []
+        ret_frame = []
         # read each capture object in vids and add as a tuple to retAndFrame
         for camera in self.available_cameras:
             newFeed = camera.read()
-            retAndFrame.append((newFeed[0], newFeed[1]))
+            ret_frame.append((newFeed[0], newFeed[1]))
         
-        return retAndFrame
+        return ret_frame
 
     def run_feeds(self):
         while True:
@@ -38,5 +38,5 @@ class CameraHandler:
 
 # Runnable to display camera feeds
 if __name__ == '__main__':
-    camHandler = CameraHandler()
-    camHandler.run_feeds()
+    camera_handler = CameraHandler()
+    camera_handler.run_feeds()

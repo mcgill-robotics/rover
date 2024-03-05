@@ -2,44 +2,41 @@ import cv2
 
 
 class CameraHandler:
-    vids = []  # available cameras
+    available_cameras = []
 
     def __init__(self):
-        # Loop 25 times and collect all found cameras
+        # Collect all found cameras
         # Assumes sequential indices
         for i in range (25):
             newCap = cv2.VideoCapture(i, cv2.CAP_V4L2)
 
-            if newCap is not None:
-                newCap.open(i)
-
-            # check if object is not null
-            if newCap is not None and newCap.isOpened():
-                # add the camera found
-                self.vids.append(newCap)
+            if newCap is not None and newCap.open(i):
+                self.available_cameras.append(newCap)
 
     def get_all_feeds(self):
         retAndFrame = []
         # read each capture object in vids and add as a tuple to retAndFrame
-        for i in range(len(self.vids)):
-            newFeed = self.vids[i].read()
-            retAndFrame.append((newFeed[0], newFeed[1], i))
+        for camera in self.available_cameras:
+            newFeed = camera.read()
+            retAndFrame.append((newFeed[0], newFeed[1]))
         
         return retAndFrame
 
-# # Runnable for displaying camera feeds
+    def run_feeds(self):
+        while True:
+            # display each frame (camera feed) in the list
+            for index, (ret, frame) in enumerate(self.get_all_feeds()):
+                if ret:
+                    cv2.imshow(f"frame {index}", frame)
+
+            # press 'q' to stop displaying
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                for vid in self.available_cameras:
+                    vid.release()
+                    cv2.destroyAllWindows()
+                break
+
+# Runnable to display camera feeds
 if __name__ == '__main__':
     camHandler = CameraHandler()
-    while True:
-        retAndFrame = camHandler.get_all_feeds()
-        # display each frame (camera feed) in the list
-        for ret, frame, index in retAndFrame:
-            if ret:
-                cv2.imshow(f"frame {index}", frame)
-
-        # press 'q' to stop displaying
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            for vid in camHandler.vids:
-                vid.release()
-                cv2.destroyAllWindows()
-            break
+    camHandler.run_feeds()

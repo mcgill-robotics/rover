@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 import os, sys
-from pydoc_data.topics import topics
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import rospy
 import cv2
-import time
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import Int16
-from PyQt5 import QtGui
 import sys
 
 stop = False
@@ -24,23 +21,20 @@ class Node_CameraFramePub():
 
         rospy.init_node('camera_frame_publisher')
         self.camera_select_subscriber = rospy.Subscriber("camera_selection", Int16, self.select_camera)
-        self.timer = rospy.Timer(rospy.Duration(0.03), self.timer_callback)
+        _30fps_ns = 30000000
+        self.timer = rospy.Timer(rospy.Duration(0, _30fps_ns), self.timer_callback)
         self.camera_frame_publisher = rospy.Publisher('/camera_frames', Image, queue_size=10)
 
-    def timer_callback(self, event):
-        try:
-            ret, frame = self.video_capture.read()
-            # these code cause error
-            encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-            result, frame = cv2.imencode(".jpg", frame, encode_params)
+    def timer_callback(self, _):
+        ret, frame = self.video_capture.read()
+        if ret:
+            encode_params = [cv2.IMWRITE_JPEG_QUALITY, 90]
+            _, frame = cv2.imencode(".jpg", frame, encode_params)
             self.frames = self.openCV_to_ros_image(frame)
-            if ret:
-                print("Publishing frame")
-                self.camera_frame_publisher.publish(self.frames)
-        except:
+            print("Publishing frame")
+            self.camera_frame_publisher.publish(self.frames)
+        else: 
             print("No camera found")
-        finally:
-            pass
 
     def openCV_to_ros_image(self, cv_image):
         try:

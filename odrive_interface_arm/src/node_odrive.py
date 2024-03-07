@@ -21,6 +21,8 @@ class FeedbackMode(Enum):
     FROM_OUTSHAFT = "fb_from_outshaft"
 
 
+is_homed = False
+
 # CONFIGURATION ---------------------------------------------------------------
 # Serial number of the ODrive controlling the joint
 arm_serial_numbers = {
@@ -30,7 +32,7 @@ arm_serial_numbers = {
 }
 arm_gear_ratios = {
     "elbow_joint": 1,
-    "shoulder_joint": 10,
+    "shoulder_joint": 100,
     "waist_joint": 1,
 }
 
@@ -92,6 +94,11 @@ class Node_odrive_interface_arm:
 
     # Update encoder angle from external encoders
     def handle_arm_outshaft_fb(self, msg):
+        if not is_homed:
+            self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
+            self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
+            self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
+            is_homed = True
         # only update if data[i] is not 0
         # if msg.data[0] != 0:
         #     self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
@@ -99,9 +106,9 @@ class Node_odrive_interface_arm:
         #     self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
         # if msg.data[2] != 0:
         #     self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
-        self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
-        self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
-        self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
+        # self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
+        # self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
+        # self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
 
     # Receive setpoint from external control node
     def handle_arm_command(self, msg):

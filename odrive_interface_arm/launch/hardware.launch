@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find hardware)/launch/cameras.launch"></include>
+    <include file="$(find hardware)/launch/imu.launch"></include>
+    <include file="$(find hardware)/launch/rosserial.launch"></include>
+</launch>

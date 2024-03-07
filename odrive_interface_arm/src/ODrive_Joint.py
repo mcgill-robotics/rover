@@ -13,6 +13,7 @@ import time
 import threading
 import fibre
 import re
+import math
 
 try:
     import rospy
@@ -75,6 +76,28 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
             pass
 
 
+def print_joint_state_from_lst(ODrive_Joint_lst):
+    for joint_name, joint_obj in ODrive_Joint_lst.items():
+        # Check if the odrive is connected
+        status = "connected" if joint_obj.odrv else "disconnected"
+        print(f"{joint_name} {joint_obj.serial_number} ({status})")
+        if joint_obj.odrv:
+            try:
+                print(
+                    f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
+                print(
+                    f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                print(
+                    f"-input_pos={joint_obj.odrv.axis0.controller.input_pos}"
+                )
+            except:
+                print(f"-pos_rel=None")
+                print(f"-pos_abs=None")
+        print(
+            f"-setpoint_deg={joint_obj.setpoint_deg}"
+        )
+
+
 class ODrive_Joint:
     def __init__(self, odrv=None, gear_ratio=1, zero_offset_deg=0):
         self.odrv = odrv
@@ -87,6 +110,8 @@ class ODrive_Joint:
         # gear_ratio is input revolutions / output revolutions
         self.gear_ratio = gear_ratio
         self.zero_offset_deg = zero_offset_deg
+        self.setpoint_deg = 0
+        self.pos_outshaft_deg = 0
 
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")
@@ -478,7 +503,11 @@ def main():
             # Increment command
             if command == "i":  # Incremental command
                 setpoint_increment = value
-                setpoint = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel + (
+                if math.isnan(test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs):
+                    current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel
+                else:
+                    current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
+                setpoint = current + (
                     setpoint_increment * test_odrv_joint.gear_ratio
                 )
                 print(

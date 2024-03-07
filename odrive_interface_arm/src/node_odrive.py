@@ -56,6 +56,7 @@ joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
 class Node_odrive_interface_arm:
     def __init__(self):
         self.is_homed = False
+        self.is_calibrated = False
 
         # FEEDBACK VARIABLES
         self.joint_pos_outshaft_dict = {
@@ -94,6 +95,8 @@ class Node_odrive_interface_arm:
 
     # Update encoder angle from external encoders
     def handle_arm_outshaft_fb(self, msg):
+        if not self.is_calibrated:
+            return
         if not self.is_homed:
             self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
             self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
@@ -102,26 +105,21 @@ class Node_odrive_interface_arm:
             for joint_name, joint_obj in arm_joint_dict.items():
                 if not joint_obj.odrv:
                     continue
-                temp = self.joint_pos_outshaft_dict[joint_name]
-                temp = temp * joint_obj.gear_ratio
-                joint_obj.odrv.set_abs_pos(temp)
+                temp = self.joint_pos_outshaft_dict[joint_name] * \
+                    joint_obj.gear_ratio / 360
+                joint_obj.odrv.axis0.set_abs_pos(temp)
             self.is_homed = True
-        # only update if data[i] is not 0
-        # if msg.data[0] != 0:
-        #     self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
-        # if msg.data[1] != 0:
-        #     self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
-        # if msg.data[2] != 0:
-        #     self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
-        # self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
-        # self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
-        # self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
 
     # Receive setpoint from external control node
     def handle_arm_command(self, msg):
         self.joint_setpoint_dict["elbow_joint"] = msg.data[0]
         self.joint_setpoint_dict["shoulder_joint"] = msg.data[1]
         self.joint_setpoint_dict["waist_joint"] = msg.data[2]
+
+        for joint_name, joint_obj in arm_joint_dict.items():
+            if not joint_obj.odrv:
+                continue
+            joint_obj.setpoint_deg = self.joint_setpoint_dict[joint_name]
 
     def odrive_reconnect_watchdog(self):
         for key, value in arm_serial_numbers.items():
@@ -135,39 +133,54 @@ class Node_odrive_interface_arm:
 
     def run(self):
         for key, value in arm_serial_numbers.items():
-            try:
-                # CONNECT TO ODRIVE ---------------------------------------------------------------
-                odrv = odrive.find_any(serial_number=value, timeout=5)
-                print(f"Connected joint: {key}, serial_number: {value}")
-                # Neccessary?
-                # if odrv is None:
-                #     print(
-                #         f"Cannot connect joint: {key}, serial_number: {value}")
-                #     continue
+            if value == 0:
+                print(
+                    f"Skipping connection for joint: {key} due to serial_number being 0")
+                # Instantiate class with odrv as None because we're skipping connection
                 arm_joint_dict[key] = ODrive_Joint(
                     gear_ratio=arm_gear_ratios[key],
-                    odrv=odrv,
+                    odrv=None,
                 )
-                # CALIBRATE -------------------------------------------------------------------------
+                continue
+
+            try:
+                # Attempt to CONNECT TO ODRIVE only if serial_number is not 0
+                odrv = odrive.find_any(serial_number=value, timeout=5)
+                print(f"Connected joint: {key}, serial_number: {value}")
+            except Exception as e:
+                odrv = None
+                print(
+                    f"Cannot connect joint: {key}, serial_number: {value}. Error: {e}")
+
+            # Instantiate ODrive_Joint class whether or not the connection attempt was made/successful
+            arm_joint_dict[key] = ODrive_Joint(
+                gear_ratio=arm_gear_ratios[key],
+                odrv=odrv,
+            )
+
+            if odrv is not None:
+                # CALIBRATE -----------------------------------------------------
                 print("CALIBRATING...")
                 arm_joint_dict[key].calibrate()
 
-                # ENTER CLOSED LOOP CONTROL ---------------------------------------------------------
+                # ENTER CLOSED LOOP CONTROL ------------------------------------
                 print("ENTERING CLOSED LOOP CONTROL...")
                 arm_joint_dict[key].enter_closed_loop_control()
 
-            except:
-                odrv = None
-                print(f"Cannot connect joint: {key}, serial_number: {value}")
-                arm_joint_dict[key] = ODrive_Joint(
-                    gear_ratio=arm_gear_ratios[key],
-                    odrv=odrv,
-                )
+                self.is_calibrated = True
 
-        self.watchdog_stop_event = threading.Event()
-        self.watchdog_thread = threading.Thread(
-            target=self.odrive_reconnect_watchdog)
-        self.watchdog_thread.start()
+        # self.watchdog_stop_event = threading.Event()
+        # self.watchdog_thread = threading.Thread(
+        #     target=self.odrive_reconnect_watchdog)
+        # self.watchdog_thread.start()
+
+        # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
+        watchdog_stop_event = threading.Event()
+        watchdog_thread = threading.Thread(
+            target=print_joint_state_from_lst, args=(
+                arm_joint_dict, watchdog_stop_event)
+        )
+        watchdog_thread.start()
 
         # MAIN LOOP
         while not rospy.is_shutdown():
@@ -199,8 +212,8 @@ class Node_odrive_interface_arm:
                 if current_mode == FeedbackMode.FROM_ODRIVE:
                     try:
                         setpoint = (
-                            self.joint_setpoint_dict[joint_name] *
-                            joint_obj.gear_ratio
+                            joint_obj.setpoint_deg *
+                            joint_obj.gear_ratio / 360
                         )
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
@@ -217,8 +230,8 @@ class Node_odrive_interface_arm:
                         # joint_obj.odrv.axis0.controller.input_pos = setpoint
 
                         setpoint = (
-                            self.joint_setpoint_dict[joint_name] *
-                            joint_obj.gear_ratio
+                            joint_obj.setpoint_deg *
+                            joint_obj.gear_ratio / 360
                         )
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
@@ -226,31 +239,7 @@ class Node_odrive_interface_arm:
                             f"Cannot apply setpoint {setpoint} to joint: {joint_name}")
 
             # PRINT POSITIONS TO CONSOLE
-            for joint_name, joint_obj in arm_joint_dict.items():
-                # Check if the odrive is connected
-                status = "connected" if joint_obj.odrv else "disconnected"
-                print(f"{joint_name} {joint_obj.serial_number} ({status})")
-                if joint_obj.odrv:
-                    try:
-                        print(
-                            f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
-                        print(
-                            f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
-                        print(
-                            f"-input_pos={joint_obj.odrv.axis0.controller.input_pos}"
-                        )
-                    except:
-                        print(f"-pos_rel=None")
-                        print(f"-pos_abs=None")
-                print(
-                    f"-setpoint_deg={self.joint_setpoint_dict[joint_name]}"
-                )
-                print(
-                    f"-outshaft_deg={self.joint_pos_outshaft_dict[joint_name]}"
-                )
-                print(
-                    f"diff_deg={self.joint_setpoint_dict[joint_name] - self.joint_pos_outshaft_dict[joint_name]}"
-                )
+            print_joint_state_from_lst(arm_joint_dict)
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
             # TODO trim error handling down
@@ -258,6 +247,7 @@ class Node_odrive_interface_arm:
                 if not joint_obj.odrv:
                     continue
                 try:
+                    # TODO full feedback
                     # state_fb = MotorState()
                     # state_fb.id = joint_obj.serial_number
                     # state_fb.state = joint_obj.odrv.axis0.current_state

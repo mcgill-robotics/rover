@@ -219,18 +219,18 @@ class Node_odrive_interface_arm:
                         print(
                             f"-input_pos={joint_obj.odrv.axis0.controller.input_pos}"
                         )
-                        print(
-                            f"-setpoint_deg={self.joint_setpoint_dict[joint_name]}"
-                        )
-                        print(
-                            f"-outshaft_deg={self.joint_pos_outshaft_dict[joint_name]}"
-                        )
-                        print(
-                            f"diff_deg={self.joint_setpoint_dict[joint_name] - self.joint_pos_outshaft_dict[joint_name]}"
-                        )
                     except:
                         print(f"-pos_rel=None")
                         print(f"-pos_abs=None")
+                print(
+                    f"-setpoint_deg={self.joint_setpoint_dict[joint_name]}"
+                )
+                print(
+                    f"-outshaft_deg={self.joint_pos_outshaft_dict[joint_name]}"
+                )
+                print(
+                    f"diff_deg={self.joint_setpoint_dict[joint_name] - self.joint_pos_outshaft_dict[joint_name]}"
+                )
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
             # TODO trim error handling down

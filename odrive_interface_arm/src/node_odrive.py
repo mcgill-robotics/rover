@@ -21,8 +21,6 @@ class FeedbackMode(Enum):
     FROM_OUTSHAFT = "fb_from_outshaft"
 
 
-is_homed = False
-
 # CONFIGURATION ---------------------------------------------------------------
 # Serial number of the ODrive controlling the joint
 arm_serial_numbers = {
@@ -57,6 +55,8 @@ joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
 
 class Node_odrive_interface_arm:
     def __init__(self):
+        self.is_homed = False
+
         # FEEDBACK VARIABLES
         self.joint_pos_outshaft_dict = {
             "elbow_joint": 0,
@@ -94,11 +94,18 @@ class Node_odrive_interface_arm:
 
     # Update encoder angle from external encoders
     def handle_arm_outshaft_fb(self, msg):
-        if not is_homed:
+        if not self.is_homed:
             self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
             self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
             self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
-            is_homed = True
+
+            for joint_name, joint_obj in arm_joint_dict.items():
+                if not joint_obj.odrv:
+                    continue
+                temp = self.joint_pos_outshaft_dict[joint_name]
+                temp = temp * joint_obj.gear_ratio
+                joint_obj.odrv.set_abs_pos(temp)
+            self.is_homed = True
         # only update if data[i] is not 0
         # if msg.data[0] != 0:
         #     self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
@@ -201,12 +208,18 @@ class Node_odrive_interface_arm:
                             f"Cannot apply setpoint {setpoint} to joint: {joint_name}")
                 elif current_mode == FeedbackMode.FROM_OUTSHAFT:
                     try:
-                        diff_deg = (
-                            self.joint_setpoint_dict[joint_name]
-                            - self.joint_pos_outshaft_dict[joint_name]
+                        # diff_deg = (
+                        #     self.joint_setpoint_dict[joint_name]
+                        #     - self.joint_pos_outshaft_dict[joint_name]
+                        # )
+                        # setpoint = joint_obj.gear_ratio * diff_deg + \
+                        #     joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
+                        # joint_obj.odrv.axis0.controller.input_pos = setpoint
+
+                        setpoint = (
+                            self.joint_setpoint_dict[joint_name] *
+                            joint_obj.gear_ratio
                         )
-                        setpoint = joint_obj.gear_ratio * diff_deg + \
-                            joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
                         print(

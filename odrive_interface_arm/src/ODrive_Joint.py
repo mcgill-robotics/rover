@@ -83,19 +83,13 @@ def print_joint_state_from_lst(ODrive_Joint_lst):
         print(f"{joint_name} {joint_obj.serial_number} ({status})")
         if joint_obj.odrv:
             try:
-                print(
-                    f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
-                print(
-                    f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
-                print(
-                    f"-input_pos={joint_obj.odrv.axis0.controller.input_pos}"
-                )
+                print(f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
+                print(f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                print(f"-input_pos={joint_obj.odrv.axis0.controller.input_pos}")
             except:
                 print(f"-pos_rel=None")
                 print(f"-pos_abs=None")
-        print(
-            f"-setpoint_deg={joint_obj.setpoint_deg}"
-        )
+        print(f"-setpoint_deg={joint_obj.setpoint_deg}")
 
 
 class ODrive_Joint:
@@ -323,8 +317,7 @@ class ODrive_Joint:
     def print_gpio_voltages(self):
         for i in [1, 2, 3, 4]:
             print(
-                "voltage on GPIO{} is {} Volt".format(
-                    i, self.odrv.get_adc_voltage(i))
+                "voltage on GPIO{} is {} Volt".format(i, self.odrv.get_adc_voltage(i))
             )
 
 
@@ -351,8 +344,7 @@ def main():
     setup_upper_lim_switch = False
 
     test_odrv_joint = ODrive_Joint(
-        odrive.find_any(
-            serial_number=arm_serial_numbers[test_joint_name], timeout=5)
+        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
@@ -379,9 +371,10 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 1.5
-        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.12161764705882352
-        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.12161764705882352
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 2.5
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.5
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.5
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
         test_odrv_joint.odrv.config.enable_uart_a = False
         test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
@@ -408,9 +401,8 @@ def main():
             ControlMode.POSITION_CONTROL
         )
         test_odrv_joint.odrv.axis0.controller.config.vel_limit = 1
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1
-        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.04543956043956044
-        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.1
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.1
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
         test_odrv_joint.odrv.config.enable_uart_a = False
         test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
@@ -488,8 +480,7 @@ def main():
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
-            user_input = input(
-                "Enter command (increment 'i X' or absolute 'a X'): ")
+            user_input = input("Enter command (increment 'i X' or absolute 'a X'): ")
             # Using regular expression to parse the input
             match = re.match(r"([ia])\s*(-?\d+(\.\d+)?)", user_input)
             if not match:
@@ -507,9 +498,7 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel
                 else:
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
-                setpoint = current + (
-                    setpoint_increment * test_odrv_joint.gear_ratio
-                )
+                setpoint = current + (setpoint_increment * test_odrv_joint.gear_ratio)
                 print(
                     f"INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}"
                 )

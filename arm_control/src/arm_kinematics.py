@@ -2,17 +2,30 @@ import numpy as np
 import math
 
 # Define joint limits in Radians
-jointUpperLimits = [90*np.pi/180, 70*np.pi/180, 70*np.pi/180, 38*np.pi/180, 85*np.pi/180]      # rad
-jointLowerLimits = [-90*np.pi/180, -60*np.pi/180, -20*np.pi/180, -35*np.pi/180, -85*np.pi/180] # rad
+jointUpperLimits = [
+    90 * np.pi / 180,
+    70 * np.pi / 180,
+    70 * np.pi / 180,
+    38 * np.pi / 180,
+    85 * np.pi / 180,
+]  # rad
+jointLowerLimits = [
+    -90 * np.pi / 180,
+    -60 * np.pi / 180,
+    -20 * np.pi / 180,
+    -35 * np.pi / 180,
+    -85 * np.pi / 180,
+]  # rad
 
 # Define Denavit-Hartenberg parameters for the robot arm
 arm_DH = [
-    [0.0575,                0,     0, -90*math.pi/180], #waist - shoulder : vertical offset from base
-    [     0, -90*math.pi/180,   0.5,               0], #shoulder - elbow
-    [     0,  90*math.pi/180,   0.4,               0], #elbow - wrist
-    [     0,  90*math.pi/180,     0,  90*math.pi/180], # wrist - hand
-    [ 0.034,               0,     0,               0] #hand 
+    [0.0575, 0, 0, -90 * math.pi / 180],  # waist - shoulder : vertical offset from base
+    [0, -90 * math.pi / 180, 0.5, 0],  # shoulder - elbow
+    [0, 90 * math.pi / 180, 0.4, 0],  # elbow - wrist
+    [0, 90 * math.pi / 180, 0, 90 * math.pi / 180],  # wrist - hand
+    [0.034, 0, 0, 0],  # hand
 ]
+
 
 # Function to convert pose (position and Euler angles) to a transformation matrix
 def Pose2Mat(pose):
@@ -22,7 +35,7 @@ def Pose2Mat(pose):
     --------
         pose : np.array(6, 1)
             [x, y, z, alpha_x, alpha_y, alpha_z]
-    
+
     Returns
     --------
         T : np.array(4,4)
@@ -38,27 +51,34 @@ def Pose2Mat(pose):
     T = np.eye(4)
 
     # Create rotation matrices for each axis (X, Y, Z)
-    Rx = np.array([
-        [1,0,0],
-        [0,math.cos(alpha), -math.sin(alpha)],
-        [0,math.sin(alpha), math.cos(alpha)],
-    ])
-    Ry = np.array([
-        [math.cos(beta), 0, math.sin(beta)],
-        [0, 1, 0],
-        [-math.sin(beta), 0, math.cos(beta)],
-    ])
-    Rz = np.array([
-        [math.cos(gamma), -math.sin(gamma), 0],
-        [math.sin(gamma), math.cos(gamma), 0],
-        [0, 0, 1],
-    ])
+    Rx = np.array(
+        [
+            [1, 0, 0],
+            [0, math.cos(alpha), -math.sin(alpha)],
+            [0, math.sin(alpha), math.cos(alpha)],
+        ]
+    )
+    Ry = np.array(
+        [
+            [math.cos(beta), 0, math.sin(beta)],
+            [0, 1, 0],
+            [-math.sin(beta), 0, math.cos(beta)],
+        ]
+    )
+    Rz = np.array(
+        [
+            [math.cos(gamma), -math.sin(gamma), 0],
+            [math.sin(gamma), math.cos(gamma), 0],
+            [0, 0, 1],
+        ]
+    )
 
     # Combine the rotation matrices and set the translation components
-    T[:3,:3] = Rz @ Ry @ Rx
-    T[:3,3] = pose[:3]
-    
+    T[:3, :3] = Rz @ Ry @ Rx
+    T[:3, 3] = pose[:3]
+
     return T
+
 
 # Function to convert a transformation matrix to pose (position and Euler angles)
 def Mat2Pose(T):
@@ -77,20 +97,20 @@ def Mat2Pose(T):
     """
 
     # Compute Euler angles from the rotation matrix
-    if abs(T[2,0]) != 1:
-        beta = -math.asin(T[2,0])
-        alpha = math.atan2(T[2,1]/math.cos(beta), T[2,2]/math.cos(beta))
-        gamma = math.atan2(T[1,0]/math.cos(beta), T[0,0]/math.cos(beta))
+    if abs(T[2, 0]) != 1:
+        beta = -math.asin(T[2, 0])
+        alpha = math.atan2(T[2, 1] / math.cos(beta), T[2, 2] / math.cos(beta))
+        gamma = math.atan2(T[1, 0] / math.cos(beta), T[0, 0] / math.cos(beta))
     else:
         gamma = 0
-        if T[2,0] == -1:
-            beta = math.pi/2
-            alpha = math.atan2(T[0,1], T[0,2])
+        if T[2, 0] == -1:
+            beta = math.pi / 2
+            alpha = math.atan2(T[0, 1], T[0, 2])
         else:
-            beta = -math.pi/2
-            alpha = math.atan2(-T[0,1], -T[0,2])
+            beta = -math.pi / 2
+            alpha = math.atan2(-T[0, 1], -T[0, 2])
 
-    #return Euler angles and translation into a pose array
+    # return Euler angles and translation into a pose array
     return np.array([T[0][3], T[1][3], T[2][3], alpha, beta, gamma])
 
 
@@ -115,12 +135,25 @@ def dhToMat(d, theta, a, alpha):
         T : np,array(4,4)
             transformation matrix
     """
-    return np.array([
-        [math.cos(theta), -math.sin(theta)*math.cos(alpha), math.sin(theta)*math.sin(alpha), a*math.cos(theta)],
-        [math.sin(theta), math.cos(theta)*math.cos(alpha), -math.cos(theta)*math.sin(alpha), a*math.sin(theta)],
-        [0, math.sin(alpha), math.cos(alpha), d],
-        [0, 0, 0, 1]
-    ])
+    return np.array(
+        [
+            [
+                math.cos(theta),
+                -math.sin(theta) * math.cos(alpha),
+                math.sin(theta) * math.sin(alpha),
+                a * math.cos(theta),
+            ],
+            [
+                math.sin(theta),
+                math.cos(theta) * math.cos(alpha),
+                -math.cos(theta) * math.sin(alpha),
+                a * math.sin(theta),
+            ],
+            [0, math.sin(alpha), math.cos(alpha), d],
+            [0, 0, 0, 1],
+        ]
+    )
+
 
 # Function to compute the forward kinematics of the arm
 def forwardKinematics(q):
@@ -130,7 +163,7 @@ def forwardKinematics(q):
     --------
         q : list(float)
             list of the values of the joints angles in rad, thetas
-        
+
     Returns
     --------
         T : np.array(4,4)
@@ -138,6 +171,7 @@ def forwardKinematics(q):
     """
     Ts = _FK(q)
     return Ts[-1]
+
 
 # Function to compute a list of transformation matrices for the arm joints
 def _FK(q):
@@ -150,7 +184,7 @@ def _FK(q):
     --------
         q : list(float)
             list of the values of the joints angles, thetas
-        
+
     Returns
     --------
         list(np.array(4,4))
@@ -169,6 +203,7 @@ def _FK(q):
         matrices.append(T0i)
 
     return matrices
+
 
 # Function to compute the Jacobian matrix for a given set of joint angles
 def Jacobian(q):
@@ -197,8 +232,14 @@ def Jacobian(q):
             z0i = np.array([0, 0, 1])
             riN = np.array([Ts[-1][0][3], Ts[-1][1][3], Ts[-1][2][3]])
         else:
-            z0i = np.array([Ts[i-1][0][2], Ts[i-1][1][2], Ts[i-1][2][2]])
-            riN = np.array([Ts[-1][0][3] - Ts[i-1][0][3], Ts[-1][1][3] - Ts[i-1][1][3], Ts[-1][2][3] - Ts[i-1][2][3]])
+            z0i = np.array([Ts[i - 1][0][2], Ts[i - 1][1][2], Ts[i - 1][2][2]])
+            riN = np.array(
+                [
+                    Ts[-1][0][3] - Ts[i - 1][0][3],
+                    Ts[-1][1][3] - Ts[i - 1][1][3],
+                    Ts[-1][2][3] - Ts[i - 1][2][3],
+                ]
+            )
         Jvi = np.cross(z0i, riN)
         Jwi = z0i
         Jv.append(Jvi)
@@ -209,6 +250,7 @@ def Jacobian(q):
     J = np.concatenate([Jv, Jw])
 
     return J, Jv, Jw
+
 
 # Function to compute the forward Cartesian velocity of the arm
 def forwardVelocity(q, dq):
@@ -229,8 +271,9 @@ def forwardVelocity(q, dq):
     J, Jv, Jw = Jacobian(q)
 
     dx = J.dot(dq)
-    
+
     return dx
+
 
 # Function to compute the inverse velocity of the arm
 def inverseVelocity(q, dx):
@@ -268,6 +311,7 @@ def inverseVelocity(q, dx):
 
     return dq
 
+
 # Function to compute the projection length of a vector onto a line
 def projection_length(line, vector):
     """
@@ -277,16 +321,19 @@ def projection_length(line, vector):
             two-dimensional vector defining line onto which pojection is done
         vector : list(float)
             two-dimensional vector to be projected
-        
+
     Returns
     --------
         length : float
             length of projected vector
     """
-    
+
     dot_product = line[0] * vector[0] + line[1] * vector[1]
     length_sqrd = math.pow(line[0], 2) + math.pow(line[1], 2)
-    proj_vector = [line[0] * dot_product / length_sqrd, line[1] * dot_product / length_sqrd]
+    proj_vector = [
+        line[0] * dot_product / length_sqrd,
+        line[1] * dot_product / length_sqrd,
+    ]
 
     length = math.sqrt(math.pow(proj_vector[0], 2) + math.pow(proj_vector[1], 2))
     if proj_vector[0] < 0:
@@ -294,31 +341,37 @@ def projection_length(line, vector):
 
     return length
 
+
 # Function to compute the joint angles to achieve a target end effector position
-def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, rotate_waist):
+def inverseKinematicsComputeJointAngles(
+    ee_target, wrist_target, elbow_target, rotate_waist
+):
     """Calculates the necessary angles of all joints to achieve the target end effector position
 
     Parameters
     --------
         ee_target : np.array(6, 1)
             end effector Cartesian coordinates and XYZ Euler angles
-        
+
         wrist_target: list(float)
             wrist position Cartesian coordinates [x, y, z]
-        
+
         elbow_target: list(float)
             elbow position Cartesian coordinates [x, y, z]
 
         rotate_waist: boolean
             True if the waist is to be rotated 180, False otherwise
-        
+
     Returns
     --------
         joint_angles : list(float)
-            list of angles in radians of joints from base to end effector, relative to 
+            list of angles in radians of joints from base to end effector, relative to
             the last joint
     """
-    projection_line = [ee_target[0], ee_target[1]] # To turn from 3D to 2D, we project onto the plane defined by this line and the Y axis.
+    projection_line = [
+        ee_target[0],
+        ee_target[1],
+    ]  # To turn from 3D to 2D, we project onto the plane defined by this line and the Y axis.
 
     # Refactor hand coordinates from 3D to 2D
     hand_proj = projection_length(projection_line, ee_target[:2])
@@ -332,22 +385,38 @@ def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, r
     elbow_proj = projection_length(projection_line, elbow_target[:2])
     elbow_coordinates = (elbow_proj, elbow_target[2])
 
-    true_base_coordinates = (0, 0, arm_DH[0][0]) # Shoulder coordinates
+    true_base_coordinates = (0, 0, arm_DH[0][0])  # Shoulder coordinates
 
-    d = math.sqrt(wrist_coordinates[0] ** 2 + (wrist_coordinates[1] - true_base_coordinates[2]) ** 2) # Length of line between wrist and shoulder
+    d = math.sqrt(
+        wrist_coordinates[0] ** 2
+        + (wrist_coordinates[1] - true_base_coordinates[2]) ** 2
+    )  # Length of line between wrist and shoulder
 
-    theta_l1_l2 = math.acos(round((d ** 2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2), 2) / (-2 * arm_DH[1][2] * arm_DH[2][2])) # Elbow inner angle with cosine law
-    theta_b = math.asin(elbow_coordinates[0] / arm_DH[1][2]) # Shoulder angle based on elbow coordinates
+    theta_l1_l2 = math.acos(
+        round((d**2 - arm_DH[1][2] ** 2 - arm_DH[2][2] ** 2), 2)
+        / (-2 * arm_DH[1][2] * arm_DH[2][2])
+    )  # Elbow inner angle with cosine law
+    theta_b = math.asin(
+        elbow_coordinates[0] / arm_DH[1][2]
+    )  # Shoulder angle based on elbow coordinates
 
-    l = math.sqrt((hand_coordinates[0] - elbow_coordinates[0]) ** 2 + (hand_coordinates[1] - elbow_coordinates[1]) ** 2) # Length of line between hand and elbow
-    theta_h = math.acos((l ** 2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2) / (-2 * arm_DH[-1][0] * arm_DH[2][2])) # Wrist inner angle with cosine law
-    
+    l = math.sqrt(
+        (hand_coordinates[0] - elbow_coordinates[0]) ** 2
+        + (hand_coordinates[1] - elbow_coordinates[1]) ** 2
+    )  # Length of line between hand and elbow
+    theta_h = math.acos(
+        (l**2 - arm_DH[2][2] ** 2 - arm_DH[-1][0] ** 2)
+        / (-2 * arm_DH[-1][0] * arm_DH[2][2])
+    )  # Wrist inner angle with cosine law
+
     # Calculation of adjustment to wrist required to align with wrist standard 0
-    robot_normal = np.cross(np.array([0,0,1]), np.array([ee_target[0], ee_target[1],0]))
+    robot_normal = np.cross(
+        np.array([0, 0, 1]), np.array([ee_target[0], ee_target[1], 0])
+    )
     eh_normal = np.cross(np.array(ee_target[:3]) - np.array(elbow_target), robot_normal)
     tmp = eh_normal @ (np.array(wrist_target) - np.array(elbow_target))
     if ee_target[0] < 0:
-        tmp = -tmp # Negative if wrist below hand-elbow line, positive if above
+        tmp = -tmp  # Negative if wrist below hand-elbow line, positive if above
 
     # Calculates waist rotation with inverse tangent and adjusts to align with waist standard 0 position
     if ee_target[0] >= 0:
@@ -355,22 +424,26 @@ def inverseKinematicsComputeJointAngles(ee_target, wrist_target, elbow_target, r
     elif ee_target[1] >= 0:
         rotation = -math.pi + math.atan2(ee_target[1], ee_target[0])
     else:
-        rotation = math.pi + math.atan2(ee_target[1],  ee_target[0])
+        rotation = math.pi + math.atan2(ee_target[1], ee_target[0])
 
     joint_angles = [
-        rotation, # waist
-        theta_b, # shoulder relative to z axis
-        math.pi / 2 - theta_l1_l2, # elbow angle adjusted for elbow standard 0
-        np.sign(tmp) * np.abs(theta_h - math.pi),  # wrist angle adjusted for wrist sandard 0
-        0 # hand
-    ] 
+        rotation,  # waist
+        theta_b,  # shoulder relative to z axis
+        math.pi / 2 - theta_l1_l2,  # elbow angle adjusted for elbow standard 0
+        np.sign(tmp)
+        * np.abs(theta_h - math.pi),  # wrist angle adjusted for wrist sandard 0
+        0,  # hand
+    ]
 
     # Applies rotation if in a reversed position
     if rotate_waist:
         joint_angles[0] += math.pi  # Reverses waist
-        joint_angles[1] = -joint_angles[1] # Adjusts shoulder to point along the same line despite rotated waist
+        joint_angles[1] = -joint_angles[
+            1
+        ]  # Adjusts shoulder to point along the same line despite rotated waist
 
     return joint_angles
+
 
 def inverseKinematicsJointPositions(hand_pose):
     """Calculates the reference frame positions of the joints on the arm
@@ -379,7 +452,7 @@ def inverseKinematicsJointPositions(hand_pose):
     --------
         hand_pose : np.array(6, 1)
             end effector Cartesian coordinates and XYZ Euler angles
-        
+
     Returns
     --------
         tuple[list[np.array, np.array, np.array, np.array, np.array]]
@@ -396,16 +469,16 @@ def inverseKinematicsJointPositions(hand_pose):
     T_h = Pose2Mat(hand_pose)
 
     # Get Wrist position
-    wrist_pose = hand_pose[:3] - T_h[:3,2] * arm_DH[-1][0]
+    wrist_pose = hand_pose[:3] - T_h[:3, 2] * arm_DH[-1][0]
 
     # Get Shoulder position
-    shoulder_pose = np.array([0,0,arm_DH[0][0]])
+    shoulder_pose = np.array([0, 0, arm_DH[0][0]])
 
     ## Get Possible Elbow position
     # Form Arm Plane Basis Vectors
     basis_x = wrist_pose - shoulder_pose
     d = np.linalg.norm(basis_x)
-    if not np.isclose(d, 0): 
+    if not np.isclose(d, 0):
         basis_x = basis_x / d
     w = np.linalg.norm(wrist_pose)
     if np.isclose(w, 0):
@@ -415,8 +488,8 @@ def inverseKinematicsJointPositions(hand_pose):
     basis_y = basis_y / np.linalg.norm(basis_y)
 
     # Get Position of Link intersections (circles)
-    elbow_basis_x = (d**2 - arm_DH[2][2]**2 + arm_DH[1][2]**2) / (2*d)
-    elbow_basis_y = np.sqrt(arm_DH[1][2]**2 - elbow_basis_x**2) 
+    elbow_basis_x = (d**2 - arm_DH[2][2] ** 2 + arm_DH[1][2] ** 2) / (2 * d)
+    elbow_basis_y = np.sqrt(arm_DH[1][2] ** 2 - elbow_basis_x**2)
 
     elbow_pose_1 = elbow_basis_x * basis_x + elbow_basis_y * basis_y + shoulder_pose
     elbow_pose_2 = elbow_basis_x * basis_x - elbow_basis_y * basis_y + shoulder_pose
@@ -426,18 +499,19 @@ def inverseKinematicsJointPositions(hand_pose):
         [shoulder_pose, elbow_pose_2, wrist_pose, wrist_pose, hand_pose[:3]],
     )
 
-def inverseKinematicsAngleOptions(hand_pose): 
+
+def inverseKinematicsAngleOptions(hand_pose):
     """Calculates the necessary joint positions and selects ideal elbow
 
     Parameters
     --------
         hand_pose : np.array(6, 1)
             end effector Cartesian coordinates and XYZ Euler angles
-        
+
     Returns
     --------
         joint_angles : list(float)
-            list of angles in radians of joints from base to end effector, relative to 
+            list of angles in radians of joints from base to end effector, relative to
             the last joint
     """
 
@@ -450,11 +524,12 @@ def inverseKinematicsAngleOptions(hand_pose):
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, False),
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_1, True),
         inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, False),
-        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, True)
+        inverseKinematicsComputeJointAngles(hand_pose, wrist_pose, elbow_pose_2, True),
     )
 
+
 def legalIKPositionPicker(poses, cur_pose):
-    """ Determines which of the given poses is the best choice. 
+    """Determines which of the given poses is the best choice.
 
     Parameters
     --------
@@ -478,18 +553,17 @@ def legalIKPositionPicker(poses, cur_pose):
         if legal:
             legal_poses.append(np.array(pose))
 
-    if len(legal_poses) == 0: 
+    if len(legal_poses) == 0:
         raise AssertionError("Unreachable Position")
-    
 
     # Typically there should only be one pose in legal_poses, but if not this picks the one closest to cur_pose
     cur_pose = np.array(cur_pose)
     best_pose = legal_poses[0]
-    best_difference = np.sum((cur_pose[:-1] - best_pose[:-1])**2) 
+    best_difference = np.sum((cur_pose[:-1] - best_pose[:-1]) ** 2)
     for pose in legal_poses:
-        if np.sum((cur_pose[:-1] - pose[:-1])**2) < best_difference:
+        if np.sum((cur_pose[:-1] - pose[:-1]) ** 2) < best_difference:
             best_pose = pose
-            best_difference = np.sum((cur_pose[:-1] - pose[:-1])**2)
+            best_difference = np.sum((cur_pose[:-1] - pose[:-1]) ** 2)
 
     return best_pose
 

@@ -326,7 +326,7 @@ def main():
     # TODO find more serial, it is a string of hex of the serial number
     arm_serial_numbers = {
         # 0x386434413539 = 62003024573753 in decimal
-        "rover_arm_shoulder": "386434413539",
+        "rover_arm_shoulder": "383834583539",
         "rover_arm_elbow": "386434413539",  # change as needed
         "rover_arm_waist": "0",
     }

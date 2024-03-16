@@ -54,10 +54,10 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
                     + str(joint.odrv.encoder_estimator0.vel_estimate)
                     + ", "
                     + "lower_limit_switch_pin_state="
-                    + f"{bin(joint.odrv.get_gpio_states())[2:]:0>12}"[0]
+                    + f"""{bin(joint.odrv.get_gpio_states())[2:]:0>12}"""[0]
                     + ", "
                     + "upper_limit_switch_pin_state="
-                    + f"{bin(joint.odrv.get_gpio_states())[2:]:0>12}"[2]
+                    + f"""{bin(joint.odrv.get_gpio_states())[2:]:0>12}"""[2]
                 )
                 dump_errors(joint.odrv)
 
@@ -80,19 +80,19 @@ def print_joint_state_from_lst(ODrive_Joint_lst):
     for joint_name, joint_obj in ODrive_Joint_lst.items():
         # Check if the odrive is connected
         status = "connected" if joint_obj.odrv else "disconnected"
-        print(f"{joint_name} {joint_obj.serial_number} ({status})")
+        print(f"""{joint_name} {joint_obj.serial_number} ({status})""")
         if joint_obj.odrv:
             try:
                 print(
-                    f"-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}")
+                    f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
                 print(
-                    f"-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}")
+                    f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
                 print(
-                    f"-input_pos={joint_obj.odrv.axis0.controller.input_pos}")
+                    f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
             except:
-                print(f"-pos_rel=None")
-                print(f"-pos_abs=None")
-        print(f"-setpoint_deg={joint_obj.setpoint_deg}")
+                print(f"""-pos_rel=None""")
+                print(f"""-pos_abs=None""")
+        print(f"""-setpoint_deg={joint_obj.setpoint_deg}""")
 
 
 class ODrive_Joint:
@@ -128,7 +128,7 @@ class ODrive_Joint:
         # verify it is on mode high
         print(
             "initial state of limit switch pin 12 is : ",
-            f"{bin(self.odrv.get_gpio_states())[2:]:0>12}"[0],
+            f"""{bin(self.odrv.get_gpio_states())[2:]:0>12}"""[0],
         )
 
     def config_upper_limit_switch(self):
@@ -149,7 +149,7 @@ class ODrive_Joint:
         # verify it is on mode high
         print(
             "initial state of limit switch pin 10 is : ",
-            f"{bin(self.odrv.get_gpio_states())[2:]:0>12}"[2],
+            f"""{bin(self.odrv.get_gpio_states())[2:]:0>12}"""[2],
         )
 
     # TODO untested, call after entered closed loop control
@@ -464,7 +464,7 @@ def main():
 
     # SET ABSOLUTE POSITION ----------------------------------------------------------------
     # abs_pos = 6.9
-    # print(f"SETTING ABSOLUTE POSITION to {abs_pos}")
+    # print(f"""SETTING ABSOLUTE POSITION to {abs_pos}")
     # test_odrv_joint.odrv.axis0.set_abs_pos(abs_pos)
 
     # TODO investigate more, this is not working, NOT A PRIORITY
@@ -506,7 +506,7 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
                 setpoint = current + \
                     (setpoint_increment * test_odrv_joint.gear_ratio)
-                print(f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
+                print(f"""""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
                       test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}""")
                 test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
 
@@ -514,7 +514,7 @@ def main():
             elif command == "s":
                 setpoint = value
                 print(
-                    f"""SETTING SETPOINT to {setpoint}, current_state={
+                    f"""""SETTING SETPOINT to {setpoint}, current_state={
                         test_odrv_joint.odrv.axis0.current_state}"""
                 )
                 test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
@@ -522,7 +522,7 @@ def main():
             # Absolute command
             elif command == "a":
                 print(
-                    f"""SETTING ABSOLUTE POSITION to {value}, current_state={
+                    f"""""SETTING ABSOLUTE POSITION to {value}, current_state={
                         test_odrv_joint.odrv.axis0.current_state}"""
                 )
                 test_odrv_joint.odrv.axis0.set_abs_pos(value)

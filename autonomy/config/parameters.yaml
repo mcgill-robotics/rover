@@ -1,3 +1,31 @@
+# Robot config parameters
+acc_lim_x: 0.2
+acc_lim_theta: 1.0
+max_vel_x: 1.0
+max_vel_x_backwards: 0.5 
+max_vel_theta: 30.0
+
+# FOR CARLIKE, DO NOT TOUCH
+min_turning_radius: 0.0
+wheelbase: 1.0
+cmd_angle_instead_of_rotvel: false
+
+# FOR HOLONOMIC, DO NOT TOUCH
+max_vel_y: 0.0
+acc_lim_y: 0.5
+
+footprint_model:
+  type: "point"
+  radius: 0.2
+  line_start: [-0.3, 0.0]
+  line_end: [0.3, 0.0]
+  front_offset: 0.2
+  front_radius: 0.2
+  rear_offset: 0.2
+  rear_radius: 0.2
+  is_footprint_dynamic: false
+
+
 # Goal tolerance parameters
 xy_goal_tolerance: 0.2
 yaw_goal_tolerance: 0.2

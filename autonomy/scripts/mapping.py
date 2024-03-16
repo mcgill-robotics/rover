@@ -153,14 +153,23 @@ class PointCloudTracker:
 
     def publish_bounding_boxes_to_rviz(self) -> None:
         X = np.array([(t[0], t[1]) for t in self.obstacle_points])
-
+        obstacle_msg = ObstacleArrayMsg() # This and 2 lines under creates an Obstacle array
+        obstacle_msg.header.stamp = rospy.Time.now()
+        obstacle_msg.header.frame_id = FIXED_FRAME_ID
         for e, hull in enumerate(get_all_hulls_vertices(X)):
+            individual_obstacle = ObstacleMsg()
+            individual_obstacle.id = e
+            individual_obstacle.polygon.points = [Point32(x=x, y=y) for x, y in hull]
+            obstacle_msg.obstacles.append(individual_obstacle)
             # Setting up the polygonStamped
             polygon_stamped_msg = PolygonStamped()
             polygon_stamped_msg.header.stamp = rospy.Time.now()
             polygon_stamped_msg.header.frame_id = FIXED_FRAME_ID
             polygon_stamped_msg.polygon.points = [Point32(x=x, y=y, z=0.5) for x, y in hull]
             polygon_stamped_msg.header.seq = e
+            '''---------------------------------'''
+            
+
             if e+1 > len(self.rviz_polygon_pub_lst):
                 for _ in range(e+1-len(self.rviz_polygon_pub_lst)):
                     self.rviz_polygon_pub_lst[e] = rospy.Publisher(f'obstacle_polygons/{e}', PolygonStamped, queue_size=10)
@@ -169,6 +178,7 @@ class PointCloudTracker:
             '''
             else:
                 print(f'WARNING: {e=} is out of range of {len(self.rviz_polygon_pub_lst)=}')'''
+        self.obstacle_pub.publish(obstacle_msg)
 
     def quaternion_rotation_matrix(self, Q: tuple):
         """

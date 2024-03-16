@@ -28,12 +28,14 @@ arm_serial_numbers = {
     "shoulder_joint": "386434413539",  # 0x386434413539 = 62003024573753 in decimal
     "waist_joint": "0",
 }
+
 arm_gear_ratios = {
     "elbow_joint": 1,
     "shoulder_joint": 100,
     "waist_joint": 1,
 }
 
+# Unused at the moment
 arm_zero_offsets = {
     "elbow_joint": 0,
     "shoulder_joint": 45.0,
@@ -80,6 +82,7 @@ class Node_odrive_interface_arm:
             Float32MultiArray,
             self.handle_arm_outshaft_fb,
         )
+        # Cmd comes from the external control node, we convert it to setpoint and apply it to the ODrive
         self.command_subscriber = rospy.Subscriber(
             "/armBrushlessCmd", Float32MultiArray, self.handle_arm_command
         )
@@ -105,8 +108,11 @@ class Node_odrive_interface_arm:
             for joint_name, joint_obj in arm_joint_dict.items():
                 if not joint_obj.odrv:
                     continue
-                temp = self.joint_pos_outshaft_dict[joint_name] * \
-                    joint_obj.gear_ratio / 360
+                temp = (
+                    self.joint_pos_outshaft_dict[joint_name]
+                    * joint_obj.gear_ratio
+                    / 360
+                )
                 joint_obj.odrv.axis0.set_abs_pos(temp)
             self.is_homed = True
 
@@ -135,7 +141,8 @@ class Node_odrive_interface_arm:
         for key, value in arm_serial_numbers.items():
             if value == 0:
                 print(
-                    f"Skipping connection for joint: {key} due to serial_number being 0")
+                    f"Skipping connection for joint: {key} due to serial_number being 0"
+                )
                 # Instantiate class with odrv as None because we're skipping connection
                 arm_joint_dict[key] = ODrive_Joint(
                     gear_ratio=arm_gear_ratios[key],
@@ -150,7 +157,8 @@ class Node_odrive_interface_arm:
             except Exception as e:
                 odrv = None
                 print(
-                    f"Cannot connect joint: {key}, serial_number: {value}. Error: {e}")
+                    f"Cannot connect joint: {key}, serial_number: {value}. Error: {e}"
+                )
 
             # Instantiate ODrive_Joint class whether or not the connection attempt was made/successful
             arm_joint_dict[key] = ODrive_Joint(
@@ -177,8 +185,8 @@ class Node_odrive_interface_arm:
         # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
         watchdog_stop_event = threading.Event()
         watchdog_thread = threading.Thread(
-            target=print_joint_state_from_lst, args=(
-                arm_joint_dict, watchdog_stop_event)
+            target=print_joint_state_from_lst,
+            args=(arm_joint_dict, watchdog_stop_event),
         )
         watchdog_thread.start()
 
@@ -209,34 +217,24 @@ class Node_odrive_interface_arm:
             for joint_name, joint_obj in arm_joint_dict.items():
                 if not joint_obj.odrv:
                     continue
+                # Dead code, TODO remove
                 if current_mode == FeedbackMode.FROM_ODRIVE:
                     try:
-                        setpoint = (
-                            joint_obj.setpoint_deg *
-                            joint_obj.gear_ratio / 360
-                        )
+                        setpoint = joint_obj.setpoint_deg * joint_obj.gear_ratio / 360
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
                         print(
-                            f"Cannot apply setpoint {setpoint} to joint: {joint_name}")
+                            f"Cannot apply setpoint {setpoint} to joint: {joint_name}"
+                        )
                 elif current_mode == FeedbackMode.FROM_OUTSHAFT:
                     try:
-                        # diff_deg = (
-                        #     self.joint_setpoint_dict[joint_name]
-                        #     - self.joint_pos_outshaft_dict[joint_name]
-                        # )
-                        # setpoint = joint_obj.gear_ratio * diff_deg + \
-                        #     joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
-                        # joint_obj.odrv.axis0.controller.input_pos = setpoint
-
-                        setpoint = (
-                            joint_obj.setpoint_deg *
-                            joint_obj.gear_ratio / 360
-                        )
+                        # setpoint in radians
+                        setpoint = joint_obj.setpoint_deg * joint_obj.gear_ratio / 360
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
                         print(
-                            f"Cannot apply setpoint {setpoint} to joint: {joint_name}")
+                            f"Cannot apply setpoint {setpoint} to joint: {joint_name}"
+                        )
 
             # PRINT POSITIONS TO CONSOLE
             print_joint_state_from_lst(arm_joint_dict)

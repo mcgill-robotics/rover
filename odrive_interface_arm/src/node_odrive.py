@@ -30,7 +30,7 @@ arm_serial_numbers = {
 }
 
 arm_gear_ratios = {
-    "elbow_joint": 1,
+    "elbow_joint": 100,
     "shoulder_joint": 100,
     "waist_joint": 1,
 }

@@ -38,7 +38,8 @@ catkin_package(
 
 catkin_install_python(PROGRAMS
   src/node_odrive.py
-  src/node_outshaft.py
+  src/node_brushed_test.py
+  src/node_arm_viz.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

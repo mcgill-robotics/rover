@@ -106,14 +106,21 @@ class Node_odrive_interface_arm:
             self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
 
             for joint_name, joint_obj in arm_joint_dict.items():
-                if not joint_obj.odrv:
-                    continue
-                temp = (
-                    self.joint_pos_outshaft_dict[joint_name]
-                    * joint_obj.gear_ratio
-                    / 360
-                )
-                joint_obj.odrv.axis0.set_abs_pos(temp)
+                # error here TODO
+                try:
+                    if not joint_obj.odrv:
+                        continue
+                    temp = (
+                        self.joint_pos_outshaft_dict[joint_name]
+                        * joint_obj.gear_ratio
+                        / 360
+                    )
+                    joint_obj.odrv.axis0.set_abs_pos(temp)
+                except:
+                    print(
+                        f"""Cannot home joint: {
+                            joint_name} to position: {
+                            self.joint_pos_outshaft_dict[joint_name]}""")
             self.is_homed = True
 
     # Receive setpoint from external control node
@@ -132,17 +139,18 @@ class Node_odrive_interface_arm:
             try:
                 odrv = odrive.find_any(serial_number=value, timeout=5)
                 arm_joint_dict[key].attach_odrive(odrv)
-                print(f"Connected joint: {key}, serial_number: {value}")
+                print(f"""Connected joint: {key}, serial_number: {value}""")
             except:
                 odrv = None
-                print(f"Cannot connect joint: {key}, serial_number: {value}")
+                print(f"""Cannot connect joint: {
+                      key}, serial_number: {value}""")
 
     def run(self):
         for key, value in arm_serial_numbers.items():
             if value == 0:
                 print(
-                    f"Skipping connection for joint: {
-                        key} due to serial_number being 0"
+                    f"""Skipping connection for joint: {
+                        key} due to serial_number being 0"""
                 )
                 # Instantiate class with odrv as None because we're skipping connection
                 arm_joint_dict[key] = ODrive_Joint(
@@ -154,12 +162,12 @@ class Node_odrive_interface_arm:
             try:
                 # Attempt to CONNECT TO ODRIVE only if serial_number is not 0
                 odrv = odrive.find_any(serial_number=value, timeout=5)
-                print(f"Connected joint: {key}, serial_number: {value}")
+                print(f"""Connected joint: {key}, serial_number: {value}""")
             except Exception as e:
                 odrv = None
                 print(
-                    f"Cannot connect joint: {
-                        key}, serial_number: {value}. Error: {e}"
+                    f"""Cannot connect joint: {
+                        key}, serial_number: {value}. Error: {e}"""
                 )
 
             # Instantiate ODrive_Joint class whether or not the connection attempt was made/successful
@@ -185,17 +193,17 @@ class Node_odrive_interface_arm:
         # self.watchdog_thread.start()
 
         # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
-        watchdog_stop_event = threading.Event()
-        watchdog_thread = threading.Thread(
-            target=print_joint_state_from_lst,
-            args=(arm_joint_dict, watchdog_stop_event),
-        )
-        watchdog_thread.start()
+        # watchdog_stop_event = threading.Event()
+        # watchdog_thread = threading.Thread(
+        #     target=print_joint_state_from_lst,
+        #     args=(arm_joint_dict, watchdog_stop_event),
+        # )
+        # watchdog_thread.start()
 
         # MAIN LOOP
         while not rospy.is_shutdown():
             # PRINT TIMESTAMP
-            print(f"Time: {rospy.get_time()}")
+            print(f"""Time: {rospy.get_time()}""")
             if current_mode == FeedbackMode.FROM_ODRIVE:
                 feedback = Float32MultiArray()
                 for joint_name in joint_order:
@@ -226,8 +234,8 @@ class Node_odrive_interface_arm:
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
                         print(
-                            f"Cannot apply setpoint {
-                                setpoint} to joint: {joint_name}"
+                            f"""Cannot apply setpoint {
+                                setpoint} to joint: {joint_name}"""
                         )
                 elif current_mode == FeedbackMode.FROM_OUTSHAFT:
                     try:
@@ -236,8 +244,8 @@ class Node_odrive_interface_arm:
                         joint_obj.odrv.axis0.controller.input_pos = setpoint
                     except:
                         print(
-                            f"Cannot apply setpoint {
-                                setpoint} to joint: {joint_name}"
+                            f"""Cannot apply setpoint {
+                                setpoint} to joint: {joint_name}"""
                         )
 
             # PRINT POSITIONS TO CONSOLE
@@ -313,14 +321,14 @@ class Node_odrive_interface_arm:
                             ).name
                             self.error_publisher.publish(error_fb)
                             print(
-                                f"\nError(s) occurred. Motor ID: {
-                                    error_fb.id}, Error(s): {error_fb.error}"
+                                f"""\nError(s) occurred. Motor ID: {
+                                    error_fb.id}, Error(s): {error_fb.error}"""
                             )
 
                             # Finally, hang the node and keep trying to recover until the error is gone or the shutdown signal is received
                             print(
-                                f"\nMotor {error_fb.id} Cannot recover from error(s) {
-                                    error_fb.error}. R to retry, keyboard interrupt to shut down node."
+                                f"""\nMotor {error_fb.id} Cannot recover from error(s) {
+                                    error_fb.error}. R to retry, keyboard interrupt to shut down node."""
                             )
                             while not rospy.is_shutdown():
                                 prompt = input(">").upper()
@@ -336,7 +344,7 @@ class Node_odrive_interface_arm:
                                     else:
                                         print("Recovery failed. Try again?")
                 except AttributeError:
-                    print(f"{joint_name} is not connected")
+                    print(f"""{joint_name} is not connected""")
             print()
             self.rate.sleep()
 

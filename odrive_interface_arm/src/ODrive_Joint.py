@@ -84,6 +84,10 @@ def print_joint_state_from_lst(ODrive_Joint_lst):
         if joint_obj.odrv:
             try:
                 print(
+                    f"""-current_state={
+                        AxisState(joint_obj.odrv.axis0.current_state).name}"""
+                )
+                print(
                     f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
                 print(
                     f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
@@ -335,7 +339,8 @@ def main():
         "rover_arm_waist": "0",
     }
 
-    test_joint_name = "rover_arm_elbow"
+    test_joint_name = "rover_arm_shoulder"
+    # test_joint_name = "rover_arm_elbow"
 
     # Set to True if you want to reapply the config, False if you want to skip it
     reapply_config = True
@@ -376,10 +381,10 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 2.5
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1
-        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.5
-        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.5
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 5
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1.5
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.7
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.7
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
         test_odrv_joint.odrv.config.enable_uart_a = False
         test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
@@ -406,7 +411,7 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 5
         test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1.2
         test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.1
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.1
@@ -506,7 +511,7 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
                 setpoint = current + \
                     (setpoint_increment * test_odrv_joint.gear_ratio)
-                print(f"""""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
+                print(f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
                       test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}""")
                 test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
 
@@ -514,7 +519,7 @@ def main():
             elif command == "s":
                 setpoint = value
                 print(
-                    f"""""SETTING SETPOINT to {setpoint}, current_state={
+                    f"""SETTING SETPOINT to {setpoint}, current_state={
                         test_odrv_joint.odrv.axis0.current_state}"""
                 )
                 test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
@@ -522,7 +527,7 @@ def main():
             # Absolute command
             elif command == "a":
                 print(
-                    f"""""SETTING ABSOLUTE POSITION to {value}, current_state={
+                    f"""SETTING ABSOLUTE POSITION to {value}, current_state={
                         test_odrv_joint.odrv.axis0.current_state}"""
                 )
                 test_odrv_joint.odrv.axis0.set_abs_pos(value)

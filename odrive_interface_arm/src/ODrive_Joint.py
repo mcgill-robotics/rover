@@ -381,8 +381,9 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 5
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1.5
+        # vel_limit determines how fast, vel_limit_tolerance determines how much it can go over, so we avoid vel_limit violations
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 2
         test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.7
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.7
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
@@ -411,7 +412,7 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 5
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 6
         test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1.2
         test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.1
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.1

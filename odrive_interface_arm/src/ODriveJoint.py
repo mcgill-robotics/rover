@@ -30,10 +30,10 @@ def custom_sleep(duration):
         time.sleep(duration)
 
 
-def watchdog(ODrive_Joint_lst, watchdog_stop_event):
+def watchdog(ODriveJoint_lst, watchdog_stop_event):
     while not watchdog_stop_event.is_set():
         try:
-            for joint in ODrive_Joint_lst:
+            for joint in ODriveJoint_lst:
                 print(
                     "current_state="
                     + str(AxisState(joint.odrv.axis0.current_state).name)
@@ -66,7 +66,7 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
             pass
         except fibre.libfibre.ObjectLostError:
             print(" lost connection in watchdog() ...")
-            for joint_obj in ODrive_Joint_lst:
+            for joint_obj in ODriveJoint_lst:
                 joint_obj.odrv = odrive.find_any(
                     serial_number=joint_obj.serial_number,
                     timeout=joint_obj.timeout,
@@ -76,8 +76,8 @@ def watchdog(ODrive_Joint_lst, watchdog_stop_event):
             pass
 
 
-def print_joint_state_from_lst(ODrive_Joint_lst):
-    for joint_name, joint_obj in ODrive_Joint_lst.items():
+def print_joint_state_from_lst(ODriveJoint_lst):
+    for joint_name, joint_obj in ODriveJoint_lst.items():
         # Check if the odrive is connected
         status = "connected" if joint_obj.odrv else "disconnected"
         print(f"""{joint_name} {joint_obj.serial_number} ({status})""")
@@ -99,7 +99,7 @@ def print_joint_state_from_lst(ODrive_Joint_lst):
         print(f"""-setpoint_deg={joint_obj.setpoint_deg}""")
 
 
-class ODrive_Joint:
+class ODriveJoint:
     def __init__(self, odrv=None, gear_ratio=1, zero_offset_deg=0):
         self.odrv = odrv
         # odrv.serial_number is int, serial_number should be hex version in string
@@ -352,7 +352,7 @@ def main():
     setup_lower_lim_switch = True
     setup_upper_lim_switch = False
 
-    test_odrv_joint = ODrive_Joint(
+    test_odrv_joint = ODriveJoint(
         odrive.find_any(
             serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
@@ -481,10 +481,10 @@ def main():
     # test_odrv_joint.odrv.axis0.controller.config.absolute_setpoints = True
 
     # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
-    ODrive_Joint_lst = [test_odrv_joint]
+    ODriveJoint_lst = [test_odrv_joint]
     watchdog_stop_event = threading.Event()
     watchdog_thread = threading.Thread(
-        target=watchdog, args=(ODrive_Joint_lst, watchdog_stop_event)
+        target=watchdog, args=(ODriveJoint_lst, watchdog_stop_event)
     )
     watchdog_thread.start()
 

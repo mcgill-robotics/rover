@@ -10,7 +10,7 @@ import rospy
 from odrive.enums import AxisState, ProcedureResult
 from odrive.utils import dump_errors
 from std_msgs.msg import Float32MultiArray
-from ODrive_Joint import *
+from ODriveJoint import *
 from odrive_interface_arm.msg import MotorState, MotorError
 
 

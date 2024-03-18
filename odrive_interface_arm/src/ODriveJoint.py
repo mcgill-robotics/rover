@@ -87,12 +87,9 @@ def print_joint_state_from_lst(ODriveJoint_lst):
                     f"""-current_state={
                         AxisState(joint_obj.odrv.axis0.current_state).name}"""
                 )
-                print(
-                    f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
-                print(
-                    f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
-                print(
-                    f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
+                print(f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
+                print(f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
+                print(f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
             except:
                 print(f"""-pos_rel=None""")
                 print(f"""-pos_abs=None""")
@@ -324,8 +321,7 @@ class ODriveJoint:
     def print_gpio_voltages(self):
         for i in [1, 2, 3, 4]:
             print(
-                "voltage on GPIO{} is {} Volt".format(
-                    i, self.odrv.get_adc_voltage(i))
+                "voltage on GPIO{} is {} Volt".format(i, self.odrv.get_adc_voltage(i))
             )
 
 
@@ -349,12 +345,11 @@ def main():
     do_calibration = True
 
     # if there is a limit switch
-    setup_lower_lim_switch = True
+    setup_lower_lim_switch = False
     setup_upper_lim_switch = False
 
     test_odrv_joint = ODriveJoint(
-        odrive.find_any(
-            serial_number=arm_serial_numbers[test_joint_name], timeout=5)
+        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
@@ -418,7 +413,9 @@ def main():
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.1
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
         test_odrv_joint.odrv.config.enable_uart_a = False
-        test_odrv_joint.odrv.rs485_encoder_group0.config.mode = Rs485EncoderMode.AMT21_POLLING
+        test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
+            Rs485EncoderMode.AMT21_POLLING
+        )
         test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
         test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
 
@@ -491,8 +488,7 @@ def main():
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
-            user_input = input(
-                "Enter command (increment 'i X' or absolute 'a X'): ")
+            user_input = input("Enter command (increment 'i X' or absolute 'a X'): ")
             # Using regular expression to parse the input
             match = re.match(r"([ia])\s*(-?\d+(\.\d+)?)", user_input)
             if not match:
@@ -510,10 +506,11 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel
                 else:
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
-                setpoint = current + \
-                    (setpoint_increment * test_odrv_joint.gear_ratio)
-                print(f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
-                      test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}""")
+                setpoint = current + (setpoint_increment * test_odrv_joint.gear_ratio)
+                print(
+                    f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
+                      test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}"""
+                )
                 test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
 
             # Setpoint command

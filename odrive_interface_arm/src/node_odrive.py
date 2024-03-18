@@ -3,7 +3,7 @@ from odrive_interface_arm.msg import MotorState, MotorError
 from ODriveJoint import *
 from std_msgs.msg import Float32MultiArray
 from odrive.utils import dump_errors
-from odrive.enums import AxisState, ProcedureResult
+from odrive.enums import AxisState, ODriveError, ProcedureResult
 from enum import Enum
 import rospy
 import os
@@ -12,10 +12,8 @@ import sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 
-# TODO: Figure out why catkin on the Jetson isn't playing nice with this import. It worked on my PC -Eren
-# import init_functions
 
-
+# unused at the moment
 class FeedbackMode(Enum):
     FROM_ODRIVE = "fb_from_odrive"
     FROM_OUTSHAFT = "fb_from_outshaft"
@@ -77,19 +75,18 @@ class Node_odrive_interface_arm:
 
         # Subscriptions
         rospy.init_node("odrive_interface_arm")
-        self.outshaft_subscriber = rospy.Subscriber(
-            # "/arm_outshaft_fb",
+        self.outshaft_fb_subscriber = rospy.Subscriber(
             "/armBrushlessFb",
             Float32MultiArray,
-            self.handle_arm_outshaft_fb,
+            self.handle_outshaft_fb,
         )
         # Cmd comes from the external control node, we convert it to setpoint and apply it to the ODrive
-        self.command_subscriber = rospy.Subscriber(
-            "/armBrushlessCmd", Float32MultiArray, self.handle_arm_command
+        self.arm_joint_cmd_subscriber = rospy.Subscriber(
+            "/armBrushlessCmd", Float32MultiArray, self.handle_arm_cmd
         )
 
         # Publishers
-        self.state_publisher = rospy.Publisher(
+        self.odrive_state_publisher = rospy.Publisher(
             "/odrive_arm_state", MotorState, queue_size=1
         )
         self.odrive_fb_publisher = rospy.Publisher(
@@ -101,7 +98,7 @@ class Node_odrive_interface_arm:
         self.run()
 
     # Update encoder angle from external encoders
-    def handle_arm_outshaft_fb(self, msg):
+    def handle_outshaft_fb(self, msg):
         if not self.is_calibrated:
             return
         if not self.is_homed:
@@ -110,7 +107,6 @@ class Node_odrive_interface_arm:
             self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
 
             for joint_name, joint_obj in arm_joint_dict.items():
-                # error here TODO
                 try:
                     if not joint_obj.odrv:
                         continue
@@ -129,7 +125,7 @@ class Node_odrive_interface_arm:
             self.is_homed = True
 
     # Receive setpoint from external control node
-    def handle_arm_command(self, msg):
+    def handle_arm_cmd(self, msg):
         self.joint_setpoint_dict["elbow_joint"] = msg.data[0]
         self.joint_setpoint_dict["shoulder_joint"] = msg.data[1]
         self.joint_setpoint_dict["waist_joint"] = msg.data[2]
@@ -311,7 +307,6 @@ class Node_odrive_interface_arm:
                         if joint_obj.odrv.axis0.active_errors != 0:
                             error_fb = MotorError()
                             error_fb.id = joint_obj.serial_number
-                            # error_fb.error = decode_errors(joint.axis0.active_errors)
                             error_fb.error = ODriveError(
                                 joint_obj.odrv.axis0.active_errors
                             ).name

@@ -8,7 +8,7 @@ from gazebo_msgs.msg._ModelStates import ModelStates
 from geometry_msgs.msg import Pose, PolygonStamped, Polygon, Point32
 from visualization_msgs.msg import Marker
 from nav_msgs.msg import Odometry
-from autonomy_config import FIXED_FRAME_ID, CAMERA_POSITION_OFFSET, ROUNDING_COEF, ROVER_MODEL_NAME, PointsFilters
+from autonomy_config import FIXED_FRAME_ID, CAMERA_POSITION_OFFSET, ROUNDING_COEF, ROVER_MODEL_NAME, PointsFilters, MAX_DIST
 import numpy as np
 from typing import Set, Tuple, List
 from scipy.spatial import ConvexHull
@@ -26,7 +26,6 @@ class PointCloudTracker:
         self.map_grid = {}
     def listener(self) -> None:
         rospy.init_node('pc2_publisher_and_listener', anonymous=True)
-        # rospy.Subscriber("camera/depth/points", PointCloud2, self.parse_pointcloud2_message)
         rospy.Subscriber("/camera/depth/color/points", PointCloud2, self.parse_pointcloud2_message)
         rospy.Subscriber("/track_cam/odom/sample", Odometry, self.update_rover_pos)
         rospy.spin()
@@ -42,13 +41,7 @@ class PointCloudTracker:
         self.rover_pose = msg
 
     def get_rover_pose(self) -> tuple:
-        # data = rospy.wait_for_message("/gazebo/model_states", ModelStates)
         data = self.rover_pose
-        # model_names, model_poses = data.name, data.pose
-        # if ROVER_MODEL_NAME not in model_names:
-        #     raise Exception(f"Rover model name not found: '{ROVER_MODEL_NAME}'")
-        # rover_pose_quat = model_poses[model_names.index(ROVER_MODEL_NAME)].orientation 
-        # rover_pose_obj = model_poses[model_names.index(ROVER_MODEL_NAME)].position
         rover_pose_quat = data.pose.pose.orientation 
         rover_pose_obj  = data.pose.pose.position
         return (
@@ -101,22 +94,19 @@ class PointCloudTracker:
             (points_transformed_np[:, 2] > PointsFilters.GROUND_UPPER_LIMIT)
         ]
 
-        # ground_points = points_transformed_np[
-        #     (points_transformed_np[:, 2] >= PointsFilters.GROUND_LOWER_LIMIT) &
-        #     (points_transformed_np[:, 2] <= PointsFilters.GROUND_UPPER_LIMIT)
-        # ]
+        """
+        Using a rounding coefficient of 1, and resetting the self.obstacle points, with or without filters could produce results akin to the depth camera in rover gazebo
+        """
+        self.obstacle_points = set()
 
         for p in new_obstacle_points:
-            point = str(f"{round(p[0], 1)} {round(p[1], 1)}")
-            if point not in self.map_grid:
-                self.map_grid[point] = True
-            self.obstacle_points.add(tuple((p[0], p[1], p[2])))
-        self.update_json()
+            if np.linalg.norm((p[0], p[1], p[2])) < MAX_DIST:
+                self.obstacle_points.add(tuple((p[0], p[1], p[2])))
         
         self.publish_rover_position_to_rviz(rover_position_tuple)
         if (len(self.obstacle_points) > 0):
             self.publish_pc2_to_rviz()
-            #self.publish_bounding_boxes_to_rviz()
+            self.publish_bounding_boxes_to_rviz()
 
     def publish_pc2_to_rviz(self) -> None:
         header = Header()

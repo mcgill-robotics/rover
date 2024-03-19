@@ -8,7 +8,10 @@ FIXED_FRAME_ID = 'parsed_point_cloud_world'
 CAMERA_POSITION_OFFSET = (-0.285, 0, 1.1)
 
 # rounding coefficient for the points
-ROUNDING_COEF = 10
+ROUNDING_COEF = 1
+
+# distance restriction for new point clouds to filter out obects that are too far away to be read clearly
+MAX_DIST = 2.5
 
 class PointsFilters:
     # filter out points that are too close to ground

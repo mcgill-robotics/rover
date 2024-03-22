@@ -7,7 +7,7 @@ sys.path.append(currentdir)
 import rospy
 from drive_control.msg import WheelSpeed
 from odrive_interface.msg import MotorError, MotorState
-from odrive_interface.src.ODrive_utils import *
+from ODrive_utils import *
 from odrive.enums import AxisState, ProcedureResult 
 
 # TODO: Once drive is working well, expand this node to include the three arm motors

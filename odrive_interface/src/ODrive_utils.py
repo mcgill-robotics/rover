@@ -8,7 +8,7 @@ because ODrive API requires them to be that way. Note: correct serial numbers ar
 decimal. So before putting the numbers in here, you should first convert them to hex.
 """
 
-drive_serial_numbers = {"DRIVE_LB": "384E346E3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
+drive_serial_numbers = {"DRIVE_LB": "384E346E3539"}
 arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
 
 drive_ids = {'384E346E3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}

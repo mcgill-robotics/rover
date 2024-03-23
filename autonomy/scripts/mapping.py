@@ -14,6 +14,8 @@ from scipy.spatial import ConvexHull
 from bounding_boxes import get_all_hulls_vertices
 import json
 from costmap_converter.msg import ObstacleArrayMsg, ObstacleMsg 
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Path
 
 class PointCloudTracker:
     def __init__(self) -> None:
@@ -24,6 +26,7 @@ class PointCloudTracker:
         self.rviz_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
         self.obstacle_pub = rospy.Publisher('obstacles', ObstacleArrayMsg)
         self.rviz_polygon_pub_lst = {}  #Dictionary Containing n publishers
+        self.via_points_pub = rospy.Publisher('/test_optim_node/via_points', Path, queue_size=1)
         self.map_grid = {}
     def listener(self) -> None:
         rospy.init_node('pc2_publisher_and_listener', anonymous=True)
@@ -179,6 +182,29 @@ class PointCloudTracker:
             else:
                 print(f'WARNING: {e=} is out of range of {len(self.rviz_polygon_pub_lst)=}')'''
         self.obstacle_pub.publish(obstacle_msg)
+
+    
+    def publish_via_points(self):
+        
+        rospy.init_node("test_via_points_msg")
+
+
+        via_points_msg = Path() 
+        via_points_msg.header.stamp = rospy.Time.now()
+        via_points_msg.header.frame_id = "odom" # CHANGE HERE: odom/map
+        
+        # Add via-points
+        point1 = PoseStamped()
+        point1.pose.position.x = 0.0
+        point1.pose.position.y = 1.5
+        point2 = PoseStamped()
+        point2.pose.position.x = 2.0
+        point2.pose.position.y = -0.5
+        
+        via_points_msg.poses = [point1, point2]
+        self.via_points_pub.publish(via_points_msg)
+            
+
 
     def quaternion_rotation_matrix(self, Q: tuple):
         """

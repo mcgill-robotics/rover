@@ -122,4 +122,5 @@ if __name__ == "__main__":
     app.router.add_get("/controller.js", javascript_control)
 
     app.router.add_post("/offer", offer)
+    app.router.add_options("/offer", handle_options)
     web.run_app(app, host=args.host, port=args.port, ssl_context=ssl_context)

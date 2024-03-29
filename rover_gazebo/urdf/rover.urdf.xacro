@@ -34,19 +34,19 @@
     </joint>
 
     <xacro:wheel wheel_prefix="left" parent_link="base_link">
-        <origin xyz="0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 3.141592 0" />
+        <origin xyz="0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 1.57079 0" />
     </xacro:wheel>
 
     <xacro:wheel wheel_prefix="right" parent_link="base_link">
-        <origin xyz="-0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 0 0" />
+        <origin xyz="-0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 1.57079 0" />
     </xacro:wheel>
 
     <xacro:wheel wheel_prefix="rear_left" parent_link="base_link">
-        <origin xyz="0.5125 0.306875 ${-0.060752 + .1}" rpy="0 3.141592 0" />
+        <origin xyz="0.5125 0.306875 ${-0.060752 + .1}" rpy="0 1.57079 0" />
     </xacro:wheel>
 
     <xacro:wheel wheel_prefix="rear_right" parent_link="base_link">
-        <origin xyz="-0.5125 0.306875 ${-0.060752 + .1}" rpy="0 0 0" />
+        <origin xyz="-0.5125 0.306875 ${-0.060752 + .1}" rpy="0 1.57079 0" />
     </xacro:wheel>
 
     <xacro:depth_camera parent_link="base_link">

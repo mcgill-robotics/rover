@@ -2,7 +2,7 @@
 import rospy
 from pynput import keyboard
 from human_control_interface.msg import Gamepad_input
-from camera_data.msg import Camera_Orientation
+#from camera_data.msg import Camera_Orientation
 from geometry_msgs.msg import Twist
 from Gamepad import *
 from std_msgs.msg import Float32MultiArray

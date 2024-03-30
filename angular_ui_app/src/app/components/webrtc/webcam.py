@@ -7,7 +7,6 @@ import platform
 import ssl
 
 from aiohttp import web
-
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaPlayer
 
@@ -18,7 +17,6 @@ async def index(request):
     content = open(os.path.join(ROOT, "index.html"), "r").read()
     return web.Response(content_type="text/html", text=content)
 
-
 async def javascript(request):
     content = open(os.path.join(ROOT, "client.js"), "r").read()
     return web.Response(content_type="application/javascript", text=content)
@@ -28,6 +26,7 @@ async def javascript_control(request):
     return web.Response(content_type="application/javascript", text=content)
 
 async def offer(request):
+    print(request)  
     params = await request.json()
     offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
 
@@ -61,13 +60,33 @@ async def offer(request):
     answer = await pc.createAnswer()
     await pc.setLocalDescription(answer)
 
-    return web.Response(
+    response = web.Response(
         content_type="application/json",
         text=json.dumps(
             {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
         ),
     )
+    print("returning")
 
+    # Add CORS headers
+    # response.headers['Access-Control-Allow-Origin'] = 'http://127.0.0.1:4200'  # Replace '*' with your specific allowed origins if necessary
+    response.headers['Access-Control-Allow-Origin'] = '*'  # Replace '*' with your specific allowed origins if necessary
+    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+
+    return response
+
+# work with different base port plain js
+# async def handle_options(request):
+#     # Respond to preflight requests
+#     return web.Response(
+#         status=200,
+#         headers={
+#             'Access-Control-Allow-Origin': '*',
+#             'Access-Control-Allow-Methods': 'POST, OPTIONS',
+#             'Access-Control-Allow-Headers': 'Content-Type',
+#         }
+#     )
 async def handle_options(request):
     # Get the requested headers from the request
     requested_headers = request.headers.get('Access-Control-Request-Headers', '')
@@ -80,17 +99,16 @@ async def handle_options(request):
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
             'Access-Control-Allow-Headers': requested_headers,  # Use the requested headers in the response
         }
-)
+    )
+
 
 pcs = set()
-
 
 async def on_shutdown(app):
     # close peer connections
     coros = [pc.close() for pc in pcs]
     await asyncio.gather(*coros)
     pcs.clear()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="WebRTC webcam demo")
@@ -120,7 +138,7 @@ if __name__ == "__main__":
     app.router.add_get("/", index)
     app.router.add_get("/client.js", javascript)
     app.router.add_get("/controller.js", javascript_control)
-
+    app.router.add_options("/offer", handle_options) 
+    
     app.router.add_post("/offer", offer)
-    app.router.add_options("/offer", handle_options)
     web.run_app(app, host=args.host, port=args.port, ssl_context=ssl_context)

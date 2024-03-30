@@ -95,6 +95,8 @@ export class WebrtcComponent {
     // Hide stop button using Angular data binding
     setTimeout(() => {
       this.pc?.close();
+      console.log(this.pc);
     }, 500);
+
   }
 }

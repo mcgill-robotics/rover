@@ -13,13 +13,13 @@
                     <box size="0.073000 0.276000 0.072000" />
                 </geometry>
             </collision>
-            <visual name="kinect_visual">
+            <!-- <visual name="kinect_visual">
                 <origin xyz="0 0 0" rpy="0 0 0" />
                 <geometry>
                     <mesh filename="package://rover_gazebo/meshes/depth_camera.dae"
                         scale="1.0 1.0 1.0" />
                 </geometry>
-            </visual>
+            </visual> -->
         </link>
 
         <joint name="depth_camera_joint" type="fixed">

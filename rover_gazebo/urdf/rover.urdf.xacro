@@ -12,7 +12,7 @@
         <visual>
             <origin xyz="0 0 0.1" rpy="0 0 0" />
             <geometry>
-                <mesh filename="package://rover_gazebo/meshes/Full_Asm_Adjusted.dae" />
+                <mesh filename="package://rover_gazebo/meshes/Full_Asm_noarm_mast_cam.dae" />
             </geometry>
         </visual>
         <collision>
@@ -50,7 +50,7 @@
     </xacro:wheel>
 
     <xacro:depth_camera parent_link="base_link">
-        <origin xyz="0 0.2754 ${0.9943 + .1}" rpy="0 0 -1.57079"/>
+        <origin xyz="0 -0.41 0.32" rpy="0 0 -1.57079"/>
     </xacro:depth_camera>
 
     <gazebo>

@@ -1,5 +1,5 @@
 import threading
-from odrive_interface_arm.msg import MotorState, MotorError
+from odrive_interface.msg import MotorState, MotorError
 from ODriveJoint import *
 from std_msgs.msg import Float32MultiArray
 from odrive.utils import dump_errors

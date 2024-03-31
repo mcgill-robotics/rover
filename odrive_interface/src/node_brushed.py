@@ -11,7 +11,7 @@ from odrive.enums import AxisState, ProcedureResult
 from odrive.utils import dump_errors
 from std_msgs.msg import Float32MultiArray
 from ODriveJoint import *
-from odrive_interface_arm.msg import MotorState, MotorError
+from odrive_interface.msg import MotorState, MotorError
 
 
 # TODO

@@ -2,17 +2,17 @@
 <package format="2">
   <name>odrive_interface</name>
   <version>0.0.0</version>
-  <description>Package that interfaces with the ODrives</description>
+  <description>Package that interfaces with the ODrives motors</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="eren.ozturk@mail.mcgill.ca">Eren Ozturk</maintainer>
+  <maintainer email="martin.nguyen3@mail.mcgill.ca">Martin Nguyen</maintainer>
 
 
   <license>MIT</license>
 
-  <author email="eren.ozturk@mail.mcgill.ca">Eren Ozturk</author>
+  <author email="martin.nguyen3@mail.mcgill.ca">Martin Nguyen</author>
   
   <build_depend>message_generation</build_depend>
   <build_export_depend>message_generation</build_export_depend>

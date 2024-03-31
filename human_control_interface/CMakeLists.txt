@@ -33,8 +33,6 @@ catkin_package(
 catkin_install_python(PROGRAMS 
   src/Controller/Joystick.py
   src/Controller/Gamepad.py
-  src/Controller/GamepadProcess.py
-  src/Controller/GamepadProcess_alt.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 

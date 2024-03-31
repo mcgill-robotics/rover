@@ -30,43 +30,43 @@ def custom_sleep(duration):
         time.sleep(duration)
 
 
-def watchdog(ODriveJoint_lst, watchdog_stop_event):
+def watchdog(joint_dict, watchdog_stop_event):
     while not watchdog_stop_event.is_set():
         try:
-            for joint in ODriveJoint_lst:
+            for joint_name, joint_obj in joint_dict.items():
                 print(
                     "current_state="
-                    + str(AxisState(joint.odrv.axis0.current_state).name)
+                    + str(AxisState(joint_obj.odrv.axis0.current_state).name)
                     + ", "
                     + "Raw angle="
-                    + str(joint.odrv.rs485_encoder_group0.raw)
+                    + str(joint_obj.odrv.rs485_encoder_group0.raw)
                     + ", "
                     + "pos_rel="
-                    + str(joint.odrv.axis0.pos_vel_mapper.pos_rel)
+                    + str(joint_obj.odrv.axis0.pos_vel_mapper.pos_rel)
                     + ", "
                     + "pos_abs="
-                    + str(joint.odrv.axis0.pos_vel_mapper.pos_abs)
+                    + str(joint_obj.odrv.axis0.pos_vel_mapper.pos_abs)
                     + ", "
                     + "input_pos="
-                    + str(joint.odrv.axis0.controller.input_pos)
+                    + str(joint_obj.odrv.axis0.controller.input_pos)
                     + ", "
                     + "vel_estimate="
-                    + str(joint.odrv.encoder_estimator0.vel_estimate)
+                    + str(joint_obj.odrv.encoder_estimator0.vel_estimate)
                     + ", "
                     + "lower_limit_switch_pin_state="
-                    + f"""{bin(joint.odrv.get_gpio_states())[2:]:0>12}"""[0]
+                    + f"""{bin(joint_obj.odrv.get_gpio_states())[2:]:0>12}"""[0]
                     + ", "
                     + "upper_limit_switch_pin_state="
-                    + f"""{bin(joint.odrv.get_gpio_states())[2:]:0>12}"""[2]
+                    + f"""{bin(joint_obj.odrv.get_gpio_states())[2:]:0>12}"""[2]
                 )
-                dump_errors(joint.odrv)
+                dump_errors(joint_obj.odrv)
 
             custom_sleep(1)
         except NameError:
             pass
         except fibre.libfibre.ObjectLostError:
             print(" lost connection in watchdog() ...")
-            for joint_obj in ODriveJoint_lst:
+            for joint_name, joint_obj in joint_dict.items():
                 joint_obj.odrv = odrive.find_any(
                     serial_number=joint_obj.serial_number,
                     timeout=joint_obj.timeout,
@@ -76,8 +76,8 @@ def watchdog(ODriveJoint_lst, watchdog_stop_event):
             pass
 
 
-def print_joint_state_from_lst(ODriveJoint_lst):
-    for joint_name, joint_obj in ODriveJoint_lst.items():
+def print_joint_state_from_lst(joint_dict):
+    for joint_name, joint_obj in joint_dict.items():
         # Check if the odrive is connected
         status = "connected" if joint_obj.odrv else "disconnected"
         print(f"""{joint_name} {joint_obj.serial_number} ({status})""")
@@ -96,7 +96,8 @@ def print_joint_state_from_lst(ODriveJoint_lst):
             except:
                 print(f"""-pos_rel=None""")
                 print(f"""-pos_abs=None""")
-        print(f"""-setpoint_deg={joint_obj.setpoint_deg}""")
+        print(f"""-pos_cmd={joint_obj.pos_cmd}""")
+        print(f"""-vel_cmd={joint_obj.vel_cmd}""")
 
 
 class ODriveJoint:
@@ -113,7 +114,7 @@ class ODriveJoint:
         # gear_ratio is input revolutions / output revolutions
         self.gear_ratio = gear_ratio
         self.zero_offset_deg = zero_offset_deg
-        self.setpoint_deg = 0
+        self.pos_cmd = 0
         self.pos_outshaft_deg = 0
 
         # Velocity control
@@ -487,10 +488,10 @@ def main():
     # test_odrv_joint.odrv.axis0.controller.config.absolute_setpoints = True
 
     # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
-    ODriveJoint_lst = [test_odrv_joint]
+    joint_dict = {test_joint_name: test_odrv_joint}
     watchdog_stop_event = threading.Event()
     watchdog_thread = threading.Thread(
-        target=watchdog, args=(ODriveJoint_lst, watchdog_stop_event)
+        target=watchdog, args=(joint_dict, watchdog_stop_event)
     )
     watchdog_thread.start()
 

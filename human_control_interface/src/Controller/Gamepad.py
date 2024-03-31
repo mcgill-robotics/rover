@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import pygame
-#import time
-#import rospy
+
+# import time
+# import rospy
 from human_control_interface.msg import Gamepad_input
+
 """Gets gamepad data and publishes the data to the gamepad_data topic
 
     Topic data : Float32MultiArray
@@ -31,9 +33,11 @@ from human_control_interface.msg import Gamepad_input
         Axis 6      : Range [-1, 1]     : RT - analog
 
 """
-class Gamepad():
-    """Driver to get the event inputs from the Logitech Extreme 3D Pro Gamepad
-    """
+
+
+class Gamepad:
+    """Driver to get the event inputs from the Logitech Extreme 3D Pro Gamepad"""
+
     def __init__(self):
         """Constructor for the Gamepad Driver
 
@@ -54,44 +58,63 @@ class Gamepad():
             print("only one joystick")
             self.controller = pygame.joystick.Joystick(0)
             self.controller.init()
-            print(pygame.joystick.get_count(),self.controller.get_id(), " ", self.controller.get_name())
+            print(
+                pygame.joystick.get_count(),
+                self.controller.get_id(),
+                " ",
+                self.controller.get_name(),
+            )
 
         elif pygame.joystick.get_count() == 2:
             try:
                 controller1 = pygame.joystick.Joystick(0)
                 controller1.init()
-                print ("SINGLE CONTROLL DETECTED", controller1.get_id(), " ", controller1.get_name())
+                print(
+                    "SINGLE CONTROLL DETECTED",
+                    controller1.get_id(),
+                    " ",
+                    controller1.get_name(),
+                )
             except:
                 print("controller not intialised")
             try:
                 controller2 = pygame.joystick.Joystick(1)
                 controller2.init()
-                print ("DOUBLE CONTROLL DETECTED", controller2.get_id(), " ", controller2.get_name())
+                print(
+                    "DOUBLE CONTROLL DETECTED",
+                    controller2.get_id(),
+                    " ",
+                    controller2.get_name(),
+                )
             except:
                 print(controller2.get_name(), "failed")
-        
+
             if controller1.get_id() == 0:
                 self.controller = controller1
-                #print("gamepad initalize success")
+                # print("gamepad initalize success")
             else:
                 self.controller = controller2
-                            
+
         else:
-            # Either no Gamepad found 
+            # Either no Gamepad found
             print(pygame.joystick.get_count())
-            
+
             self.controller = None
 
         if self.controller is None:
-            raise AssertionError("Gamepad not initialized properly, make sure you have one connected")
+            raise AssertionError(
+                "Gamepad not initialized properly, make sure you have one connected"
+            )
 
     def update(self):
-        """Gets the latest data from the Gamepad from event information received from the Gamepad
-        """
+        """Gets the latest data from the Gamepad from event information received from the Gamepad"""
         for an_event in pygame.event.get():
             try:
                 # Get event information
-                if an_event.type == pygame.JOYBUTTONDOWN or an_event.type == pygame.JOYBUTTONUP:
+                if (
+                    an_event.type == pygame.JOYBUTTONDOWN
+                    or an_event.type == pygame.JOYBUTTONUP
+                ):
                     self.data.b1 = self.controller.get_button(0)
                     self.data.b2 = self.controller.get_button(1)
                     self.data.b3 = self.controller.get_button(2)
@@ -120,9 +143,8 @@ class Gamepad():
                 pass
 
     def printData(self):
-        """Sends copy of Gamepad data to the standard output (sys.out)
-        """
-        data = ''
+        """Sends copy of Gamepad data to the standard output (sys.out)"""
+        data = ""
         # Buttons
         data += f"B1 {self.data.b1}| "
         data += f"B2 {self.data.b2}| "
@@ -145,12 +167,13 @@ class Gamepad():
         data += f"A4 {self.data.a4}| "
         data += f"A5 {self.data.a5}| "
         data += f"A6 {self.data.a6}| "
-        
+
         print(data)
 
-class GamepadData():
-    """Object containing mapping of the Logitech Extreme 3D Pro
-    """
+
+class GamepadData:
+    """Object containing mapping of the Logitech Extreme 3D Pro"""
+
     def __init__(self):
         # Buttons
         self.b1 = 0
@@ -175,4 +198,6 @@ class GamepadData():
         self.a5 = 0
         self.a6 = 0
 
-Gamepad()
+
+if __name__ == "__main__":
+    Gamepad()

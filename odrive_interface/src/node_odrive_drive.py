@@ -1,7 +1,7 @@
 import scipy.stats as st
 from scipy.ndimage import gaussian_filter1d
 from drive_control.msg import WheelSpeed
-from odrive_interface.msg import MotorState, MotorError
+from odrive_interface.msg import MotorState, MotorError, ODriveStatus
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32MultiArray
 from enum import Enum
@@ -16,58 +16,39 @@ import sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 
-# CONFIGURATION ---------------------------------------------------------------
-# Serial number of the ODrive controlling the joint
-drive_serial_numbers = {
-    "rover_drive_rf": "384F34683539",
-    "rover_drive_lf": "386134503539",
-    "rover_drive_rb": "387134683539",
-    "rover_drive_lb": "385C347A3539",
-}
 
-# VARIABLES -------------------------------------------------------------------
-# Dictionary of ODriveJoint objects, key is the joint name in string format, value is the ODriveJoint object
-drive_joint_dict = {
-    "rover_drive_rf": None,
-    "rover_drive_lf": None,
-    "rover_drive_rb": None,
-    "rover_drive_lb": None,
-}
-
-
-class Node_odrive_interface_arm:
+class NodeODriveInterfaceArm:
     def __init__(self):
         self.is_homed = False
         self.is_calibrated = False
 
-        # FEEDBACK VARIABLES
-
-        # SETPOINT VARIABLES
-        self.joint_setpoint_dict = {
-            "rover_drive_rf": 0,
-            "rover_drive_lf": 0,
-            "rover_drive_rb": 0,
-            "rover_drive_lb": 0,
+        # CONFIGURATION ---------------------------------------------------------------
+        # Serial number of the ODrive controlling the joint
+        self.drive_serial_numbers = {
+            "rover_drive_rf": "384F34683539",
+            "rover_drive_lf": "386134503539",
+            "rover_drive_rb": "387134683539",
+            "rover_drive_lb": "385C347A3539",
         }
+
+        # VARIABLES -------------------------------------------------------------------
+        # Dictionary of ODriveJoint objects, key is the joint name in string format, value is the ODriveJoint object
+        self.joint_dict = {}
 
         # Subscriptions
         rospy.init_node("odrive_interface_drive")
-        self.outshaft_fb_subscriber = rospy.Subscriber(
-            "/armBrushlessFb",
-            Float32MultiArray,
-            self.handle_outshaft_fb,
-        )
         # Cmd comes from the external control node, we convert it to setpoint and apply it to the ODrive
-        self.arm_joint_cmd_subscriber = rospy.Subscriber(
-            "/armBrushlessCmd", Float32MultiArray, self.handle_arm_cmd
+        self.drive_cmd_subscriber = rospy.Subscriber(
+            "/wheel_velocity_cmd", WheelSpeed, self.handle_drive_cmd
         )
 
         # Publishers
-        self.odrive_state_publisher = rospy.Publisher(
-            "/odrive_arm_state", MotorState, queue_size=1
+        self.drive_fb_publisher = rospy.Publisher(
+            "/wheel_velocity_feedback", WheelSpeed, queue_size=1
         )
-        self.odrive_fb_publisher = rospy.Publisher(
-            "/odrive_armBrushlessFb", Float32MultiArray, queue_size=1
+
+        self.odrive_publisher = rospy.Publisher(
+            "/odrive_state", MotorState, queue_size=1
         )
 
         # Frequency of the ODrive I/O
@@ -76,17 +57,17 @@ class Node_odrive_interface_arm:
 
     # Receive setpoint from external control node
 
-    def handle_arm_cmd(self, msg):
-        self.joint_setpoint_dict["rover_drive_lb"] = msg.data[0]
-        self.joint_setpoint_dict["rover_drive_lf"] = msg.data[1]
-        self.joint_setpoint_dict["rover_drive_rb"] = msg.data[2]
-        self.joint_setpoint_dict["rover_drive_rf"] = msg.data[3]
+    def handle_drive_cmd(self, msg):
+        self.joint_dict["rover_drive_lb"].vel_cmd = msg.left[0]
+        self.joint_dict["rover_drive_lf"].vel_cmd = msg.left[1]
+        self.joint_dict["rover_drive_rb"].vel_cmd = msg.right[0]
+        self.joint_dict["rover_drive_rf"].vel_cmd = msg.right[1]
 
     def odrive_reconnect_watchdog(self):
-        for key, value in drive_serial_numbers.items():
+        for key, value in self.drive_serial_numbers.items():
             try:
                 odrv = odrive.find_any(serial_number=value, timeout=5)
-                drive_joint_dict[key].attach_odrive(odrv)
+                self.joint_dict[key].attach_odrive(odrv)
                 print(f"""Connected joint: {key}, serial_number: {value}""")
             except:
                 odrv = None
@@ -96,14 +77,15 @@ class Node_odrive_interface_arm:
                 )
 
     def run(self):
-        for key, value in drive_serial_numbers.items():
+        # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
+        for key, value in self.drive_serial_numbers.items():
             if value == 0:
                 print(
                     f"""Skipping connection for joint: {
                         key} due to serial_number being 0"""
                 )
                 # Instantiate class with odrv as None because we're skipping connection
-                drive_joint_dict[key] = ODriveJoint(
+                self.joint_dict[key] = ODriveJoint(
                     odrv=None,
                 )
                 continue
@@ -120,93 +102,80 @@ class Node_odrive_interface_arm:
                 )
 
             # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
-            drive_joint_dict[key] = ODriveJoint(
+            self.joint_dict[key] = ODriveJoint(
                 odrv=odrv,
             )
 
             if odrv is not None:
                 # CALIBRATE -----------------------------------------------------
                 print("CALIBRATING...")
-                drive_joint_dict[key].calibrate()
+                self.joint_dict[key].calibrate()
 
                 # ENTER CLOSED LOOP CONTROL ------------------------------------
                 print("ENTERING CLOSED LOOP CONTROL...")
-                drive_joint_dict[key].enter_closed_loop_control()
+                self.joint_dict[key].enter_closed_loop_control()
 
                 self.is_calibrated = True
 
-        # self.watchdog_stop_event = threading.Event()
-        # self.watchdog_thread = threading.Thread(
-        #     target=self.odrive_reconnect_watchdog)
-        # self.watchdog_thread.start()
-
-        # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
-        # watchdog_stop_event = threading.Event()
-        # watchdog_thread = threading.Thread(
-        #     target=print_joint_state_from_lst,
-        #     args=(drive_joint_dict, watchdog_stop_event),
-        # )
-        # watchdog_thread.start()
-
-        # MAIN LOOP
+        # MAIN LOOP -----------------------------------------------------
         while not rospy.is_shutdown():
             # PRINT TIMESTAMP
             print(f"""Time: {rospy.get_time()}""")
 
-            # ODRIVE POSITION FEEDBACK, different from the outshaft feedback
-            feedback = Float32MultiArray()
-            for joint_name, joint_obj in drive_joint_dict.items():
-                try:
-                    # Assuming .odrv.axis0.pos_vel_mapper.pos_abs and .gear_ratio are correct
-                    feedback.data.append(
-                        360
-                        * (
-                            joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
-                            / joint_obj.gear_ratio
-                        )
-                    )
-                # Default value in case lose connection to ODrive
-                except:
-                    feedback.data.append(0.0)
-            # Publish
-            self.odrive_fb_publisher.publish(feedback)
-
-            # APPLY SETPOINT
-            for joint_name, joint_obj in drive_joint_dict.items():
+            # ODRIVE Velocity FB
+            feedback = WheelSpeed()
+            for joint_name, joint_obj in self.joint_dict.items():
                 if not joint_obj.odrv:
                     continue
                 try:
-                    # setpoint in radians
-                    setpoint = joint_obj.setpoint_deg * joint_obj.gear_ratio / 360
-                    joint_obj.odrv.axis0.controller.input_pos = setpoint
+                    self.joint_dict[joint_name].vel_fb = (
+                        joint_obj.odrv.encoder_estimator0.vel_estimate
+                    )
+                except:
+                    print(f"""Cannot get feedback from joint: {joint_name}""")
+            # Publish
+            self.drive_fb_publisher.publish(feedback)
+
+            # APPLY Velocity CMD
+            for joint_name, joint_obj in self.joint_dict.items():
+                if not joint_obj.odrv:
+                    continue
+                try:
+                    # setpoint in rev/s
+                    joint_obj.odrv.axis0.controller.input_vel = joint_obj.vel_cmd
                 except:
                     print(
-                        f"""Cannot apply setpoint {
-                            setpoint} to joint: {joint_name}"""
+                        f"""Cannot apply vel_cmd {
+                            joint_obj.vel_cmd} to joint: {joint_name}"""
                     )
 
             # PRINT POSITIONS TO CONSOLE
-            print_joint_state_from_lst(drive_joint_dict)
+            print_joint_state_from_lst(self.joint_dict)
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
             # TODO trim error handling down
-            for joint_name, joint_obj in drive_joint_dict.items():
+            for joint_name, joint_obj in self.joint_dict.items():
                 if not joint_obj.odrv:
                     continue
                 try:
                     # TODO full feedback
-                    # state_fb = MotorState()
-                    # state_fb.id = joint_obj.serial_number
-                    # state_fb.state = joint_obj.odrv.axis0.current_state
-                    # state_fb.pos_rel = joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
-                    # state_fb.pos_abs = joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
-                    # state_fb.input_pos = joint_obj.odrv.axis0.controller.input_pos
-                    # self.state_publisher.publish(state_fb)
+                    odrive_state = ODriveStatus()
+                    odrive_state.id = joint_obj.serial_number
+                    odrive_state.state = joint_obj.odrv.axis0.current_state
+                    odrive_state.error = joint_obj.odrv.axis0.active_errors
+                    odrive_state.input_pos = joint_obj.odrv.axis0.controller.input_pos
+                    odrive_state.pos_abs = joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
+                    odrive_state.pos_rel = joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
+                    odrive_state.input_vel = joint_obj.odrv.axis0.controller.input_vel
+                    odrive_state.vel_estimate = (
+                        joint_obj.odrv.encoder_estimator0.vel_estimate
+                    )
+                    self.odrive_publisher.publish(odrive_state)
 
                     # ERROR HANDLING
                     if joint_obj.odrv.axis0.active_errors != 0:
                         # Tell the rover to stop
-                        for joint_name, joint_obj in drive_joint_dict.items():
+                        for joint_name, joint_obj in self.joint_dict.items():
                             if not joint_obj.odrv:
                                 continue
                             joint_obj.odrv.axis0.controller.input_vel = 0
@@ -215,7 +184,7 @@ class Node_odrive_interface_arm:
                         motor_stopped = False
                         while not motor_stopped:
                             motor_stopped = True
-                            for joint_name, joint_obj in drive_joint_dict.items():
+                            for joint_name, joint_obj in self.joint_dict.items():
                                 if not joint_obj.odrv:
                                     continue
                                 if (
@@ -227,7 +196,10 @@ class Node_odrive_interface_arm:
                                 print(
                                     "Shutdown prompt received. Setting all motors to idle state."
                                 )
-                                for joint_name, joint_obj in drive_joint_dict.items():
+                                for (
+                                    joint_name,
+                                    joint_obj,
+                                ) in self.joint_dict.items():
                                     if not joint_obj.odrv:
                                         continue
                                     joint_obj.odrv.axis0.requested_state = (
@@ -286,12 +258,12 @@ class Node_odrive_interface_arm:
 
         # On shutdown, bring motors to idle state
         print("Shutdown prompt received. Setting all motors to idle state.")
-        for joint_name, joint_obj in drive_joint_dict.items():
+        for joint_name, joint_obj in self.joint_dict.items():
             if not joint_obj.odrv:
                 continue
             joint_obj.odrv.axis0.requested_state = AxisState.IDLE
 
 
 if __name__ == "__main__":
-    driver = Node_odrive_interface_arm()
+    driver = NodeODriveInterfaceArm()
     rospy.spin()

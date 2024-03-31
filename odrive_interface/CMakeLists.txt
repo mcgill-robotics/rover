@@ -20,6 +20,7 @@ add_message_files(
   FILES
   MotorError.msg
   MotorState.msg
+  ODriveStatus.msg
 )
 
 generate_messages(

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(odrive_interface_arm)
+project(odrive_interface_old)
 
 
 
@@ -32,14 +32,12 @@ catkin_package(
     roscpp
     rospy 
     std_msgs
-    LIBRARIES odrive_interface_arm
+    LIBRARIES odrive_interface_old
     CATKIN_DEPENDS message_runtime
 )
 
 catkin_install_python(PROGRAMS
-  src/node_odrive.py
-  src/node_brushed_test.py
-  src/node_arm_manual_control.py
+  src/ODrive.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

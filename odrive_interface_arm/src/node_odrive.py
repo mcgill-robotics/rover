@@ -22,22 +22,22 @@ class FeedbackMode(Enum):
 # CONFIGURATION ---------------------------------------------------------------
 # Serial number of the ODrive controlling the joint
 arm_serial_numbers = {
-    "elbow_joint": "383834583539",  # 0x383834583539 = 61814047520057 in decimal
-    "shoulder_joint": "386434413539",  # 0x386434413539 = 62003024573753 in decimal
-    "waist_joint": "0",
+    "rover_arm_elbow": "383834583539",  # 0x383834583539 = 61814047520057 in decimal
+    "rover_arm_shoulder": "386434413539",  # 0x386434413539 = 62003024573753 in decimal
+    "rover_arm_waist": "0",
 }
 
 arm_gear_ratios = {
-    "elbow_joint": 100,
-    "shoulder_joint": 100,
-    "waist_joint": 1,
+    "rover_arm_elbow": 100,
+    "rover_arm_shoulder": 100,
+    "rover_arm_waist": 1,
 }
 
 # Unused at the moment
 arm_zero_offsets = {
-    "elbow_joint": 0,
-    "shoulder_joint": 45.0,
-    "waist_joint": 0,
+    "rover_arm_elbow": 0,
+    "rover_arm_shoulder": 45.0,
+    "rover_arm_waist": 0,
 }
 
 current_mode = FeedbackMode.FROM_OUTSHAFT
@@ -45,13 +45,13 @@ current_mode = FeedbackMode.FROM_OUTSHAFT
 # VARIABLES -------------------------------------------------------------------
 # Dictionary of ODriveJoint objects, key is the joint name in string format, value is the ODriveJoint object
 arm_joint_dict = {
-    "elbow_joint": None,
-    "shoulder_joint": None,
-    "waist_joint": None,
+    "rover_arm_elbow": None,
+    "rover_arm_shoulder": None,
+    "rover_arm_waist": None,
 }
 
 # Predefine the order of joints for publishing feedback
-joint_order = ["elbow_joint", "shoulder_joint", "waist_joint"]
+joint_order = ["rover_arm_elbow", "rover_arm_shoulder", "rover_arm_waist"]
 
 
 class Node_odrive_interface_arm:
@@ -61,16 +61,16 @@ class Node_odrive_interface_arm:
 
         # FEEDBACK VARIABLES
         self.joint_pos_outshaft_dict = {
-            "elbow_joint": 0,
-            "shoulder_joint": 0,
-            "waist_joint": 0,
+            "rover_arm_elbow": 0,
+            "rover_arm_shoulder": 0,
+            "rover_arm_waist": 0,
         }
 
         # SETPOINT VARIABLES
         self.joint_setpoint_dict = {
-            "elbow_joint": 0,
-            "shoulder_joint": 0,
-            "waist_joint": 0,
+            "rover_arm_elbow": 0,
+            "rover_arm_shoulder": 0,
+            "rover_arm_waist": 0,
         }
 
         # Subscriptions
@@ -102,9 +102,9 @@ class Node_odrive_interface_arm:
         if not self.is_calibrated:
             return
         if not self.is_homed:
-            self.joint_pos_outshaft_dict["elbow_joint"] = msg.data[0]
-            self.joint_pos_outshaft_dict["shoulder_joint"] = msg.data[1]
-            self.joint_pos_outshaft_dict["waist_joint"] = msg.data[2]
+            self.joint_pos_outshaft_dict["rover_arm_elbow"] = msg.data[0]
+            self.joint_pos_outshaft_dict["rover_arm_shoulder"] = msg.data[1]
+            self.joint_pos_outshaft_dict["rover_arm_waist"] = msg.data[2]
 
             for joint_name, joint_obj in arm_joint_dict.items():
                 try:
@@ -126,9 +126,9 @@ class Node_odrive_interface_arm:
 
     # Receive setpoint from external control node
     def handle_arm_cmd(self, msg):
-        self.joint_setpoint_dict["elbow_joint"] = msg.data[0]
-        self.joint_setpoint_dict["shoulder_joint"] = msg.data[1]
-        self.joint_setpoint_dict["waist_joint"] = msg.data[2]
+        self.joint_setpoint_dict["rover_arm_elbow"] = msg.data[0]
+        self.joint_setpoint_dict["rover_arm_shoulder"] = msg.data[1]
+        self.joint_setpoint_dict["rover_arm_waist"] = msg.data[2]
 
         for joint_name, joint_obj in arm_joint_dict.items():
             if not joint_obj.odrv:

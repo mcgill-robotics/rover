@@ -90,6 +90,9 @@ def print_joint_state_from_lst(ODriveJoint_lst):
                 print(f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
                 print(f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
                 print(f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
+                print(
+                    f"""-vel_estimate={joint_obj.odrv.encoder_estimator0.vel_estimate}"""
+                )
             except:
                 print(f"""-pos_rel=None""")
                 print(f"""-pos_abs=None""")
@@ -105,11 +108,17 @@ class ODriveJoint:
         else:
             self.serial_number = None
         self.timeout = 5
+
+        # Position control
         # gear_ratio is input revolutions / output revolutions
         self.gear_ratio = gear_ratio
         self.zero_offset_deg = zero_offset_deg
         self.setpoint_deg = 0
         self.pos_outshaft_deg = 0
+
+        # Velocity control
+        self.vel_cmd = 0
+        self.vel_fb = 0
 
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")

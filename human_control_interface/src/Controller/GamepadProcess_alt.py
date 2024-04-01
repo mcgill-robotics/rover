@@ -107,8 +107,10 @@ class Node_GamepadProcessing:
         exit()
 
     def keyboardProcessCall(self, key):
+        print(f"Key pressed: {key}")
         if key == keyboard.Key.up:
             self.roverLinearVelocity += self.keyboard_sensitivity
+            print(f"Linear velocity: {self.roverLinearVelocity}")
         elif key == keyboard.Key.down:
             self.roverLinearVelocity -= self.keyboard_sensitivity
         elif key == keyboard.Key.left:
@@ -208,4 +210,4 @@ class Node_GamepadProcessing:
 
 if __name__ == "__main__":
     gamepadProcess = Node_GamepadProcessing(10, 10)
-    # rospy.spin()
+    rospy.spin()

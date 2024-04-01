@@ -54,7 +54,7 @@ joint_dict = {
 joint_order = ["rover_arm_elbow", "rover_arm_shoulder", "rover_arm_waist"]
 
 
-class Node_odrive_interface_arm:
+class NodeODriveInterfaceArm:
     def __init__(self):
         self.is_homed = False
         self.is_calibrated = False
@@ -352,5 +352,5 @@ class Node_odrive_interface_arm:
 
 
 if __name__ == "__main__":
-    driver = Node_odrive_interface_arm()
+    driver = NodeODriveInterfaceArm()
     rospy.spin()

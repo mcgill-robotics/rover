@@ -17,7 +17,7 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 
 
-class NodeODriveInterfaceArm:
+class NodeODriveInterfaceDrive:
     def __init__(self):
         self.is_homed = False
         self.is_calibrated = False
@@ -265,5 +265,5 @@ class NodeODriveInterfaceArm:
 
 
 if __name__ == "__main__":
-    driver = NodeODriveInterfaceArm()
+    driver = NodeODriveInterfaceDrive()
     rospy.spin()

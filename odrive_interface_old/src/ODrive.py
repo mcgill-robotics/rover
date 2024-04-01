@@ -1,5 +1,5 @@
 from odrive.enums import AxisState, ProcedureResult
-from odrive_interface_old.src.ODrive_utils import *
+from ODrive_utils import *
 from odrive_interface_old.msg import MotorError, MotorState
 from drive_control.msg import WheelSpeed
 import rospy

@@ -87,9 +87,12 @@ def print_joint_state_from_lst(joint_dict):
                     f"""-current_state={
                         AxisState(joint_obj.odrv.axis0.current_state).name}"""
                 )
-                print(f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
-                print(f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
-                print(f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
+                print(
+                    f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
+                print(
+                    f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
+                print(
+                    f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
                 print(
                     f"""-vel_estimate={joint_obj.odrv.encoder_estimator0.vel_estimate}"""
                 )
@@ -331,8 +334,109 @@ class ODriveJoint:
     def print_gpio_voltages(self):
         for i in [1, 2, 3, 4]:
             print(
-                "voltage on GPIO{} is {} Volt".format(i, self.odrv.get_adc_voltage(i))
+                "voltage on GPIO{} is {} Volt".format(
+                    i, self.odrv.get_adc_voltage(i))
             )
+
+
+# def calibrate_joint(joint_name, joint_obj):
+#     joint_obj.odrv.clear_errors()
+#     if joint_obj.odrv.axis0.current_state != AxisState.FULL_CALIBRATION_SEQUENCE:
+#         joint_obj.odrv.axis0.requested_state = AxisState.FULL_CALIBRATION_SEQUENCE
+#     time.sleep(0.2)
+
+#     # Wait for calibration to end
+#     while not joint_obj.odrv.axis0.current_state == AxisState.IDLE:
+#         time.sleep(1)
+#         print(f"Motor {joint_obj.serial_number} is still calibrating. Current state: {AxisState(joint_obj.odrv.axis0.current_state).name}")
+
+#     results_available = False
+#     # Wait for calibration results
+#     while not results_available:
+#         if joint_obj.odrv.axis0.procedure_result == ProcedureResult.BUSY:
+#             results_available = False
+#         else:
+#             results_available = True
+#         time.sleep(0.1)
+
+#     # ERROR CHECKING
+#     if joint_obj.odrv.axis0.procedure_result != ProcedureResult.SUCCESS:
+#         errors = joint_obj.odrv.axis0.active_errors
+#         error_message = f"Calibration procedure failed in motor {joint_obj.serial_number}. Reason: {ProcedureResult(joint_obj.odrv.axis0.procedure_result).name}"
+#         if errors != 0:
+#             error_message += f", Motor error(s): {AxisError(joint_obj.odrv.axis0.disarm_reason).name}"
+#         print(error_message)
+#         joint_obj.odrv.axis0.requested_state = AxisState.IDLE
+#     else:
+#         print(f"Calibration successful for motor {joint_obj.serial_number}!")
+
+
+def calibrate_non_blocking(joint_dict):
+    # Start calibration for all motors
+    for joint_name, joint_obj in joint_dict.items():
+        joint_obj.odrv.clear_errors()
+        if joint_obj.odrv.axis0.current_state != AxisState.FULL_CALIBRATION_SEQUENCE:
+            joint_obj.odrv.axis0.requested_state = AxisState.FULL_CALIBRATION_SEQUENCE
+        custom_sleep(0.2)  # Short delay to ensure command is sent
+
+    # Continuously check if calibration is done for all motors
+    all_motors_idle = False
+    while not all_motors_idle:
+        all_motors_idle = True  # Assume all motors are idle until proven otherwise
+        for joint_name, joint_obj in joint_dict.items():
+            if joint_obj.odrv.axis0.current_state != AxisState.IDLE:
+                all_motors_idle = False  # Found a motor still calibrating
+                print(
+                    f"Motor {joint_obj.odrv.serial_number} is still calibrating. Current state: {AxisState(joint_obj.odrv.axis0.current_state).name}")
+                break  # Exit early since we found a motor still calibrating
+        if not all_motors_idle:
+            custom_sleep(1)  # Wait a bit before checking again
+
+    # Once all motors are idle, check calibration results
+    for joint_name, joint_obj in joint_dict.items():
+        results_available = False
+        while not results_available:
+            if joint_obj.odrv.axis0.procedure_result == ProcedureResult.BUSY:
+                custom_sleep(0.1)  # Wait if result is still busy
+            else:
+                results_available = True  # Result is available, move on to next motor
+                # Handle the calibration result for each motor
+                if joint_obj.odrv.axis0.procedure_result != ProcedureResult.SUCCESS:
+                    print(
+                        f"Calibration failed for motor {joint_obj.odrv.serial_number}.")
+                else:
+                    print(
+                        f"Calibration successful for motor {joint_obj.odrv.serial_number}.")
+
+
+def enter_closed_loop_control_non_blocking(joint_dict):
+    # Request CLOSED_LOOP_CONTROL state for all motors
+    for joint_name, joint_obj in joint_dict.items():
+        joint_obj.odrv.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
+        # Short delay to ensure the state request is processed
+        custom_sleep(0.2)
+
+    # Continuously check if all motors have entered CLOSED_LOOP_CONTROL
+    all_motors_in_closed_loop = False
+    while not all_motors_in_closed_loop:
+        # Assume all motors are in closed loop until proven otherwise
+        all_motors_in_closed_loop = True
+        for joint_name, joint_obj in joint_dict.items():
+            current_state = joint_obj.odrv.axis0.current_state
+            if current_state != AxisState.CLOSED_LOOP_CONTROL:
+                all_motors_in_closed_loop = False  # Found a motor not in CLOSED_LOOP_CONTROL
+                print(
+                    f"Motor {joint_obj.odrv.serial_number} is still entering closed loop control. Current state: {AxisState(current_state).name}")
+                # Assuming dump_errors() is a function that prints out the current errors
+                dump_errors(joint_obj.odrv)
+                break  # Exit early since we found a motor not in CLOSED_LOOP_CONTROL
+        if not all_motors_in_closed_loop:
+            custom_sleep(0.5)  # Wait a bit before checking again
+
+    # Once all motors are confirmed to be in CLOSED_LOOP_CONTROL, print success message for each
+    for joint_name, joint_obj in joint_dict.items():
+        print(
+            f"Enter CLOSED_LOOP SUCCESS: Motor {joint_obj.odrv.serial_number} is in state: {AxisState(joint_obj.odrv.axis0.current_state).name}.")
 
 
 # SAMPLE USAGE FOR REFERENCE
@@ -359,7 +463,8 @@ def main():
     setup_upper_lim_switch = False
 
     test_odrv_joint = ODriveJoint(
-        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
+        odrive.find_any(
+            serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
@@ -498,7 +603,8 @@ def main():
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
-            user_input = input("Enter command (increment 'i X' or absolute 'a X'): ")
+            user_input = input(
+                "Enter command (increment 'i X' or absolute 'a X'): ")
             # Using regular expression to parse the input
             match = re.match(r"([ia])\s*(-?\d+(\.\d+)?)", user_input)
             if not match:
@@ -516,7 +622,8 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel
                 else:
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
-                setpoint = current + (setpoint_increment * test_odrv_joint.gear_ratio)
+                setpoint = current + \
+                    (setpoint_increment * test_odrv_joint.gear_ratio)
                 print(
                     f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
                       test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}"""

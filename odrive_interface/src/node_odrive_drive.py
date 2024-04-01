@@ -53,7 +53,7 @@ class NodeODriveInterfaceDrive:
         )
 
         self.odrive_publisher = rospy.Publisher(
-            "/odrive_state", MotorState, queue_size=1
+            "/odrive_state", ODriveStatus, queue_size=1
         )
 
         # Frequency of the ODrive I/O
@@ -81,7 +81,19 @@ class NodeODriveInterfaceDrive:
                       key}, serial_number: {value}"""
                 )
 
+    def calibrate_and_enter_closed_loop(self, joint_name, joint_obj):
+        if joint_obj.odrv is not None:
+            print(f"CALIBRATING joint {joint_name}...")
+            joint_obj.calibrate()
+
+            print(f"ENTERING CLOSED LOOP CONTROL for joint {joint_name}...")
+            joint_obj.enter_closed_loop_control()
+
+            self.is_calibrated = True
+
     def run(self):
+        threads = []
+
         # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
         for key, value in self.drive_serial_numbers.items():
             if value == 0:
@@ -111,16 +123,32 @@ class NodeODriveInterfaceDrive:
                 odrv=odrv,
             )
 
-            if odrv is not None:
-                # CALIBRATE -----------------------------------------------------
-                print("CALIBRATING...")
-                self.joint_dict[key].calibrate()
+            # if odrv is not None:
+            #     # CALIBRATE -----------------------------------------------------
+            #     print("CALIBRATING...")
+            #     self.joint_dict[key].calibrate()
 
-                # ENTER CLOSED LOOP CONTROL ------------------------------------
-                print("ENTERING CLOSED LOOP CONTROL...")
-                self.joint_dict[key].enter_closed_loop_control()
+            #     # ENTER CLOSED LOOP CONTROL ------------------------------------
+            #     print("ENTERING CLOSED LOOP CONTROL...")
+            #     self.joint_dict[key].enter_closed_loop_control()
 
-                self.is_calibrated = True
+            #     self.is_calibrated = True
+
+            # Create a thread for calibration and entering closed loop control
+            t = threading.Thread(
+                target=self.calibrate_and_enter_closed_loop, args=(key, self.joint_dict[key]))
+            threads.append(t)
+            t.start()
+
+        # Wait for all threads to complete
+        for t in threads:
+            t.join()
+
+        print("All operations completed.")
+        # print(self.joint_dict)
+        # calibrate_non_blocking(self.joint_dict)
+        # rospy.sleep(1)
+        # enter_closed_loop_control_non_blocking(self.joint_dict)
 
         # MAIN LOOP -----------------------------------------------------
         while not rospy.is_shutdown():

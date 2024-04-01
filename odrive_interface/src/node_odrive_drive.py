@@ -61,7 +61,6 @@ class NodeODriveInterfaceDrive:
         self.run()
 
     # Receive setpoint from external control node
-
     def handle_drive_cmd(self, msg):
         self.joint_dict["rover_drive_lb"].vel_cmd = msg.left[0]
         self.joint_dict["rover_drive_lf"].vel_cmd = msg.left[1]
@@ -144,6 +143,12 @@ class NodeODriveInterfaceDrive:
         for t in threads:
             t.join()
 
+        # Set the direction of the motors
+        self.joint_dict["rover_drive_lb"].direction = -1
+        self.joint_dict["rover_drive_lf"].direction = -1
+        self.joint_dict["rover_drive_rb"].direction = 1
+        self.joint_dict["rover_drive_rf"].direction = 1
+
         print("All operations completed.")
         # print(self.joint_dict)
         # calibrate_non_blocking(self.joint_dict)
@@ -166,7 +171,12 @@ class NodeODriveInterfaceDrive:
                     )
                 except:
                     print(f"""Cannot get feedback from joint: {joint_name}""")
+
             # Publish
+            feedback.left[0] = self.joint_dict["rover_drive_lb"].vel_fb
+            feedback.left[1] = self.joint_dict["rover_drive_lf"].vel_fb
+            feedback.right[0] = self.joint_dict["rover_drive_rb"].vel_fb
+            feedback.right[1] = self.joint_dict["rover_drive_rf"].vel_fb
             self.drive_fb_publisher.publish(feedback)
 
             # APPLY Velocity CMD
@@ -175,7 +185,7 @@ class NodeODriveInterfaceDrive:
                     continue
                 try:
                     # setpoint in rev/s
-                    joint_obj.odrv.axis0.controller.input_vel = joint_obj.vel_cmd
+                    joint_obj.odrv.axis0.controller.input_vel = joint_obj.vel_cmd * joint_obj.direction
                 except:
                     print(
                         f"""Cannot apply vel_cmd {

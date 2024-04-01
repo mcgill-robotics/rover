@@ -166,7 +166,12 @@ class NodeODriveInterfaceDrive:
                     )
                 except:
                     print(f"""Cannot get feedback from joint: {joint_name}""")
+
             # Publish
+            feedback.left[0] = self.joint_dict["rover_drive_lb"].vel_fb
+            feedback.left[1] = self.joint_dict["rover_drive_lf"].vel_fb
+            feedback.right[0] = self.joint_dict["rover_drive_rb"].vel_fb
+            feedback.right[1] = self.joint_dict["rover_drive_rf"].vel_fb
             self.drive_fb_publisher.publish(feedback)
 
             # APPLY Velocity CMD

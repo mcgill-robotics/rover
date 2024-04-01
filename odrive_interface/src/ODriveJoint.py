@@ -338,14 +338,14 @@ class ODriveJoint:
 # SAMPLE USAGE FOR REFERENCE
 def main():
     # TODO find more serial, it is a string of hex of the serial number
-    arm_serial_numbers = {
-        # 0x386434413539 = 62003024573753 in decimal
-        "rover_arm_elbow": "383834583539",  # change as needed
-        "rover_arm_shoulder": "386434413539",
-        "rover_arm_waist": "0",
+    odrive_serial_numbers = {
+        "rf": "384F34683539",  # change as needed
+        "lF": "386134503539",
+        "rb": "387134683539",
+        "lb": "385C",
     }
 
-    test_joint_name = "rover_arm_shoulder"
+    test_joint_name = "rover_rf"
     # test_joint_name = "rover_arm_elbow"
 
     # Set to True if you want to reapply the config, False if you want to skip it
@@ -359,7 +359,7 @@ def main():
     setup_upper_lim_switch = False
 
     test_odrv_joint = ODriveJoint(
-        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
+        odrive.find_any(serial_number=odrive_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
@@ -368,15 +368,15 @@ def main():
         test_odrv_joint.erase_config()
 
     # APPLY CONFIG -----------------------------------------------------------------------
-    if test_joint_name == "rover_arm_shoulder":
+    if test_joint_name == "rover_rf":
         test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
-        test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
+        test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 15
         test_odrv_joint.odrv.config.dc_max_positive_current = 10
         test_odrv_joint.odrv.config.brake_resistor0.enable = True
         test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
         test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
         test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.06080882352941176
-        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 11
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
         test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 10
         test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 23
         test_odrv_joint.odrv.axis0.config.motor.calibration_current = 2.5
@@ -385,6 +385,61 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
+            
+# odrv = odrv0
+# odrv.config.dc_bus_overvoltage_trip_level = 30
+# odrv.config.dc_bus_undervoltage_trip_level = 15
+# odrv.config.dc_max_positive_current = 10
+# odrv.config.dc_max_negative_current = -1
+# odrv.config.brake_resistor0.enable = True
+# odrv.config.brake_resistor0.resistance = 2
+# odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+# odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+# odrv.axis0.config.motor.pole_pairs = 7
+# odrv.axis0.config.motor.current_soft_max = 10
+# odrv.axis0.config.motor.current_hard_max = 23
+# odrv.axis0.config.motor.calibration_current = 5
+# odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+# odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+# odrv.axis0.controller.config.control_mode = ControlMode.VELOCITY_CONTROL
+# odrv.axis0.controller.config.vel_limit = 200
+# odrv.axis0.controller.config.vel_limit_tolerance = 2
+# odrv.can.config.protocol = Protocol.NONE
+# odrv.config.enable_uart_a = False
+# odrv.inc_encoder0.config.cpr = 2400
+# odrv.inc_encoder0.config.enabled = True
+# odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+# odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+
+
+# FOR THE ODDBALL
+
+# odrv = odrv0
+# odrv.config.dc_bus_overvoltage_trip_level = 30
+# odrv.config.dc_bus_undervoltage_trip_level = 15
+# odrv.config.dc_max_positive_current = 10
+# odrv.config.dc_max_negative_current = -1
+# odrv.config.brake_resistor0.enable = True
+# odrv.config.brake_resistor0.resistance = 2
+# odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+# odrv.axis0.config.motor.torque_constant = 0.026006289308176098
+# odrv.axis0.config.motor.pole_pairs = 7
+# odrv.axis0.config.motor.current_soft_max = 10
+# odrv.axis0.config.motor.current_hard_max = 23
+# odrv.axis0.config.motor.calibration_current = 5
+# odrv.axis0.config.motor.resistance_calib_max_voltage = 5
+# odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+# odrv.axis0.controller.config.control_mode = ControlMode.VELOCITY_CONTROL
+# odrv.axis0.controller.config.vel_limit = 200
+# odrv.axis0.controller.config.vel_limit_tolerance = 2
+# odrv.can.config.protocol = Protocol.NONE
+# odrv.config.enable_uart_a = False
+# odrv.inc_encoder0.config.cpr = 2400
+# odrv.inc_encoder0.config.enabled = True
+# odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+# odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+
+
         )
         # vel_limit determines how fast, vel_limit_tolerance determines how much it can go over, so we avoid vel_limit violations
         test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3

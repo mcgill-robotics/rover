@@ -33,7 +33,12 @@ class NodeODriveInterfaceDrive:
 
         # VARIABLES -------------------------------------------------------------------
         # Dictionary of ODriveJoint objects, key is the joint name in string format, value is the ODriveJoint object
-        self.joint_dict = {}
+        self.joint_dict = {
+            "rover_drive_rf": None,
+            "rover_drive_lf": None,
+            "rover_drive_rb": None,
+            "rover_drive_lb": None,
+        }
 
         # Subscriptions
         rospy.init_node("odrive_interface_drive")

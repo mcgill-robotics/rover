@@ -36,7 +36,7 @@ class Node_GamepadProcessing:
             self.listener = keyboard.Listener(on_press=self.keyboardProcessCall)
             self.keyboard_accumulator_linear = 0.0
             self.keyboard_accumulator_twist = 0.0
-            self.keyboard_sensitivity = 0.05
+            self.keyboard_sensitivity = 0.025  # 0.5 default
             self.listener.start()
 
         # initialize variables for velocity
@@ -72,6 +72,13 @@ class Node_GamepadProcessing:
 
                 # Skip the rest of the loop if gamepad is not connected
                 if not self.gamepad_init_successful:
+                    # Decay
+                    self.roverLinearVelocity *= 0.9999
+                    self.roverAngularVelocity *= 0.9999
+                    roverTwist = Twist()
+                    roverTwist.linear.x = self.roverLinearVelocity
+                    roverTwist.angular.z = self.roverAngularVelocity
+                    self.drive_publisher.publish(roverTwist)
                     continue
 
                 self.gamepad.update()
@@ -107,39 +114,34 @@ class Node_GamepadProcessing:
         exit()
 
     def keyboardProcessCall(self, key):
-        print(f"Key pressed: {key}")
+        # Accelerate
         if key == keyboard.Key.up:
-            self.roverLinearVelocity += self.keyboard_sensitivity
-            print(f"Linear velocity: {self.roverLinearVelocity}")
-        elif key == keyboard.Key.down:
-            self.roverLinearVelocity -= self.keyboard_sensitivity
-        elif key == keyboard.Key.left:
-            self.roverAngularVelocity -= self.keyboard_sensitivity
-        elif key == keyboard.Key.right:
-            self.roverAngularVelocity += self.keyboard_sensitivity
-        elif key == keyboard.Key.space:  # Brake
-            self.roverLinearVelocity *= self.brakeDecay
-            self.roverAngularVelocity *= self.brakeDecay
-        elif key == keyboard.KeyCode.from_char("0"):
-            self.roverLinearVelocity = 0.0
-            self.roverAngularVelocity = 0.0
+            self.keyboard_accumulator_linear += self.keyboard_sensitivity
+        if key == keyboard.Key.down:
+            self.keyboard_accumulator_linear -= self.keyboard_sensitivity
+        if key == keyboard.Key.left:
+            self.keyboard_accumulator_twist -= self.keyboard_sensitivity
+        if key == keyboard.Key.right:
+            self.keyboard_accumulator_twist += self.keyboard_sensitivity
+        # Brake
+        if key == keyboard.KeyCode.from_char("0") or key == keyboard.Key.space:
+            self.keyboard_accumulator_linear = 0.0
+            self.keyboard_accumulator_twist = 0.0
 
-        # Clamp velocities to maximum values
-        self.roverLinearVelocity = max(
-            -self.maxLinearVelocity,
-            min(self.roverLinearVelocity, self.maxLinearVelocity),
+        # Clamp velocities to limit values
+        self.keyboard_accumulator_linear = max(
+            min(self.keyboard_accumulator_linear, 1.0), -1.0
         )
-        self.roverAngularVelocity = max(
-            -self.maxAngularVelocity,
-            min(self.roverAngularVelocity, self.maxAngularVelocity),
+        self.keyboard_accumulator_twist = max(
+            min(self.keyboard_accumulator_twist, 1.0), -1.0
         )
 
-        # Apply velocity decay when keys are released
-        if key == keyboard.KeyCode.from_char("0"):
-            pass  # No decay when resetting velocities
-        elif key != keyboard.Key.space:  # Don't apply decay when braking
-            self.roverLinearVelocity *= self.linearVelocityDecay
-            self.roverAngularVelocity *= self.angularVelocityDecay
+        self.roverLinearVelocity = (
+            self.maxLinearVelocity * self.keyboard_accumulator_linear
+        )
+        self.roverAngularVelocity = (
+            self.maxAngularVelocity * self.keyboard_accumulator_twist
+        )
 
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
@@ -152,7 +154,6 @@ class Node_GamepadProcessing:
         self.cameraProcessCall(msg)
 
     def driveProcessCall(self, msg):
-
         # A2 is the left stick moving up and down. Drives forwards or backwards.
         # A4 is the right stick that moves left and right. Steers left or right.
 

@@ -114,6 +114,7 @@ class Node_GamepadProcessing:
         exit()
 
     def keyboardProcessCall(self, key):
+        print(key)
         # Accelerate
         if key == keyboard.Key.up:
             self.keyboard_accumulator_linear += self.keyboard_sensitivity

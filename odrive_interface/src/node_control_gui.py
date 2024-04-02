@@ -304,7 +304,7 @@ class ArmControlGUI(QWidget):
 
         # Update GUI
         self.drive_twist_label.setText(
-            f"""Linear: {self.roverLinearVelocity:.2f}, Angular: {self.roverAngularVelocity:.2f}""")
+            f"""Twist - Linear: {self.roverLinearVelocity:.2f}, Angular: {self.roverAngularVelocity:.2f}""")
         self.arrowWidget.set_velocities(
             self.roverLinearVelocity, self.roverAngularVelocity)
 

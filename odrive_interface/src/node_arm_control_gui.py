@@ -26,20 +26,20 @@ class ArmControlGUI(QWidget):
         self.downButtons = []
         self.upButtons = []
         self.joint_brushless_lst = {
-            "Elbow": (-30, 30, 0),
-            "Shoulder": (-30, 30, 0),
-            "Waist": (-90, 90, 0),
+            "Elbow": (-30, 30, 0, 1),
+            "Shoulder": (-30, 30, 0, 1),
+            "Waist": (-90, 90, 0, 1),
         }
         self.joint_brushed_lst = {
-            "EndEffector": (-400, 400, 0),
-            "WristRoll": (0, 360, 0),
-            "WristPitch": (-30, 30, 0),
+            "EndEffector": (-400, 400, 0, 1),
+            "WristRoll": (0, 360, 0, 1),
+            "WristPitch": (-30, 30, 0, 1),
         }
         self.joint_drive_lst = {
-            "LB": (-200, 200, 0),
-            "LF": (-200, 200, 0),
-            "RB": (-200, 200, 0),
-            "RF": (-200, 200, 0),
+            "LB": (-200, 200, 0, -1),
+            "LF": (-200, 200, 0, -1),
+            "RB": (-200, 200, 0, 1),
+            "RF": (-200, 200, 0, 1),
         }
         super(ArmControlGUI, self).__init__()
         self.initUI()
@@ -85,7 +85,7 @@ class ArmControlGUI(QWidget):
         vbox = QVBoxLayout()
         vbox.addWidget(QLabel(f"{motorType} Motor Control"))
 
-        for joint, (minVal, maxVal, initVal) in jointRanges.items():
+        for joint, (minVal, maxVal, initVal, direction) in jointRanges.items():
             hbox = QHBoxLayout()
 
             downBtn = QPushButton("-")
@@ -123,7 +123,7 @@ class ArmControlGUI(QWidget):
 
     def resetSliders(self):
         # Reset brushless sliders
-        for joint, (minVal, maxVal, initVal) in self.joint_brushless_lst.items():
+        for joint, (minVal, maxVal, initVal, direction) in self.joint_brushless_lst.items():
             self.sliders[joint].setValue(initVal)
             # Optionally, update the label as well
             index = self.labels.index(
@@ -132,7 +132,7 @@ class ArmControlGUI(QWidget):
             self.labels[index].setText(f"{joint} Cmd: {initVal}")
 
         # Reset brushed sliders
-        for joint, (minVal, maxVal, initVal) in self.joint_brushed_lst.items():
+        for joint, (minVal, maxVal, initVal, direction) in self.joint_brushed_lst.items():
             self.sliders[joint].setValue(initVal)
             # Optionally, update the label as well
             index = self.labels.index(
@@ -141,7 +141,7 @@ class ArmControlGUI(QWidget):
             self.labels[index].setText(f"{joint} Cmd: {initVal}")
 
         # Reset drive sliders
-        for joint, (minVal, maxVal, initVal) in self.joint_drive_lst.items():
+        for joint, (minVal, maxVal, initVal, direction) in self.joint_drive_lst.items():
             self.sliders[joint].setValue(initVal)
             # Optionally, update the label as well
             index = self.labels.index(
@@ -196,6 +196,7 @@ class ArmControlGUI(QWidget):
         cmdMsgDrive.left[1] = items[7][1].value()
         cmdMsgDrive.right[0] = items[8][1].value()
         cmdMsgDrive.right[1] = items[9][1].value()
+        print(type(items[6][1]))
         self.driveCmdPublisher.publish(cmdMsgDrive)
 
         # Update labels
@@ -208,10 +209,9 @@ class ArmControlGUI(QWidget):
     def on_update_brushed_fb(self, data):
         self.update_arm_fb("Brushed", data)
 
-    # TODO
     def update_drive_fb(self, data):
         self.fbLabelDrive.setText(
-            f"Fb Drive - Left: {data.data[0]:.2f}, Right: {data.data[1]:.2f}")
+            f"""Drive Fb - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}""")
 
     def update_arm_fb(self, motorType, data):
         if motorType == "Brushless":

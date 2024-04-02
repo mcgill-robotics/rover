@@ -202,18 +202,18 @@ class NodeODriveInterfaceDrive:
                     continue
                 try:
                     # TODO full feedback
-                    odrive_state = ODriveStatus()
-                    odrive_state.id = joint_obj.serial_number
-                    odrive_state.state = joint_obj.odrv.axis0.current_state
-                    odrive_state.error = joint_obj.odrv.axis0.active_errors
-                    odrive_state.input_pos = joint_obj.odrv.axis0.controller.input_pos
-                    odrive_state.pos_abs = joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
-                    odrive_state.pos_rel = joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
-                    odrive_state.input_vel = joint_obj.odrv.axis0.controller.input_vel
-                    odrive_state.vel_estimate = (
+                    odrive_status_msg = ODriveStatus()
+                    odrive_status_msg.id = joint_obj.serial_number
+                    odrive_status_msg.state = joint_obj.odrv.axis0.current_state
+                    odrive_status_msg.error = joint_obj.odrv.axis0.active_errors
+                    odrive_status_msg.input_pos = joint_obj.odrv.axis0.controller.input_pos
+                    odrive_status_msg.pos_abs = joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
+                    odrive_status_msg.pos_rel = joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
+                    odrive_status_msg.input_vel = joint_obj.odrv.axis0.controller.input_vel
+                    odrive_status_msg.vel_estimate = (
                         joint_obj.odrv.encoder_estimator0.vel_estimate
                     )
-                    self.odrive_publisher.publish(odrive_state)
+                    self.odrive_publisher.publish(odrive_status_msg)
 
                     # ERROR HANDLING
                     if joint_obj.odrv.axis0.active_errors != 0:

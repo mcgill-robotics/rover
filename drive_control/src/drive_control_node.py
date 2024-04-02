@@ -94,8 +94,12 @@ class Node_DriveControl():
             correct_rb = np.sum(back_right * self.basis)
 
             # Populate the message with the averaged values.
-            cmd.left[0], cmd.left[1] = correct_lf, correct_lb
-            cmd.right[0], cmd.right[1] = correct_rf, correct_rb
+            # cmd.left[0], cmd.left[1] = correct_lf, correct_lb
+            # cmd.right[0], cmd.right[1] = correct_rf, correct_rb
+            cmd.left[0] = min(max(correct_lf, -50), 50)
+            cmd.left[1] = min(max(correct_lb, -50), 50)
+            cmd.right[0] = min(max(correct_rf, -50), 50)
+            cmd.right[1] = min(max(correct_rb, -50), 50)
 
             print(cmd)
 

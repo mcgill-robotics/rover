@@ -123,6 +123,7 @@ class ODriveJoint:
         # Velocity control
         self.vel_cmd = 0
         self.vel_fb = 0
+        self.direction = 1
 
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")

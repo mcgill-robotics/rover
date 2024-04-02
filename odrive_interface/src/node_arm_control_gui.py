@@ -158,10 +158,18 @@ class ArmControlGUI(QWidget):
         self.maxLinearVelocity = 10
         self.maxAngularVelocity = 10
 
+        # Setup movement timer
+        self.movement_timer = QTimer(self)
+        self.movement_timer.timeout.connect(self.updateMovement)
+        self.movement_timer.start(10)  # Update every 10ms
+
         # Setup the decay timer
         self.decay_timer = QTimer(self)
         self.decay_timer.timeout.connect(self.decay_velocity)
         self.decay_timer.start(10)  # Decay every 10ms
+
+        self.pressedKeys = set()  # Set to keep track of pressed keys
+        self.keyStates = {}  # Tracks the press state of each key
 
     def initUI(self):
         mainLayout = QVBoxLayout()
@@ -212,19 +220,62 @@ class ArmControlGUI(QWidget):
 
         self.setLayout(mainLayout)
 
-    def keyPressEvent(self, event: QKeyEvent):
+    # def keyPressEvent(self, event):
+    #     # if event.isAutoRepeat():  # Ignore auto-repeated events
+    #     #     return
+    #     self.pressedKeys.add(event.key())
+    #     print(f"Key pressed: {event.key()}")
+    #     self.updateMovement()
+
+    # def keyReleaseEvent(self, event):
+    #     if event.isAutoRepeat():  # Ignore auto-repeated events
+    #         return
+    #     if event.key() in self.pressedKeys:
+    #         self.pressedKeys.remove(event.key())
+    #     self.updateMovement()
+
+    def keyPressEvent(self, event):
         print(f"Key pressed: {event.key()}")
-        # Handle key press events
-        key = event.key()
-        if key == Qt.Key_Up or key == Qt.Key_W:
+        self.keyStates[event.key()] = True  # Mark as pressed
+        # self.updateMovement()
+        event.accept()
+
+    def keyReleaseEvent(self, event):
+        if event.isAutoRepeat():
+            event.ignore()
+            return
+        if event.key() in self.keyStates:
+            self.keyStates[event.key()] = False  # Mark as not pressed
+        # self.updateMovement()
+        event.accept()
+
+    def updateMovement(self):
+        # Check combinations and adjust accordingly
+        # if Qt.Key_Up in self.pressedKeys or Qt.Key_W in self.pressedKeys:
+        #     self.keyboard_accumulator_linear += self.keyboard_sensitivity
+        # if Qt.Key_Down in self.pressedKeys or Qt.Key_S in self.pressedKeys:
+        #     self.keyboard_accumulator_linear -= self.keyboard_sensitivity
+        # if Qt.Key_Left in self.pressedKeys or Qt.Key_A in self.pressedKeys:
+        #     self.keyboard_accumulator_twist -= self.keyboard_sensitivity
+        # if Qt.Key_Right in self.pressedKeys or Qt.Key_D in self.pressedKeys:
+        #     self.keyboard_accumulator_twist += self.keyboard_sensitivity
+        # if Qt.Key_Space in self.pressedKeys:
+        #     self.keyboard_accumulator_linear = 0.0
+        #     self.keyboard_accumulator_twist = 0.0
+        print(self.keyStates)
+        if self.keyStates.get(Qt.Key_Up, False) or self.keyStates.get(Qt.Key_W, False):
+            print("Up")
             self.keyboard_accumulator_linear += self.keyboard_sensitivity
-        elif key == Qt.Key_Down or key == Qt.Key_S:
+        if self.keyStates.get(Qt.Key_Down, False) or self.keyStates.get(Qt.Key_S, False):
+            print("Down")
             self.keyboard_accumulator_linear -= self.keyboard_sensitivity
-        elif key == Qt.Key_Left or key == Qt.Key_A:
+        if self.keyStates.get(Qt.Key_Left, False) or self.keyStates.get(Qt.Key_A, False):
+            print("Left")
             self.keyboard_accumulator_twist -= self.keyboard_sensitivity
-        elif key == Qt.Key_Right or key == Qt.Key_D:
+        if self.keyStates.get(Qt.Key_Right, False) or self.keyStates.get(Qt.Key_D, False):
+            print("Right")
             self.keyboard_accumulator_twist += self.keyboard_sensitivity
-        elif key == Qt.Key_Space:
+        if self.keyStates.get(Qt.Key_Space, False) or self.keyStates.get(Qt.Key_0, False):
             self.keyboard_accumulator_linear = 0.0
             self.keyboard_accumulator_twist = 0.0
 
@@ -238,6 +289,9 @@ class ArmControlGUI(QWidget):
         self.roverAngularVelocity = self.maxAngularVelocity * \
             self.keyboard_accumulator_twist
 
+        self.apply_velocities()
+
+    def apply_velocities(self):
         # Publish the velocities
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
@@ -249,10 +303,6 @@ class ArmControlGUI(QWidget):
             f"""Linear: {self.roverLinearVelocity:.2f}, Angular: {self.roverAngularVelocity:.2f}""")
         self.arrowWidget.set_velocities(
             self.roverLinearVelocity, self.roverAngularVelocity)
-
-    def keyReleaseEvent(self, event: QKeyEvent):
-        # Handle key release events if needed
-        pass
 
     def decay_velocity(self):
         # Decay the velocity over time
@@ -262,17 +312,7 @@ class ArmControlGUI(QWidget):
         self.roverLinearVelocity *= 0.99
         self.roverAngularVelocity *= 0.99
 
-        # Publish the velocities
-        roverTwist = Twist()
-        roverTwist.linear.x = self.roverLinearVelocity
-        roverTwist.angular.z = self.roverAngularVelocity
-        self.drive_twist_publisher.publish(roverTwist)
-
-        # Update GUI
-        self.drive_twist_label.setText(
-            f"""Linear: {self.roverLinearVelocity:.2f}, Angular: {self.roverAngularVelocity:.2f}""")
-        self.arrowWidget.set_velocities(
-            self.roverLinearVelocity, self.roverAngularVelocity)
+        self.apply_velocities()
 
     def createMotorGroup(self, motorType, jointRanges, increment=1):
         vbox = QVBoxLayout()
@@ -385,6 +425,7 @@ class ArmControlGUI(QWidget):
 
         # For drive motors
         cmdMsgDrive = WheelSpeed()
+        # flip is done in odrive_interface
         # cmdMsgDrive.left[0] = items[6][1].value() * \
         #     self.joint_drive_lst["LB"][3]
         # cmdMsgDrive.left[1] = items[7][1].value() * \

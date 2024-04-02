@@ -1,0 +1,49 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [45.50590297241211, -73.57591247558594],
+          "size": 40
+        },
+        "properties": {
+          "name": "obstacle 1"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [45.50519779663086, -73.5725615234375],
+          "size": 20
+        },
+        "properties": {
+          "name": "obstacle2"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [45.50668771362305, -73.5739506225586],
+          "size": 5
+        },
+        "properties": {
+          "name": "obstacle3"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [45.50578771362305, -73.5746506225586],
+          "size": 30
+        },
+        "properties": {
+          "name": "obstacle4"
+        }
+      }   
+    ]
+  }

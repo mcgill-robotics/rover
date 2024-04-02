@@ -38,6 +38,7 @@ export class MapComponent implements AfterViewInit{
   ngAfterViewInit(): void { 
     this.initMap();
     this.markerService.makeDebrisMarkers(this.map);
+    this.markerService.makeAreas(this.map);
     this.markerService.makeRoverMarker(this.map);
     var control_station = L.latLng([45.5056037902832, -73.57576751708984]);
     L.marker(control_station).addTo(this.map);

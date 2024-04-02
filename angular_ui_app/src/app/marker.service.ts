@@ -29,7 +29,8 @@ export class MarkerService {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
-        const area = L.circleMarker([lat, lon]);
+        const rad = c.geometry.size;
+        const area = L.circleMarker([lat, lon], { radius: rad});
         
         area.addTo(map);
       }

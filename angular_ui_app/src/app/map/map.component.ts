@@ -25,30 +25,24 @@ L.Marker.prototype.options.icon = iconDefault;
 export class MapComponent implements AfterViewInit{
 
   private map: L.Map;
-
+  
   constructor(private markerService: MarkerService) { }
 
   private initMap(): void {
     this.map = L.map('map', {
-      center: [ 45.5019, -73.5674 ],
-      zoom: 17
+      crs: L.CRS.Simple,
+      minZoom: 15
     });
-  
-
-  const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      minZoom: 3,
-      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    });
-
-  tiles.addTo(this.map);
-}
-
-  
+  }
 
   ngAfterViewInit(): void { 
     this.initMap();
-    this.markerService.makeCapitalMarkers(this.map);
+    this.markerService.makeDebrisMarkers(this.map);
+    this.markerService.makeRoverMarker(this.map);
+    var control_station = L.latLng([45.5056037902832, -73.57576751708984]);
+    L.marker(control_station).addTo(this.map);
+    this.map.setView(control_station, 1);
+
   }
 
 }

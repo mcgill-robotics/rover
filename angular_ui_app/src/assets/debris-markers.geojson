@@ -1,0 +1,45 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [45.50570297241211, -73.57591247558594]
+        },
+        "properties": {
+          "name": "debris1"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [45.50539779663086, -73.5755615234375]
+        },
+        "properties": {
+          "name": "debris2"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [45.50568771362305, -73.5759506225586]
+        },
+        "properties": {
+          "name": "debris3"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [45.50548771362305, -73.5756506225586]
+        },
+        "properties": {
+          "name": "debris4"
+        }
+      }   
+    ]
+  }

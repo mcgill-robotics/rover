@@ -289,6 +289,10 @@ class ArmControlGUI(QWidget):
         self.roverAngularVelocity = self.maxAngularVelocity * \
             self.keyboard_accumulator_twist
 
+        # Flip the angular velocity if the linear velocity is negative, similar to WASD controls
+        if self.roverLinearVelocity < 0:
+            self.roverAngularVelocity *= -1
+
         self.apply_velocities()
 
     def apply_velocities(self):

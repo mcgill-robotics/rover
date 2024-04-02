@@ -1,0 +1,16 @@
+<launch>
+    <!-- For receiving/sending data from/to the servos and the foot sensors -->
+    <node name="rosserial" pkg="rosserial_python" type="serial_node.py" respawn="false"
+        output="screen">
+        <param name="port" type="string" value="/dev/tty.usbmodem144090201" />
+        <param name="baud" type="int" value="57600" />
+    </node>
+    <node name="rosserial2" pkg="rosserial_python" type="serial_node.py" respawn="false"
+        output="screen">
+        <param name="port" type="string" value="/dev/tty.usbmodem144095001" />
+        <param name="baud" type="int" value="57600" />
+    </node>
+    <node pkg="odrive_interface" type="node_odrive_arm.py" name="odrive_interface_arm"
+        output="screen">
+    </node>
+</launch>

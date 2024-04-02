@@ -21,6 +21,8 @@ try:
         QPushButton,
         QApplication,
     )
+    from PyQt5.QtGui import QKeyEvent
+
     import rospy
     from std_msgs.msg import Float32MultiArray
     from drive_control.msg import WheelSpeed
@@ -34,101 +36,6 @@ except ImportError as e:
     print("Please install the required packages using the command:")
     print("pip install -r requirements.txt")
     sys.exit(1)
-
-
-# worker thread that will run our function
-
-
-class KeyboardListenerThread(QThread):
-    keyPressed = pyqtSignal(str)  # Signal to communicate key presses
-
-    def on_press(self, key):
-        try:
-            # Emit signal with the character of the key pressed
-            self.keyPressed.emit(key.char)
-            print(f"Key pressed: {key.char}")
-        except AttributeError:
-            if key == keyboard.Key.space:  # Example to handle special keys
-                self.keyPressed.emit(' ')
-
-    def on_key_press(self, key):
-        print(f"Key pressed: {key.char}")
-        # Accelerate
-        if key == keyboard.Key.up or key == keyboard.KeyCode.from_char("w"):
-            print("Accelerating")
-            self.keyboard_accumulator_linear += self.keyboard_sensitivity
-        if key == keyboard.Key.down or key == keyboard.KeyCode.from_char("s"):
-            self.keyboard_accumulator_linear -= self.keyboard_sensitivity
-        if key == keyboard.Key.left or key == keyboard.KeyCode.from_char("a"):
-            self.keyboard_accumulator_twist -= self.keyboard_sensitivity
-        if key == keyboard.Key.right or key == keyboard.KeyCode.from_char("d"):
-            self.keyboard_accumulator_twist += self.keyboard_sensitivity
-        # Brake
-        if key == keyboard.KeyCode.from_char("0") or key == keyboard.Key.space:
-            self.keyboard_accumulator_linear = 0.0
-            self.keyboard_accumulator_twist = 0.0
-
-        # Clamp velocities to limit values
-        self.keyboard_accumulator_linear = max(
-            min(self.keyboard_accumulator_linear, 1.0), -1.0
-        )
-        self.keyboard_accumulator_twist = max(
-            min(self.keyboard_accumulator_twist, 1.0), -1.0
-        )
-
-        self.roverLinearVelocity = (
-            self.maxLinearVelocity * self.keyboard_accumulator_linear
-        )
-        self.roverAngularVelocity = (
-            self.maxAngularVelocity * self.keyboard_accumulator_twist
-        )
-        print(f"""Accumulator Linear: {self.keyboard_accumulator_linear}""")
-        print(
-            f"""Linear: {self.roverLinearVelocity}, Angular: {self.roverAngularVelocity}""")
-
-        roverTwist = Twist()
-        roverTwist.linear.x = self.roverLinearVelocity
-        roverTwist.angular.z = self.roverAngularVelocity
-        self.drive_twist_publisher.publish(roverTwist)
-
-    def decay_velocity(self):
-        print("Decaying velocity")
-        self.roverLinearVelocity *= 0.99
-        self.roverAngularVelocity *= 0.99
-        roverTwist = Twist()
-        roverTwist.linear.x = self.roverLinearVelocity
-        roverTwist.angular.z = self.roverAngularVelocity
-        self.drive_twist_publisher.publish(roverTwist)
-
-    def run(self):
-        # Define the on_press callback for pynput
-
-        self.drive_twist_publisher = rospy.Publisher(
-            "rover_velocity_controller/cmd_vel", Twist, queue_size=1
-        )
-        self.roverLinearVelocity = 0.0
-        self.roverAngularVelocity = 0.0
-        self.keyboard_accumulator_linear = 0.0
-        self.keyboard_accumulator_twist = 0.0
-        self.keyboard_sensitivity = 0.025  # 0.5 default
-        self.maxLinearVelocity = 10
-        self.maxAngularVelocity = 10
-
-        # Start the pynput listener
-        # with keyboard.Listener(on_press=self.on_key_press) as listener:
-        #     listener.join()
-        self.listener = keyboard.Listener(on_press=self.on_key_press)
-        self.listener.start()
-
-        # Initialize the QTimer for decay
-        self.decay_timer = QTimer()
-        # Connect timeout to decay_velocity
-        self.decay_timer.timeout.connect(self.decay_velocity)
-        self.decay_timer.start(10)  # Set to timeout every 10ms
-
-        # Keep the thread running
-        loop = QEventLoop()
-        loop.exec_()
 
 
 class ArmControlGUI(QWidget):
@@ -160,10 +67,73 @@ class ArmControlGUI(QWidget):
 
         # Set up the keyboard listener thread
 
-        self.keyboardListenerThread = KeyboardListenerThread()
-        # self.keyboardListenerThread.keyPressed.connect(self.on_key_press)
-        self.keyboardListenerThread.start()
-        print("Keyboard listener started")
+        # self.keyboardListenerThread = KeyboardListenerThread()
+        # self.keyboardListenerThread.start()
+        # print("Keyboard listener started")
+        self.roverLinearVelocity = 0.0
+        self.roverAngularVelocity = 0.0
+        self.keyboard_accumulator_linear = 0.0
+        self.keyboard_accumulator_twist = 0.0
+        self.keyboard_sensitivity = 0.025
+        self.maxLinearVelocity = 10
+        self.maxAngularVelocity = 10
+        # Setup a label to display key presses (for demonstration)
+        self.label = QLabel(
+            "Press arrow keys, WSAD, or space to interact", self)
+        self.label.setGeometry(50, 50, 400, 50)
+
+        # Setup the decay timer
+        self.decay_timer = QTimer(self)
+        self.decay_timer.timeout.connect(self.decay_velocity)
+        self.decay_timer.start(10)  # Decay every 10ms
+
+    def keyPressEvent(self, event: QKeyEvent):
+        print(f"Key pressed: {event.key()}")
+        # Handle key press events
+        key = event.key()
+        if key == Qt.Key_Up or key == Qt.Key_W:
+            self.keyboard_accumulator_linear += self.keyboard_sensitivity
+        elif key == Qt.Key_Down or key == Qt.Key_S:
+            self.keyboard_accumulator_linear -= self.keyboard_sensitivity
+        elif key == Qt.Key_Left or key == Qt.Key_A:
+            self.keyboard_accumulator_twist -= self.keyboard_sensitivity
+        elif key == Qt.Key_Right or key == Qt.Key_D:
+            self.keyboard_accumulator_twist += self.keyboard_sensitivity
+        elif key == Qt.Key_Space:
+            self.keyboard_accumulator_linear = 0.0
+            self.keyboard_accumulator_twist = 0.0
+
+        # Clamp and apply the velocities
+        self.keyboard_accumulator_linear = max(
+            min(self.keyboard_accumulator_linear, 1.0), -1.0)
+        self.keyboard_accumulator_twist = max(
+            min(self.keyboard_accumulator_twist, 1.0), -1.0)
+        self.roverLinearVelocity = self.maxLinearVelocity * \
+            self.keyboard_accumulator_linear
+        self.roverAngularVelocity = self.maxAngularVelocity * \
+            self.keyboard_accumulator_twist
+        # For demonstration, update the label (or publish your Twist message here)
+        self.label.setText(
+            f"Linear: {self.roverLinearVelocity}, Angular: {self.roverAngularVelocity}")
+
+        roverTwist = Twist()
+        roverTwist.linear.x = self.roverLinearVelocity
+        roverTwist.angular.z = self.roverAngularVelocity
+        self.drive_twist_publisher.publish(roverTwist)
+
+    def keyReleaseEvent(self, event: QKeyEvent):
+        # Handle key release events if needed
+        pass
+
+    def decay_velocity(self):
+        # Decay the velocity over time
+        # print("Decaying velocity")
+        self.roverLinearVelocity *= 0.99
+        self.roverAngularVelocity *= 0.99
+        roverTwist = Twist()
+        roverTwist.linear.x = self.roverLinearVelocity
+        roverTwist.angular.z = self.roverAngularVelocity
+        self.drive_twist_publisher.publish(roverTwist)
 
     def initUI(self):
         mainLayout = QVBoxLayout()
@@ -366,6 +336,9 @@ class ArmControlGUI(QWidget):
         )
         self.drive_cmd_publisher = rospy.Publisher(
             "/wheel_velocity_cmd", WheelSpeed, queue_size=10
+        )
+        self.drive_twist_publisher = rospy.Publisher(
+            "rover_velocity_controller/cmd_vel", Twist, queue_size=1
         )
 
         rospy.Subscriber("/armBrushlessFb", Float32MultiArray,

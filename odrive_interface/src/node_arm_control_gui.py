@@ -1,21 +1,134 @@
-from std_msgs.msg import Float32MultiArray
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QSlider,
-    QLabel,
-    QPushButton,
-    QApplication,
-)
-from PyQt5.QtCore import Qt
-import rospy
-import os
+
+
 import sys
-from drive_control.msg import WheelSpeed
+import os
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
+sys.path.append(currentdir + "/../..")
+
+try:
+    import scipy.stats as st
+    from scipy.ndimage import gaussian_filter1d
+    import numpy as np
+    from PyQt5.QtCore import Qt, QThread, QTimer, QEventLoop, pyqtSignal
+    from PyQt5.QtWidgets import (
+        QWidget,
+        QVBoxLayout,
+        QHBoxLayout,
+        QSlider,
+        QLabel,
+        QPushButton,
+        QApplication,
+    )
+    import rospy
+    from std_msgs.msg import Float32MultiArray
+    from drive_control.msg import WheelSpeed
+    from geometry_msgs.msg import Twist
+
+    from pynput import keyboard
+
+    from drive_control.src.steering import Steering
+except ImportError as e:
+    print(f"Error: {e}")
+    print("Please install the required packages using the command:")
+    print("pip install -r requirements.txt")
+    sys.exit(1)
+
+
+# worker thread that will run our function
+
+
+class KeyboardListenerThread(QThread):
+    keyPressed = pyqtSignal(str)  # Signal to communicate key presses
+
+    def on_press(self, key):
+        try:
+            # Emit signal with the character of the key pressed
+            self.keyPressed.emit(key.char)
+            print(f"Key pressed: {key.char}")
+        except AttributeError:
+            if key == keyboard.Key.space:  # Example to handle special keys
+                self.keyPressed.emit(' ')
+
+    def on_key_press(self, key):
+        print(f"Key pressed: {key.char}")
+        # Accelerate
+        if key == keyboard.Key.up or key == keyboard.KeyCode.from_char("w"):
+            print("Accelerating")
+            self.keyboard_accumulator_linear += self.keyboard_sensitivity
+        if key == keyboard.Key.down or key == keyboard.KeyCode.from_char("s"):
+            self.keyboard_accumulator_linear -= self.keyboard_sensitivity
+        if key == keyboard.Key.left or key == keyboard.KeyCode.from_char("a"):
+            self.keyboard_accumulator_twist -= self.keyboard_sensitivity
+        if key == keyboard.Key.right or key == keyboard.KeyCode.from_char("d"):
+            self.keyboard_accumulator_twist += self.keyboard_sensitivity
+        # Brake
+        if key == keyboard.KeyCode.from_char("0") or key == keyboard.Key.space:
+            self.keyboard_accumulator_linear = 0.0
+            self.keyboard_accumulator_twist = 0.0
+
+        # Clamp velocities to limit values
+        self.keyboard_accumulator_linear = max(
+            min(self.keyboard_accumulator_linear, 1.0), -1.0
+        )
+        self.keyboard_accumulator_twist = max(
+            min(self.keyboard_accumulator_twist, 1.0), -1.0
+        )
+
+        self.roverLinearVelocity = (
+            self.maxLinearVelocity * self.keyboard_accumulator_linear
+        )
+        self.roverAngularVelocity = (
+            self.maxAngularVelocity * self.keyboard_accumulator_twist
+        )
+        print(f"""Accumulator Linear: {self.keyboard_accumulator_linear}""")
+        print(
+            f"""Linear: {self.roverLinearVelocity}, Angular: {self.roverAngularVelocity}""")
+
+        roverTwist = Twist()
+        roverTwist.linear.x = self.roverLinearVelocity
+        roverTwist.angular.z = self.roverAngularVelocity
+        self.drive_twist_publisher.publish(roverTwist)
+
+    def decay_velocity(self):
+        print("Decaying velocity")
+        self.roverLinearVelocity *= 0.99
+        self.roverAngularVelocity *= 0.99
+        roverTwist = Twist()
+        roverTwist.linear.x = self.roverLinearVelocity
+        roverTwist.angular.z = self.roverAngularVelocity
+        self.drive_twist_publisher.publish(roverTwist)
+
+    def run(self):
+        # Define the on_press callback for pynput
+
+        self.drive_twist_publisher = rospy.Publisher(
+            "rover_velocity_controller/cmd_vel", Twist, queue_size=1
+        )
+        self.roverLinearVelocity = 0.0
+        self.roverAngularVelocity = 0.0
+        self.keyboard_accumulator_linear = 0.0
+        self.keyboard_accumulator_twist = 0.0
+        self.keyboard_sensitivity = 0.025  # 0.5 default
+        self.maxLinearVelocity = 10
+        self.maxAngularVelocity = 10
+
+        # Start the pynput listener
+        # with keyboard.Listener(on_press=self.on_key_press) as listener:
+        #     listener.join()
+        self.listener = keyboard.Listener(on_press=self.on_key_press)
+        self.listener.start()
+
+        # Initialize the QTimer for decay
+        self.decay_timer = QTimer()
+        # Connect timeout to decay_velocity
+        self.decay_timer.timeout.connect(self.decay_velocity)
+        self.decay_timer.start(10)  # Set to timeout every 10ms
+
+        # Keep the thread running
+        loop = QEventLoop()
+        loop.exec_()
 
 
 class ArmControlGUI(QWidget):
@@ -44,6 +157,13 @@ class ArmControlGUI(QWidget):
         super(ArmControlGUI, self).__init__()
         self.initUI()
         self.rosSetup()
+
+        # Set up the keyboard listener thread
+
+        self.keyboardListenerThread = KeyboardListenerThread()
+        # self.keyboardListenerThread.keyPressed.connect(self.on_key_press)
+        self.keyboardListenerThread.start()
+        print("Keyboard listener started")
 
     def initUI(self):
         mainLayout = QVBoxLayout()
@@ -182,22 +302,30 @@ class ArmControlGUI(QWidget):
         cmdMsgBrushless = Float32MultiArray()
         cmdMsgBrushless.data = [float(slider.value())
                                 for key, slider in items[0:3]]
-        self.brushlessCmdPublisher.publish(cmdMsgBrushless)
+        self.arm_brushless_cmd_publisher.publish(cmdMsgBrushless)
 
         # For brushed motors
         cmdMsgBrushed = Float32MultiArray()
         cmdMsgBrushed.data = [float(slider.value())
                               for key, slider in items[3:6]]
-        self.brushedCmdPublisher.publish(cmdMsgBrushed)
+        self.arm_brushed_cmd_publisher.publish(cmdMsgBrushed)
 
         # For drive motors
         cmdMsgDrive = WheelSpeed()
+        # cmdMsgDrive.left[0] = items[6][1].value() * \
+        #     self.joint_drive_lst["LB"][3]
+        # cmdMsgDrive.left[1] = items[7][1].value() * \
+        #     self.joint_drive_lst["LF"][3]
+        # cmdMsgDrive.right[0] = items[8][1].value() * \
+        #     self.joint_drive_lst["RB"][3]
+        # cmdMsgDrive.right[1] = items[9][1].value() * \
+        #     self.joint_drive_lst["RF"][3]
         cmdMsgDrive.left[0] = items[6][1].value()
         cmdMsgDrive.left[1] = items[7][1].value()
         cmdMsgDrive.right[0] = items[8][1].value()
         cmdMsgDrive.right[1] = items[9][1].value()
-        print(type(items[6][1]))
-        self.driveCmdPublisher.publish(cmdMsgDrive)
+        # print(type(items[6][1]))
+        self.drive_cmd_publisher.publish(cmdMsgDrive)
 
         # Update labels
         for i, (joint, slider) in enumerate(items):
@@ -211,7 +339,9 @@ class ArmControlGUI(QWidget):
 
     def update_drive_fb(self, data):
         self.fbLabelDrive.setText(
-            f"""Drive Fb - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}""")
+            f"""Drive Fb - LB: {data.left[0] * self.joint_drive_lst["LB"][3]:.2f}, LF: {data.left[1] * self.joint_drive_lst["LF"][3]:.2f}, RB: {data.right[0] * self.joint_drive_lst["RB"][3]:.2f}, RF: {data.right[1] * self.joint_drive_lst["RF"][3]:.2f}""")
+        # self.fbLabelDrive.setText(
+        #     f"""Drive Fb - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}""")
 
     def update_arm_fb(self, motorType, data):
         if motorType == "Brushless":
@@ -228,15 +358,16 @@ class ArmControlGUI(QWidget):
 
     def rosSetup(self):
         rospy.init_node("arm_control_gui", anonymous=True)
-        self.brushlessCmdPublisher = rospy.Publisher(
+        self.arm_brushless_cmd_publisher = rospy.Publisher(
             "/armBrushlessCmd", Float32MultiArray, queue_size=10
         )
-        self.brushedCmdPublisher = rospy.Publisher(
+        self.arm_brushed_cmd_publisher = rospy.Publisher(
             "/armBrushedCmd", Float32MultiArray, queue_size=10
         )
-        self.driveCmdPublisher = rospy.Publisher(
+        self.drive_cmd_publisher = rospy.Publisher(
             "/wheel_velocity_cmd", WheelSpeed, queue_size=10
         )
+
         rospy.Subscriber("/armBrushlessFb", Float32MultiArray,
                          self.on_update_brushless_fb)
         rospy.Subscriber("/armBrushedFb", Float32MultiArray,

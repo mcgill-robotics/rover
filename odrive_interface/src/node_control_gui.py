@@ -45,8 +45,8 @@ class ArrowWidget(QWidget):
         self.linear_velocity = 0
         self.angular_velocity = 0
         # Should be same as the maxLinearVelocity and maxAngularVelocity in the main class
-        self.maxLinearVelocity = 10
-        self.maxAngularVelocity = 10
+        self.max_linear_vel = 10
+        self.max_angular_vel = 10
         self.setMinimumSize(200, 200)  # Ensure widget is large enough
 
     def set_velocities(self, linear, angular):
@@ -54,29 +54,7 @@ class ArrowWidget(QWidget):
         self.angular_velocity = angular
         self.update()  # Trigger a repaint to show updated velocities
 
-    # def paintEvent(self, event):
-    #     qp = QPainter(self)
-    #     qp.setPen(QPen(QColor(0, 0, 0), 2))
-    #     qp.setRenderHint(QPainter.Antialiasing)
-
-    #     # Calculate arrow parameters based on velocities
-    #     center = self.rect().center()
-    #     arrow_length = max(min(abs(self.linear_velocity) *
-    #                        10, self.rect().height() / 2), 10)
-    #     arrow_angle = self.angular_velocity * 10
-
-    #     # Calculate arrow end point
-    #     # Explicitly converted to int
-    #     end_point_x = int(center.x() + arrow_length)
-    #     # Explicitly converted to int
-    #     end_point_y = int(center.y() + arrow_angle)
-
-    #     # Ensure end point is within widget bounds
-    #     end_point_y = max(
-    #         min(end_point_y, self.rect().bottom()), self.rect().top())
-
-    #     # Draw the arrow
-    #     qp.drawLine(center.x(), center.y(), end_point_x, end_point_y)
+    # OVERRIDE, don't change name
     def paintEvent(self, event):
         qp = QPainter(self)
         qp.setPen(QPen(QColor(0, 0, 0), 2))
@@ -89,9 +67,9 @@ class ArrowWidget(QWidget):
         max_angle_degrees = 60  # Max rotation angle from the vertical "north"
 
         # Normalize linear velocity to [-1, 1] range
-        normalized_linear_vel = self.linear_velocity / self.maxLinearVelocity
+        normalized_linear_vel = self.linear_velocity / self.max_linear_vel
         # Normalize angular velocity and calculate rotation angle
-        normalized_angular_vel = self.angular_velocity / self.maxAngularVelocity
+        normalized_angular_vel = self.angular_velocity / self.max_angular_vel
         angle_degrees = normalized_angular_vel * max_angle_degrees
 
         if abs(self.linear_velocity) < velocity_threshold:
@@ -150,17 +128,17 @@ class ArmControlGUI(QWidget):
         # self.keyboardListenerThread = KeyboardListenerThread()
         # self.keyboardListenerThread.start()
         # print("Keyboard listener started")
-        self.roverLinearVelocity = 0.0
-        self.roverAngularVelocity = 0.0
+        self.rover_linear_vel = 0.0
+        self.rover_angular_vel = 0.0
         self.keyboard_accumulator_linear = 0.0
         self.keyboard_accumulator_twist = 0.0
         self.keyboard_sensitivity = 0.025
-        self.maxLinearVelocity = 10
-        self.maxAngularVelocity = 10
+        self.max_linear_vel = 10
+        self.max_angular_vel = 10
 
         # Setup movement timer
         self.movement_timer = QTimer(self)
-        self.movement_timer.timeout.connect(self.updateMovement)
+        self.movement_timer.timeout.connect(self.update_movement)
         self.movement_timer.start(10)  # Update every 10ms
 
         # Setup the decay timer
@@ -172,96 +150,71 @@ class ArmControlGUI(QWidget):
         self.keyStates = {}  # Tracks the press state of each key
 
     def initUI(self):
-        mainLayout = QVBoxLayout()
+        # main_layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
 
         # Brushless and Brushed motor control
-        brushlessGroupLayout = self.createMotorGroup(
+        brushless_group_layout = self.create_motor_group(
             "Brushless", self.joint_brushless_lst
         )
         self.fbLabelBrushless = QLabel(
             "Fb Brushless - Elbow: 0, Shoulder: 0, Waist: 0")
         self.fbLabelBrushless.setAlignment(Qt.AlignCenter)
-        brushlessGroupLayout.addWidget(self.fbLabelBrushless)
-        mainLayout.addLayout(brushlessGroupLayout)
+        brushless_group_layout.addWidget(self.fbLabelBrushless)
+        main_layout.addLayout(brushless_group_layout)
 
-        brushedGroupLayout = self.createMotorGroup(
+        brushed_group_layout = self.create_motor_group(
             "Brushed", self.joint_brushed_lst)
         self.fbLabelBrushed = QLabel(
             "Fb Brushed - Elbow: 0, Shoulder: 0, Waist: 0")
         self.fbLabelBrushed.setAlignment(Qt.AlignCenter)
-        brushedGroupLayout.addWidget(self.fbLabelBrushed)
-        mainLayout.addLayout(brushedGroupLayout)
+        brushed_group_layout.addWidget(self.fbLabelBrushed)
+        main_layout.addLayout(brushed_group_layout)
 
         # Drive Fb and Cmd
-        driveGroupLayout = self.createMotorGroup(
+        drive_group_layout = self.create_motor_group(
             "Drive", self.joint_drive_lst, 5)
         self.fbLabelDrive = QLabel("Drive Fb - LB: 0, LF: 0, RB: 0, RF: 0")
         self.fbLabelDrive.setAlignment(Qt.AlignCenter)
         self.drive_cmd_label = QLabel("Drive Cmd - LB: 0, LF: 0, RB: 0, RF: 0")
         self.drive_cmd_label.setAlignment(Qt.AlignCenter)
-        driveGroupLayout.addWidget(self.fbLabelDrive)
-        driveGroupLayout.addWidget(self.drive_cmd_label)
-        mainLayout.addLayout(driveGroupLayout)
+        drive_group_layout.addWidget(self.fbLabelDrive)
+        drive_group_layout.addWidget(self.drive_cmd_label)
+        main_layout.addLayout(drive_group_layout)
 
         # Setup a label to display key presses (for demonstration)
         self.drive_twist_label = QLabel(
             "Press arrow keys, WASD, or space to interact", self)
         self.drive_twist_label.setAlignment(Qt.AlignCenter)
-        mainLayout.addWidget(self.drive_twist_label)
+        main_layout.addWidget(self.drive_twist_label)
 
         # Reset Button
         self.resetButton = QPushButton("Reset")
         self.resetButton.clicked.connect(self.resetSliders)
-        mainLayout.addWidget(self.resetButton)
+        main_layout.addWidget(self.resetButton)
 
         # Arrow Widget
-        self.arrowWidget = ArrowWidget()
-        mainLayout.addWidget(self.arrowWidget)
+        self.arrow_widget = ArrowWidget()
+        main_layout.addWidget(self.arrow_widget)
 
-        self.setLayout(mainLayout)
+        self.setLayout(main_layout)
 
-    # def keyPressEvent(self, event):
-    #     # if event.isAutoRepeat():  # Ignore auto-repeated events
-    #     #     return
-    #     self.pressedKeys.add(event.key())
-    #     print(f"Key pressed: {event.key()}")
-    #     self.updateMovement()
-
-    # def keyReleaseEvent(self, event):
-    #     if event.isAutoRepeat():  # Ignore auto-repeated events
-    #         return
-    #     if event.key() in self.pressedKeys:
-    #         self.pressedKeys.remove(event.key())
-    #     self.updateMovement()
-
+    # OVERRIDE, don't change name
     def keyPressEvent(self, event):
         print(f"Key pressed: {event.key()}")
         self.keyStates[event.key()] = True  # Mark as pressed
-        # self.updateMovement()
         event.accept()
 
+    # OVERRIDE, don't change name
     def keyReleaseEvent(self, event):
         if event.isAutoRepeat():
             event.ignore()
             return
         if event.key() in self.keyStates:
             self.keyStates[event.key()] = False  # Mark as not pressed
-        # self.updateMovement()
         event.accept()
 
-    def updateMovement(self):
-        # Check combinations and adjust accordingly
-        # if Qt.Key_Up in self.pressedKeys or Qt.Key_W in self.pressedKeys:
-        #     self.keyboard_accumulator_linear += self.keyboard_sensitivity
-        # if Qt.Key_Down in self.pressedKeys or Qt.Key_S in self.pressedKeys:
-        #     self.keyboard_accumulator_linear -= self.keyboard_sensitivity
-        # if Qt.Key_Left in self.pressedKeys or Qt.Key_A in self.pressedKeys:
-        #     self.keyboard_accumulator_twist -= self.keyboard_sensitivity
-        # if Qt.Key_Right in self.pressedKeys or Qt.Key_D in self.pressedKeys:
-        #     self.keyboard_accumulator_twist += self.keyboard_sensitivity
-        # if Qt.Key_Space in self.pressedKeys:
-        #     self.keyboard_accumulator_linear = 0.0
-        #     self.keyboard_accumulator_twist = 0.0
+    def update_movement(self):
         print(self.keyStates)
         if self.keyStates.get(Qt.Key_Up, False) or self.keyStates.get(Qt.Key_W, False):
             print("Up")
@@ -276,6 +229,7 @@ class ArmControlGUI(QWidget):
             print("Right")
             self.keyboard_accumulator_twist += self.keyboard_sensitivity
         if self.keyStates.get(Qt.Key_Space, False) or self.keyStates.get(Qt.Key_0, False):
+            print("Stop")
             self.keyboard_accumulator_linear = 0.0
             self.keyboard_accumulator_twist = 0.0
 
@@ -284,41 +238,41 @@ class ArmControlGUI(QWidget):
             min(self.keyboard_accumulator_linear, 1.0), -1.0)
         self.keyboard_accumulator_twist = max(
             min(self.keyboard_accumulator_twist, 1.0), -1.0)
-        self.roverLinearVelocity = self.maxLinearVelocity * \
+        self.rover_linear_vel = self.max_linear_vel * \
             self.keyboard_accumulator_linear
-        self.roverAngularVelocity = self.maxAngularVelocity * \
+        self.rover_angular_vel = self.max_angular_vel * \
             self.keyboard_accumulator_twist
 
         # Flip the angular velocity if the linear velocity is negative, similar to WASD controls
-        if self.roverLinearVelocity < 0:
-            self.roverAngularVelocity *= -1
+        if self.rover_linear_vel < 0:
+            self.rover_angular_vel *= -1
 
-        self.apply_velocities()
+        self.publish_drive_twist()
 
-    def apply_velocities(self):
+    def publish_drive_twist(self):
         # Publish the velocities
         roverTwist = Twist()
-        roverTwist.linear.x = self.roverLinearVelocity
-        roverTwist.angular.z = self.roverAngularVelocity
+        roverTwist.linear.x = self.rover_linear_vel
+        roverTwist.angular.z = self.rover_angular_vel
         self.drive_twist_publisher.publish(roverTwist)
 
         # Update GUI
         self.drive_twist_label.setText(
-            f"""Twist - Linear: {self.roverLinearVelocity:.2f}, Angular: {self.roverAngularVelocity:.2f}""")
-        self.arrowWidget.set_velocities(
-            self.roverLinearVelocity, self.roverAngularVelocity)
+            f"""Twist - Linear: {self.rover_linear_vel:.2f}, Angular: {self.rover_angular_vel:.2f}""")
+        self.arrow_widget.set_velocities(
+            self.rover_linear_vel, self.rover_angular_vel)
 
     def decay_velocity(self):
         # Decay the velocity over time
         # print("Decaying velocity")
-        self.keyboard_accumulator_linear *= 0.99
-        self.keyboard_accumulator_twist *= 0.99
-        self.roverLinearVelocity *= 0.99
-        self.roverAngularVelocity *= 0.99
+        self.keyboard_accumulator_linear *= 0.98
+        self.keyboard_accumulator_twist *= 0.98
+        self.rover_linear_vel *= 0.95
+        self.rover_angular_vel *= 0.95
 
-        self.apply_velocities()
+        self.publish_drive_twist()
 
-    def createMotorGroup(self, motorType, jointRanges, increment=1):
+    def create_motor_group(self, motorType, jointRanges, increment=1):
         vbox = QVBoxLayout()
         vbox.addWidget(QLabel(f"{motorType} Motor Control"))
 

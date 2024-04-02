@@ -11,6 +11,7 @@ try:
     import scipy.stats as st
     from scipy.ndimage import gaussian_filter1d
     import numpy as np
+    import math
     from PyQt5.QtCore import Qt, QThread, QTimer, QEventLoop, pyqtSignal
     from PyQt5.QtWidgets import (
         QWidget,
@@ -21,7 +22,7 @@ try:
         QPushButton,
         QApplication,
     )
-    from PyQt5.QtGui import QKeyEvent
+    from PyQt5.QtGui import QKeyEvent, QPainter, QPen, QColor
 
     import rospy
     from std_msgs.msg import Float32MultiArray
@@ -36,6 +37,85 @@ except ImportError as e:
     print("Please install the required packages using the command:")
     print("pip install -r requirements.txt")
     sys.exit(1)
+
+
+class ArrowWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.linear_velocity = 0
+        self.angular_velocity = 0
+        # Should be same as the maxLinearVelocity and maxAngularVelocity in the main class
+        self.maxLinearVelocity = 10
+        self.maxAngularVelocity = 10
+        self.setMinimumSize(200, 200)  # Ensure widget is large enough
+
+    def set_velocities(self, linear, angular):
+        self.linear_velocity = linear
+        self.angular_velocity = angular
+        self.update()  # Trigger a repaint to show updated velocities
+
+    # def paintEvent(self, event):
+    #     qp = QPainter(self)
+    #     qp.setPen(QPen(QColor(0, 0, 0), 2))
+    #     qp.setRenderHint(QPainter.Antialiasing)
+
+    #     # Calculate arrow parameters based on velocities
+    #     center = self.rect().center()
+    #     arrow_length = max(min(abs(self.linear_velocity) *
+    #                        10, self.rect().height() / 2), 10)
+    #     arrow_angle = self.angular_velocity * 10
+
+    #     # Calculate arrow end point
+    #     # Explicitly converted to int
+    #     end_point_x = int(center.x() + arrow_length)
+    #     # Explicitly converted to int
+    #     end_point_y = int(center.y() + arrow_angle)
+
+    #     # Ensure end point is within widget bounds
+    #     end_point_y = max(
+    #         min(end_point_y, self.rect().bottom()), self.rect().top())
+
+    #     # Draw the arrow
+    #     qp.drawLine(center.x(), center.y(), end_point_x, end_point_y)
+    def paintEvent(self, event):
+        qp = QPainter(self)
+        qp.setPen(QPen(QColor(0, 0, 0), 2))
+        qp.setRenderHint(QPainter.Antialiasing)
+
+        center = self.rect().center()
+        velocity_threshold = 0.01  # Threshold for considering velocity as zero
+        # Use smaller dimension for max length
+        max_pixel_length = min(self.rect().width(), self.rect().height()) / 2
+        max_angle_degrees = 60  # Max rotation angle from the vertical "north"
+
+        # Normalize linear velocity to [-1, 1] range
+        normalized_linear_vel = self.linear_velocity / self.maxLinearVelocity
+        # Normalize angular velocity and calculate rotation angle
+        normalized_angular_vel = self.angular_velocity / self.maxAngularVelocity
+        angle_degrees = normalized_angular_vel * max_angle_degrees
+
+        if abs(self.linear_velocity) < velocity_threshold:
+            dot_radius = 3  # Draw a dot for zero/near-zero velocities
+            qp.drawEllipse(center, dot_radius, dot_radius)
+        else:
+            # Calculate arrow length from normalized linear velocity, ensuring minimum visibility
+            arrow_length = max(abs(normalized_linear_vel)
+                               * max_pixel_length, 3)
+
+            # Adjust angle based on direction; flip arrow for negative velocities
+            angle_radians = math.radians(angle_degrees)
+            if self.linear_velocity < 0:
+                # For negative linear velocities, adjust the arrow to point "south"
+                # This involves adding 180 degrees (pi radians) to flip the arrow direction
+                angle_radians += math.pi
+
+            # Calculate arrow end point using polar coordinates conversion
+            end_point_x = center.x() + arrow_length * math.sin(angle_radians)
+            end_point_y = center.y() - arrow_length * math.cos(angle_radians)
+
+            # Draw the arrow
+            qp.drawLine(center.x(), center.y(), int(
+                end_point_x), int(end_point_y))
 
 
 class ArmControlGUI(QWidget):
@@ -77,15 +157,60 @@ class ArmControlGUI(QWidget):
         self.keyboard_sensitivity = 0.025
         self.maxLinearVelocity = 10
         self.maxAngularVelocity = 10
-        # Setup a label to display key presses (for demonstration)
-        self.label = QLabel(
-            "Press arrow keys, WSAD, or space to interact", self)
-        self.label.setGeometry(50, 50, 400, 50)
 
         # Setup the decay timer
         self.decay_timer = QTimer(self)
         self.decay_timer.timeout.connect(self.decay_velocity)
         self.decay_timer.start(10)  # Decay every 10ms
+
+    def initUI(self):
+        mainLayout = QVBoxLayout()
+
+        # Brushless and Brushed motor control
+        brushlessGroupLayout = self.createMotorGroup(
+            "Brushless", self.joint_brushless_lst
+        )
+        self.fbLabelBrushless = QLabel(
+            "Fb Brushless - Elbow: 0, Shoulder: 0, Waist: 0")
+        self.fbLabelBrushless.setAlignment(Qt.AlignCenter)
+        brushlessGroupLayout.addWidget(self.fbLabelBrushless)
+        mainLayout.addLayout(brushlessGroupLayout)
+
+        brushedGroupLayout = self.createMotorGroup(
+            "Brushed", self.joint_brushed_lst)
+        self.fbLabelBrushed = QLabel(
+            "Fb Brushed - Elbow: 0, Shoulder: 0, Waist: 0")
+        self.fbLabelBrushed.setAlignment(Qt.AlignCenter)
+        brushedGroupLayout.addWidget(self.fbLabelBrushed)
+        mainLayout.addLayout(brushedGroupLayout)
+
+        # Drive Fb and Cmd
+        driveGroupLayout = self.createMotorGroup(
+            "Drive", self.joint_drive_lst, 5)
+        self.fbLabelDrive = QLabel("Drive Fb - LB: 0, LF: 0, RB: 0, RF: 0")
+        self.fbLabelDrive.setAlignment(Qt.AlignCenter)
+        self.drive_cmd_label = QLabel("Drive Cmd - LB: 0, LF: 0, RB: 0, RF: 0")
+        self.drive_cmd_label.setAlignment(Qt.AlignCenter)
+        driveGroupLayout.addWidget(self.fbLabelDrive)
+        driveGroupLayout.addWidget(self.drive_cmd_label)
+        mainLayout.addLayout(driveGroupLayout)
+
+        # Setup a label to display key presses (for demonstration)
+        self.drive_twist_label = QLabel(
+            "Press arrow keys, WASD, or space to interact", self)
+        self.drive_twist_label.setAlignment(Qt.AlignCenter)
+        mainLayout.addWidget(self.drive_twist_label)
+
+        # Reset Button
+        self.resetButton = QPushButton("Reset")
+        self.resetButton.clicked.connect(self.resetSliders)
+        mainLayout.addWidget(self.resetButton)
+
+        # Arrow Widget
+        self.arrowWidget = ArrowWidget()
+        mainLayout.addWidget(self.arrowWidget)
+
+        self.setLayout(mainLayout)
 
     def keyPressEvent(self, event: QKeyEvent):
         print(f"Key pressed: {event.key()}")
@@ -112,14 +237,18 @@ class ArmControlGUI(QWidget):
             self.keyboard_accumulator_linear
         self.roverAngularVelocity = self.maxAngularVelocity * \
             self.keyboard_accumulator_twist
-        # For demonstration, update the label (or publish your Twist message here)
-        self.label.setText(
-            f"Linear: {self.roverLinearVelocity}, Angular: {self.roverAngularVelocity}")
 
+        # Publish the velocities
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
         self.drive_twist_publisher.publish(roverTwist)
+
+        # Update GUI
+        self.drive_twist_label.setText(
+            f"""Linear: {self.roverLinearVelocity:.2f}, Angular: {self.roverAngularVelocity:.2f}""")
+        self.arrowWidget.set_velocities(
+            self.roverLinearVelocity, self.roverAngularVelocity)
 
     def keyReleaseEvent(self, event: QKeyEvent):
         # Handle key release events if needed
@@ -128,48 +257,22 @@ class ArmControlGUI(QWidget):
     def decay_velocity(self):
         # Decay the velocity over time
         # print("Decaying velocity")
+        self.keyboard_accumulator_linear *= 0.99
+        self.keyboard_accumulator_twist *= 0.99
         self.roverLinearVelocity *= 0.99
         self.roverAngularVelocity *= 0.99
+
+        # Publish the velocities
         roverTwist = Twist()
         roverTwist.linear.x = self.roverLinearVelocity
         roverTwist.angular.z = self.roverAngularVelocity
         self.drive_twist_publisher.publish(roverTwist)
 
-    def initUI(self):
-        mainLayout = QVBoxLayout()
-
-        # Brushless and Brushed motor control
-        brushlessGroupLayout = self.createMotorGroup(
-            "Brushless", self.joint_brushless_lst
-        )
-        self.fbLabelBrushless = QLabel(
-            "Fb Brushless - Elbow: 0, Shoulder: 0, Waist: 0")
-        self.fbLabelBrushless.setAlignment(Qt.AlignCenter)
-        brushlessGroupLayout.addWidget(self.fbLabelBrushless)
-        mainLayout.addLayout(brushlessGroupLayout)
-
-        brushedGroupLayout = self.createMotorGroup(
-            "Brushed", self.joint_brushed_lst)
-        self.fbLabelBrushed = QLabel(
-            "Fb Brushed - Elbow: 0, Shoulder: 0, Waist: 0")
-        self.fbLabelBrushed.setAlignment(Qt.AlignCenter)
-        brushedGroupLayout.addWidget(self.fbLabelBrushed)
-        mainLayout.addLayout(brushedGroupLayout)
-
-        # Drive control
-        driveGroupLayout = self.createMotorGroup(
-            "Drive", self.joint_drive_lst, 5)
-        self.fbLabelDrive = QLabel("LB: 0, LF: 0, RB: 0, RF: 0")
-        self.fbLabelDrive.setAlignment(Qt.AlignCenter)
-        driveGroupLayout.addWidget(self.fbLabelDrive)
-        mainLayout.addLayout(driveGroupLayout)
-
-        # Reset Button
-        self.resetButton = QPushButton("Reset")
-        self.resetButton.clicked.connect(self.resetSliders)
-        mainLayout.addWidget(self.resetButton)
-
-        self.setLayout(mainLayout)
+        # Update GUI
+        self.drive_twist_label.setText(
+            f"""Linear: {self.roverLinearVelocity:.2f}, Angular: {self.roverAngularVelocity:.2f}""")
+        self.arrowWidget.set_velocities(
+            self.roverLinearVelocity, self.roverAngularVelocity)
 
     def createMotorGroup(self, motorType, jointRanges, increment=1):
         vbox = QVBoxLayout()
@@ -313,6 +416,10 @@ class ArmControlGUI(QWidget):
         # self.fbLabelDrive.setText(
         #     f"""Drive Fb - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}""")
 
+    def on_update_drive_cmd(self, data):
+        self.drive_cmd_label.setText(
+            f"Drive Cmd - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}")
+
     def update_arm_fb(self, motorType, data):
         if motorType == "Brushless":
             names = list(self.joint_brushless_lst.keys())
@@ -341,6 +448,8 @@ class ArmControlGUI(QWidget):
             "rover_velocity_controller/cmd_vel", Twist, queue_size=1
         )
 
+        rospy.Subscriber(
+            "/wheel_velocity_cmd", WheelSpeed, self.on_update_drive_cmd)
         rospy.Subscriber("/armBrushlessFb", Float32MultiArray,
                          self.on_update_brushless_fb)
         rospy.Subscriber("/armBrushedFb", Float32MultiArray,

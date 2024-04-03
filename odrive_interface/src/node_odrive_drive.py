@@ -135,7 +135,9 @@ class NodeODriveInterfaceDrive:
 
             # Create a thread for calibration and entering closed loop control
             t = threading.Thread(
-                target=self.calibrate_and_enter_closed_loop, args=(key, self.joint_dict[key]))
+                target=self.calibrate_and_enter_closed_loop,
+                args=(key, self.joint_dict[key]),
+            )
             threads.append(t)
             t.start()
 
@@ -185,7 +187,9 @@ class NodeODriveInterfaceDrive:
                     continue
                 try:
                     # setpoint in rev/s
-                    joint_obj.odrv.axis0.controller.input_vel = joint_obj.vel_cmd * joint_obj.direction
+                    joint_obj.odrv.axis0.controller.input_vel = (
+                        joint_obj.vel_cmd * joint_obj.direction
+                    )
                 except:
                     print(
                         f"""Cannot apply vel_cmd {
@@ -205,11 +209,23 @@ class NodeODriveInterfaceDrive:
                     odrive_status_msg = ODriveStatus()
                     odrive_status_msg.id = joint_obj.serial_number
                     odrive_status_msg.state = joint_obj.odrv.axis0.current_state
+                    odrive_status_msg.dump_errors = dump_errors(joint_obj.odrv)
                     odrive_status_msg.error = joint_obj.odrv.axis0.active_errors
-                    odrive_status_msg.input_pos = joint_obj.odrv.axis0.controller.input_pos
-                    odrive_status_msg.pos_abs = joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
-                    odrive_status_msg.pos_rel = joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
-                    odrive_status_msg.input_vel = joint_obj.odrv.axis0.controller.input_vel
+                    odrive_status_msg.process_result = (
+                        joint_obj.odrv.axis0.procedure_result
+                    )
+                    odrive_status_msg.input_pos = (
+                        joint_obj.odrv.axis0.controller.input_pos
+                    )
+                    odrive_status_msg.pos_abs = (
+                        joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
+                    )
+                    odrive_status_msg.pos_rel = (
+                        joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
+                    )
+                    odrive_status_msg.input_vel = (
+                        joint_obj.odrv.axis0.controller.input_vel
+                    )
                     odrive_status_msg.vel_estimate = (
                         joint_obj.odrv.encoder_estimator0.vel_estimate
                     )

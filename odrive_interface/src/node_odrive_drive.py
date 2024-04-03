@@ -67,19 +67,6 @@ class NodeODriveInterfaceDrive:
         self.joint_dict["rover_drive_rb"].vel_cmd = msg.right[0]
         self.joint_dict["rover_drive_rf"].vel_cmd = msg.right[1]
 
-    def odrive_reconnect_watchdog(self):
-        for key, value in self.drive_serial_numbers.items():
-            try:
-                odrv = odrive.find_any(serial_number=value, timeout=5)
-                self.joint_dict[key].attach_odrive(odrv)
-                print(f"""Connected joint: {key}, serial_number: {value}""")
-            except:
-                odrv = None
-                print(
-                    f"""Cannot connect joint: {
-                      key}, serial_number: {value}"""
-                )
-
     def calibrate_and_enter_closed_loop(self, joint_name, joint_obj):
         if joint_obj.odrv is not None:
             print(f"CALIBRATING joint {joint_name}...")
@@ -90,48 +77,34 @@ class NodeODriveInterfaceDrive:
 
             self.is_calibrated = True
 
+    def detect_odrive_hardware(self, joint_obj):
+        try:
+            # Attempt to CONNECT TO ODRIVE only if serial_number is not 0
+            joint_obj.attach_odrive()
+            print(
+                f"""Connected joint: {joint_obj.name}, serial_number: {joint_obj.serial_number}"""
+            )
+        except Exception as e:
+            print(
+                f"""Cannot connect joint: {joint_obj.name}, serial_number: {joint_obj.serial_number}. Error: {e}"""
+            )
+
     def run(self):
         threads = []
 
         # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
         for key, value in self.drive_serial_numbers.items():
+            # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
+            self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
+
             if value == 0:
                 print(
                     f"""Skipping connection for joint: {
                         key} due to serial_number being 0"""
                 )
-                # Instantiate class with odrv as None because we're skipping connection
-                self.joint_dict[key] = ODriveJoint(
-                    odrv=None,
-                )
                 continue
 
-            try:
-                # Attempt to CONNECT TO ODRIVE only if serial_number is not 0
-                odrv = odrive.find_any(serial_number=value, timeout=5)
-                print(f"""Connected joint: {key}, serial_number: {value}""")
-            except Exception as e:
-                odrv = None
-                print(
-                    f"""Cannot connect joint: {
-                        key}, serial_number: {value}. Error: {e}"""
-                )
-
-            # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
-            self.joint_dict[key] = ODriveJoint(
-                odrv=odrv,
-            )
-
-            # if odrv is not None:
-            #     # CALIBRATE -----------------------------------------------------
-            #     print("CALIBRATING...")
-            #     self.joint_dict[key].calibrate()
-
-            #     # ENTER CLOSED LOOP CONTROL ------------------------------------
-            #     print("ENTERING CLOSED LOOP CONTROL...")
-            #     self.joint_dict[key].enter_closed_loop_control()
-
-            #     self.is_calibrated = True
+            self.detect_odrive_hardware(self.joint_dict[key])
 
             # Create a thread for calibration and entering closed loop control
             t = threading.Thread(
@@ -152,10 +125,6 @@ class NodeODriveInterfaceDrive:
         self.joint_dict["rover_drive_rf"].direction = 1
 
         print("All operations completed.")
-        # print(self.joint_dict)
-        # calibrate_non_blocking(self.joint_dict)
-        # rospy.sleep(1)
-        # enter_closed_loop_control_non_blocking(self.joint_dict)
 
         # MAIN LOOP -----------------------------------------------------
         while not rospy.is_shutdown():
@@ -171,6 +140,8 @@ class NodeODriveInterfaceDrive:
                     self.joint_dict[joint_name].vel_fb = (
                         joint_obj.odrv.encoder_estimator0.vel_estimate
                     )
+                except fibre.libfibre.ObjectLostError:
+                    joint_obj.odrv = None
                 except:
                     print(f"""Cannot get feedback from joint: {joint_name}""")
 
@@ -190,6 +161,8 @@ class NodeODriveInterfaceDrive:
                     joint_obj.odrv.axis0.controller.input_vel = (
                         joint_obj.vel_cmd * joint_obj.direction
                     )
+                except fibre.libfibre.ObjectLostError:
+                    joint_obj.odrv = None
                 except:
                     print(
                         f"""Cannot apply vel_cmd {
@@ -197,12 +170,20 @@ class NodeODriveInterfaceDrive:
                     )
 
             # PRINT POSITIONS TO CONSOLE
-            print_joint_state_from_lst(self.joint_dict)
+            print_joint_state_from_dict(self.joint_dict)
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
-            # TODO trim error handling down
+            # TODO test reconnecting
             for joint_name, joint_obj in self.joint_dict.items():
+                # Rescue disconnected joints
                 if not joint_obj.odrv:
+                    # Create a thread for reconnection
+                    t = threading.Thread(
+                        target=self.detect_odrive_hardware,
+                        args=(self.joint_dict[joint_name]),
+                    )
+                    # threads.append(t)
+                    t.start()
                     continue
                 try:
                     # TODO full feedback

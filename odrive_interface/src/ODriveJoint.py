@@ -76,7 +76,7 @@ def watchdog(joint_dict, watchdog_stop_event):
             pass
 
 
-def print_joint_state_from_lst(joint_dict):
+def print_joint_state_from_dict(joint_dict):
     for joint_name, joint_obj in joint_dict.items():
         # Check if the odrive is connected
         status = "connected" if joint_obj.odrv else "disconnected"
@@ -87,12 +87,9 @@ def print_joint_state_from_lst(joint_dict):
                     f"""-current_state={
                         AxisState(joint_obj.odrv.axis0.current_state).name}"""
                 )
-                print(
-                    f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
-                print(
-                    f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
-                print(
-                    f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
+                print(f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
+                print(f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
+                print(f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
                 print(
                     f"""-vel_estimate={joint_obj.odrv.encoder_estimator0.vel_estimate}"""
                 )
@@ -104,13 +101,16 @@ def print_joint_state_from_lst(joint_dict):
 
 
 class ODriveJoint:
-    def __init__(self, odrv=None, gear_ratio=1, zero_offset_deg=0):
+    def __init__(
+        self, name=None, odrv=None, gear_ratio=1, zero_offset_deg=0, serial_number=None
+    ):
+        self.name = name
         self.odrv = odrv
         # odrv.serial_number is int, serial_number should be hex version in string
         if self.odrv:
             self.serial_number = str(hex(self.odrv.serial_number)[2:])
         else:
-            self.serial_number = None
+            self.serial_number = serial_number
         self.timeout = 5
 
         # Position control
@@ -124,6 +124,13 @@ class ODriveJoint:
         self.vel_cmd = 0
         self.vel_fb = 0
         self.direction = 1
+
+    def attach_odrive(self):
+        self.odrv = odrive.find_any(
+            serial_number=self.serial_number, timeout=self.timeout
+        )
+        if self.odrv:
+            self.serial_number = str(hex(self.odrv.serial_number)[2:])
 
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")
@@ -335,8 +342,7 @@ class ODriveJoint:
     def print_gpio_voltages(self):
         for i in [1, 2, 3, 4]:
             print(
-                "voltage on GPIO{} is {} Volt".format(
-                    i, self.odrv.get_adc_voltage(i))
+                "voltage on GPIO{} is {} Volt".format(i, self.odrv.get_adc_voltage(i))
             )
 
 
@@ -388,7 +394,8 @@ def calibrate_non_blocking(joint_dict):
             if joint_obj.odrv.axis0.current_state != AxisState.IDLE:
                 all_motors_idle = False  # Found a motor still calibrating
                 print(
-                    f"Motor {joint_obj.odrv.serial_number} is still calibrating. Current state: {AxisState(joint_obj.odrv.axis0.current_state).name}")
+                    f"Motor {joint_obj.odrv.serial_number} is still calibrating. Current state: {AxisState(joint_obj.odrv.axis0.current_state).name}"
+                )
                 break  # Exit early since we found a motor still calibrating
         if not all_motors_idle:
             custom_sleep(1)  # Wait a bit before checking again
@@ -404,10 +411,12 @@ def calibrate_non_blocking(joint_dict):
                 # Handle the calibration result for each motor
                 if joint_obj.odrv.axis0.procedure_result != ProcedureResult.SUCCESS:
                     print(
-                        f"Calibration failed for motor {joint_obj.odrv.serial_number}.")
+                        f"Calibration failed for motor {joint_obj.odrv.serial_number}."
+                    )
                 else:
                     print(
-                        f"Calibration successful for motor {joint_obj.odrv.serial_number}.")
+                        f"Calibration successful for motor {joint_obj.odrv.serial_number}."
+                    )
 
 
 def enter_closed_loop_control_non_blocking(joint_dict):
@@ -425,9 +434,12 @@ def enter_closed_loop_control_non_blocking(joint_dict):
         for joint_name, joint_obj in joint_dict.items():
             current_state = joint_obj.odrv.axis0.current_state
             if current_state != AxisState.CLOSED_LOOP_CONTROL:
-                all_motors_in_closed_loop = False  # Found a motor not in CLOSED_LOOP_CONTROL
+                all_motors_in_closed_loop = (
+                    False  # Found a motor not in CLOSED_LOOP_CONTROL
+                )
                 print(
-                    f"Motor {joint_obj.odrv.serial_number} is still entering closed loop control. Current state: {AxisState(current_state).name}")
+                    f"Motor {joint_obj.odrv.serial_number} is still entering closed loop control. Current state: {AxisState(current_state).name}"
+                )
                 # Assuming dump_errors() is a function that prints out the current errors
                 dump_errors(joint_obj.odrv)
                 break  # Exit early since we found a motor not in CLOSED_LOOP_CONTROL
@@ -437,7 +449,8 @@ def enter_closed_loop_control_non_blocking(joint_dict):
     # Once all motors are confirmed to be in CLOSED_LOOP_CONTROL, print success message for each
     for joint_name, joint_obj in joint_dict.items():
         print(
-            f"Enter CLOSED_LOOP SUCCESS: Motor {joint_obj.odrv.serial_number} is in state: {AxisState(joint_obj.odrv.axis0.current_state).name}.")
+            f"Enter CLOSED_LOOP SUCCESS: Motor {joint_obj.odrv.serial_number} is in state: {AxisState(joint_obj.odrv.axis0.current_state).name}."
+        )
 
 
 # SAMPLE USAGE FOR REFERENCE
@@ -464,8 +477,7 @@ def main():
     setup_upper_lim_switch = False
 
     test_odrv_joint = ODriveJoint(
-        odrive.find_any(
-            serial_number=arm_serial_numbers[test_joint_name], timeout=5)
+        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
@@ -604,8 +616,7 @@ def main():
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
-            user_input = input(
-                "Enter command (increment 'i X' or absolute 'a X'): ")
+            user_input = input("Enter command (increment 'i X' or absolute 'a X'): ")
             # Using regular expression to parse the input
             match = re.match(r"([ia])\s*(-?\d+(\.\d+)?)", user_input)
             if not match:
@@ -623,8 +634,7 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel
                 else:
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
-                setpoint = current + \
-                    (setpoint_increment * test_odrv_joint.gear_ratio)
+                setpoint = current + (setpoint_increment * test_odrv_joint.gear_ratio)
                 print(
                     f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
                       test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}"""

@@ -202,7 +202,7 @@ class NodeODriveInterfaceArm:
         # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
         # watchdog_stop_event = threading.Event()
         # watchdog_thread = threading.Thread(
-        #     target=print_joint_state_from_lst,
+        #     target=print_joint_state_from_dict,
         #     args=(arm_self.joint_dict, watchdog_stop_event),
         # )
         # watchdog_thread.start()
@@ -245,7 +245,7 @@ class NodeODriveInterfaceArm:
                     )
 
             # PRINT POSITIONS TO CONSOLE
-            print_joint_state_from_lst(self.joint_dict)
+            print_joint_state_from_dict(self.joint_dict)
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
             # TODO trim error handling down

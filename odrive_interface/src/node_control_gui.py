@@ -1,5 +1,3 @@
-
-
 import sys
 import os
 
@@ -7,6 +5,7 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 sys.path.append(currentdir + "/../..")
 
+# try statement to force it to stay below the directory settings throughout autoformatting
 try:
     import scipy.stats as st
     from scipy.ndimage import gaussian_filter1d
@@ -77,8 +76,7 @@ class ArrowWidget(QWidget):
             qp.drawEllipse(center, dot_radius, dot_radius)
         else:
             # Calculate arrow length from normalized linear velocity, ensuring minimum visibility
-            arrow_length = max(abs(normalized_linear_vel)
-                               * max_pixel_length, 3)
+            arrow_length = max(abs(normalized_linear_vel) * max_pixel_length, 3)
 
             # Adjust angle based on direction; flip arrow for negative velocities
             angle_radians = math.radians(angle_degrees)
@@ -92,8 +90,7 @@ class ArrowWidget(QWidget):
             end_point_y = center.y() - arrow_length * math.cos(angle_radians)
 
             # Draw the arrow
-            qp.drawLine(center.x(), center.y(), int(
-                end_point_x), int(end_point_y))
+            qp.drawLine(center.x(), center.y(), int(end_point_x), int(end_point_y))
 
 
 class ArmControlGUI(QWidget):
@@ -157,23 +154,21 @@ class ArmControlGUI(QWidget):
         brushless_group_layout = self.create_motor_group(
             "Brushless", self.joint_brushless_lst
         )
-        self.fbLabelBrushless = QLabel(
-            "Fb Brushless - Elbow: 0, Shoulder: 0, Waist: 0")
+        self.fbLabelBrushless = QLabel("Fb Brushless - Elbow: 0, Shoulder: 0, Waist: 0")
         self.fbLabelBrushless.setAlignment(Qt.AlignCenter)
         brushless_group_layout.addWidget(self.fbLabelBrushless)
         main_layout.addLayout(brushless_group_layout)
 
         brushed_group_layout = self.create_motor_group(
-            "Brushed", self.joint_brushed_lst)
-        self.fbLabelBrushed = QLabel(
-            "Fb Brushed - Elbow: 0, Shoulder: 0, Waist: 0")
+            "Brushed", self.joint_brushed_lst
+        )
+        self.fbLabelBrushed = QLabel("Fb Brushed - Elbow: 0, Shoulder: 0, Waist: 0")
         self.fbLabelBrushed.setAlignment(Qt.AlignCenter)
         brushed_group_layout.addWidget(self.fbLabelBrushed)
         main_layout.addLayout(brushed_group_layout)
 
         # Drive Fb and Cmd
-        drive_group_layout = self.create_motor_group(
-            "Drive", self.joint_drive_lst, 5)
+        drive_group_layout = self.create_motor_group("Drive", self.joint_drive_lst, 5)
         self.fbLabelDrive = QLabel("Drive Fb - LB: 0, LF: 0, RB: 0, RF: 0")
         self.fbLabelDrive.setAlignment(Qt.AlignCenter)
         self.drive_cmd_label = QLabel("Drive Cmd - LB: 0, LF: 0, RB: 0, RF: 0")
@@ -184,7 +179,8 @@ class ArmControlGUI(QWidget):
 
         # Setup a label to display key presses (for demonstration)
         self.drive_twist_label = QLabel(
-            "Press arrow keys, WASD, or space to interact", self)
+            "Press arrow keys, WASD, or space to interact", self
+        )
         self.drive_twist_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.drive_twist_label)
 
@@ -223,29 +219,37 @@ class ArmControlGUI(QWidget):
         if self.keyStates.get(Qt.Key_Up, False) or self.keyStates.get(Qt.Key_W, False):
             print("Up")
             self.keyboard_accumulator_linear += self.keyboard_sensitivity
-        if self.keyStates.get(Qt.Key_Down, False) or self.keyStates.get(Qt.Key_S, False):
+        if self.keyStates.get(Qt.Key_Down, False) or self.keyStates.get(
+            Qt.Key_S, False
+        ):
             print("Down")
             self.keyboard_accumulator_linear -= self.keyboard_sensitivity
-        if self.keyStates.get(Qt.Key_Left, False) or self.keyStates.get(Qt.Key_A, False):
+        if self.keyStates.get(Qt.Key_Left, False) or self.keyStates.get(
+            Qt.Key_A, False
+        ):
             print("Left")
             self.keyboard_accumulator_twist -= self.keyboard_sensitivity
-        if self.keyStates.get(Qt.Key_Right, False) or self.keyStates.get(Qt.Key_D, False):
+        if self.keyStates.get(Qt.Key_Right, False) or self.keyStates.get(
+            Qt.Key_D, False
+        ):
             print("Right")
             self.keyboard_accumulator_twist += self.keyboard_sensitivity
-        if self.keyStates.get(Qt.Key_Space, False) or self.keyStates.get(Qt.Key_0, False):
+        if self.keyStates.get(Qt.Key_Space, False) or self.keyStates.get(
+            Qt.Key_0, False
+        ):
             print("Stop")
             self.rover_linear_vel = 0.0
             self.rover_angular_vel = 0.0
 
         # Clamp and apply the velocities
         self.keyboard_accumulator_linear = max(
-            min(self.keyboard_accumulator_linear, 1.0), -1.0)
+            min(self.keyboard_accumulator_linear, 1.0), -1.0
+        )
         self.keyboard_accumulator_twist = max(
-            min(self.keyboard_accumulator_twist, 1.0), -1.0)
-        self.rover_linear_vel += self.max_linear_vel * \
-            self.keyboard_accumulator_linear
-        self.rover_angular_vel += self.max_angular_vel * \
-            self.keyboard_accumulator_twist
+            min(self.keyboard_accumulator_twist, 1.0), -1.0
+        )
+        self.rover_linear_vel += self.max_linear_vel * self.keyboard_accumulator_linear
+        self.rover_angular_vel += self.max_angular_vel * self.keyboard_accumulator_twist
 
         self.publish_drive_twist()
 
@@ -263,9 +267,9 @@ class ArmControlGUI(QWidget):
 
         # Update GUI
         self.drive_twist_label.setText(
-            f"""Twist - Linear: {self.rover_linear_vel:.2f}, Angular: {self.rover_angular_vel:.2f}""")
-        self.arrow_widget.set_velocities(
-            self.rover_linear_vel, self.rover_angular_vel)
+            f"""Twist - Linear: {self.rover_linear_vel:.2f}, Angular: {self.rover_angular_vel:.2f}"""
+        )
+        self.arrow_widget.set_velocities(self.rover_linear_vel, self.rover_angular_vel)
 
     def decay_velocity(self):
         # Decay the velocity over time
@@ -276,11 +280,17 @@ class ArmControlGUI(QWidget):
         is_accelerating_twist = False
         if self.keyStates.get(Qt.Key_Up, False) or self.keyStates.get(Qt.Key_W, False):
             is_accelerating_linear = True
-        if self.keyStates.get(Qt.Key_Down, False) or self.keyStates.get(Qt.Key_S, False):
+        if self.keyStates.get(Qt.Key_Down, False) or self.keyStates.get(
+            Qt.Key_S, False
+        ):
             is_accelerating_linear = True
-        if self.keyStates.get(Qt.Key_Left, False) or self.keyStates.get(Qt.Key_A, False):
+        if self.keyStates.get(Qt.Key_Left, False) or self.keyStates.get(
+            Qt.Key_A, False
+        ):
             is_accelerating_twist = True
-        if self.keyStates.get(Qt.Key_Right, False) or self.keyStates.get(Qt.Key_D, False):
+        if self.keyStates.get(Qt.Key_Right, False) or self.keyStates.get(
+            Qt.Key_D, False
+        ):
             is_accelerating_twist = True
 
         if is_accelerating_linear:
@@ -310,8 +320,7 @@ class ArmControlGUI(QWidget):
             slider.setMaximum(maxVal)
             # Set the initial value
             slider.setValue(initVal)
-            slider.valueChanged[int].connect(
-                lambda value, j=joint: self.onChangeCmd(j))
+            slider.valueChanged[int].connect(lambda value, j=joint: self.onChangeCmd(j))
             self.sliders[joint] = slider
 
             upBtn = QPushButton("+")
@@ -321,9 +330,9 @@ class ArmControlGUI(QWidget):
             self.labels.append(label)
 
             downBtn.clicked.connect(
-                lambda checked, j=joint: self.adjustCmd(j, -increment))
-            upBtn.clicked.connect(
-                lambda checked, j=joint: self.adjustCmd(j, increment))
+                lambda checked, j=joint: self.adjustCmd(j, -increment)
+            )
+            upBtn.clicked.connect(lambda checked, j=joint: self.adjustCmd(j, increment))
 
             hbox.addWidget(downBtn)
             hbox.addWidget(slider)
@@ -337,7 +346,12 @@ class ArmControlGUI(QWidget):
 
     def resetSliders(self):
         # Reset brushless sliders
-        for joint, (minVal, maxVal, initVal, direction) in self.joint_brushless_lst.items():
+        for joint, (
+            minVal,
+            maxVal,
+            initVal,
+            direction,
+        ) in self.joint_brushless_lst.items():
             self.sliders[joint].setValue(initVal)
             # Optionally, update the label as well
             index = self.labels.index(
@@ -346,7 +360,12 @@ class ArmControlGUI(QWidget):
             self.labels[index].setText(f"{joint} Cmd: {initVal}")
 
         # Reset brushed sliders
-        for joint, (minVal, maxVal, initVal, direction) in self.joint_brushed_lst.items():
+        for joint, (
+            minVal,
+            maxVal,
+            initVal,
+            direction,
+        ) in self.joint_brushed_lst.items():
             self.sliders[joint].setValue(initVal)
             # Optionally, update the label as well
             index = self.labels.index(
@@ -379,8 +398,7 @@ class ArmControlGUI(QWidget):
         slider = self.sliders[joint]
 
         # Calculate the new value, ensuring it stays within the specified range.
-        newValue = max(joint_range[0], min(
-            joint_range[1], slider.value() + delta))
+        newValue = max(joint_range[0], min(joint_range[1], slider.value() + delta))
 
         # Set the new value to the slider.
         slider.setValue(newValue)
@@ -394,14 +412,12 @@ class ArmControlGUI(QWidget):
 
         # For brushless motors
         cmdMsgBrushless = Float32MultiArray()
-        cmdMsgBrushless.data = [float(slider.value())
-                                for key, slider in items[0:3]]
+        cmdMsgBrushless.data = [float(slider.value()) for key, slider in items[0:3]]
         self.arm_brushless_cmd_publisher.publish(cmdMsgBrushless)
 
         # For brushed motors
         cmdMsgBrushed = Float32MultiArray()
-        cmdMsgBrushed.data = [float(slider.value())
-                              for key, slider in items[3:6]]
+        cmdMsgBrushed.data = [float(slider.value()) for key, slider in items[3:6]]
         self.arm_brushed_cmd_publisher.publish(cmdMsgBrushed)
 
         # For drive motors
@@ -434,13 +450,15 @@ class ArmControlGUI(QWidget):
 
     def update_drive_fb(self, data):
         self.fbLabelDrive.setText(
-            f"""Drive Fb - LB: {data.left[0] * self.joint_drive_lst["LB"][3]:.2f}, LF: {data.left[1] * self.joint_drive_lst["LF"][3]:.2f}, RB: {data.right[0] * self.joint_drive_lst["RB"][3]:.2f}, RF: {data.right[1] * self.joint_drive_lst["RF"][3]:.2f}""")
+            f"""Drive Fb - LB: {data.left[0] * self.joint_drive_lst["LB"][3]:.2f}, LF: {data.left[1] * self.joint_drive_lst["LF"][3]:.2f}, RB: {data.right[0] * self.joint_drive_lst["RB"][3]:.2f}, RF: {data.right[1] * self.joint_drive_lst["RF"][3]:.2f}"""
+        )
         # self.fbLabelDrive.setText(
         #     f"""Drive Fb - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}""")
 
     def on_update_drive_cmd(self, data):
         self.drive_cmd_label.setText(
-            f"Drive Cmd - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}")
+            f"Drive Cmd - LB: {data.left[0]:.2f}, LF: {data.left[1]:.2f}, RB: {data.right[0]:.2f}, RF: {data.right[1]:.2f}"
+        )
 
     def update_arm_fb(self, motorType, data):
         if motorType == "Brushless":
@@ -452,8 +470,7 @@ class ArmControlGUI(QWidget):
             names = list(self.joint_brushed_lst.keys())
             fbText = f"""Fb {motorType} - {names[0]}: {data.data[0]:.2f}, {names[1]}: {
                 data.data[1]:.2f}, {names[2]}: {data.data[2]:.2f}"""
-            self.fbLabelBrushed.setText(
-                fbText)  # Corrected to update the brushed label
+            self.fbLabelBrushed.setText(fbText)  # Corrected to update the brushed label
 
     def rosSetup(self):
         rospy.init_node("arm_control_gui", anonymous=True)
@@ -470,15 +487,12 @@ class ArmControlGUI(QWidget):
             "rover_velocity_controller/cmd_vel", Twist, queue_size=1
         )
 
+        rospy.Subscriber("/wheel_velocity_cmd", WheelSpeed, self.on_update_drive_cmd)
         rospy.Subscriber(
-            "/wheel_velocity_cmd", WheelSpeed, self.on_update_drive_cmd)
-        rospy.Subscriber("/armBrushlessFb", Float32MultiArray,
-                         self.on_update_brushless_fb)
-        rospy.Subscriber("/armBrushedFb", Float32MultiArray,
-                         self.on_update_brushed_fb)
-        rospy.Subscriber(
-            "/wheel_velocity_feedback", WheelSpeed, self.update_drive_fb
+            "/armBrushlessFb", Float32MultiArray, self.on_update_brushless_fb
         )
+        rospy.Subscriber("/armBrushedFb", Float32MultiArray, self.on_update_brushed_fb)
+        rospy.Subscriber("/wheel_velocity_feedback", WheelSpeed, self.update_drive_fb)
 
 
 def main():

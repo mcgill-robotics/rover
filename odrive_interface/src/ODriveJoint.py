@@ -76,6 +76,30 @@ def watchdog(joint_dict, watchdog_stop_event):
             pass
 
 
+# def calibrate_and_enter_closed_loop(joint_obj):
+#     if joint_obj.odrv is not None:
+#         print(f"CALIBRATING joint {joint_obj.name}...")
+#         joint_obj.calibrate()
+
+#         print(f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
+#         joint_obj.enter_closed_loop_control()
+
+#         self.is_calibrated = True
+
+
+# def detect_odrive_hardware(joint_obj):
+#     try:
+#         # Attempt to CONNECT TO ODRIVE only if serial_number is not 0
+#         joint_obj.attach_odrive()
+#         print(
+#             f"""Connected joint: {joint_obj.name}, serial_number: {joint_obj.serial_number}"""
+#         )
+#     except Exception as e:
+#         print(
+#             f"""Cannot connect joint: {joint_obj.name}, serial_number: {joint_obj.serial_number}. Error: {e}"""
+#         )
+
+
 def print_joint_state_from_dict(joint_dict):
     for joint_name, joint_obj in joint_dict.items():
         # Check if the odrive is connected
@@ -125,12 +149,18 @@ class ODriveJoint:
         self.vel_fb = 0
         self.direction = 1
 
-    def attach_odrive(self):
-        self.odrv = odrive.find_any(
-            serial_number=self.serial_number, timeout=self.timeout
-        )
-        if self.odrv:
-            self.serial_number = str(hex(self.odrv.serial_number)[2:])
+    def attach_odrive(self, serial_number=None):
+        self.serial_number = serial_number
+        try:
+            self.odrv = odrive.find_any(
+                serial_number=self.serial_number, timeout=self.timeout
+            )
+            if self.odrv:
+                self.serial_number = str(hex(self.odrv.serial_number)[2:])
+        except Exception as e:
+            print(
+                f"""Cannot connect joint: {self.name}, serial_number: {self.serial_number}. Error: {e}"""
+            )
 
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")

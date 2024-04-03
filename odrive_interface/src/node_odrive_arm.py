@@ -19,12 +19,6 @@ class FeedbackMode(Enum):
     FROM_OUTSHAFT = "fb_from_outshaft"
 
 
-arm_gear_ratios = {
-    "rover_arm_elbow": 100,
-    "rover_arm_shoulder": 100,
-    "rover_arm_waist": 1,
-}
-
 # Unused at the moment
 arm_zero_offsets = {
     "rover_arm_elbow": 0,
@@ -46,9 +40,10 @@ class NodeODriveInterfaceArm:
     def __init__(self):
         self.is_homed = False
         self.is_calibrated = False
+
         # CONFIGURATION ---------------------------------------------------------------
         # Serial number of the ODrive controlling the joint
-        self.arm_serial_numbers = {
+        self.joint_serial_numbers = {
             "rover_arm_elbow": "383834583539",  # 0x383834583539 = 61814047520057 in decimal
             # 0x386434413539 = 62003024573753 in decimal
             "rover_arm_shoulder": "386434413539",
@@ -59,19 +54,13 @@ class NodeODriveInterfaceArm:
             "rover_arm_shoulder": None,
             "rover_arm_waist": None,
         }
+
         # FEEDBACK VARIABLES
         self.joint_pos_outshaft_dict = {
             "rover_arm_elbow": 0,
             "rover_arm_shoulder": 0,
             "rover_arm_waist": 0,
         }
-
-        # SETPOINT VARIABLES
-        # self.joint_setpoint_dict = {
-        #     "rover_arm_elbow": 0,
-        #     "rover_arm_shoulder": 0,
-        #     "rover_arm_waist": 0,
-        # }
 
         # Subscriptions
         rospy.init_node("odrive_interface_arm")
@@ -106,6 +95,7 @@ class NodeODriveInterfaceArm:
             self.joint_pos_outshaft_dict["rover_arm_shoulder"] = msg.data[1]
             self.joint_pos_outshaft_dict["rover_arm_waist"] = msg.data[2]
 
+            # Home the joints to 0 position
             for joint_name, joint_obj in self.joint_dict.items():
                 try:
                     if not joint_obj.odrv:
@@ -126,86 +116,63 @@ class NodeODriveInterfaceArm:
 
     # Receive setpoint from external control node
     def handle_arm_cmd(self, msg):
-        # self.joint_setpoint_dict["rover_arm_elbow"] = msg.data[0]
-        # self.joint_setpoint_dict["rover_arm_shoulder"] = msg.data[1]
-        # self.joint_setpoint_dict["rover_arm_waist"] = msg.data[2]
-
-        # for joint_name, joint_obj in self.joint_dict.items():
-        #     if not joint_obj.odrv:
-        #         return
-        #     joint_obj.pos_cmd = self.joint_setpoint_dict[joint_name]
-
         self.joint_dict["rover_arm_elbow"].pos_cmd = msg.data[0]
         self.joint_dict["rover_arm_shoulder"].pos_cmd = msg.data[1]
         self.joint_dict["rover_arm_waist"].pos_cmd = msg.data[2]
 
-    def odrive_reconnect_watchdog(self):
-        for key, value in self.arm_serial_numbers.items():
-            try:
-                odrv = odrive.find_any(serial_number=value, timeout=5)
-                self.joint_dict[key].attach_odrive(odrv)
-                print(f"""Connected joint: {key}, serial_number: {value}""")
-            except:
-                odrv = None
-                print(
-                    f"""Cannot connect joint: {
-                      key}, serial_number: {value}"""
-                )
-
     def run(self):
-        for key, value in self.arm_serial_numbers.items():
+        calibrate_threads = []
+        enter_closed_loop_threads = []
+
+        # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
+        for key, value in self.joint_serial_numbers.items():
+            # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
+            self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
+
             if value == 0:
                 print(
                     f"""Skipping connection for joint: {
                         key} due to serial_number being 0"""
                 )
-                # Instantiate class with odrv as None because we're skipping connection
-                self.joint_dict[key] = ODriveJoint(
-                    gear_ratio=arm_gear_ratios[key],
-                    odrv=None,
-                )
                 continue
 
-            try:
-                # Attempt to CONNECT TO ODRIVE only if serial_number is not 0
-                odrv = odrive.find_any(serial_number=value, timeout=5)
-                print(f"""Connected joint: {key}, serial_number: {value}""")
-            except Exception as e:
-                odrv = None
-                print(
-                    f"""Cannot connect joint: {
-                        key}, serial_number: {value}. Error: {e}"""
-                )
+            self.joint_dict[key].attach_odrive()
 
-            # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
-            self.joint_dict[key] = ODriveJoint(
-                gear_ratio=arm_gear_ratios[key],
-                odrv=odrv,
+        print("Connection step completed.")
+
+        # Create a thread for calibration and entering closed loop control
+        for joint_name, joint_obj in self.joint_dict.items():
+            t = threading.Thread(
+                target=self.joint_obj.calibrate(),
+                # args=(key, self.joint_dict[key]),
             )
+            calibrate_threads.append(t)
+            t.start()
 
-            if odrv is not None:
-                # CALIBRATE -----------------------------------------------------
-                print("CALIBRATING...")
-                self.joint_dict[key].calibrate()
+        # Wait for all threads to complete
+        for t in calibrate_threads:
+            t.join()
 
-                # ENTER CLOSED LOOP CONTROL ------------------------------------
-                print("ENTERING CLOSED LOOP CONTROL...")
-                self.joint_dict[key].enter_closed_loop_control()
+        self.is_calibrated = True
+        print("Calibration step completed.")
 
-                self.is_calibrated = True
+        for joint_name, joint_obj in self.joint_dict.items():
+            t = threading.Thread(
+                target=self.joint_obj.enter_closed_loop_control(),
+            )
+            enter_closed_loop_threads.append(t)
+            t.start()
 
-        # self.watchdog_stop_event = threading.Event()
-        # self.watchdog_thread = threading.Thread(
-        #     target=self.odrive_reconnect_watchdog)
-        # self.watchdog_thread.start()
+        # Wait for all threads to complete
+        for t in enter_closed_loop_threads:
+            t.join()
 
-        # START WATCHDOG THREAD FOR DEBUG INFO ---------------------------------------------------------
-        # watchdog_stop_event = threading.Event()
-        # watchdog_thread = threading.Thread(
-        #     target=print_joint_state_from_dict,
-        #     args=(arm_self.joint_dict, watchdog_stop_event),
-        # )
-        # watchdog_thread.start()
+        # Set the direction of the motors
+        self.joint_dict["rover_arm_elbow"].gear_ratio = 100
+        self.joint_dict["rover_arm_shoulder"].gear_ratio = 100
+        self.joint_dict["rover_arm_waist"].gear_ratio = 1
+
+        print("Entering closed loop control step completed.")
 
         # MAIN LOOP
         while not rospy.is_shutdown():
@@ -225,12 +192,16 @@ class NodeODriveInterfaceArm:
                         )
                     )
                 # Default value in case lose connection to ODrive
-                except:
+                except fibre.libfibre.ObjectLostError:
+                    joint_obj.odrv = None
                     feedback.data.append(0.0)
+                # except:
+                #     feedback.data.append(0.0)
+
             # Publish
             self.odrive_fb_publisher.publish(feedback)
 
-            # APPLY SETPOINT
+            # APPLY Position Cmd
             for joint_name, joint_obj in self.joint_dict.items():
                 if not joint_obj.odrv:
                     continue
@@ -238,6 +209,8 @@ class NodeODriveInterfaceArm:
                     # setpoint in radians
                     setpoint = joint_obj.pos_cmd * joint_obj.gear_ratio / 360
                     joint_obj.odrv.axis0.controller.input_pos = setpoint
+                except fibre.libfibre.ObjectLostError:
+                    joint_obj.odrv = None
                 except:
                     print(
                         f"""Cannot apply setpoint {
@@ -248,9 +221,15 @@ class NodeODriveInterfaceArm:
             print_joint_state_from_dict(self.joint_dict)
 
             # SEND ODRIVE INFO AND HANDLE ERRORS
-            # TODO trim error handling down
             for joint_name, joint_obj in self.joint_dict.items():
                 if not joint_obj.odrv:
+                    # Create a thread for reconnection
+                    t = threading.Thread(
+                        target=joint_obj.attach_odrive(),
+                        # args=(self.joint_dict[joint_name]),
+                    )
+                    # threads.append(t)
+                    t.start()
                     continue
                 try:
                     # TODO ODriveStatus.msg

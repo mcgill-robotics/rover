@@ -45,7 +45,7 @@ class ArrowWidget(QWidget):
         self.linear_velocity = 0
         self.angular_velocity = 0
         # Should be same as the maxLinearVelocity and maxAngularVelocity in the main class
-        self.max_linear_vel = 10
+        self.max_linear_vel = 3
         self.max_angular_vel = 10
         self.setMinimumSize(200, 200)  # Ensure widget is large enough
 
@@ -132,7 +132,7 @@ class ArmControlGUI(QWidget):
         self.rover_angular_vel = 0.0
         self.keyboard_accumulator_linear = 0.0
         self.keyboard_accumulator_twist = 0.0
-        self.keyboard_sensitivity = 0.025
+        self.keyboard_sensitivity = 0.01
         self.max_linear_vel = 10
         self.max_angular_vel = 10
 
@@ -216,6 +216,10 @@ class ArmControlGUI(QWidget):
 
     def update_movement(self):
         print(self.keyStates)
+
+        self.keyboard_accumulator_linear = 0.0
+        self.keyboard_accumulator_twist = 0.0
+
         if self.keyStates.get(Qt.Key_Up, False) or self.keyStates.get(Qt.Key_W, False):
             print("Up")
             self.keyboard_accumulator_linear += self.keyboard_sensitivity
@@ -230,22 +234,18 @@ class ArmControlGUI(QWidget):
             self.keyboard_accumulator_twist += self.keyboard_sensitivity
         if self.keyStates.get(Qt.Key_Space, False) or self.keyStates.get(Qt.Key_0, False):
             print("Stop")
-            self.keyboard_accumulator_linear = 0.0
-            self.keyboard_accumulator_twist = 0.0
+            self.rover_linear_vel = 0.0
+            self.rover_angular_vel = 0.0
 
         # Clamp and apply the velocities
         self.keyboard_accumulator_linear = max(
             min(self.keyboard_accumulator_linear, 1.0), -1.0)
         self.keyboard_accumulator_twist = max(
             min(self.keyboard_accumulator_twist, 1.0), -1.0)
-        self.rover_linear_vel = self.max_linear_vel * \
+        self.rover_linear_vel += self.max_linear_vel * \
             self.keyboard_accumulator_linear
-        self.rover_angular_vel = self.max_angular_vel * \
+        self.rover_angular_vel += self.max_angular_vel * \
             self.keyboard_accumulator_twist
-
-        # Flip the angular velocity if the linear velocity is negative, similar to WASD controls
-        if self.rover_linear_vel < 0:
-            self.rover_angular_vel *= -1
 
         self.publish_drive_twist()
 
@@ -254,6 +254,11 @@ class ArmControlGUI(QWidget):
         roverTwist = Twist()
         roverTwist.linear.x = self.rover_linear_vel
         roverTwist.angular.z = self.rover_angular_vel
+
+        # Flip the angular velocity if the linear velocity is negative, similar to WASD controls
+        # if self.rover_linear_vel < 0:
+        #     roverTwist.angular.z = self.rover_angular_vel * -1
+
         self.drive_twist_publisher.publish(roverTwist)
 
         # Update GUI
@@ -265,10 +270,28 @@ class ArmControlGUI(QWidget):
     def decay_velocity(self):
         # Decay the velocity over time
         # print("Decaying velocity")
-        self.keyboard_accumulator_linear *= 0.98
-        self.keyboard_accumulator_twist *= 0.98
-        self.rover_linear_vel *= 0.95
-        self.rover_angular_vel *= 0.95
+        # self.keyboard_accumulator_linear *= 0.96
+        # self.keyboard_accumulator_twist *= 0.96
+        is_accelerating_linear = False
+        is_accelerating_twist = False
+        if self.keyStates.get(Qt.Key_Up, False) or self.keyStates.get(Qt.Key_W, False):
+            is_accelerating_linear = True
+        if self.keyStates.get(Qt.Key_Down, False) or self.keyStates.get(Qt.Key_S, False):
+            is_accelerating_linear = True
+        if self.keyStates.get(Qt.Key_Left, False) or self.keyStates.get(Qt.Key_A, False):
+            is_accelerating_twist = True
+        if self.keyStates.get(Qt.Key_Right, False) or self.keyStates.get(Qt.Key_D, False):
+            is_accelerating_twist = True
+
+        if is_accelerating_linear:
+            self.rover_linear_vel *= 0.96
+        else:
+            self.rover_linear_vel *= 0.9
+
+        if is_accelerating_twist:
+            self.rover_angular_vel *= 0.99
+        else:
+            self.rover_angular_vel *= 0.9
 
         self.publish_drive_twist()
 

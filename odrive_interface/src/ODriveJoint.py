@@ -103,17 +103,23 @@ def watchdog(joint_dict, watchdog_stop_event):
 def print_joint_state_from_dict(joint_dict):
     for joint_name, joint_obj in joint_dict.items():
         # Check if the odrive is connected
-        status = "connected" if joint_obj.odrv else "disconnected"
-        print(f"""{joint_name} {joint_obj.serial_number} ({status})""")
-        if joint_obj.odrv:
+        status = "connected" if joint_obj.odrv else "disconnected, odrv=None"
+        print(
+            f"""{joint_name} {joint_obj.serial_number} ({status}) is_reconnecting={joint_obj.is_reconnecting}""")
+        if joint_obj.odrv and not joint_obj.is_reconnecting:
             try:
+                status = "connected"
+                dump_errors(joint_obj.odrv)
                 print(
                     f"""-current_state={
                         AxisState(joint_obj.odrv.axis0.current_state).name}"""
                 )
-                print(f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
-                print(f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
-                print(f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
+                print(
+                    f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}""")
+                print(
+                    f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}""")
+                print(
+                    f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}""")
                 print(
                     f"""-vel_estimate={joint_obj.odrv.encoder_estimator0.vel_estimate}"""
                 )
@@ -122,6 +128,10 @@ def print_joint_state_from_dict(joint_dict):
                 print(f"""-pos_abs=None""")
         print(f"""-pos_cmd={joint_obj.pos_cmd}""")
         print(f"""-vel_cmd={joint_obj.vel_cmd}""")
+        print()
+        # except fibre.libfibre.ObjectLostError:
+        #     joint_obj.odrv = None
+        #     print(f"""{joint_name} {joint_obj.serial_number} ({status})""")
 
 
 class ODriveJoint:
@@ -136,6 +146,7 @@ class ODriveJoint:
         else:
             self.serial_number = serial_number
         self.timeout = 5
+        self.is_reconnecting = False
 
         # Position control
         # gear_ratio is input revolutions / output revolutions
@@ -150,7 +161,8 @@ class ODriveJoint:
         self.direction = 1
 
     def attach_odrive(self, serial_number=None):
-        self.serial_number = serial_number
+        if serial_number:
+            self.serial_number = serial_number
         try:
             self.odrv = odrive.find_any(
                 serial_number=self.serial_number, timeout=self.timeout
@@ -242,11 +254,6 @@ class ODriveJoint:
             )
             dump_errors(self.odrv)
 
-    def attach_odrive(self, odrv):
-        self.odrv = odrv
-        if self.odrv:
-            self.serial_number = str(hex(self.odrv.serial_number)[2:])
-
     def save_config(self):
         try:
             self.odrv.save_configuration()
@@ -280,6 +287,9 @@ class ODriveJoint:
             self.odrv = odrive.find_any(
                 serial_number=self.serial_number, timeout=self.timeout
             )
+        except TimeoutError:
+            print("TimeoutError in reconnect() ...")
+            pass
         except fibre.libfibre.ObjectLostError:
             print(" lost connection in reconnect() ...")
             self.odrv = odrive.find_any(
@@ -368,11 +378,22 @@ class ODriveJoint:
             )
         )
 
+    def calibrate_and_enter_closed_loop(self):
+        if self.odrv is not None:
+            print(f"CALIBRATING joint {self.name}...")
+            self.calibrate()
+
+            print(f"ENTERING CLOSED LOOP CONTROL for joint {self.name}...")
+            self.enter_closed_loop_control()
+
+            self.is_calibrated = True
+
     # Print the voltage on the GPIO pins
     def print_gpio_voltages(self):
         for i in [1, 2, 3, 4]:
             print(
-                "voltage on GPIO{} is {} Volt".format(i, self.odrv.get_adc_voltage(i))
+                "voltage on GPIO{} is {} Volt".format(
+                    i, self.odrv.get_adc_voltage(i))
             )
 
 
@@ -507,7 +528,8 @@ def main():
     setup_upper_lim_switch = False
 
     test_odrv_joint = ODriveJoint(
-        odrive.find_any(serial_number=arm_serial_numbers[test_joint_name], timeout=5)
+        odrive.find_any(
+            serial_number=arm_serial_numbers[test_joint_name], timeout=5)
     )
 
     # ERASE CONFIG -----------------------------------------------------------------------
@@ -646,7 +668,8 @@ def main():
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
-            user_input = input("Enter command (increment 'i X' or absolute 'a X'): ")
+            user_input = input(
+                "Enter command (increment 'i X' or absolute 'a X'): ")
             # Using regular expression to parse the input
             match = re.match(r"([ia])\s*(-?\d+(\.\d+)?)", user_input)
             if not match:
@@ -664,7 +687,8 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel
                 else:
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
-                setpoint = current + (setpoint_increment * test_odrv_joint.gear_ratio)
+                setpoint = current + \
+                    (setpoint_increment * test_odrv_joint.gear_ratio)
                 print(
                     f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
                       test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}"""

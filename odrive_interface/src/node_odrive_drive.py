@@ -9,6 +9,8 @@ from odrive.enums import AxisState, ODriveError, ProcedureResult
 from odrive.utils import dump_errors
 from ODriveJoint import *
 import threading
+from threading import Lock
+
 import rospy
 import os
 import sys
@@ -39,6 +41,8 @@ class NodeODriveInterfaceDrive:
             "rover_drive_rb": None,
             "rover_drive_lb": None,
         }
+        self.locks = {joint_name: Lock()
+                      for joint_name in self.joint_dict.keys()}
 
         # Subscriptions
         rospy.init_node("odrive_interface_drive")
@@ -62,14 +66,34 @@ class NodeODriveInterfaceDrive:
 
     # Receive setpoint from external control node
     def handle_drive_cmd(self, msg):
+        if not self.is_calibrated:
+            print("ODrive not calibrated. Ignoring command.")
+            return
         self.joint_dict["rover_drive_lb"].vel_cmd = msg.left[0]
         self.joint_dict["rover_drive_lf"].vel_cmd = msg.left[1]
         self.joint_dict["rover_drive_rb"].vel_cmd = msg.right[0]
         self.joint_dict["rover_drive_rf"].vel_cmd = msg.right[1]
 
+    def reconnect_joint(self, joint_name, joint_obj):
+        # Attempt to reconnect...
+        # Update joint_obj.odrv as necessary...
+        joint_obj.reconnect()
+
+        # Once done, reset the flag
+        with self.locks[joint_name]:
+            joint_obj.is_reconnecting = False
+
+    def calibrate_and_enter_closed_loop(self, joint_obj):
+        if joint_obj.odrv is not None:
+            print(f"CALIBRATING joint {joint_obj.name}...")
+            joint_obj.calibrate()
+
+            print(
+                f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
+            joint_obj.enter_closed_loop_control()
+
     def run(self):
-        calibrate_threads = []
-        enter_closed_loop_threads = []
+        threads = []
 
         # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
         for key, value in self.joint_serial_numbers.items():
@@ -83,36 +107,25 @@ class NodeODriveInterfaceDrive:
                 )
                 continue
 
-            self.joint_dict[key].attach_odrive()
+            self.joint_dict[key].reconnect()
 
         print("Connection step completed.")
 
-        # Create a thread for calibration and entering closed loop control
         for joint_name, joint_obj in self.joint_dict.items():
+            print(f"Creating thread for joint {joint_obj.name}")
             t = threading.Thread(
-                target=self.joint_obj.calibrate(),
-                # args=(key, self.joint_dict[key]),
+                target=self.calibrate_and_enter_closed_loop,
+                args=(joint_obj,),
             )
-            calibrate_threads.append(t)
+            threads.append(t)
             t.start()
 
         # Wait for all threads to complete
-        for t in calibrate_threads:
+        for t in threads:
             t.join()
 
         self.is_calibrated = True
         print("Calibration step completed.")
-
-        for joint_name, joint_obj in self.joint_dict.items():
-            t = threading.Thread(
-                target=self.joint_obj.enter_closed_loop_control(),
-            )
-            enter_closed_loop_threads.append(t)
-            t.start()
-
-        # Wait for all threads to complete
-        for t in enter_closed_loop_threads:
-            t.join()
 
         # Set the direction of the motors
         self.joint_dict["rover_drive_lb"].direction = -1
@@ -171,125 +184,142 @@ class NodeODriveInterfaceDrive:
             # SEND ODRIVE STATUS AND HANDLE ERRORS
             # TODO test reconnecting
             for joint_name, joint_obj in self.joint_dict.items():
-                # Rescue disconnected joints
-                if not joint_obj.odrv:
-                    # Create a thread for reconnection
-                    t = threading.Thread(
-                        target=joint_obj.attach_odrive(),
-                        # args=(self.joint_dict[joint_name]),
-                    )
-                    # threads.append(t)
-                    t.start()
-                    continue
-                try:
-                    # TODO feedback for disconnected joint
-                    odrive_status_msg = ODriveStatus()
-                    odrive_status_msg.id = joint_obj.serial_number
-                    odrive_status_msg.state = joint_obj.odrv.axis0.current_state
-                    odrive_status_msg.dump_errors = dump_errors(joint_obj.odrv)
-                    odrive_status_msg.error = joint_obj.odrv.axis0.active_errors
-                    odrive_status_msg.process_result = (
-                        joint_obj.odrv.axis0.procedure_result
-                    )
-                    odrive_status_msg.input_pos = (
-                        joint_obj.odrv.axis0.controller.input_pos
-                    )
-                    odrive_status_msg.pos_abs = (
-                        joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
-                    )
-                    odrive_status_msg.pos_rel = (
-                        joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
-                    )
-                    odrive_status_msg.input_vel = (
-                        joint_obj.odrv.axis0.controller.input_vel
-                    )
-                    odrive_status_msg.vel_estimate = (
-                        joint_obj.odrv.encoder_estimator0.vel_estimate
-                    )
-                    self.odrive_publisher.publish(odrive_status_msg)
-
-                    # ERROR HANDLING
-                    if joint_obj.odrv.axis0.active_errors != 0:
-                        # Tell the rover to stop
-                        for joint_name, joint_obj in self.joint_dict.items():
-                            if not joint_obj.odrv:
-                                continue
-                            joint_obj.odrv.axis0.controller.input_vel = 0
-
-                        # Wait until it actually stops
-                        motor_stopped = False
-                        while not motor_stopped:
-                            motor_stopped = True
-                            for joint_name, joint_obj in self.joint_dict.items():
-                                if not joint_obj.odrv:
-                                    continue
-                                if (
-                                    abs(joint_obj.odrv.encoder_estimator0.vel_estimate)
-                                    >= 0.01
-                                ):
-                                    motor_stopped = False
-                            if rospy.is_shutdown():
+                with self.locks[joint_name]:  # Use a lock specific to each joint
+                    if joint_obj.odrv is not None:
+                        # Check if 'odrv' object has 'axis0' attribute before accessing it
+                        if hasattr(joint_obj.odrv, 'axis0') and joint_obj.odrv.axis0.current_state != AxisState.CLOSED_LOOP_CONTROL:
+                            if not joint_obj.is_reconnecting:
                                 print(
-                                    "Shutdown prompt received. Setting all motors to idle state."
-                                )
-                                for (
-                                    joint_name,
-                                    joint_obj,
-                                ) in self.joint_dict.items():
-                                    if not joint_obj.odrv:
-                                        continue
-                                    joint_obj.odrv.axis0.requested_state = (
-                                        AxisState.IDLE
-                                    )
-                                break
-
-                        # Wait for two seconds while all the transient currents and voltages calm down
-                        rospy.sleep(5)
-
-                        # Now try to recover from the error. This will always succeed the first time, but if
-                        # the error persists, the ODrive will not allow the transition to closed loop control, and
-                        # re-throw the error.
-                        joint_obj.odrv.clear_errors()
-                        rospy.sleep(0.5)
-                        joint_obj.odrv.axis0.requested_state = (
-                            AxisState.CLOSED_LOOP_CONTROL
-                        )
-                        rospy.sleep(0.5)
-
-                        # If the motor cannot recover successfully publish a message about the error, then print to console
-                        if joint_obj.odrv.axis0.active_errors != 0:
-                            error_fb = MotorError()
-                            error_fb.id = joint_obj.serial_number
-                            error_fb.error = ODriveError(
-                                joint_obj.odrv.axis0.active_errors
-                            ).name
-                            self.error_publisher.publish(error_fb)
+                                    f"{joint_name} is not in closed loop control, recalibrating...")
+                                joint_obj.is_reconnecting = True
+                                t = threading.Thread(
+                                    target=self.calibrate_and_enter_closed_loop, args=(joint_obj,))
+                                t.start()
+                        else:
+                            # Handle case where 'axis0' is not available
                             print(
-                                f"""\nError(s) occurred. Motor ID: {
-                                    error_fb.id}, Error(s): {error_fb.error}"""
-                            )
+                                f"Cannot check current state for {joint_name}, 'axis0' attribute missing.")
+                    else:
+                        # ODrive interface is None, indicating a disconnection or uninitialized state
+                        if not joint_obj.is_reconnecting:
+                            print(f"RECONNECTING {joint_name}...")
+                            joint_obj.is_reconnecting = True
+                            t = threading.Thread(
+                                target=self.reconnect_joint, args=(joint_name, joint_obj))
+                            t.start()
 
-                            # Finally, hang the node and keep trying to recover until the error is gone or the shutdown signal is received
-                            print(
-                                f"""\nMotor {error_fb.id} Cannot recover from error(s) {
-                                    error_fb.error}. R to retry, keyboard interrupt to shut down node."""
-                            )
-                            while not rospy.is_shutdown():
-                                prompt = input(">").upper()
-                                if prompt == "R":
-                                    joint_obj.odrv.clear_errors()
-                                    rospy.sleep(0.5)
-                                    joint_obj.odrv.axis0.requested_state = (
-                                        AxisState.CLOSED_LOOP_CONTROL
-                                    )
-                                    rospy.sleep(0.5)
-                                    if joint_obj.odrv.axis0.active_errors == 0:
-                                        break
-                                    else:
-                                        print("Recovery failed. Try again?")
-                except AttributeError:
-                    print(f"""{joint_name} is not connected""")
-            print()
+            #     try:
+            #         pass
+            #         # TODO feedback for disconnected joint
+            #         # odrive_status_msg = ODriveStatus()
+            #         # odrive_status_msg.id = joint_obj.serial_number
+            #         # odrive_status_msg.state = joint_obj.odrv.axis0.current_state
+            #         # odrive_status_msg.dump_errors = dump_errors(joint_obj.odrv)
+            #         # odrive_status_msg.error = joint_obj.odrv.axis0.active_errors
+            #         # odrive_status_msg.process_result = (
+            #         #     joint_obj.odrv.axis0.procedure_result
+            #         # )
+            #         # odrive_status_msg.input_pos = (
+            #         #     joint_obj.odrv.axis0.controller.input_pos
+            #         # )
+            #         # odrive_status_msg.pos_abs = (
+            #         #     joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
+            #         # )
+            #         # odrive_status_msg.pos_rel = (
+            #         #     joint_obj.odrv.axis0.pos_vel_mapper.pos_rel
+            #         # )
+            #         # odrive_status_msg.input_vel = (
+            #         #     joint_obj.odrv.axis0.controller.input_vel
+            #         # )
+            #         # odrive_status_msg.vel_estimate = (
+            #         #     joint_obj.odrv.encoder_estimator0.vel_estimate
+            #         # )
+            #         # self.odrive_publisher.publish(odrive_status_msg)
+
+            #         # # ERROR HANDLING
+            #         # if joint_obj.odrv.axis0.active_errors != 0:
+            #         #     # Tell the rover to stop
+            #         #     for joint_name, joint_obj in self.joint_dict.items():
+            #         #         if not joint_obj.odrv:
+            #         #             continue
+            #         #         joint_obj.odrv.axis0.controller.input_vel = 0
+
+            #         #     # Wait until it actually stops
+            #         #     motor_stopped = False
+            #         #     while not motor_stopped:
+            #         #         motor_stopped = True
+            #         #         for joint_name, joint_obj in self.joint_dict.items():
+            #         #             if not joint_obj.odrv:
+            #         #                 continue
+            #         #             if (
+            #         #                 abs(joint_obj.odrv.encoder_estimator0.vel_estimate)
+            #         #                 >= 0.01
+            #         #             ):
+            #         #                 motor_stopped = False
+            #         #         if rospy.is_shutdown():
+            #         #             print(
+            #         #                 "Shutdown prompt received. Setting all motors to idle state."
+            #         #             )
+            #         #             for (
+            #         #                 joint_name,
+            #         #                 joint_obj,
+            #         #             ) in self.joint_dict.items():
+            #         #                 if not joint_obj.odrv:
+            #         #                     continue
+            #         #                 joint_obj.odrv.axis0.requested_state = (
+            #         #                     AxisState.IDLE
+            #         #                 )
+            #         #             break
+
+            #         #     # Wait for two seconds while all the transient currents and voltages calm down
+            #         #     rospy.sleep(5)
+
+            #         #     # Now try to recover from the error. This will always succeed the first time, but if
+            #         #     # the error persists, the ODrive will not allow the transition to closed loop control, and
+            #         #     # re-throw the error.
+            #         #     joint_obj.odrv.clear_errors()
+            #         #     rospy.sleep(0.5)
+            #         #     joint_obj.odrv.axis0.requested_state = (
+            #         #         AxisState.CLOSED_LOOP_CONTROL
+            #         #     )
+            #         #     rospy.sleep(0.5)
+
+            #         #     # If the motor cannot recover successfully publish a message about the error, then print to console
+            #         #     if joint_obj.odrv.axis0.active_errors != 0:
+            #         #         error_fb = MotorError()
+            #         #         error_fb.id = joint_obj.serial_number
+            #         #         error_fb.error = ODriveError(
+            #         #             joint_obj.odrv.axis0.active_errors
+            #         #         ).name
+            #         #         self.error_publisher.publish(error_fb)
+            #         #         print(
+            #         #             f"""\nError(s) occurred. Motor ID: {
+            #         #                 error_fb.id}, Error(s): {error_fb.error}"""
+            #         #         )
+
+            #         #         # Finally, hang the node and keep trying to recover until the error is gone or the shutdown signal is received
+            #         #         print(
+            #         #             f"""\nMotor {error_fb.id} Cannot recover from error(s) {
+            #         #                 error_fb.error}. R to retry, keyboard interrupt to shut down node."""
+            #         #         )
+            #         #         while not rospy.is_shutdown():
+            #         #             prompt = input(">").upper()
+            #         #             if prompt == "R":
+            #         #                 joint_obj.odrv.clear_errors()
+            #         #                 rospy.sleep(0.5)
+            #         #                 joint_obj.odrv.axis0.requested_state = (
+            #         #                     AxisState.CLOSED_LOOP_CONTROL
+            #         #                 )
+            #         #                 rospy.sleep(0.5)
+            #         #                 if joint_obj.odrv.axis0.active_errors == 0:
+            #         #                     break
+            #         #                 else:
+            #         #                     print("Recovery failed. Try again?")
+            #     except AttributeError:
+            #         print(f"""{joint_name} is not connected""")
+            #     except fibre.libfibre.ObjectLostError:
+            #         joint_obj.odrv = None
+            # print()
             self.rate.sleep()
 
         # On shutdown, bring motors to idle state

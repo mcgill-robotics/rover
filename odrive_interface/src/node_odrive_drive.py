@@ -94,6 +94,8 @@ class NodeODriveInterfaceDrive:
 
     def run(self):
         threads = []
+        calibrate_threads = []
+        enter_closed_loop_threads = []
 
         # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
         for key, value in self.joint_serial_numbers.items():
@@ -112,20 +114,37 @@ class NodeODriveInterfaceDrive:
         print("Connection step completed.")
 
         for joint_name, joint_obj in self.joint_dict.items():
+            if joint_obj.odrv is None:
+                continue
             print(f"Creating thread for joint {joint_obj.name}")
             t = threading.Thread(
-                target=self.calibrate_and_enter_closed_loop,
-                args=(joint_obj,),
+                target=joint_obj.calibrate,
+                # args=(joint_obj,),
             )
-            threads.append(t)
+            calibrate_threads.append(t)
             t.start()
 
         # Wait for all threads to complete
-        for t in threads:
+        for t in calibrate_threads:
+            t.join()
+
+        print("Calibration step completed.")
+
+        for joint_name, joint_obj in self.joint_dict.items():
+            print(f"Creating thread for joint {joint_obj.name}")
+            t = threading.Thread(
+                target=joint_obj.enter_closed_loop_control,
+                # args=(joint_obj,),
+            )
+            enter_closed_loop_threads.append(t)
+            t.start()
+
+        # Wait for all threads to complete
+        for t in enter_closed_loop_threads:
             t.join()
 
         self.is_calibrated = True
-        print("Calibration step completed.")
+        print("Enter closed loop control step completed.")
 
         # Set the direction of the motors
         self.joint_dict["rover_drive_lb"].direction = -1

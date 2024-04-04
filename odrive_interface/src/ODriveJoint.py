@@ -315,7 +315,7 @@ class ODriveJoint:
             custom_sleep(1)
             print(
                 "Motor {} is still calibrating. Current state: {}".format(
-                    self.odrv.serial_number,
+                    self.name,
                     AxisState(self.odrv.axis0.current_state).name,
                 )
             )
@@ -343,7 +343,8 @@ class ODriveJoint:
                 )
             print(
                 "Calibration procedure failed in motor {}. Reason: {}".format(
-                    self.odrv.serial_number, ProcedureResult(result).name
+                    self.name,
+                    ProcedureResult(result).name
                 )
             )
             if result == ProcedureResult.DISARMED:
@@ -366,7 +367,7 @@ class ODriveJoint:
             custom_sleep(0.5)
             print(
                 "Motor {} is still entering closed loop control. Current state: {}".format(
-                    self.odrv.serial_number,
+                    self.name,
                     AxisState(self.odrv.axis0.current_state).name,
                 )
             )

@@ -1,12 +1,13 @@
+import os
+import sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentdir)
 from odrive.enums import AxisState, ProcedureResult
 from ODrive_utils import *
 from odrive_interface_old.msg import MotorError, MotorState
 from drive_control.msg import WheelSpeed
 import rospy
-import os
-import sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(currentdir)
+
 
 # TODO: Figure out why catkin on the Jetson isn't playing nice with this import. It worked on my PC -Eren
 # import init_functions

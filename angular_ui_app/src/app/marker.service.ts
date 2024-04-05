@@ -16,22 +16,30 @@ export class MarkerService {
 
   constructor(private http: HttpClient) { 
     this.blueIcon = new L.Icon({
-      iconUrl: '/assets/map-pins/blue-map-pin.png',
-      
+      iconUrl: 'assets/map-pins/blue-map-pin.png',
+      iconSize: [41, 41], 
+      iconAnchor: [12, 41], 
+      popupAnchor: [1, -34],
+      shadowUrl: 'assets/map-pins/marker-shadow.png',
+      shadowAnchor: [5, 42]
     });
     
     this.redIcon = new L.Icon({
-      iconUrl: '/assets/map-pins/red-map-pin.png',
-      iconSize: [25, 41],
+      iconUrl: 'assets/map-pins/red-map-pin.png',
+      iconSize: [41, 41],
       iconAnchor: [12, 41],
-      popupAnchor: [1, -34]
+      popupAnchor: [1, -34],
+      shadowUrl: 'assets/map-pins/marker-shadow.png',
+      shadowAnchor: [5, 42]
     });
 
     this.blackIcon = new L.Icon({
-      iconUrl: '/assets/map-pins/black-map-pin.png',
-      iconSize: [25, 41],
+      iconUrl: 'assets/map-pins/black-map-pin.png',
+      iconSize: [41, 41],
       iconAnchor: [12, 41],
-      popupAnchor: [1, -34]
+      popupAnchor: [1, -34],
+      shadowUrl: 'assets/map-pins/marker-shadow.png',
+      shadowAnchor: [5, 42]
     });
   }
 
@@ -40,7 +48,7 @@ export class MarkerService {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
-        const marker = L.marker([lat, lon], {icon: this.blueIcon});
+        const marker = L.marker([lat, lon], {icon: this.redIcon});
         marker.addTo(map);
       }
     });
@@ -61,14 +69,14 @@ export class MarkerService {
 
   makeRoverMarker(map: L.Map): void { 
     const rover  = L.latLng([this.gps_data[0], this.gps_data[1]]);
-    const markerr = L.marker(rover);
+    const markerr = L.marker(rover, {icon: this.blueIcon});
     
     markerr.addTo(map);
   }
 
   makeControlStationMarker(map: L.Map): void { 
     var control_station = L.latLng([45.5056037902832, -73.57576751708984]);
-    L.marker(control_station).addTo(map);
+    L.marker(control_station, {icon: this.blackIcon}).addTo(map);
     map.setView(control_station, 1);
   }
 

@@ -1,3 +1,4 @@
+# Author: mn297
 import threading
 from threading import Lock
 from odrive_interface.msg import MotorState, MotorError
@@ -45,7 +46,8 @@ class NodeODriveInterfaceArm:
         # CONFIGURATION ---------------------------------------------------------------
         # Serial number of the ODrive controlling the joint
         self.joint_serial_numbers = {
-            "rover_arm_elbow": "383834583539",  # 0x383834583539 = 61814047520057 in decimal
+            # 0x383834583539 = 61814047520057 in decimal
+            "rover_arm_elbow": "383834583539",
             # 0x386434413539 = 62003024573753 in decimal
             "rover_arm_shoulder": "386434413539",
             "rover_arm_waist": "0",

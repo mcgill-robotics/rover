@@ -1,3 +1,4 @@
+# Author: mn297
 from __future__ import print_function
 
 import odrive
@@ -76,30 +77,6 @@ def watchdog(joint_dict, watchdog_stop_event):
             pass
 
 
-# def calibrate_and_enter_closed_loop(joint_obj):
-#     if joint_obj.odrv is not None:
-#         print(f"CALIBRATING joint {joint_obj.name}...")
-#         joint_obj.calibrate()
-
-#         print(f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
-#         joint_obj.enter_closed_loop_control()
-
-#         self.is_calibrated = True
-
-
-# def detect_odrive_hardware(joint_obj):
-#     try:
-#         # Attempt to CONNECT TO ODRIVE only if serial_number is not 0
-#         joint_obj.attach_odrive()
-#         print(
-#             f"""Connected joint: {joint_obj.name}, serial_number: {joint_obj.serial_number}"""
-#         )
-#     except Exception as e:
-#         print(
-#             f"""Cannot connect joint: {joint_obj.name}, serial_number: {joint_obj.serial_number}. Error: {e}"""
-#         )
-
-
 def print_joint_state_from_dict(joint_dict):
     for joint_name, joint_obj in joint_dict.items():
         # Check if the odrive is connected
@@ -129,9 +106,6 @@ def print_joint_state_from_dict(joint_dict):
         print(f"""-pos_cmd={joint_obj.pos_cmd}""")
         print(f"""-vel_cmd={joint_obj.vel_cmd}""")
         print()
-        # except fibre.libfibre.ObjectLostError:
-        #     joint_obj.odrv = None
-        #     print(f"""{joint_name} {joint_obj.serial_number} ({status})""")
 
 
 class ODriveJoint:
@@ -159,20 +133,6 @@ class ODriveJoint:
         self.vel_cmd = 0
         self.vel_fb = 0
         self.direction = 1
-
-    def attach_odrive(self, serial_number=None):
-        if serial_number:
-            self.serial_number = serial_number
-        try:
-            self.odrv = odrive.find_any(
-                serial_number=self.serial_number, timeout=self.timeout
-            )
-            if self.odrv:
-                self.serial_number = str(hex(self.odrv.serial_number)[2:])
-        except Exception as e:
-            print(
-                f"""Cannot connect joint: {self.name}, serial_number: {self.serial_number}. Error: {e}"""
-            )
 
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")
@@ -398,38 +358,7 @@ class ODriveJoint:
             )
 
 
-# def calibrate_joint(joint_name, joint_obj):
-#     joint_obj.odrv.clear_errors()
-#     if joint_obj.odrv.axis0.current_state != AxisState.FULL_CALIBRATION_SEQUENCE:
-#         joint_obj.odrv.axis0.requested_state = AxisState.FULL_CALIBRATION_SEQUENCE
-#     time.sleep(0.2)
-
-#     # Wait for calibration to end
-#     while not joint_obj.odrv.axis0.current_state == AxisState.IDLE:
-#         time.sleep(1)
-#         print(f"Motor {joint_obj.serial_number} is still calibrating. Current state: {AxisState(joint_obj.odrv.axis0.current_state).name}")
-
-#     results_available = False
-#     # Wait for calibration results
-#     while not results_available:
-#         if joint_obj.odrv.axis0.procedure_result == ProcedureResult.BUSY:
-#             results_available = False
-#         else:
-#             results_available = True
-#         time.sleep(0.1)
-
-#     # ERROR CHECKING
-#     if joint_obj.odrv.axis0.procedure_result != ProcedureResult.SUCCESS:
-#         errors = joint_obj.odrv.axis0.active_errors
-#         error_message = f"Calibration procedure failed in motor {joint_obj.serial_number}. Reason: {ProcedureResult(joint_obj.odrv.axis0.procedure_result).name}"
-#         if errors != 0:
-#             error_message += f", Motor error(s): {AxisError(joint_obj.odrv.axis0.disarm_reason).name}"
-#         print(error_message)
-#         joint_obj.odrv.axis0.requested_state = AxisState.IDLE
-#     else:
-#         print(f"Calibration successful for motor {joint_obj.serial_number}!")
-
-
+# Maybe useful helper function for future use
 def calibrate_non_blocking(joint_dict):
     # Start calibration for all motors
     for joint_name, joint_obj in joint_dict.items():
@@ -471,6 +400,7 @@ def calibrate_non_blocking(joint_dict):
                     )
 
 
+# Maybe useful helper function for future use
 def enter_closed_loop_control_non_blocking(joint_dict):
     # Request CLOSED_LOOP_CONTROL state for all motors
     for joint_name, joint_obj in joint_dict.items():
@@ -515,8 +445,28 @@ def main():
         "rover_arm_waist": "0",
     }
 
-    test_joint_name = "rover_arm_shoulder"
-    # test_joint_name = "rover_arm_elbow"
+    # Define the menu options
+    menu_options = {
+        '1': "rover_arm_elbow",
+        '2': "rover_arm_shoulder",
+        '3': "rover_arm_waist"
+    }
+
+    # Display the menu to the user
+    print("Please select a motor to configure:")
+    for option, joint in menu_options.items():
+        print(f"{option}: {joint}")
+
+    # Get the user's choice
+    choice = input("Enter your choice (1/2/3): ")
+
+    # Validate and process the choice
+    if choice in menu_options:
+        test_joint_name = menu_options[choice]
+        print(f"You selected: {test_joint_name}")
+    else:
+        print("Invalid choice. Exiting.")
+        return
 
     # Set to True if you want to reapply the config, False if you want to skip it
     reapply_config = True
@@ -559,9 +509,9 @@ def main():
         )
         # vel_limit determines how fast, vel_limit_tolerance determines how much it can go over, so we avoid vel_limit violations
         test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 2
-        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.7
-        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.7
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 10
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -5
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 5
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
         test_odrv_joint.odrv.config.enable_uart_a = False
         test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
@@ -588,10 +538,10 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 6
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 1.2
-        test_odrv_joint.odrv.axis0.config.torque_soft_min = -0.1
-        test_odrv_joint.odrv.axis0.config.torque_soft_max = 0.1
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 10
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -1
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 1
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
         test_odrv_joint.odrv.config.enable_uart_a = False
         test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (

@@ -1,3 +1,4 @@
+# Author: mn297
 import scipy.stats as st
 from scipy.ndimage import gaussian_filter1d
 from drive_control.msg import WheelSpeed

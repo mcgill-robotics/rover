@@ -9,16 +9,38 @@ import {MapComponent} from './map/map.component';
 export class MarkerService {
   debris: string = '/assets/debris-markers.geojson';
   areas: string = '/assets/map-areas.geojson';
-  gps_data: number[] = [45.506503790, -73.57566751708];
+  private gps_data: number[] = [45.506103790, -73.57566751708];
+  private blueIcon: L.Icon;
+  private redIcon: L.Icon;
+  private blackIcon: L.Icon;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { 
+    this.blueIcon = new L.Icon({
+      iconUrl: '/assets/map-pins/blue-map-pin.png',
+      
+    });
+    
+    this.redIcon = new L.Icon({
+      iconUrl: '/assets/map-pins/red-map-pin.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34]
+    });
+
+    this.blackIcon = new L.Icon({
+      iconUrl: '/assets/map-pins/black-map-pin.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34]
+    });
+  }
 
   makeDebrisMarkers(map: L.Map): void { 
     this.http.get(this.debris).subscribe((res: any) => {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
-        const marker = L.marker([lat, lon]);
+        const marker = L.marker([lat, lon], {icon: this.blueIcon});
         marker.addTo(map);
       }
     });
@@ -30,8 +52,8 @@ export class MarkerService {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
         const rad = c.geometry.size;
-        const area = L.circleMarker([lat, lon], { radius: rad});
-        
+        const area = L.circleMarker([lat, lon], {radius: rad});
+        area.setStyle({color: 'green'});
         area.addTo(map);
       }
     });
@@ -40,7 +62,14 @@ export class MarkerService {
   makeRoverMarker(map: L.Map): void { 
     const rover  = L.latLng([this.gps_data[0], this.gps_data[1]]);
     const markerr = L.marker(rover);
+    
     markerr.addTo(map);
+  }
+
+  makeControlStationMarker(map: L.Map): void { 
+    var control_station = L.latLng([45.5056037902832, -73.57576751708984]);
+    L.marker(control_station).addTo(map);
+    map.setView(control_station, 1);
   }
 
   set_gps_data(msg: any): void {

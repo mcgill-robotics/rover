@@ -31,7 +31,9 @@ export class MapComponent implements AfterViewInit{
   private initMap(): void {
     this.map = L.map('map', {
       crs: L.CRS.Simple,
-      minZoom: 15
+      minZoom: 18,
+      maxZoom: 18
+
     });
   }
 
@@ -40,10 +42,7 @@ export class MapComponent implements AfterViewInit{
     this.markerService.makeDebrisMarkers(this.map);
     this.markerService.makeAreas(this.map);
     this.markerService.makeRoverMarker(this.map);
-    var control_station = L.latLng([45.5056037902832, -73.57576751708984]);
-    L.marker(control_station).addTo(this.map);
-    this.map.setView(control_station, 1);
-
+    this.markerService.makeControlStationMarker(this.map);
   }
 
 }

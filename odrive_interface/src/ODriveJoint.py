@@ -438,7 +438,7 @@ def enter_closed_loop_control_non_blocking(joint_dict):
 # SAMPLE USAGE FOR REFERENCE
 def main():
     # TODO find more serial, it is a string of hex of the serial number
-    arm_serial_numbers = {
+    joint_serial_numbers = {
         # 0x386434413539 = 62003024573753 in decimal
         "rover_arm_elbow": "383834583539",  # change as needed
         "rover_arm_shoulder": "386434413539",
@@ -459,11 +459,12 @@ def main():
 
     # Get the user's choice
     choice = input("Enter your choice (1/2/3): ")
-
+    test_joint_name = None
     # Validate and process the choice
     if choice in menu_options:
         test_joint_name = menu_options[choice]
-        print(f"You selected: {test_joint_name}")
+        print(
+            f"You selected: {test_joint_name}, serial number: {joint_serial_numbers[test_joint_name]}")
     else:
         print("Invalid choice. Exiting.")
         return
@@ -478,10 +479,11 @@ def main():
     setup_lower_lim_switch = False
     setup_upper_lim_switch = False
 
-    test_odrv_joint = ODriveJoint(
-        odrive.find_any(
-            serial_number=arm_serial_numbers[test_joint_name], timeout=5)
-    )
+    odrv = odrive.find_any(
+        serial_number=joint_serial_numbers[test_joint_name], timeout=5)
+
+    test_odrv_joint = ODriveJoint(name=test_joint_name, odrv=odrv,
+                                  gear_ratio=1, serial_number=joint_serial_numbers[test_joint_name])
 
     # ERASE CONFIG -----------------------------------------------------------------------
     if reapply_config:
@@ -489,7 +491,39 @@ def main():
         test_odrv_joint.erase_config()
 
     # APPLY CONFIG -----------------------------------------------------------------------
+    if test_joint_name == "rover_arm_elbow":
+        print("APPLYING CONFIG for rover_arm_elbow...")
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_max_positive_current = 5
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 6
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 17.8
+        # test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 12
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 2.5
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 2.5
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.POSITION_CONTROL
+        )
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 10
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -2
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 2
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.config.enable_uart_a = False
+        test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
+            Rs485EncoderMode.AMT21_POLLING
+        )
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
+
     if test_joint_name == "rover_arm_shoulder":
+        print("APPLYING CONFIG for rover_arm_shoulder...")
         test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
         test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
         test_odrv_joint.odrv.config.dc_max_positive_current = 10
@@ -498,8 +532,8 @@ def main():
         test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
         test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.06080882352941176
         test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 11
-        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 10
-        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 23
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 12
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 25.6
         test_odrv_joint.odrv.axis0.config.motor.calibration_current = 2.5
         test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
         test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 2.5
@@ -512,36 +546,6 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 10
         test_odrv_joint.odrv.axis0.config.torque_soft_min = -5
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 5
-        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
-        test_odrv_joint.odrv.config.enable_uart_a = False
-        test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
-            Rs485EncoderMode.AMT21_POLLING
-        )
-        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
-        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
-
-    if test_joint_name == "rover_arm_elbow":
-        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
-        test_odrv_joint.odrv.config.dc_max_positive_current = 5
-        test_odrv_joint.odrv.config.brake_resistor0.enable = True
-        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
-        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
-        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.04543956043956044
-        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
-        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 5
-        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 16.5
-        # test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 12
-        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 2.5
-        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
-        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 2.5
-        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
-        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
-            ControlMode.POSITION_CONTROL
-        )
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
-        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 10
-        test_odrv_joint.odrv.axis0.config.torque_soft_min = -1
-        test_odrv_joint.odrv.axis0.config.torque_soft_max = 1
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
         test_odrv_joint.odrv.config.enable_uart_a = False
         test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (

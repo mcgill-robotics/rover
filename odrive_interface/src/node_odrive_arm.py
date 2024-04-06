@@ -70,7 +70,7 @@ class NodeODriveInterfaceArm:
 
         # Subscriptions
         rospy.init_node("odrive_interface_arm")
-        self.outshaft_fb_subscriber = rospy.Subscriber(
+        self.outshaft_pos_fb_subscriber = rospy.Subscriber(
             "/armBrushlessFb",
             Float32MultiArray,
             self.handle_outshaft_fb,
@@ -84,7 +84,7 @@ class NodeODriveInterfaceArm:
         self.odrive_state_publisher = rospy.Publisher(
             "/odrive_status", MotorState, queue_size=1
         )
-        self.odrive_fb_publisher = rospy.Publisher(
+        self.odrive_pos_fb_publisher = rospy.Publisher(
             "/odrive_armBrushlessFb", Float32MultiArray, queue_size=1
         )
 
@@ -237,7 +237,7 @@ class NodeODriveInterfaceArm:
                     feedback.data.append(0.0)
 
             # Publish
-            self.odrive_fb_publisher.publish(feedback)
+            self.odrive_pos_fb_publisher.publish(feedback)
 
             # APPLY Position Cmd
             for joint_name, joint_obj in self.joint_dict.items():

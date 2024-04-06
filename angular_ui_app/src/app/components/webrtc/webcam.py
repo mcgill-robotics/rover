@@ -8,7 +8,13 @@ from aiortc.contrib.media import MediaPlayer
 ROOT = os.path.dirname(__file__)
 HOST_IP = os.getenv('HOST_IP', "0.0.0.0")
 
+pcs = set() #set of all pc
+
+logging.basicConfig(level=logging.DEBUG) #enable logging
 async def offer(request):
+    print(request)
+    id = request.rel_url.query["id"]  
+
     params = await request.json()
     of = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
 
@@ -22,8 +28,23 @@ async def offer(request):
             await pc.close()
             pcs.discard(pc)
 
-    options = {"framerate": "30", "video_size": "640x360"}
-    player = MediaPlayer("/dev/video0", format="v4l2", options=options)
+    # open media source
+    # if args.play_from:
+    #     player = MediaPlayer(args.play_from)
+    # else:
+    #     options = {"framerate": "20", "video_size": "640x360"}
+    #     if platform.system() == "Darwin": # macOS
+    #         player = MediaPlayer("default:none", format="avfoundation", options=options)
+    #     else:
+    #         # player = MediaPlayer("/dev/video0", format="v4l2", options=options)
+    #         player = MediaPlayer(f'/dev/video{id}', format="v4l2", options=options)
+
+    options = {"framerate": "20", "video_size": "640x360"}
+    if platform.system() == "Darwin": # macOS
+        player = MediaPlayer("default:none", format="avfoundation", options=options)
+    else:
+        # player = MediaPlayer("/dev/video0", format="v4l2", options=options)
+        player = MediaPlayer(f'/dev/video{id}', format="v4l2", options=options)
 
     await pc.setRemoteDescription(of)
     for t in pc.getTransceivers():
@@ -64,7 +85,7 @@ async def handle_options(request):
     )
 
 
-pcs = set()
+
 
 async def on_shutdown(app):
     # close peer connections

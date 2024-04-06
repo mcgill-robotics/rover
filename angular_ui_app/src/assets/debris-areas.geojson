@@ -9,7 +9,7 @@
           "size": 40
         },
         "properties": {
-          "name": "obstacle 1"
+          "name": "debris 1"
         }
       },
       {
@@ -20,7 +20,7 @@
           "size": 20
         },
         "properties": {
-          "name": "obstacle2"
+          "name": "debris 2"
         }
       },
       {
@@ -28,10 +28,10 @@
         "geometry": {
           "type": "Circle",
           "coordinates": [45.50590297241211, -73.57531247558594],
-          "size": 5
+          "size": 10
         },
         "properties": {
-          "name": "obstacle3"
+          "name": "debris 3"
         }
       },
       {
@@ -42,7 +42,7 @@
           "size": 30
         },
         "properties": {
-          "name": "obstacle4"
+          "name": "debris 4"
         }
       }   
     ]

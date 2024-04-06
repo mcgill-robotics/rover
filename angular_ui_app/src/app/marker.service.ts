@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
-import {MapComponent} from './map/map.component';
-
+import 'leaflet-rotatedmarker';
 @Injectable({
   providedIn: 'root'
 })
 export class MarkerService {
-  debris: string = '/assets/debris-markers.geojson';
-  areas: string = '/assets/map-areas.geojson';
+  debris: string = '/assets/obstacle-markers.geojson';
+  areas: string = '/assets/debris-areas.geojson';
   private gps_data: number[] = [45.506003790, -73.57566751708];
+  private prev_gps_data: number[] = [45.506103790, -73.57566751708];
   private control_station: number[] = [45.5056037902832, -73.57576751708984];
   private blueIcon: L.Icon;
   private redIcon: L.Icon;
@@ -17,12 +17,10 @@ export class MarkerService {
 
   constructor(private http: HttpClient) { 
     this.blueIcon = new L.Icon({
-      iconUrl: 'assets/map-pins/blue-map-pin.png',
+      iconUrl: 'assets/map-pins/direction-arrow.png',
       iconSize: [41, 41], 
       iconAnchor: [12, 41], 
-      popupAnchor: [1, -34],
-      shadowUrl: 'assets/map-pins/marker-shadow.png',
-      shadowAnchor: [5, 42]
+      popupAnchor: [1, -34]
     });
     
     this.redIcon = new L.Icon({
@@ -44,7 +42,7 @@ export class MarkerService {
     });
   }
 
-  makeDebrisMarkers(map: L.Map): void { 
+  makeObjectiveMarkers(map: L.Map): void { 
     this.http.get(this.debris).subscribe((res: any) => {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
@@ -55,7 +53,7 @@ export class MarkerService {
     });
   };
 
-  makeAreas(map: L.Map): void { 
+  makeDebrisAreas(map: L.Map): void { 
     this.http.get(this.areas).subscribe((res: any) => {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];

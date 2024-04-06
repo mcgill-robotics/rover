@@ -16,16 +16,16 @@ export class MapComponent implements AfterViewInit{
   private initMap(): void {
     this.map = L.map('map', {
       crs: L.CRS.Simple,
-      minZoom: 19,
-      maxZoom: 19
+      minZoom: 18,
+      maxZoom: 18
 
     });
   }
 
   ngAfterViewInit(): void { 
     this.initMap();
-    this.markerService.makeDebrisMarkers(this.map);
-    this.markerService.makeAreas(this.map);
+    this.markerService.makeObjectiveMarkers(this.map);
+    this.markerService.makeDebrisAreas(this.map);
     this.markerService.makeRoverMarker(this.map);
     this.markerService.makeControlStationMarker(this.map);
   }

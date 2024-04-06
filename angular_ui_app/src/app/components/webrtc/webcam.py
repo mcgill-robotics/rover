@@ -25,7 +25,7 @@ async def offer(request):
             await pc.close()
             pcs.discard(pc)
 
-    options = {"framerate": "20", "video_size": "1600x1200"}
+    options = {"framerate": "20", "video_size": "640x480"}
     player = MediaPlayer(f'/dev/video{id}', format="v4l2", options=options)
 
     await pc.setRemoteDescription(offer)

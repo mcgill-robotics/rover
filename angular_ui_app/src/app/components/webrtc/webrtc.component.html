@@ -1,33 +1,21 @@
-<p>webrtc works!</p>
-<!-- webrtc.component.html -->
+<app-generic height="375px" width="375px">
 
-<div id="Header">
-    <h1>Jetbot Control through WebRTC</h1>
-    <p>This interface allows to control the Jetbot platform using either the keyboard while watching live feed from
-      the robot's frontal camera</p>
-    <p>First, enter the jetbot's IP address</p>
-  
-    <!-- <form id="form" (ngSubmit)="setIp()">
-      <input type="text" id="userInput" [(ngModel)]="host_ip" name="host_ip" />
-      <input type="submit" value="Submit" />
-    </form> -->
+  <div id="Header">
+    <h1>WebRTC</h1>
   </div>
   
-  <h2>WebRTC</h2>
   <div class="option">
     <input id="use-stun" type="checkbox" checked />
     <label for="use-stun">Use STUN server</label>
   </div>
-  <button id="start" (click)="start()" style="dislay: inline-block;">Start</button>
+  <input type="text" placeholder="Jetson IP" [(ngModel)]="host_ip" [style.display]="pc ?  'none' :'inline-block'">
+  <input type="number" name="" id="" placeholder="Device" [(ngModel)]="device_id" [style.display]="pc ?  'none' :'inline-block'">
+  <button id="start" (click)="start()"  [style.display]="pc ?  'none' :'inline-block'">Start</button>
   <button id="stop" (click)="stop()" [style.display]="pc ? 'inline-block' : 'none'">Stop</button>
   
   <div id="media">
-    <audio id="audio" autoplay="true"></audio>
-    <video id="video" autoplay="true" playsinline="true"></video>
+    <h2>Device: {{device_id}}</h2>
+    <video *ngIf="!error" #videoElement [style.display]="pc ? 'inline-block' : 'none'" id="video" autoplay="true" playsinline="true" width="100%"></video>
+    <div>{{error}}</div>
   </div>
-  
-  <!-- <h3>Teleoperation </h3>
-  <div id="Steering">steering = {{ steering_ }}</div>
-  <div id="Throttle">throttle = {{ throttle_ * throttle_factor }}</div>
-  <div id="Throttle_factor">throttle_factor = {{ throttle_factor }}</div> -->
-  
+</app-generic>

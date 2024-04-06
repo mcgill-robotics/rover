@@ -4,7 +4,7 @@
 ROVER_MODEL_NAME = '/'
 
 # id of the frame the mapping script will publish to
-FIXED_FRAME_ID = 'parsed_point_cloud_world'
+FIXED_FRAME_ID = 'odom'
 
 # offset of the camera from the rover's center
 CAMERA_POSITION_OFFSET = (-0.285, 0, 1.1)

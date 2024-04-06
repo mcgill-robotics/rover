@@ -24,7 +24,7 @@ class PointCloudTracker:
         self.convex_hulls: List[ConvexHull] = []
         self.rviz_pc2_pub = rospy.Publisher('parsed_point_cloud', PointCloud2, queue_size=10)
         self.rviz_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
-        self.obstacle_pub = rospy.Publisher('obstacles', ObstacleArrayMsg)
+        self.obstacle_pub = rospy.Publisher('/test_optim_node/obstacles', ObstacleArrayMsg)
         self.rviz_polygon_pub_lst = {}  #Dictionary Containing n publishers
         self.via_points_pub = rospy.Publisher('/test_optim_node/via_points', Path, queue_size=1)
         self.map_grid = {}

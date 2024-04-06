@@ -9,7 +9,8 @@ import {MapComponent} from './map/map.component';
 export class MarkerService {
   debris: string = '/assets/debris-markers.geojson';
   areas: string = '/assets/map-areas.geojson';
-  private gps_data: number[] = [45.506103790, -73.57566751708];
+  private gps_data: number[] = [45.506003790, -73.57566751708];
+  private control_station: number[] = [45.5056037902832, -73.57576751708984];
   private blueIcon: L.Icon;
   private redIcon: L.Icon;
   private blackIcon: L.Icon;
@@ -48,7 +49,7 @@ export class MarkerService {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
-        const marker = L.marker([lat, lon], {icon: this.redIcon});
+        const marker = L.marker([lat, lon], {icon: this.redIcon, title: c.properties.name + " : "+lat +", "+lon});
         marker.addTo(map);
       }
     });
@@ -69,15 +70,14 @@ export class MarkerService {
 
   makeRoverMarker(map: L.Map): void { 
     const rover  = L.latLng([this.gps_data[0], this.gps_data[1]]);
-    const markerr = L.marker(rover, {icon: this.blueIcon});
-    
+    const markerr = L.marker(rover, {icon: this.blueIcon, title: "Rover" + " : "+this.gps_data[0] +", "+this.gps_data[1]});
     markerr.addTo(map);
+    map.setView(rover, 1);
   }
 
   makeControlStationMarker(map: L.Map): void { 
-    var control_station = L.latLng([45.5056037902832, -73.57576751708984]);
-    L.marker(control_station, {icon: this.blackIcon}).addTo(map);
-    map.setView(control_station, 1);
+    var control_station = L.latLng([this.control_station[0], this.control_station[1]]);
+    L.marker(control_station, {icon: this.blackIcon, title: "Control station" + " : "+this.control_station[0] +", "+this.control_station[1]}).addTo(map);
   }
 
   set_gps_data(msg: any): void {

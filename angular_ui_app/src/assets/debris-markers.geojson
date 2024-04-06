@@ -5,7 +5,7 @@
         "type": "Feature",
         "geometry": {
           "type": "Point",
-          "coordinates": [45.50570297241211, -73.57591247558594]
+          "coordinates": [45.50590297241211, -73.57591247558594]
         },
         "properties": {
           "name": "debris1"

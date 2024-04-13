@@ -1,10 +1,8 @@
 import os, sys
-from pydoc_data.topics import topics
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
+
 import rospy
-currentdir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(currentdir)
 import cv2
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge

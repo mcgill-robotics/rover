@@ -2,7 +2,7 @@
 <robot name="myfirst" xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:include filename="$(find rover_gazebo)/urdf/wheel.urdf.xacro" />
     <xacro:include filename="$(find rover_gazebo)/urdf/depth_camera.urdf.xacro" />
-    <!-- <xacro:include filename="$(find rover_gazebo)/urdf/MR_arm.urdf"/> -->
+    <xacro:include filename="$(find arm_control)/model/MR_arm.urdf.xacro"/>
     <link name="base_link">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0" />
@@ -34,13 +34,6 @@
         <axis xyz="0 1 0" rpy="0 0 0" />
     </joint>
 
-    <joint name="arm_joint" type="fixed">
-        <parent link="base_footprint"/> 
-        <child link="link_0"/> 
-        <origin xyz="0 1 0" rpy="0 0 0"/> 
-    </joint>
-
-
     <xacro:wheel wheel_prefix="left" parent_link="base_link">
         <origin xyz="0.5125 -0.316275 ${-0.060752 + .1}" rpy="0 1.57079 0" />
     </xacro:wheel>
@@ -61,7 +54,10 @@
         <origin xyz="0 -0.41 0.32" rpy="0 0 -1.57079"/>
     </xacro:depth_camera>
 
-   <xacro:include filename="$(find rover_gazebo)/urdf/MR_arm.urdf"/>
+   <xacro:MR_arm parent_link="base_link">
+        <origin xyz="0 -0.28 0.37" rpy="0 0 -1.57079"/>
+    </xacro:MR_arm>
+
 
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">

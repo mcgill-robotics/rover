@@ -12,21 +12,26 @@
 		</joint>
     
     <link name="link_0">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/Link0.stl" />
+          <mesh filename="package://arm_control/model/meshes/Link0.stl" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/collision_Link0.stl" />
+          <mesh filename="package://arm_control/model/meshes/collision_Link0.stl" />
         </geometry>
       </collision>
     </link>
 
-    <joint name="joint_1" type="revolute">
+    <joint name="joint_1" type="fixed">
       <origin xyz="0 0 0" rpy="0 0 0" />
       <parent link="link_0" />
       <child link="link_1" />
@@ -37,16 +42,21 @@
 
     <!-- Joint 1 -->
     <link name="link_1">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/Link1.stl" />
+          <mesh filename="package://arm_control/model/meshes/Link1.stl" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/collision_Link1.stl" />
+          <mesh filename="package://arm_control/model/meshes/collision_Link1.stl" />
         </geometry>
       </collision>
     </link>
@@ -62,16 +72,21 @@
 
 
     <link name="link_2">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/Link2.stl" />
+          <mesh filename="package://arm_control/model/meshes/Link2.stl" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/collision_Link2.stl" />
+          <mesh filename="package://arm_control/model/meshes/collision_Link2.stl" />
         </geometry>
       </collision>
     </link>
@@ -87,16 +102,21 @@
 
 
     <link name="link_3">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/Link3.stl" />
+          <mesh filename="package://arm_control/model/meshes/Link3.stl" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/collision_Link3.stl" />
+          <mesh filename="package://arm_control/model/meshes/collision_Link3.stl" />
         </geometry>
       </collision>
     </link>
@@ -112,16 +132,21 @@
 
 
     <link name="link_4">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/Link4.stl" />
+          <mesh filename="package://arm_control/model/meshes/Link4.stl" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/collision_Link4.stl" />
+          <mesh filename="package://arm_control/model/meshes/collision_Link4.stl" />
         </geometry>
       </collision>
     </link>
@@ -137,16 +162,21 @@
 
 
     <link name="link_5">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/Link5.stl" />
+          <mesh filename="package://arm_control/model/meshes/Link5.stl" />
         </geometry>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/collision_Link5.stl" />
+          <mesh filename="package://arm_control/model/meshes/collision_Link5.stl" />
         </geometry>
       </collision>
     </link>
@@ -172,6 +202,11 @@
 
 
     <link name="link_6">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
@@ -188,6 +223,11 @@
 
 
     <link name="link_7">
+      <inertial>
+          <mass value="0.1" />
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>

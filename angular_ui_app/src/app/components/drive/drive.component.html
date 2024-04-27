@@ -2,4 +2,23 @@
     <h5>Drive</h5>
     <button (click)="enableGamepad()">Gamepad On</button>
     <button (click)="disableGamepad()">Gamepad Off</button>
+
+    <head>
+        <script type="text/javascript" src="testing.js" defer></script>
+    </head>
+
+    <div class="drive">
+        <div id="driveInfo" style="height: 235px; width: 645px;">
+            <p id="LF">Wheel LF:</p>
+            <p id="LR">Wheel LR:</p>
+            <p id="RF">Wheel RF:</p>
+            <p id="RR">Wheel RR:</p>
+
+            <div id="slider">
+                <progress class="axis" max="2" value="1">0: 0.0000</progress>
+                <progress class="axis" max="2" value="1">1: 0.0000</progress>
+            </div>
+
+        </div>
+    </div>
 </app-generic>

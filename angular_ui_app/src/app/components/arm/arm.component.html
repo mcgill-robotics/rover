@@ -1,17 +1,38 @@
 <!-- <p>arm-page works! </p> -->
 <!-- <div style="display: flex; flex-wrap: wrap;"> -->
 <app-generic height="235px" width="640px">
-    <h5>Joints</h5>
-    <div style="display: flex; align-content: space-between; flex-wrap: wrap;">
-        <div *ngFor="let joint of joints" style="flex: 0 0 30%;">
-            <!-- works -->
-            {{joint}}
-            <!-- {{test}} -->
+
+    <div class="arm">
+        <!-- to solve button problem, chnaged app.comp.ts and app.module.ts -->
+        <div id="armInfo" style="height: 235px; width: 645px;">
+            <h4>Arm Info</h4>
+            <div>
+                <p id="Wrist">Wrist: {{ array[0] }}</p>
+                <div id="buttons">
+                    <button id="wrist1" (click)="increment(0)">+</button>
+                    <button id="wrist2" (click)="decrement(0)">-</button>
+                </div>
+            </div>
+
+            <div>
+                <p id="Elbow">Elbow: {{ array[1] }}</p>
+                <div id="buttons">
+                    <button (click)="increment(1)">+</button>
+                    <button (click)="decrement(1)">-</button>
+                </div>
+            </div>
+
+            <div>
+                <p id="Shoulder">Shoulder: {{ array[2] }}</p>
+                <div id="buttons">
+                    <button (click)="increment(2)">+</button>
+                    <button (click)="decrement(2)">-</button>
+                </div>
+            </div>
         </div>
     </div>
-    <hr>
-    <h5>Error</h5>
-    <div style="margin:auto; width: 95%; height: 45px; border: 1px solid #5F6F74;">
 
-    </div>
+    <body>
+    </body>
+
 </app-generic>

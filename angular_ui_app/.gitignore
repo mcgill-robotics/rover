@@ -43,3 +43,5 @@ Thumbs.db
 
 # angular
 .angular
+
+start_server.sh

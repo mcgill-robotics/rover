@@ -45,7 +45,7 @@ export class WebrtcComponent {
       const headers = new Headers();
       headers.append('Content-Type', 'application/json');
       headers.append('Access-Control-Allow-Origin', '*');
-      const response = await fetch(`http://${this.host_ip}:8080/offer?id=${this.device_id}`, {
+      const response = await fetch(`http://${this.host_ip}:8081/offer?id=${this.device_id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,6 +93,8 @@ export class WebrtcComponent {
       // console.log(this.pc);
       this.pc = null; //set to null after closing
     }, 500);
+
+    this.error = null;
 
   }
 }

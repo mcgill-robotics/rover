@@ -20,6 +20,7 @@ import { AntennaComponent } from './components/antenna/antenna.component';
 import { GenericComponent } from './components/generic/genric.component';
 import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
+import { WebrtcComponent } from './components/webrtc/webrtc.component';
 // jquery
 // import * as $ from "jquery";
 
@@ -40,6 +41,7 @@ import { DrivePageComponent } from './pages/drive-page/drive-page.component';
     GenericComponent,
     HeaderComponent,
     DrivePageComponent,
+    WebrtcComponent,
   ],
   imports: [
     FormsModule,

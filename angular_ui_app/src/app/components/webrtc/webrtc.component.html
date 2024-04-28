@@ -1,0 +1,21 @@
+<app-generic height="720px" width="1200px">
+
+  <div id="Header">
+    <h1>WebRTC</h1>
+  </div>
+  
+  <div class="option">
+    <input id="use-stun" type="checkbox" checked />
+    <label for="use-stun">Use STUN server</label>
+  </div>
+  <input type="text" placeholder="Jetson IP" [(ngModel)]="host_ip" [style.display]="pc ?  'none' :'inline-block'">
+  <input type="number" name="" id="" placeholder="Device" [(ngModel)]="device_id" [style.display]="pc ?  'none' :'inline-block'">
+  <button id="start" (click)="start()"  [style.display]="pc ?  'none' :'inline-block'">Start</button>
+  <button id="stop" (click)="stop()" [style.display]="pc ? 'inline-block' : 'none'">Stop</button>
+  
+  <div id="media">
+    <h2>Device: {{device_id}}</h2>
+    <video *ngIf="!error" #videoElement [style.display]="pc ? 'inline-block' : 'none'" id="video" autoplay="true" playsinline="true" width="100%"></video>
+    <div>{{error}}</div>
+  </div>
+</app-generic>

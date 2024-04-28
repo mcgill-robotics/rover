@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import * as LeafRotated from 'leaflet-rotatedmarker';
 import * as L from 'leaflet';
-import 'leaflet-rotatedmarker';
 @Injectable({
   providedIn: 'root'
 })
 export class MarkerService {
   debris: string = '/assets/obstacle-markers.geojson';
   areas: string = '/assets/debris-areas.geojson';
-  private gps_data: number[] = [45.506003790, -73.57566751708];
-  private prev_gps_data: number[] = [45.506103790, -73.57566751708];
-  private control_station: number[] = [45.5056037902832, -73.57576751708984];
+  private gps_data: number[] = [45.406003790, -73.67566751708];
+  private prev_gps_data: number[] = [45.306103790, -73.57566751708];
+  private control_station: number[] = [45.8056037902832, -93.27576751708984];
   private blueIcon: L.Icon;
   private redIcon: L.Icon;
   private blackIcon: L.Icon;
@@ -59,7 +59,7 @@ export class MarkerService {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
         const rad = c.geometry.size;
-        const area = L.circleMarker([lat, lon], {radius: rad});
+        const area = L.circle([lat, lon], {radius: rad});
         area.setStyle({color: 'green'});
         area.addTo(map);
       }
@@ -68,7 +68,7 @@ export class MarkerService {
 
   makeRoverMarker(map: L.Map): void { 
     const rover  = L.latLng([this.gps_data[0], this.gps_data[1]]);
-    const markerr = L.marker(rover, {icon: this.blueIcon, title: "Rover" + " : "+this.gps_data[0] +", "+this.gps_data[1]});
+    const markerr = L.marker(rover, {icon: this.blueIcon, rotationAngle: 90, title: "Rover" + " : "+this.gps_data[0] +", "+this.gps_data[1]});
     markerr.addTo(map);
     map.setView(rover, 1);
   }

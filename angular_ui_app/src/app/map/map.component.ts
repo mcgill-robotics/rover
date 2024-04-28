@@ -16,8 +16,8 @@ export class MapComponent implements AfterViewInit{
   private initMap(): void {
     this.map = L.map('map', {
       crs: L.CRS.Simple,
-      minZoom: 18,
-      maxZoom: 18
+      minZoom: -5,
+      maxZoom: 12
 
     });
   }

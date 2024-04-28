@@ -44,4 +44,4 @@ Thumbs.db
 # angular
 .angular
 
-start_server.sh
+start_ui_server.sh

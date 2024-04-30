@@ -17,7 +17,7 @@ export class MarkerService {
 
   constructor(private http: HttpClient) { 
     this.blueIcon = new L.Icon({
-      iconUrl: 'assets/map-pins/direction-arrow.png',
+      iconUrl: 'assets/map-pins/rover-location-icon.png',
       iconSize: [41, 41], 
       iconAnchor: [12, 41], 
       popupAnchor: [1, -34]

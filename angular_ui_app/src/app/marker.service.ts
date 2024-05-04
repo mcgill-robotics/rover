@@ -85,5 +85,6 @@ export class MarkerService {
 
   moveRoverMarker(map: L.Map): void {
     this.roverMarker.setLatLng([this.gps_data[0], this.gps_data[1]]);
+    map.setView([this.gps_data[0], this.gps_data[1]]);
   }
 }

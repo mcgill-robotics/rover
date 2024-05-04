@@ -16,8 +16,6 @@ import { AntennaComponent } from './components/antenna/antenna.component';
 import { GenericComponent } from './components/generic/genric.component';
 import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
-// jquery
-// import * as $ from "jquery";
 
 @NgModule({
   declarations: [

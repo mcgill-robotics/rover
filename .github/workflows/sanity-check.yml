@@ -48,6 +48,10 @@ jobs:
           cd ~
           mkdir --parents catkin_ws/src
           ln -s $GITHUB_WORKSPACE ~/catkin_ws/src
+
+      - name: Setup Angular Workflow
+        run: |
+          npm install -g @angular/cli
           
       - name: Catkin Build
         shell: bash

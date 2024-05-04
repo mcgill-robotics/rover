@@ -11,45 +11,32 @@ import { RosService } from 'src/app/ros.service';
 export class PowerPageComponent {
   rosBridgeStatus: string;
   ros: ROSLIB.Ros;
-  String: ROSLIB.Topic; //payload type
-  Pub: ROSLIB.Topic; //payload type
-  
-  Results: string;
-    
+  bmsData: ROSLIB.Topic; //payload type
+  errorLogs: string[];
+  cellVoltage: number[];
+  totalVoltage: number;
+  chargingMosfet: number;
+  dischargingMosfet: number;
+
   constructor(private rosService: RosService) {
     this.ros = this.rosService.getRos();
   }
 
   ngOnInit() {
 
-    this.String = new ROSLIB.Topic({
-      ros : this.ros,
-      name : '/chatter',
-      messageType : 'std_msgs/String'
+    this.bmsData= new ROSLIB.Topic({
+      ros: this.ros,
+      name: '/bmsData',
+      messageType: 'bms_feedback/BMSData'
     });
 
-    this.Pub = new ROSLIB.Topic({
-      ros : this.ros,
-      name : 'lol',
-      messageType : 'std_msgs/String'
+    this.bmsData.subscribe((message:any) => {
+      console.log(message.cell_voltages);
+      this.cellVoltage = message.cell_voltages;
+      this.totalVoltage = message.total_voltage;
+      this.chargingMosfet = message.charging_mosfet;
+      this.dischargingMosfet = message.discharging_mosfet;
     });
-
-    this.listen()
   }
-  
-  publish() {
-    this.Pub.publish({data:"YYOYOYY"+this.Results});
-  }
-
-  listen() {
-    this.String.subscribe((message:any) => {
-      // console.log('Received message on ' +this.listener.name + ': ' + message.y + message.x);
-      this.Results = ('Received message on ' + this.String.name +"and the message.data"+  message.data);
-      this.publish();
-    });
-    }
-
-
-  
 }
 

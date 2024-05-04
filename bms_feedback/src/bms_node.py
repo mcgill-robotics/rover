@@ -18,6 +18,7 @@ class BMSNode():
         self.bms_obj = dalybms.DalyBMS()
         self.bms_obj.connect(self.device)
         self.bmsData = BMSData()
+        self.bmsData.cell_voltages = [0 for x in range(1000)]
 
         self.bms_errors = []
         self.connected = self.bms_obj.serial.is_open
@@ -64,6 +65,7 @@ class BMSNode():
             self.bmsData.cell_voltages[6] = cell_voltages["7"]
             self.bmsData.cell_voltages[7] = cell_voltages["8"]
 
+
         if soc_data:
             self.bmsData.discharging_mosfet = int(mosfet_status["discharging_mosfet"])
             self.bmsData.charging_mosfet = int(mosfet_status["charging_mosfet"])
@@ -73,7 +75,6 @@ class BMSNode():
             self.bmsData.total_voltage = soc_data["total_voltage"]
             self.bmsData.current = soc_data["current"]
             self.bmsData.soc_percent = soc_data["soc_percent"]
-
         
 if __name__ == "__main__":
     driver = BMSNode()

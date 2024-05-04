@@ -9,8 +9,6 @@ import { MarkerService } from './marker.service';
 import { CamerasWidgetComponent } from './cameras-widget/cameras-widget.component';
 import { CameraBoxComponent } from './cameras-widget/camera-box/camera-box.component';
 import { GpsComponent } from './gps/gps.component';
-import { MapComponent } from './map/map.component';
-
 
 
 @NgModule({
@@ -20,8 +18,6 @@ import { MapComponent } from './map/map.component';
     CamerasWidgetComponent,
     CameraBoxComponent,
     GpsComponent,
-    MapComponent,
-
   ],
   imports: [
     BrowserModule,

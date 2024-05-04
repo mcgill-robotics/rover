@@ -1,6 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
-import { RosService } from '../../ros.service';
-import * as ROSLIB from 'roslib';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-drive-page',

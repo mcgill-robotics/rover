@@ -83,7 +83,7 @@ file(REMOVE_RECURSE temp)
 
 add_custom_target (
     build_target ALL
-    COMMAND cd ${CMAKE_CURRENT_LIST_DIR} npm install && npm run build
+    COMMAND cd ${CMAKE_CURRENT_LIST_DIR} && npm install && npm run build
 )
 
 add_custom_command(TARGET build_target POST_BUILD

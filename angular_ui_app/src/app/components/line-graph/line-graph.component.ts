@@ -9,6 +9,8 @@ import { Input } from '@angular/core';
   templateUrl: './line-graph.component.html',
   styleUrls: ['./line-graph.component.scss']
 })
+
+// this component may be converted into a generic graph  component
 export class LineGraphComponent implements OnInit, OnDestroy {
 
   @Input() topicName:string;
@@ -17,7 +19,9 @@ export class LineGraphComponent implements OnInit, OnDestroy {
   private ctx: CanvasRenderingContext2D | null;
   private topic: ROSLIB.Topic;
   private ros: ROSLIB.Ros;
-  private data: number[] = [3, 5, 2, 8, 4, 6];
+  private data: number[] = [3, 2, 2, 8, 5, 6, 5, 2];
+  // for histogram we can create a frequency array or make data[][]
+
 
   constructor(private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -31,8 +35,8 @@ export class LineGraphComponent implements OnInit, OnDestroy {
     });
 
     this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
-    this.drawGraph();
-
+    // this.drawGraph();  
+    this.drawHistogram();
     this.listen();
   }
 
@@ -46,9 +50,68 @@ export class LineGraphComponent implements OnInit, OnDestroy {
     this.topic.subscribe((message: any) => {
       this.data.push(message.data[0]);
       this.drawGraph();
-      console.log(this.data);
+      // this.drawHistogram();
     })
   }
+
+  private drawHistogram(): void {
+    const width = this.ctx!.canvas.width;
+    const height = this.ctx!.canvas.height;
+       
+    // Clear the canvas
+    this.ctx!.clearRect(0, 0, width, height);
+
+    const drawHeight = height - 10; //create the offset
+  
+    // Find the minimum and maximum values in the dataset
+    const minValue = Math.min(...this.data);
+    const maxValue = Math.max(...this.data);
+  
+    // Calculate the range of values
+    const valueRange = maxValue - minValue + 1;
+  
+    // Initialize an array to store the frequency of each value
+    const frequencies: number[] = new Array(valueRange).fill(0);
+  
+    // Count the occurrences of each value in the dataset
+    this.data.forEach(value => {
+      frequencies[value - minValue]++;
+    });
+  
+    // Calculate the maximum frequency
+    const maxFrequency = Math.max(...frequencies);
+  
+    // Set the color for the bars
+    
+    // Calculate the width of each bar
+    const barWidth = width / valueRange;
+    
+    // Draw each bar and add labels
+    for (let i = 0; i < valueRange; i++) {
+      this.ctx!.fillStyle = '#3498db';
+      const barHeight = (frequencies[i] / maxFrequency) * drawHeight; // Scale the bar drawHeight based on the maximum frequency
+      const x = i * barWidth;
+      const y = drawHeight - barHeight + 20;
+      this.ctx!.fillRect(x, y, barWidth, barHeight);
+  
+     // Add count label at the top of the bar
+     this.ctx!.fillStyle = '#fff'; // Set text color
+     if (frequencies[i] != 0) {
+       const countLabel = frequencies[i].toString(); // Get the count for the current bar
+       this.ctx!.textAlign = 'center'; // Center-align the text
+       this.ctx!.font = '12px Arial'; // Set font size and family
+       this.ctx!.fillText(countLabel, x + barWidth / 2, y - 5); // Draw count label at the top of the bar
+     }
+
+    // Add label underneath the bar
+    const label = (minValue + i).toString(); // Calculate the value for the label
+    this.ctx!.fillText(label, x + barWidth / 2, drawHeight); // Draw label underneath the bar
+      
+    }
+  }
+  
+  
+
 
   private drawGraph(): void {
     const width = this.ctx!.canvas.width;

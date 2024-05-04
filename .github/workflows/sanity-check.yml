@@ -51,8 +51,8 @@ jobs:
 
       - name: Setup Angular Workflow
         run: |
-          npm install -g @angular/cli
-          
+          npm install
+
       - name: Catkin Build
         shell: bash
         run: |

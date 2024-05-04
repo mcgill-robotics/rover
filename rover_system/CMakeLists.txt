@@ -15,6 +15,7 @@ install(FILES
    arm_sim_manual.launch
    pilot_system.launch
    rover_robot.launch
+   rover_robot_odrive.launch
    rover_sim_manual.launch
    # myfile2
    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

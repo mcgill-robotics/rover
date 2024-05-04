@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./science-page.component.scss']
 })
 export class SciencePageComponent {
-
+  
 }

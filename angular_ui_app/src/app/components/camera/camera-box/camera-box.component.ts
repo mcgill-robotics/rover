@@ -18,6 +18,12 @@ export class CameraBoxComponent {
 
   constructor() { }
 
+  ngOnDestroy() { 
+    //stop video when quitting it
+    this.stop();
+  }
+
+  // methods
   async negotiate() {
     try {
       this.pc?.addTransceiver('video', { direction: 'recvonly' });

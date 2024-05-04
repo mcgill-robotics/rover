@@ -1,0 +1,49 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [47.50590297241211, -78.57611247558594],
+          "size": 40
+        },
+        "properties": {
+          "name": "debris 1"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [52.50550297241211, 25.57551247558594],
+          "size": 20
+        },
+        "properties": {
+          "name": "debris 2"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [-10.50590297241211, -54.57531247558594],
+          "size": 10
+        },
+        "properties": {
+          "name": "debris 3"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Circle",
+          "coordinates": [-45.50550297241211, 73.57521247558594],
+          "size": 30
+        },
+        "properties": {
+          "name": "debris 4"
+        }
+      }   
+    ]
+  }

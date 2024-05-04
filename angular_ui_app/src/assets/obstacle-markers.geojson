@@ -1,0 +1,45 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [45.50590297241211, -23.57591247558594]
+        },
+        "properties": {
+          "name": "obstacle1"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [75.50519779663086, -73.5755615234375]
+        },
+        "properties": {
+          "name": "obstacle2"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-45.50568771362305, -73.5759506225586]
+        },
+        "properties": {
+          "name": "obstacle3"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [45.50548771362305, 73.5756506225586]
+        },
+        "properties": {
+          "name": "obstacle4"
+        }
+      }   
+    ]
+  }

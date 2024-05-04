@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { GamepadService } from '../../gamepad.service';
+import { GamepadService } from 'src/app/gamepad.service';
 import { RosService } from 'src/app/ros.service';
 import * as ROSLIB from 'roslib';
 

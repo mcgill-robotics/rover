@@ -49,7 +49,7 @@ export class GraphComponent implements OnInit, OnDestroy {
         this.drawLineChart();
         break;
         
-      defautt:
+      default:
         console.log("Wrong graph type");
     }
     this.listen();

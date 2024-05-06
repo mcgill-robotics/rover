@@ -17,6 +17,8 @@ import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { LineGraphComponent } from './components/line-graph/line-graph.component';
+import { GraphComponent } from './components/graph/graph.component';
+import { DownloadComponent } from './components/download/download.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +36,8 @@ import { LineGraphComponent } from './components/line-graph/line-graph.component
     DrivePageComponent,
     NavbarComponent,
     LineGraphComponent,
+    GraphComponent,
+    DownloadComponent,
   ],
   imports: [
     FormsModule,

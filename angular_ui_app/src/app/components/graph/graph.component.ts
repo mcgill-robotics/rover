@@ -5,21 +5,22 @@ import { RosService } from 'src/app/ros.service';
 import { Input } from '@angular/core';
 
 @Component({
-  selector: 'app-line-graph',
-  templateUrl: './line-graph.component.html',
-  styleUrls: ['./line-graph.component.scss']
+  selector: 'app-graph',
+  templateUrl: './graph.component.html',
+  styleUrls: ['./graph.component.scss']
 })
-
 // this component may be converted into a generic graph  component
-export class LineGraphComponent implements OnInit, OnDestroy {
+export class GraphComponent implements OnInit, OnDestroy {
   //params for the graph
   @Input() topicName:string;
   @Input() y_axis:string;
   @Input() x_axis:string;
   @Input() title:string;  
+  @Input() type:string;  
 
 
-  @ViewChild('lineChart', { static: true }) canvasRef: ElementRef;
+
+  @ViewChild('chart', { static: true }) canvasRef: ElementRef;
   private ctx: CanvasRenderingContext2D | null;
   private topic: ROSLIB.Topic;
   private ros: ROSLIB.Ros;
@@ -40,7 +41,17 @@ export class LineGraphComponent implements OnInit, OnDestroy {
 
     this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
     // this.drawGraph();  
-    this.drawHistogram();
+    switch (this.type) {
+      case "histogram":
+        this.drawHistogram();
+        break;    
+      case "line":
+        this.drawLineChart();
+        break;
+        
+      defautt:
+        console.log("Wrong graph type");
+    }
     this.listen();
   }
 
@@ -53,7 +64,20 @@ export class LineGraphComponent implements OnInit, OnDestroy {
   private listen() {
     this.topic.subscribe((message: any) => {
       this.data.push(message.data[0]);
-      this.drawGraph();
+
+      // this.drawLineChart();
+      switch (this.type) {
+        case "histrogram":
+          this.drawHistogram();
+          break;    
+        case "line":
+          this.drawLineChart();
+          break;
+
+        defautt:
+          console.log("Wrong graph type");
+      }
+
       // this.drawHistogram();
     })
   }
@@ -118,7 +142,7 @@ export class LineGraphComponent implements OnInit, OnDestroy {
   
 
 
-  private drawGraph(): void {
+  private drawLineChart(): void {
     const width = this.ctx!.canvas.width;
     const height = this.ctx!.canvas.height;
 

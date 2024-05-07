@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ScienceService } from 'src/app/service/science.service';
 
 @Component({
   selector: 'app-download',
@@ -6,12 +7,13 @@ import { Component } from '@angular/core';
   styleUrls: ['./download.component.scss']
 })
 export class DownloadComponent {
-  constructor() { }
+  constructor(private scienceService :ScienceService) {  }
 
   download(): void {
     // Create a text file content
-    const fileContent = 'This is a downloadable text file.';
-    
+    // const fileContent = 'This is a downloadable text file.';
+    const fileContent = this.scienceService.getStoredData().toString();
+  
     // Create a blob from the content
     const blob = new Blob([fileContent], { type: 'text/plain' });
 
@@ -21,7 +23,7 @@ export class DownloadComponent {
     // Create a link element
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'downloaded_file.txt'; // Set the file name
+    link.download = 'data_file.txt'; // Set the file name
 
     // Append the link to the document body
     document.body.appendChild(link);

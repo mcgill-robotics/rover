@@ -9,23 +9,21 @@ import { Input } from '@angular/core';
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.scss']
 })
-// this component may be converted into a generic graph  component
+
 export class GraphComponent implements OnInit, OnDestroy {
   //params for the graph
   @Input() topicName:string;
   @Input() y_axis:string;
   @Input() x_axis:string;
   @Input() title:string;  
-  @Input() type:string;  
-
-
+  @Input() type:string; 
+  @Input() cuvetteId:string; 
 
   @ViewChild('chart', { static: true }) canvasRef: ElementRef;
   private ctx: CanvasRenderingContext2D | null;
-  private topic: ROSLIB.Topic;
+  private topic: ROSLIB.Topic; //renaming fix
   private ros: ROSLIB.Ros;
-  private data: number[] = [3, 2, 2, 8, 5, 6, 5, 2];
-  // for histogram we can create a frequency array or make data[][]
+  private data: number[] = [3, 2, 2, 8, 5, 6, 5, 2]; //data will be set to empty 
 
 
   constructor(private rosService: RosService) {
@@ -35,7 +33,7 @@ export class GraphComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.topic = new ROSLIB.Topic({
       ros : this.ros,
-      name : this.topicName, //to be changed to proper topic name
+      name : this.topicName,
       messageType : 'std_msgs/Float32MultiArray'
     });
 
@@ -73,12 +71,10 @@ export class GraphComponent implements OnInit, OnDestroy {
         case "line":
           this.drawLineChart();
           break;
-
-        defautt:
+        default:
           console.log("Wrong graph type");
       }
 
-      // this.drawHistogram();
     })
   }
 

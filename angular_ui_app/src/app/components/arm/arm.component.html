@@ -5,13 +5,25 @@
     <div class="arm">
         <!-- to solve button problem, chnaged app.comp.ts and app.module.ts -->
         <div id="armInfo" style="height: 235px; width: 645px; background-color: gray;">
+        <div *ngIf="armBrushed" id="armInfo" style="height: 235px; width: 645px; background-color: gray;"></div>
+        <div *ngIf="armBrushless" id="armInfo" style="height: 235px; width: 645px; background-color: gray;"></div>
             <h4>Arm Info</h4>
+            <div>
+                <p id="incrementChooser"> Increment Chooser:</p>
+            </div>
+
+
             <div>
                 <p id="Wrist">Wrist: {{ array[0] }}</p>
                 <div id="buttons">
                     <button id="wrist1" (click)="increment(0)">+</button>
                     <button id="wrist2" (click)="decrement(0)">-</button>
                 </div>
+            </div>
+
+            <div>
+                <p id="WristData">Wrist Data Brushed: {{ armBrushed.wrist }}</p>
+                <p id="WristData">Wrist Data Brushless: {{ armBrushless.wrist }}</p>
             </div>
 
             <div>
@@ -23,16 +35,23 @@
             </div>
 
             <div>
+                <p id="ElbowData">Elbow Data Brushed: {{ armBrushed.elbow }}</p>
+                <p id="WristData">Elbow Data Brushless: {{ armBrushless.elbow }}</p>
+            </div>
+
+            <div>
                 <p id="Shoulder">Shoulder: {{ array[2] }}</p>
                 <div id="buttons">
                     <button (click)="increment(2)">+</button>
                     <button (click)="decrement(2)">-</button>
                 </div>
             </div>
+            <div>
+                <p id="ShoulderData">Shoulder Data Brushed: {{ armBrushed.shoulder }}</p>
+                <p id="WristData">Shoulder Data Brushless: {{ armBrushless.shoulder }}</p>
+            </div>
         </div>
     </div>
-
     <body>
     </body>
-
 </app-generic>

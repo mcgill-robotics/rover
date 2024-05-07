@@ -1,48 +1,47 @@
 <app-generic>
-    <p>science-page works!</p>
+    <p>science-page works! inject {{inject}} </p>
     <!-- <app-line-graph topicName="/test_topic" title="aTitle" 
     y_axis="yyyy"
     x_axis="xxx"/> -->
-    <h1>Data</h1>
+    <h1>Data {{inject}}</h1>
     <div style="display:flex; justify-content: flex-start;">
         <div>
             <app-graph topicName="/test_topic" title="aTitle" y_axis="The y axis" x_axis="The x axis" type="line"
-                cuvetteId="1" />
+                cuvetteId="1" [inject]="inject"/>
 
-            <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
-                cuvetteId="1" />
+            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
+                cuvetteId="1" [inject]="inject"/> -->
         </div>
         <div>
             <app-graph topicName="/test_topic" title="aTitle" y_axis="The y axis" x_axis="The x axis" type="line"
-                cuvetteId="2" />
+                cuvetteId="2" [inject]="inject"/>
 
-            <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
-                cuvetteId="2" />
+            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
+                cuvetteId="2" [inject]="inject"/> -->
         </div>
         <div>
             <app-graph topicName="/test_topic" title="aTitle" y_axis="The y axis" x_axis="The x axis" type="line"
-                cuvetteId="3" />
+                cuvetteId="3" [inject]="inject"/>
 
-            <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
-                cuvetteId="3" />
+            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
+                cuvetteId="3" [inject]="inject"/> -->
         </div>
         <div>
             <app-graph topicName="/test_topic" title="aTitle" y_axis="The y axis" x_axis="The x axis" type="line"
-                cuvetteId="4" />
+                cuvetteId="4" [inject]="inject"/>
 
-            <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
-                cuvetteId="4" />
+            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
+                cuvetteId="4" [inject]="inject"/> -->
         </div>
     </div>
 
     <div style="display: flex; justify-content: space-around;">
 
         <div style="text-align: center;">
-
             <h1>Control</h1>
-            <div style="display: flex; justify-content: flex-start;">
+            <div style="display: flex; justify-content: space-evenly;">
                 <div>
-                    <h2>Carrousel</h2>
+                    <h2>Carousel</h2>
                     Current rotation:{{data}} <button>Turn</button>
                 </div>
                 <div style="text-align: center;">

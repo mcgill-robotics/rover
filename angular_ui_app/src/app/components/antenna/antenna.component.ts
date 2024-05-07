@@ -28,13 +28,13 @@ export class AntennaComponent {
 
     this.pub = new ROSLIB.Topic({
       ros : this.ros,
-      name : '/antennaData',
+      name : '/antennaGPSOverideCmd',
       messageType : 'std_msgs/Float32MultiArray'
     });
 
     this.sub = new ROSLIB.Topic({
       ros : this.ros,
-      name : '/antennaData',
+      name : '/antennaGPSOverideCmd',
       messageType : 'std_msgs/Float32MultiArray'
     });
 

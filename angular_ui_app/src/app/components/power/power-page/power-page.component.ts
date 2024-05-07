@@ -35,8 +35,8 @@ export class PowerPageComponent {
       this.cellVoltage = message.cell_voltages;
       this.totalVoltage = message.total_voltage;
       this.chargingMosfet = message.charging_mosfet;
-      this.dischargingMosfet = message.discharging_mosfet;
+      this.dischargingMosfet = message.discharging_logs;
+      this.errorLogs = message.error_logs;
     });
   }
 }
-

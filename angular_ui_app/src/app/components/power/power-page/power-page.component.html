@@ -1,7 +1,19 @@
-<p>Power Component</p>
-<!-- Preview content before sent -->
-<p>Cell Voltage: {{cellVoltage}}</p>
-<p>Total Voltage: {{totalVoltage}}</p>
-<p>Charging Mosfet: {{chargingMosfet}}</p>
-<p>Discharging Mosfet: {{dischargingMosfet}}</p>
-<p>Error Logs: {{cellVoltage}}</p>
+<div class="power-feedback">
+    <p>Power Component</p>
+    <!-- Preview content before sent -->
+    <div class="cell-voltage">
+        <p>Cell Voltage: {{cellVoltage}}</p>
+    </div>
+    <div class="total-voltage">
+        <p>Total Voltage: {{totalVoltage}}</p>
+    </div>
+    <div class="charging-mosfet">
+        <p>Charging Mosfet: {{chargingMosfet}}</p>
+    </div>
+    <div class="discharging-mosfet">
+        <p>Discharging Mosfet: {{dischargingMosfet}}</p>
+    </div>
+    <div class="error-logs">
+        <p>Error Logs: {errorLogs}</p>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import * as ROSLIB from 'roslib';
 import { RosService } from 'src/app/ros.service';
 import { ScienceService } from 'src/app/service/science.service';
@@ -8,12 +8,16 @@ import { ScienceService } from 'src/app/service/science.service';
   templateUrl: './science-page.component.html',
   styleUrls: ['./science-page.component.scss']
 })
-export class SciencePageComponent {
 
+export class SciencePageComponent implements OnInit{
   data: string;
   augerTopic: ROSLIB.Topic;
   carouselTopic: ROSLIB.Topic;
   ros: ROSLIB.Ros;
+
+  // mock prop data
+  mockTopic: ROSLIB.Topic;
+  inject:number[] = [1,2];
   
   constructor(private scienceService: ScienceService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -31,8 +35,21 @@ export class SciencePageComponent {
       name : "topicName", //to be changed to proper topic name
       messageType : 'std_msgs/Float32MultiArray'
     });
+
+    this.mockTopic = new ROSLIB.Topic({
+      ros : this.ros,
+      name : "/test_topic", //to be changed to proper topic name
+      messageType : 'std_msgs/Float32MultiArray'
+    });
+
+    this.listen();
   }
 
+  listen() {
+    this.mockTopic.subscribe((message:any) => {
+        this.inject = this.inject.concat(message.data[0] as number); //must never pass by ref 
+    })
+  }
   // carousel
   turn() {
     this.carouselTopic.publish(new ROSLIB.Message({

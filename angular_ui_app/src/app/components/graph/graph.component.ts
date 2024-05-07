@@ -1,5 +1,5 @@
 // line-graph.component.ts
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import * as ROSLIB from 'roslib';
 import { RosService } from 'src/app/ros.service';
 import { Input } from '@angular/core';
@@ -10,7 +10,7 @@ import { Input } from '@angular/core';
   styleUrls: ['./graph.component.scss']
 })
 
-export class GraphComponent implements OnInit, OnDestroy {
+export class GraphComponent implements OnInit, OnDestroy, OnChanges {
   //params for the graph
   @Input() topicName:string;
   @Input() y_axis:string;
@@ -18,6 +18,7 @@ export class GraphComponent implements OnInit, OnDestroy {
   @Input() title:string;  
   @Input() type:string; 
   @Input() cuvetteId:string; 
+  @Input() inject:number[];
 
   @ViewChild('chart', { static: true }) canvasRef: ElementRef;
   private ctx: CanvasRenderingContext2D | null;
@@ -53,6 +54,20 @@ export class GraphComponent implements OnInit, OnDestroy {
     this.listen();
   }
 
+  ngOnChanges(changes: SimpleChanges): void { //only tracks the object change rip
+    console.log(changes);
+    switch (this.type) {
+      case "histogram":
+        this.drawHistogram();
+        break;    
+      case "line":
+        this.drawLineChart();
+        break;
+      default:
+        console.log("Wrong graph type");
+    }
+  }
+
   ngOnDestroy(): void {
     // Clean up resources (if any)
     // could store data to central
@@ -80,6 +95,8 @@ export class GraphComponent implements OnInit, OnDestroy {
 
   // provide a selector to choose the type of graph --later
   private drawHistogram(): void {
+    this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
+
     const width = this.ctx!.canvas.width;
     const height = this.ctx!.canvas.height;
        
@@ -139,6 +156,8 @@ export class GraphComponent implements OnInit, OnDestroy {
 
 
   private drawLineChart(): void {
+    this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
+
     const width = this.ctx!.canvas.width;
     const height = this.ctx!.canvas.height;
 

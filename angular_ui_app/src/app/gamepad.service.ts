@@ -5,51 +5,121 @@ import { Injectable } from '@angular/core';
 })
 export class GamepadService {
 
-  gamepad: Gamepad | null = null;
-  gp_buttons: GamepadButton[] | null = null;
+  controller_gamepad: Gamepad | null = null;
+  joystick_gamepad: Gamepad | null = null;
 
-  axis_callback: (axis_v: number[]) => void;
-  buttons_callback: (axis_h: number, i: number) => void;
+  controller_buttons_state: GamepadButton[] | null = null;
+  joystick_input_state: { [key: string]: number | boolean } | null = null;
 
-  relay_messages: boolean = false;
+  axis_callback_controller: (axis_v: number[]) => void;
+  joystick_callback: (input: { [key: string]: number | boolean }) => void;
 
-  public enableGamepad(
-      axis_callback: (axis_v: number[]) => void,
-      buttons_callback: (axis_h: number, i: number) => void
-    ) {
+  buttons_callback_controller: (axis_h: number, i: number) => void;
+  buttons_callback_joystick: (axis_h: number, i: number) => void;
+
+  relay_messages_controller: boolean = false;
+  relay_messages_joystick: boolean = false;
+
+  public connectControllerGamepad(
+    axis_callback: (axis_v: number[]) => void,
+    buttons_callback: (axis_h: number, i: number) => void
+  ) {
     window.addEventListener("gamepadconnected", (e: GamepadEvent) => {
-      this.gamepad = navigator.getGamepads()[e.gamepad.index];
-      this.gp_buttons = this.gamepad!.buttons.slice();
-      this.axis_callback = axis_callback;
-      this.buttons_callback = buttons_callback;
-      setInterval(this.updateStatus.bind(this), 50);
+      if (e.gamepad!.id.startsWith("Sony")) {
+        this.controller_gamepad = e.gamepad;
+        this.controller_buttons_state = this.controller_gamepad!.buttons.slice();
+        this.axis_callback_controller = axis_callback;
+        this.buttons_callback_controller = buttons_callback;
+        console.log("Controller connected");
+        setInterval(this.updateControllerStatus.bind(this), 10);
+      }
     });
 
-    window.addEventListener("gamepaddisconnected", () => {
-      this.gamepad = null;
+    window.addEventListener("gamepaddisconnected", (e: GamepadEvent) => {
+      if (e.gamepad!.id.startsWith("Sony")) {
+        this.controller_gamepad = null;
+      }
+    });
+  }
+
+  public connectJoystickGamepad(
+    joystick_callback: (input: { [key: string]: number | boolean }) => void,
+  ) {
+    window.addEventListener("gamepadconnected", (e: GamepadEvent) => {
+      if (e.gamepad!.id.startsWith("Logitech")) {
+        this.joystick_gamepad = e.gamepad;
+        this.joystick_input_state = this.getJoystickInputDir(this.joystick_gamepad!);
+        this.joystick_callback = joystick_callback;
+        console.log("Joystick connected");
+        setInterval(this.updateJoystickStatus.bind(this), 10);
+      }
     });
 
-    this.relay_messages = true;
+    window.addEventListener("gamepaddisconnected", (e: GamepadEvent) => {
+      if (e.gamepad!.id.startsWith("Logitech")) {
+        this.joystick_gamepad = null;
+      }
+    });
   }
 
-  public disableGamepad() {
-    this.relay_messages = false;
+  public enableControllerGamepad() {
+    this.relay_messages_controller = true;
   }
 
-  private updateStatus() {
-    if (this.gamepad && this.relay_messages) {
-      let new_gp = navigator.getGamepads()[this.gamepad.index];
+  public enableJoystickGamepad() {
+    this.relay_messages_joystick = true;
+  }
 
-      this.axis_callback(new_gp!.axes.map((v) => v));
+  public disableControllerGamepad() {
+    this.relay_messages_controller = false;
+  }
 
-      // new_gp!.buttons.forEach((button, index) => {
-      //   if (!button.pressed && this.gp_buttons![index].pressed) {
-      //     this.buttons_callback(index, 0);
-      //     // console.log(`Button ${index} released`);
-      //   }
-      // });
-      this.gp_buttons = new_gp!.buttons.slice();
+  public disableJoystickGamepad() {
+    this.relay_messages_joystick = false;
+  }
+
+  private updateControllerStatus() {
+    if (this.controller_gamepad && this.relay_messages_controller) {
+      let new_gp = navigator.getGamepads()[this.controller_gamepad.index];
+
+      this.axis_callback_controller(new_gp!.axes.map((v) => v));
+
+      new_gp!.buttons.forEach((button, index) => {
+        if (!button.pressed && this.controller_buttons_state![index].pressed) {
+          this.buttons_callback_controller(index, 0);
+          console.log(`Button ${index} released`);
+        }
+      });
+      this.controller_buttons_state = new_gp!.buttons.slice();
     }
     // sleep for 60th of a second
+  }
+
+  private updateJoystickStatus() {
+    if (this.joystick_gamepad && this.relay_messages_joystick) {
+      let new_gp = navigator.getGamepads()[this.joystick_gamepad.index];
+      this.joystick_callback(this.getJoystickInputDir(new_gp!));
+    }
+  }
+
+  private getJoystickInputDir(gmpd: Gamepad) {
+    return {
+      "a1": gmpd.axes[0],
+      "a2": gmpd.axes[1],
+      "a3": gmpd.axes[2],
+      "a4": gmpd.axes[3],
+      "b1": gmpd.buttons[0].pressed,
+      "b2": gmpd.buttons[1].pressed,
+      "b3": gmpd.buttons[2].pressed,
+      "b4": gmpd.buttons[3].pressed,
+      "b5": gmpd.buttons[4].pressed,
+      "b6": gmpd.buttons[5].pressed,
+      "b7": gmpd.buttons[6].pressed,
+      "b8": gmpd.buttons[7].pressed,
+      "b9": gmpd.buttons[8].pressed,
+      "b10": gmpd.buttons[9].pressed,
+      "b11": gmpd.buttons[10].pressed,
+      "b12": gmpd.buttons[11].pressed
+    };
   }
 }

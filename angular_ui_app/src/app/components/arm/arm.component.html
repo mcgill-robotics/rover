@@ -1,11 +1,10 @@
 <!-- <p>arm-page works! </p> -->
 <!-- <div style="display: flex; flex-wrap: wrap;"> -->
-<app-generic height="235px" width="640px">
-
+<app-generic height="340px" width="500px">
+    Joystick <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button>
     <div class="arm">
         <!-- to solve button problem, chnaged app.comp.ts and app.module.ts -->
         <div id="armInfo" style="height: 235px; width: 645px;">
-            <h4>Arm Info</h4>
             <div>
                 <p id="Wrist">Wrist: {{ array[0] }}</p>
                 <div id="buttons">

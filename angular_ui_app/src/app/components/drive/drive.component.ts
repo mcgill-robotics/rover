@@ -23,10 +23,8 @@ export class DriveComponent {
       name : '/angular_ui_app/drive',
       messageType : 'std_msgs/Float32MultiArray'
     });
-  }
 
-  enableGamepad() {
-    this.gamepadService.enableGamepad(
+    this.gamepadService.connectControllerGamepad(
       (axis_v) => {
         this.gamepad_drive_pub.publish({data: [-axis_v[1], axis_v[2]]});
       },
@@ -34,7 +32,11 @@ export class DriveComponent {
     );
   }
 
+  enableGamepad() {
+    this.gamepadService.enableControllerGamepad();
+  }
+
   disableGamepad() {
-    this.gamepadService.disableGamepad();
+    this.gamepadService.disableControllerGamepad();
   }
 }

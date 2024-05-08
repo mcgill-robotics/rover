@@ -1,12 +1,9 @@
 <div style="display: flex; justify-content:space-between; text-align: center;" >
-    <h3 style="writing-mode: sideways-lr;">{{y_axis}}</h3>
+    <h3 style="writing-mode: sideways-lr; border: solid 1px red; position: relative; right: -20px;;">{{y_axis}}</h3>
     <div style="display: flex; flex-direction: column;" >
-        <h2 >{{title}}:{{cuvetteId}}</h2>
+        <h2 >{{title}}</h2>
         <canvas #chart style="border: 1px solid #ccc;" width="300" height="200"></canvas>
         <h3>{{x_axis}}</h3>
     </div>
-    <p>{{inject}}</p>
 </div>
 
-
-<!-- graph do not need to subscribe, the parent can pass the value -->

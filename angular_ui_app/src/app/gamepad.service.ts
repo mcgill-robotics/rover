@@ -11,7 +11,7 @@ export class GamepadService {
   controller_buttons_state: GamepadButton[] | null = null;
   joystick_input_state: { [key: string]: number | boolean } | null = null;
 
-  axis_callback_controller: (axis_v: number[]) => void;
+  controller_callback: (axis_v: { [key: string]: number | boolean }) => void;
   joystick_callback: (input: { [key: string]: number | boolean }) => void;
 
   buttons_callback_controller: (axis_h: number, i: number) => void;
@@ -21,15 +21,12 @@ export class GamepadService {
   relay_messages_joystick: boolean = false;
 
   public connectControllerGamepad(
-    axis_callback: (axis_v: number[]) => void,
-    buttons_callback: (axis_h: number, i: number) => void
+    controller_callback: (input_dir: { [key: string]: number | boolean }) => void,
   ) {
     window.addEventListener("gamepadconnected", (e: GamepadEvent) => {
       if (e.gamepad!.id.startsWith("Sony")) {
         this.controller_gamepad = e.gamepad;
-        this.controller_buttons_state = this.controller_gamepad!.buttons.slice();
-        this.axis_callback_controller = axis_callback;
-        this.buttons_callback_controller = buttons_callback;
+        this.controller_callback = controller_callback;
         console.log("Controller connected");
         setInterval(this.updateControllerStatus.bind(this), 10);
       }
@@ -81,16 +78,16 @@ export class GamepadService {
   private updateControllerStatus() {
     if (this.controller_gamepad && this.relay_messages_controller) {
       let new_gp = navigator.getGamepads()[this.controller_gamepad.index];
+      // this.controller_callback(new_gp!.axes.map((v) => v));
 
-      this.axis_callback_controller(new_gp!.axes.map((v) => v));
+      // new_gp!.buttons.forEach((button, index) => {
+      //   if (!button.pressed && this.controller_buttons_state![index].pressed) {
+      //     this.buttons_callback_controller(index, 0);
+      //     console.log(`Button ${index} released`);
+      //   }
+      // });
 
-      new_gp!.buttons.forEach((button, index) => {
-        if (!button.pressed && this.controller_buttons_state![index].pressed) {
-          this.buttons_callback_controller(index, 0);
-          console.log(`Button ${index} released`);
-        }
-      });
-      this.controller_buttons_state = new_gp!.buttons.slice();
+      this.controller_callback(this.getControllerInputDir(new_gp!));
     }
     // sleep for 60th of a second
   }
@@ -121,5 +118,16 @@ export class GamepadService {
       "b11": gmpd.buttons[10].pressed,
       "b12": gmpd.buttons[11].pressed
     };
+  }
+
+  private getControllerInputDir(gmpd: Gamepad) {
+    return {
+      "a2": -gmpd.axes[1],
+      "a4": gmpd.axes[2],
+      "left": gmpd.buttons[14].pressed,
+      "right": gmpd.buttons[15].pressed,
+      "up": gmpd.buttons[12].pressed,
+      "down": gmpd.buttons[13].pressed
+    }
   }
 }

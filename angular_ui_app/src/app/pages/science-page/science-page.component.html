@@ -1,7 +1,4 @@
 <app-generic>
-    <!-- <app-line-graph topicName="/test_topic" title="aTitle" 
-    y_axis="yyyy"
-    x_axis="xxx"/> -->
     <h1>Data </h1>
     <div style="display:flex; justify-content: flex-start;">
         <div>
@@ -21,26 +18,53 @@
 
         </div>
         <div>
-            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="The y axis" x_axis="The x axis" type="line"
-                cuvetteId="2" [data]="inject" /> -->
+            <app-graph  title="G2" y_axis="The y axis" x_axis="The x axis" type="histogram"
+                 [data]="d[1]" />
 
-            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
-                cuvetteId="2" [inject]="inject"/> -->
+            <app-graph  title="PH2" y_axis="yyyy" x_axis="xxx" type="line"
+                 [data]="d[9]"/>
+
+            <app-graph 
+            title="Moisture2" 
+            y_axis="yyyy"
+            x_axis="xxx" 
+            type="line"
+            [data]="d[5]"
+            />
+
         </div>
         <div>
-            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="The y axis" x_axis="The x axis" type="line"
-                cuvetteId="3" [data]="inject" /> -->
+            <app-graph  title="G3" y_axis="The y axis" x_axis="The x axis" type="histogram"
+                 [data]="d[2]" />
 
-            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
-                cuvetteId="3" [inject]="inject"/> -->
+            <app-graph  title="PH3" y_axis="yyyy" x_axis="xxx" type="line"
+                 [data]="d[10]"/>
+
+            <app-graph 
+            title="M3" 
+            y_axis="yyyy"
+            x_axis="xxx" 
+            type="line"
+            [data]="d[6]"
+            />
+
         </div>
         <div>
-            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="The y axis" x_axis="The x axis" type="line"
-                cuvetteId="4" [data]="inject" /> -->
+            <app-graph  title="G4" y_axis="The y axis" x_axis="The x axis" type="histogram"
+                 [data]="d[3]" />
 
-            <!-- <app-graph topicName="/test_topic" title="aTitle" y_axis="yyyy" x_axis="xxx" type="histogram"
-                cuvetteId="4" [inject]="inject"/> -->
+            <app-graph  title="PH4" y_axis="yyyy" x_axis="xxx" type="line"
+                 [data]="d[11]"/>
+
+            <app-graph 
+            title="M4" 
+            y_axis="yyyy"
+            x_axis="xxx" 
+            type="line"
+            [data]="d[7]"
+            />
         </div>
+       
     </div>
 
     <div style="display: flex; justify-content: space-evenly;">
@@ -81,8 +105,8 @@
             </div>
         </div>
 
-
-        <div>
+<!-- Data persistence to be implemented -->
+        <div> 
             <h1>Stored data: {{data}}</h1>
             <button (click)="collect()">
                 Get data from service!
@@ -90,7 +114,7 @@
             <button (click)="add()">
                 Add to data store
             </button>
-            <app-download />
+            <app-download  type="science"/>
         </div>
 
     </div>

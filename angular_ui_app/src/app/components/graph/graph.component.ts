@@ -1,7 +1,5 @@
 // line-graph.component.ts
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
-import * as ROSLIB from 'roslib';
-import { RosService } from 'src/app/ros.service';
+import { Component, OnInit, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { Input } from '@angular/core';
 
 @Component({
@@ -9,35 +7,24 @@ import { Input } from '@angular/core';
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.scss']
 })
+/* 
+To be done: self erasing to maintain enough space for visual
+ or make it scrollable, adjusting axis
 
-export class GraphComponent implements OnInit, OnDestroy, OnChanges {
-  //params for the graph
-  @Input() topicName:string;
+Optimize the code
+*/ 
+
+export class GraphComponent implements OnInit,  OnChanges {
+  @Input() title:string;  
   @Input() y_axis:string;
   @Input() x_axis:string;
-  @Input() title:string;  
   @Input() type:string; 
-  @Input() cuvetteId:string; 
-  @Input() inject:number[];
+  @Input() data:number[];
 
   @ViewChild('chart', { static: true }) canvasRef: ElementRef;
   private ctx: CanvasRenderingContext2D | null;
-  private topic: ROSLIB.Topic; //renaming fix
-  private ros: ROSLIB.Ros;
-  private data: number[] = [3, 2, 2, 8, 5, 6, 5, 2]; //data will be set to empty 
-
-
-  constructor(private rosService: RosService) {
-    this.ros = this.rosService.getRos();
-  }
 
   ngOnInit(): void {
-    this.topic = new ROSLIB.Topic({
-      ros : this.ros,
-      name : this.topicName,
-      messageType : 'std_msgs/Float32MultiArray'
-    });
-
     this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
     // this.drawGraph();  
     switch (this.type) {
@@ -51,11 +38,10 @@ export class GraphComponent implements OnInit, OnDestroy, OnChanges {
       default:
         console.log("Wrong graph type");
     }
-    this.listen();
   }
 
-  ngOnChanges(changes: SimpleChanges): void { //only tracks the object change rip
-    console.log(changes);
+  // when data changes
+  ngOnChanges(changes: SimpleChanges): void { //only tracks the object change rip, never ref
     switch (this.type) {
       case "histogram":
         this.drawHistogram();
@@ -68,30 +54,6 @@ export class GraphComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  ngOnDestroy(): void {
-    // Clean up resources (if any)
-    // could store data to central
-  }
-
-  // methods:
-  private listen() {
-    this.topic.subscribe((message: any) => {
-      this.data.push(message.data[0]);
-
-      // this.drawLineChart();
-      switch (this.type) {
-        case "histrogram":
-          this.drawHistogram();
-          break;    
-        case "line":
-          this.drawLineChart();
-          break;
-        default:
-          console.log("Wrong graph type");
-      }
-
-    })
-  }
 
   // provide a selector to choose the type of graph --later
   private drawHistogram(): void {

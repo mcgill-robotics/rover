@@ -18,23 +18,10 @@ export class SciencePageComponent implements OnInit{
 
   // mock prop data
   dataTopic: ROSLIB.Topic;
-  // inject:number[] = [0];
-  // c1:number[] = []; //[g, m, h]
-  // c2:number[] = [];
-  // c3:number[] = [];
-  // c4:number[] = [];
-  // h1:number[] = []; //[g, m, h]
-  // h2:number[] = [];
-  // h3:number[] = [];
-  // h4:number[] = [];
-  // ph1:number[] = []; //[g, m, h]
-  // ph2:number[] = [];
-  // ph3:number[] = [];
-  // ph4:number[] = [];
 
   orientationCounter: number = 0;
 
-  // g, g, g, g, m, m, m, 
+  // g1, g2, g3, g4, m1, m, m, etc
   d: number[][] = [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]];
   
   
@@ -69,10 +56,13 @@ export class SciencePageComponent implements OnInit{
     this.dataTopic.subscribe((message:any) => {
       console.log(message.data);  
       for (let k = 0; k < message.data.length; k++) {
-        if (k < 4 && (this.orientationCounter % 2 == 1 || k != 2*this.orientationCounter)) { //must be diagonal to update geiger
+        if (k < 4 && (k*2 != this.orientationCounter)) { //must be diagonal to update geiger
           continue //skips a geiger
         }
         this.d[k] = this.d[k].concat(message.data[k]);
+        // console.log(this.d);
+        this.scienceService.storeData(message.data[k], k);
+
       }
         // this.inject = this.inject.concat(message.data[0] as number); //must never pass by ref 
         
@@ -83,7 +73,6 @@ export class SciencePageComponent implements OnInit{
 
   // carousel
   turn() {
-    
     this.orientationCounter != 7 ? this.orientationCounter++: this.orientationCounter = 0;
 
     this.carouselTopic.publish(new ROSLIB.Message({
@@ -143,6 +132,6 @@ export class SciencePageComponent implements OnInit{
 
   add() {
     this.scienceService.addData("halo");
-    this.scienceService.storeData(123, 2, 0);
+    this.scienceService.storeData(123,   0);
   }
 }

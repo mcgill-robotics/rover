@@ -1,37 +1,75 @@
 <!-- <p>arm-page works! </p> -->
 <!-- <div style="display: flex; flex-wrap: wrap;"> -->
 <app-generic height="340px" width="500px">
-    Joystick <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button>
+    <div style="display: flex; justify-content: space-between;">
+        <div>
+            Joystick <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button>
+        </div>
+        <div>Mode: {{last_arm_control_mode}}</div>
+        <div>Sensitivity: {{formatNumber(maxVelPercentage / 0.125)}}</div>
+    </div>
+    <hr />
     <div class="arm">
         <!-- to solve button problem, chnaged app.comp.ts and app.module.ts -->
-        <div id="armInfo" style="height: 235px; width: 645px;">
-            <div>
-                <p id="Wrist">Wrist: {{ array[0] }}</p>
-                <div id="buttons">
-                    <button id="wrist1" (click)="increment(0)">+</button>
-                    <button id="wrist2" (click)="decrement(0)">-</button>
-                </div>
-            </div>
-
-            <div>
-                <p id="Elbow">Elbow: {{ array[1] }}</p>
-                <div id="buttons">
-                    <button (click)="increment(1)">+</button>
-                    <button (click)="decrement(1)">-</button>
-                </div>
-            </div>
-
-            <div>
-                <p id="Shoulder">Shoulder: {{ array[2] }}</p>
+        <table>
+            <tr>
+                <td>Elbow</td>
+                <td>{{formatNumber(arm_brushless_FB[0])}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button id="wrist1" (click)="increment(0)">+</button>
+                        <button id="wrist2" (click)="decrement(0)">-</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Shoulder</td>
+                <td>{{formatNumber(arm_brushless_FB[1])}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="increment(2)">+</button>
+                        <button (click)="decrement(2)">-</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Tumor</td>
+                <td>{{formatNumber(arm_brushless_FB[2])}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="increment(2)">+</button>
+                        <button (click)="decrement(2)">-</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Wrist Pitch</td>
+                <td>{{formatNumber(arm_brushed_FB[2])}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="increment(2)">+</button>
+                        <button (click)="decrement(2)">-</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Wrist Roll</td>
+                <td>{{formatNumber(arm_brushed_FB[1])}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="increment(2)">+</button>
+                        <button (click)="decrement(2)">-</button>
+                    </div>
+                </td>
+            </tr>
+            <td>End Effector</td>
+            <td>{{formatNumber(arm_brushed_FB[0])}}</td>
+            <td style="width: 15%;">
                 <div id="buttons">
                     <button (click)="increment(2)">+</button>
                     <button (click)="decrement(2)">-</button>
                 </div>
-            </div>
-        </div>
+            </td>
+        </table>
     </div>
-
-    <body>
-    </body>
-
 </app-generic>

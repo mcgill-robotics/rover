@@ -24,3 +24,16 @@ p {
     display: flex;
     height: 10px;
 }
+
+table {
+    width: 96%;
+    margin: 2%;
+    padding: 3px;
+    border: 3px solid gray;
+}
+
+td {
+    padding: 5px;
+    border: 1px solid gray;
+    width: 33.3%;
+}

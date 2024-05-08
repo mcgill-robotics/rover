@@ -15,9 +15,15 @@ export class ArmComponent {
   array  : number[]= [0,0,0];
   prev_joystick_input_state: { [key: string]: number | boolean } | null = null;
   last_arm_control_mode: number = 1;
+  maxVelPercentage: number = 0;
 
   ros: ROSLIB.Ros;
   gamepad_arm_control_pub: ROSLIB.Topic;
+  arm_brushed_sub: ROSLIB.Topic;
+  arm_brushless_sub: ROSLIB.Topic;
+
+  arm_brushed_FB = [0,0,0];
+  arm_brushless_FB = [0,0,0];
 
   constructor(private gamepadService: GamepadService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -40,17 +46,39 @@ export class ArmComponent {
       messageType : 'arm_control/ArmControllerInput'
     });
 
+    this.arm_brushed_sub = new ROSLIB.Topic({
+      ros: this.ros,
+      name: '/armBrushedFB',
+      messageType: 'std_msgs/Float32MultiArray'
+    });
+
+    this.arm_brushless_sub = new ROSLIB.Topic({
+      ros: this.ros,
+      name: '/armBrushlessFB',
+      messageType: 'std_msgs/Float32MultiArray'
+    });
+
+    this.arm_brushed_sub.subscribe((message: any) => {
+      this.arm_brushed_FB = message.data;
+    });
+
+    this.arm_brushless_sub.subscribe((message: any) => {
+      this.arm_brushless_FB = message.data;
+    });
+
     this.gamepadService.connectJoystickGamepad(
       (input_dir: { [key: string]: number | boolean }) => {
         if (this.prev_joystick_input_state == null) {
           this.prev_joystick_input_state = input_dir;
         }
 
+        this.maxVelPercentage = (1 - ((input_dir['a4'] as number) + 1) / 2) / 8;
+
         let msg = {
           X_dir: (input_dir['a2'] as number) ** 2,
           Y_dir: (input_dir['a1'] as number) ** 2,
           Z_dir: (input_dir['a3'] as number) ** 2,
-          MaxVelPercentage: (1 - ((input_dir['a4'] as number) + 1) / 2) / 4,
+          MaxVelPercentage: this.maxVelPercentage,
           Mode: this.last_arm_control_mode,
         }
 
@@ -97,6 +125,10 @@ export class ArmComponent {
 
   disableGamepad() {
     this.gamepadService.disableJoystickGamepad();
+  }
+
+  formatNumber(value: number) {
+    return value.toFixed(3);
   }
 }
 

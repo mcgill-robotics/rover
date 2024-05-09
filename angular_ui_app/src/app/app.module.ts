@@ -19,6 +19,8 @@ import { DrivePageComponent } from './pages/drive-page/drive-page.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { GraphComponent } from './components/graph/graph.component';
 import { DownloadComponent } from './components/download/download.component';
+import { ScienceSensorsComponent } from './components/science-sensors/science-sensors.component';
+import { ScienceAugerComponent } from './components/science-auger/science-auger.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +39,9 @@ import { DownloadComponent } from './components/download/download.component';
     NavbarComponent,
     GraphComponent,
     DownloadComponent,
+    ScienceSensorsComponent,
+    ScienceAugerComponent,
+    SciencePageComponent
   ],
   imports: [
     FormsModule,

@@ -25,6 +25,11 @@ export class DriveComponent {
     });
   }
 
+  ngOnDestroy() {
+    this.disableGamepad();
+    this.gamepad_drive_pub.publish({data: [0, 0]});
+  }
+
   enableGamepad() {
     this.gamepadService.enableGamepad(
       (axis_v) => {

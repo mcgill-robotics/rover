@@ -1,112 +1,36 @@
-<app-generic>
-    <h1>Data </h1>
-    <div style="display:flex; justify-content: flex-start;">
-        <div>
-            <app-graph topicName="/test_topic" title="Geiger1" y_axis="The y axis" x_axis="The x axis" type="histogram"
-                 [data]="d[0]" />
-
-            <app-graph topicName="/test_topic" title="[ph1]" y_axis="yyyy" x_axis="xxx" type="line"
-                 [data]="d[8]"/>
-
-            <app-graph 
-            title="Hmoisture1" 
-            y_axis="yyyy"
-            x_axis="xxx" 
-            type="line"
-            [data]="d[4]"
-            />
-
-        </div>
-        <div>
-            <app-graph  title="G2" y_axis="The y axis" x_axis="The x axis" type="histogram"
-                 [data]="d[1]" />
-
-            <app-graph  title="PH2" y_axis="yyyy" x_axis="xxx" type="line"
-                 [data]="d[9]"/>
-
-            <app-graph 
-            title="Moisture2" 
-            y_axis="yyyy"
-            x_axis="xxx" 
-            type="line"
-            [data]="d[5]"
-            />
-
-        </div>
-        <div>
-            <app-graph  title="G3" y_axis="The y axis" x_axis="The x axis" type="histogram"
-                 [data]="d[2]" />
-
-            <app-graph  title="PH3" y_axis="yyyy" x_axis="xxx" type="line"
-                 [data]="d[10]"/>
-
-            <app-graph 
-            title="M3" 
-            y_axis="yyyy"
-            x_axis="xxx" 
-            type="line"
-            [data]="d[6]"
-            />
-
-        </div>
-        <div>
-            <app-graph  title="G4" y_axis="The y axis" x_axis="The x axis" type="histogram"
-                 [data]="d[3]" />
-
-            <app-graph  title="PH4" y_axis="yyyy" x_axis="xxx" type="line"
-                 [data]="d[11]"/>
-
-            <app-graph 
-            title="M4" 
-            y_axis="yyyy"
-            x_axis="xxx" 
-            type="line"
-            [data]="d[7]"
-            />
-        </div>
-       
+<div style="width: 100%; height: 100%; margin: auto;">
+    <!-- <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+        <app-camera camera_size="large"/>
+        <app-camera camera_size="small"/>
+        <app-gps/>
     </div>
-
-    <div style="display: flex; justify-content: space-evenly;">
-        <div style="text-align: center; border: solid 1px salmon;">
-            <h1>Control</h1>
-            <div style="display: flex; justify-content: space-between;">
-                <div style="border: solid 1px salmon;"> 
-                    <h2>Carousel</h2>
-                    <h3>
-                        Rotation:{{orientationCounter}} 
-                    </h3>
-                    <button (click)="turn()">Turn</button>
+    <app-science-auger/> -->
+    <div style="display: flex;">
+        <div>
+            <app-camera camera_size="large"/>
+            <div style="display: flex; justify-content: space-around; margin-top: 13px;">
+                <div>
+                    <input class="form-check-input" type="radio" name="DriveAugerRB" id="DriveRB" (click)="DriveAugerView='drive'" checked>
+                    <label class="form-check-label" for="DriveRB">
+                      Drive
+                    </label>
                 </div>
-                <div style="text-align: center; border: solid 1px salmon;">
-                    <h2>Auger</h2>
-                    <div style="display: flex; align-items: center; flex-direction: column;">
-                        <div>
-                            <!-- down + turn+, turn+, up+turn,  turn-, + caroussel -->
-                            <button (click)="sendAugerInstruction([-1, 1])">Drill down</button>
-                            <button (click)="sendAugerInstruction([0, 1])">Drill</button>
-                            <button (click)="sendAugerInstruction([1, 1])">Drill Up</button>
-                            <button (click)="sendAugerInstruction([0, -1])">Reverse drill</button>
-                            <button (click)="sendAugerInstruction([0, 0])">Stop drill</button>
-                        </div>
-                        <!-- <div>
-                            <button>Up</button>
-                        </div>
-                        <div>
-                            <button>Left</button>
-                            <button>Start/Stop</button>
-                            <button>Right</button>
-                        </div>
-                        <div>
-                            <button>Down</button>
-                        </div> -->
-                    </div>
+                <div>
+                    <input class="form-check-input" type="radio" name="DriveAugerRB" id="AugerRB" (click)="DriveAugerView='auger'">
+                    <label class="form-check-label" for="AugerRB">
+                      Auger Control
+                    </label>
                 </div>
             </div>
+            <app-drive-component *ngIf="DriveAugerView === 'drive'"/>
+            <app-science-auger *ngIf="DriveAugerView === 'auger'"/>
         </div>
-
-<!-- Data persistence csv to be fixed -->
-            <app-download  type="science"/>
-
+        <div>
+            <div style="display: flex;">
+                <app-camera camera_size="small"/>
+                <app-gps/>
+            </div>
+            <app-science-sensors/>
+        </div>
     </div>
-</app-generic>
+</div>

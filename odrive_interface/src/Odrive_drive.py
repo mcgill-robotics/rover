@@ -10,8 +10,7 @@ from odrive_interface.msg import MotorError, MotorState
 from ODrive_utils import *
 from odrive.enums import AxisState, ProcedureResult 
 
-# TODO: Once drive is working well, expand this node to include the three arm motors
-class Node_ODriveInterface():
+class Node_Odrive():
     def __init__(self):
         self.drive_lb = None
         self.drive_rb = None
@@ -149,6 +148,8 @@ class Node_ODriveInterface():
             motor.axis0.requested_state = AxisState.IDLE
 
 
+
+
 if __name__ == "__main__":
-    driver = Node_ODriveInterface()
+    driver = Node_Odrive()
     rospy.spin()

@@ -9,10 +9,10 @@ decimal. So before putting the numbers in here, you should first convert them to
 """
 
 drive_serial_numbers = {"DRIVE_LB": "385C347A3539", "DRIVE_LF": "386134503539", "DRIVE_RB": "387134683539", "DRIVE_RF": "384F34683539"}
-arm_serial_numbers = {"ARM_WAIST": "4", "ARM_TUMOR": "5", "ARM_ELBOW": "6"}
+arm_serial_numbers = {"ARM_WAIST": "4", "ARM_SHOULDER": "386434413539", "ARM_ELBOW": "383834583539"}
 
 drive_ids = {'385C347A3539': 'DRIVE_LB', '386134503539': 'DRIVE_LF', '387134683539': 'DRIVE_RB', '384F34683539': 'DRIVE_RF'}
-arm_ids = {'4': 'ARM_WAIST', '5': 'ARM_TUMOR', '6': 'ARM_ELBOW'}
+arm_ids = {'4': 'ARM_WAIST', '386434413539': 'ARM_SHOULDER', '383834583539': 'ARM_ELBOW'}
 
 # Procedure codes are simple indices to this array
 procedure_codes = ["SUCCESS", "BUSY", "CANCELLED", "DISARMED", "NO_RESPONSE", "POLE_PAIR_CPR_MISMATCH",

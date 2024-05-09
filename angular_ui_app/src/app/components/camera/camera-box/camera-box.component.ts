@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ViewChild, ElementRef } from '@angular/core';
+import { AppConstants } from 'src/app/constants';
 
 @Component({
   selector: 'app-camera-box',
@@ -10,7 +11,7 @@ export class CameraBoxComponent {
   isHovered: boolean = true;
 
   pc: RTCPeerConnection | null = null;
-  host_ip: string = "127.0.0.1";
+  host_ip: string = AppConstants.HOST_IP;
   device_id: number = 0;
   error: unknown;
 

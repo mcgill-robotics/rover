@@ -21,6 +21,7 @@ import { GraphComponent } from './components/graph/graph.component';
 import { DownloadComponent } from './components/download/download.component';
 import { ScienceSensorsComponent } from './components/science-sensors/science-sensors.component';
 import { ScienceAugerComponent } from './components/science-auger/science-auger.component';
+import { AntennaFeedComponent } from './components/antenna-feed/antenna-feed.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +42,8 @@ import { ScienceAugerComponent } from './components/science-auger/science-auger.
     DownloadComponent,
     ScienceSensorsComponent,
     ScienceAugerComponent,
-    SciencePageComponent
+    SciencePageComponent,
+    AntennaFeedComponent
   ],
   imports: [
     FormsModule,

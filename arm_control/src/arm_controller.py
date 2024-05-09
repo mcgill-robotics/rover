@@ -17,7 +17,7 @@ class Node_ArmControl():
         self.nbJoints    = 5
         self.nbJointsArm = 5
         self.nbCart      = 3
-        
+
         # Actual Arm State
         self.q    = [0] * self.nbJoints
         self.dq   = [0] * self.nbJoints
@@ -30,7 +30,7 @@ class Node_ArmControl():
         self.dq_d = [0] * self.nbJoints
         self.x_d  = [0] * self.nbCart
         self.dx_d = [0] * self.nbCart
-        
+
         # Control mode
         self.mode = 0     # default cartesian mode
         # Options: [0, nbJoints), In joint control mode, control is
@@ -39,13 +39,13 @@ class Node_ArmControl():
         self.claw_state = 0
 
         self.jointVelLimits = [np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]   # rad/s
-        self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s 
+        self.cartVelLimits = [0.5, 0.5, 0.5]   # m/s
 
         # Initialize ROS
         rospy.init_node("arm_control", anonymous=False)
         self.controllerSubscriber = rospy.Subscriber("arm_controller_input", ArmControllerInput, self.controlLoop)
 
-        # Arduino message 
+        # Arduino message
         self.armBrushedSubscriber = rospy.Subscriber("armBrushedFB", Float32MultiArray, self.updateArmBrushedState)
         self.armBrushlessSubscriber = rospy.Subscriber("armBrushlessFB", Float32MultiArray, self.updateArmBrushlessState)
         self.armBrushedPublisher = rospy.Publisher("armBrushedCmd", Float32MultiArray, queue_size=10)
@@ -94,7 +94,7 @@ class Node_ArmControl():
             self.dq_d[2] = ctrlInput.X_dir *1* self.jointVelLimits[2]
 
         elif(self.mode == 4):
-            
+
             if abs(ctrlInput.X_dir) > 0.35: X_dir_filt = ctrlInput.X_dir / 0.8
             else: X_dir_filt = 0
 
@@ -105,7 +105,7 @@ class Node_ArmControl():
                 X_dir_filt = min(1, X_dir_filt)
             else:
                 X_dir_filt = max(-1, X_dir_filt)
-            
+
             if Z_dir_filt >= 0:
                 Z_dir_filt = min(1, Z_dir_filt)
             else:
@@ -113,7 +113,7 @@ class Node_ArmControl():
 
             self.dq_d[3] = X_dir_filt * self.jointVelLimits[3]
             self.dq_d[4] = Z_dir_filt * self.jointVelLimits[4]
-        
+
         # Control of EOAT
         elif (self.mode == 5):
             self.claw_state = ctrlInput.X_dir * 99.9999999
@@ -135,9 +135,9 @@ class Node_ArmControl():
 
                 else:
                     self.dq_d[i] = 0
-        
+
             self.q_d[i] += self.dq_d[i] * 0.01* ctrlInput.MaxVelPercentage
-    
+
 
     def updateArmBrushedState(self, state_brushed: Float32MultiArray):
         state12_r = tuple(data_i * (np.pi/180) for data_i in state_brushed.data)

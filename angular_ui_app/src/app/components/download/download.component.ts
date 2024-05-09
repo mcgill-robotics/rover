@@ -18,7 +18,7 @@ export class DownloadComponent {
     switch (this.type) {
       case "science":
         let data = this.scienceService.getStoredData();
-        let headers = ['a', 'b', 'c'];
+        let headers = ["G1-4", "M5-8", "PH9-12"];
         fileContent = this.convertToCSV(headers, data);
         break;
       default:

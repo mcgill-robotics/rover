@@ -89,7 +89,7 @@
                             <button (click)="sendAugerInstruction([0, -1])">Reverse drill</button>
                             <button (click)="sendAugerInstruction([0, 0])">Stop drill</button>
                         </div>
-                        <div>
+                        <!-- <div>
                             <button>Up</button>
                         </div>
                         <div>
@@ -99,23 +99,14 @@
                         </div>
                         <div>
                             <button>Down</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
         </div>
 
-<!-- Data persistence to be implemented -->
-        <div> 
-            <h1>Stored data: {{data}}</h1>
-            <button (click)="collect()">
-                Get data from service!
-            </button>
-            <button (click)="add()">
-                Add to data store
-            </button>
+<!-- Data persistence csv to be fixed -->
             <app-download  type="science"/>
-        </div>
 
     </div>
 </app-generic>

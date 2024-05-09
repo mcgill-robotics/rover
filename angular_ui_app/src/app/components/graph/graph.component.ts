@@ -116,13 +116,15 @@ export class GraphComponent implements OnInit,  OnChanges {
   
   
 
-
+// top peak and line value to be fixed
   private drawLineChart(): void {
     this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
 
     const width = this.ctx!.canvas.width;
     const height = this.ctx!.canvas.height;
-
+    let maxValue = Math.max(...this.data);
+    if (maxValue < 5) {maxValue = 20}
+    
     // Clear the canvas
     this.ctx!.clearRect(0, 0, width, height);
 
@@ -135,8 +137,10 @@ export class GraphComponent implements OnInit,  OnChanges {
 
     // Draw horizontal grid lines and axis values
     const gridSpacing = 20;
+    let verticalSpace = Math.floor(height/maxValue);
+    // if (verticalSpace < 2) (verticalSpace = 20);
 
-    for (let i = gridSpacing; i < height; i += gridSpacing) {
+    for (let i = gridSpacing; i < height; i += verticalSpace) {
       this.ctx!.beginPath();
       this.ctx!.moveTo(0, i);
       this.ctx!.lineTo(width, i);
@@ -144,7 +148,7 @@ export class GraphComponent implements OnInit,  OnChanges {
   
       // Add axis values vertical
       this.ctx!.fillStyle = '#FFF';
-      this.ctx!.fillText((Math.floor((height - i)/gridSpacing)).toString(), 5, i - 5);
+      this.ctx!.fillText((Math.floor((height - i)/verticalSpace)).toString(), 5, i - 5);
     }
   
     // Draw vertical grid lines and axis values
@@ -164,12 +168,12 @@ export class GraphComponent implements OnInit,  OnChanges {
 
     this.ctx!.strokeStyle = '#2bc';
     // Move to the first point
-    this.ctx!.moveTo(0, height - 20*this.data[0]); //need a factor to multiply
+    this.ctx!.moveTo(0, height - verticalSpace*this.data[0]); //need a factor to multiply
 
     // Draw lines connecting each point
     for (let i = 1; i < this.data.length; i++) {
       const x = i * pointGap;
-      const y = height - 20*this.data[i];
+      const y = height - verticalSpace*this.data[i];
       this.ctx!.lineTo(x, y);
     }
 

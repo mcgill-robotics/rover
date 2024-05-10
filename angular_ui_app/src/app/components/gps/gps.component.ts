@@ -21,11 +21,14 @@ export class GpsComponent implements AfterViewInit {
 
   private initMap(): void {
     this.map = L.map('map', {
-      crs: L.CRS.Simple,
-      minZoom: -5,
-      maxZoom: 12,
       attributionControl: false,
     });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      minZoom: 12,
+    }).addTo(this.map);
+
   }
 
   ngOnInit() {

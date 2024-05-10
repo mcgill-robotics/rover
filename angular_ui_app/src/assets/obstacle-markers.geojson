@@ -15,7 +15,7 @@
         "type": "Feature",
         "geometry": {
           "type": "Point",
-          "coordinates": [75.50519779663086, -73.5755615234375]
+          "coordinates": [51.5, -0.09]
         },
         "properties": {
           "name": "obstacle2"
@@ -40,6 +40,16 @@
         "properties": {
           "name": "obstacle4"
         }
-      }   
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [52.50550297241211, 25.57551247558594]
+        },
+        "properties": {
+          "name": "obstacle5"
+        }
+      }
     ]
   }

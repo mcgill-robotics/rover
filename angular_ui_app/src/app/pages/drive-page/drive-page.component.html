@@ -1,9 +1,15 @@
 <app-header/>
 <div style="width: 100%; height: 100%; margin: auto;">
     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-        <app-camera camera_size="large"/>
-        <app-camera camera_size="small"/>
+        <div>
+            <app-camera camera_size="large"/>
+            <app-drive-component/>
+        </div>
+
+        <div>
+            <app-camera camera_size="small"/>
+            <app-arm-component/>
+        </div>
         <app-gps/>
     </div>
-    <app-drive-component/>
 </div>

@@ -39,7 +39,7 @@ export class DriveComponent {
 
     this.gamepadService.connectControllerGamepad(
       (input_dir: { [key: string]: number | boolean }) => {
-        this.gamepad_drive_pub.publish({data: [input_dir['a2'], input_dir['a4']]});
+        this.gamepad_drive_pub.publish({data: [-input_dir['a2'], -input_dir['a4']]});
 
         if (input_dir['up']) {
           this.pantilt_pitch = this.clamp(this.pantilt_pitch + this.angle_delta);

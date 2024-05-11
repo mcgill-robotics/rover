@@ -1,0 +1,41 @@
+<app-generic height="200px" width="640px">
+    <div style="display: flex; justify-content: space-evenly;">
+        <div style="text-align: center; border: solid 1px salmon;">
+            <h1>Control</h1>
+            <div style="display: flex; justify-content: space-between;">
+                <div style="border: solid 1px salmon;">
+                    <h2>Carousel</h2>
+                    <h3>
+                        Rotation:{{orientationCounter}}
+                    </h3>
+                    <button (click)="turn()">Turn</button>
+                </div>
+                <div style="text-align: center; border: solid 1px salmon;">
+                    <h2>Auger</h2>
+                    <div style="display: flex; align-items: center; flex-direction: column;">
+                        <div>
+                            <!-- down + turn+, turn+, up+turn,  turn-, + caroussel -->
+                            <button (click)="sendAugerInstruction([-1, 1])">Drill down</button>
+                            <button (click)="sendAugerInstruction([1, 0])">Move Up</button>
+                            <button (click)="sendAugerInstruction([0, 1])">Drill</button>
+                            <!-- <button (click)="sendAugerInstruction([1, 1])">Drill Up</button> -->
+                            <button (click)="sendAugerInstruction([0, -1])">Reverse drill</button>
+                            <button (click)="sendAugerInstruction([0, 0])">Stop drill</button>
+                        </div>
+                        <!-- <div>
+                            <button>Up</button>
+                        </div>
+                        <div>
+                            <button>Left</button>
+                            <button>Start/Stop</button>
+                            <button>Right</button>
+                        </div>
+                        <div>
+                            <button>Down</button>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</app-generic>

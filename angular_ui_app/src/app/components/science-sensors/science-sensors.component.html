@@ -1,0 +1,41 @@
+<app-generic height="340px" width="878px">
+    <div style="overflow-y: scroll; max-height: 680px; zoom: 50%;">
+        <h2>{{orientationCounter}}</h2>
+        <div style="display:flex; justify-content: flex-start;">
+            <div>
+                <app-graph title="G1" y_axis="The y axis" x_axis="Time"
+                    type="histogram" [data]="d[0]" />
+
+                <app-graph topicName="/test_topic" title="[ph1]" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[8]" />
+
+                <app-graph title="M1" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[4]" />
+
+            </div>
+            <div>
+                <app-graph title="G2" y_axis="The y axis" x_axis="The x axis" type="histogram" [data]="d[1]" />
+
+                <app-graph title="PH2" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[9]" />
+
+                <app-graph title="M2" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[5]" />
+
+            </div>
+            <div>
+                <app-graph title="G3" y_axis="The y axis" x_axis="The x axis" type="histogram" [data]="d[2]" />
+
+                <app-graph title="PH3" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[10]" />
+
+                <app-graph title="M3" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[6]" />
+
+            </div>
+            <div>
+                <app-graph title="G4" y_axis="The y axis" x_axis="The x axis" type="histogram" [data]="d[3]" />
+
+                <app-graph title="PH4" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[11]" />
+
+                <app-graph title="M4" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[7]" />
+            </div>
+
+        </div>
+        <app-download type="science" />
+    </div>
+</app-generic>

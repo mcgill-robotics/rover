@@ -4,13 +4,17 @@ from std_msgs.msg import Float32MultiArray
 
 def talker():
     pub = rospy.Publisher("test_topic", Float32MultiArray, queue_size=10)
+    pub2 = rospy.Publisher("test_topic2", Float32MultiArray, queue_size=10)
     rospy.init_node("antennaData", anonymous=True)
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(0.3)
     while not rospy.is_shutdown():
         hello_str = "Hellos woolrd %s" %rospy.get_time()
         rospy.loginfo(hello_str)
         # pub.publish(hello_str)
-        pub.publish(Float32MultiArray(data=[1,1]))
+        pub.publish(Float32MultiArray(data=[ 150, 6, 17, 8, 9, 10, 110, 123, 93, 30, 123, 2 ]))
+        rospy.sleep(1)
+        pub.publish(Float32MultiArray(data=[ 2, 2, 7, 2, 9, 2, 120, 130, 42, 14, 132, 1 ]))
+        pub2.publish(Float32MultiArray(data=[5,7, 1, 2]))
         rate.sleep()
 
 

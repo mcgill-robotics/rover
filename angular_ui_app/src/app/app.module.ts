@@ -17,7 +17,6 @@ import { AntennaComponent } from './components/antenna/antenna.component';
 import { GenericComponent } from './components/generic/genric.component';
 import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
-import { BackupCameraComponent } from './components/backup-camera/backup-camera.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +32,6 @@ import { BackupCameraComponent } from './components/backup-camera/backup-camera.
     GenericComponent,
     HeaderComponent,
     DrivePageComponent,
-    BackupCameraComponent,
   ],
   imports: [
     FormsModule,

@@ -22,27 +22,27 @@ export class ScienceAugerComponent {
   ngOnInit() {
     this.augerTopic = new ROSLIB.Topic({
       ros: this.ros,
-      name: "topicName", //to be changed to proper topic name
+      name: "/augerCmd", //to be changed to proper topic name
       messageType: 'std_msgs/Float32MultiArray'
     });
 
     this.carouselTopic = new ROSLIB.Topic({
       ros: this.ros,
-      name: "topicName", //to be changed to proper topic name
+      name: "/stepperCmd", //to be changed to proper topic name
       messageType: 'std_msgs/Float32MultiArray'
     });
   }
 
-  // Carousel control
+  // Carousel control [up/down, right left]
   turn() {
     this.orientationCounter != 7 ? this.orientationCounter++: this.orientationCounter = 0;
 
     this.carouselTopic.publish(new ROSLIB.Message({
-      data : [1, 0] //actual data to be added (direction, )
+      data : [this.orientationCounter] //actual data to be added (direction, )
     }))
   }
 
-  // auger control
+  // auger control []
   //may change depending on electrical implementation
   sendAugerInstruction(direction: number[]) {
     // console.log(direction);

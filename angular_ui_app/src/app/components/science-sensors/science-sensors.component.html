@@ -1,13 +1,14 @@
 <app-generic height="340px" width="878px">
     <div style="overflow-y: scroll; max-height: 680px; zoom: 50%;">
+        <h2>{{orientationCounter}}</h2>
         <div style="display:flex; justify-content: flex-start;">
             <div>
-                <app-graph topicName="/test_topic" title="Geiger1" y_axis="The y axis" x_axis="The x axis"
+                <app-graph title="G1" y_axis="The y axis" x_axis="Time"
                     type="histogram" [data]="d[0]" />
 
                 <app-graph topicName="/test_topic" title="[ph1]" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[8]" />
 
-                <app-graph title="Hmoisture1" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[4]" />
+                <app-graph title="M1" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[4]" />
 
             </div>
             <div>
@@ -15,7 +16,7 @@
 
                 <app-graph title="PH2" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[9]" />
 
-                <app-graph title="Moisture2" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[5]" />
+                <app-graph title="M2" y_axis="yyyy" x_axis="xxx" type="line" [data]="d[5]" />
 
             </div>
             <div>

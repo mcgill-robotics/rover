@@ -120,10 +120,20 @@ export class GraphComponent implements OnInit,  OnChanges {
   private drawLineChart(): void {
     this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
 
+
+    // if only want last 10 dp
+    // if (this.data.length > 5) {
+    //   this.data = this.data.slice(-10);
+    // } 
+
     const width = this.ctx!.canvas.width;
     const height = this.ctx!.canvas.height;
     let maxValue = Math.max(...this.data);
-    if (maxValue < 5) {maxValue = 20}
+    if (maxValue < 5) {maxValue = 20}; //prevent 0 value division in graph
+
+    // let scaling = 1;
+    // if (maxValue > 20) {scaling = 20}
+    // if (maxValue > 10) {scaling = 10}
     
     // Clear the canvas
     this.ctx!.clearRect(0, 0, width, height);
@@ -137,7 +147,7 @@ export class GraphComponent implements OnInit,  OnChanges {
 
     // Draw horizontal grid lines and axis values
     const gridSpacing = 20;
-    let verticalSpace = Math.floor(height/maxValue);
+    let verticalSpace = Math.floor(height/maxValue); //adding scaling
     // if (verticalSpace < 2) (verticalSpace = 20);
 
     for (let i = gridSpacing; i < height; i += verticalSpace) {

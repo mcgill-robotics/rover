@@ -16,8 +16,9 @@
                         <div>
                             <!-- down + turn+, turn+, up+turn,  turn-, + caroussel -->
                             <button (click)="sendAugerInstruction([-1, 1])">Drill down</button>
+                            <button (click)="sendAugerInstruction([1, 0])">Move Up</button>
                             <button (click)="sendAugerInstruction([0, 1])">Drill</button>
-                            <button (click)="sendAugerInstruction([1, 1])">Drill Up</button>
+                            <!-- <button (click)="sendAugerInstruction([1, 1])">Drill Up</button> -->
                             <button (click)="sendAugerInstruction([0, -1])">Reverse drill</button>
                             <button (click)="sendAugerInstruction([0, 0])">Stop drill</button>
                         </div>

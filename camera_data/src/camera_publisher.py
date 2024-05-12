@@ -17,6 +17,7 @@ def webcam_publisher():
         ret, frame = cap.read()
         if ret:
             # Convert the frame to ROS format
+            frame = cv2.rotate(frame, cv2.ROTATE_180)
             ros_image = bridge.cv2_to_imgmsg(frame, "bgr8")
             # Publish the frame
             pub.publish(ros_image)

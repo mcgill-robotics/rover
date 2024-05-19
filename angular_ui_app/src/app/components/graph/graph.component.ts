@@ -8,10 +8,8 @@ import { Input } from '@angular/core';
   styleUrls: ['./graph.component.scss']
 })
 /* 
-To be done: self erasing to maintain enough space for visual
- or make it scrollable, adjusting axis
-
-Optimize the code
+To be done: 
+Optimization, value clearing 
 */ 
 
 export class GraphComponent implements OnInit,  OnChanges {
@@ -24,20 +22,15 @@ export class GraphComponent implements OnInit,  OnChanges {
   @ViewChild('chart', { static: true }) canvasRef: ElementRef;
   private ctx: CanvasRenderingContext2D | null;
 
+  width:number;
+
+  height:number;
+
+
   ngOnInit(): void {
     this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
-    // this.drawGraph();  
-    switch (this.type) {
-      case "histogram":
-        this.drawHistogram();
-        break;    
-      case "line":
-        this.drawLineChart();
-        break;
-        
-      default:
-        console.log("Wrong graph type");
-    }
+    this.width = this.ctx!.canvas.width;
+    this.height = this.ctx!.canvas.height;
   }
 
   // when data changes
@@ -57,15 +50,10 @@ export class GraphComponent implements OnInit,  OnChanges {
 
   // provide a selector to choose the type of graph --later
   private drawHistogram(): void {
-    this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
-
-    const width = this.ctx!.canvas.width;
-    const height = this.ctx!.canvas.height;
-       
     // Clear the canvas
-    this.ctx!.clearRect(0, 0, width, height);
+    this.ctx!.clearRect(0, 0, this.width, this.height);
 
-    const drawHeight = height - 10; //create the offset
+    const drawHeight = this.height - 10; //create the offset
   
     // Find the minimum and maximum values in the dataset
     const minValue = Math.min(...this.data);
@@ -73,6 +61,10 @@ export class GraphComponent implements OnInit,  OnChanges {
   
     // Calculate the range of values
     const valueRange = maxValue - minValue + 1;
+    let factor = 1;
+    if( valueRange > 100) {
+      factor = Math.floor(valueRange/10);
+    }
   
     // Initialize an array to store the frequency of each value
     const frequencies: number[] = new Array(valueRange).fill(0);
@@ -84,11 +76,9 @@ export class GraphComponent implements OnInit,  OnChanges {
   
     // Calculate the maximum frequency
     const maxFrequency = Math.max(...frequencies);
-  
-    // Set the color for the bars
     
-    // Calculate the width of each bar
-    const barWidth = width / valueRange;
+    // Calculate the this.width of each bar
+    const barWidth = this.width / valueRange;
     
     // Draw each bar and add labels
     for (let i = 0; i < valueRange; i++) {
@@ -108,8 +98,10 @@ export class GraphComponent implements OnInit,  OnChanges {
      }
 
     // Add label underneath the bar
-    const label = (minValue + i).toString(); // Calculate the value for the label
-    this.ctx!.fillText(label, x + barWidth / 2, drawHeight); // Draw label underneath the bar
+    if ((i + minValue) % factor == 0) {
+      const label = (minValue + i).toString(); // Calculate the value for the label
+      this.ctx!.fillText(label, x + barWidth / 2, drawHeight); // Draw label underneath the bar
+    }
       
     }
   }
@@ -118,58 +110,61 @@ export class GraphComponent implements OnInit,  OnChanges {
 
 // top peak and line value to be fixed
   private drawLineChart(): void {
-    this.ctx = (this.canvasRef.nativeElement as HTMLCanvasElement).getContext('2d');
-
-
-    // if only want last 10 dp
-    // if (this.data.length > 5) {
-    //   this.data = this.data.slice(-10);
+    // if only want last 20 dp
+    // if (this.data.length > 20) {
+    //   this.data = this.data.slice(-20);
     // } 
 
-    const width = this.ctx!.canvas.width;
-    const height = this.ctx!.canvas.height;
     let maxValue = Math.max(...this.data);
-    if (maxValue < 5) {maxValue = 20}; //prevent 0 value division in graph
+    let minValue = Math.min(...this.data);
+    maxValue = Math.ceil(maxValue / 10) * 10;
+    if (maxValue < 5) {maxValue = 10}; //prevent 0 value division in graph
+    (minValue < 0) ? minValue = Math.floor(minValue / 10) * 10 : minValue = 0 ;
+    let range = maxValue - minValue;
 
-    // let scaling = 1;
-    // if (maxValue > 20) {scaling = 20}
-    // if (maxValue > 10) {scaling = 10}
-    
     // Clear the canvas
-    this.ctx!.clearRect(0, 0, width, height);
+    this.ctx!.clearRect(0, 0, this.width, this.height);
 
-    // Calculate the gap between points
-    const pointGap = width / (this.data.length - 1);
+    // Calculate the x gap between points
+    const pointGap = this.width / (this.data.length - 1);
 
-    // Set the line color and width
+    // Set the line color and this.width
     this.ctx!.strokeStyle = '#FFF';
-    this.ctx!.lineWidth = 2;
+    this.ctx!.lineWidth = 1;
 
     // Draw horizontal grid lines and axis values
-    const gridSpacing = 20;
-    let verticalSpace = Math.floor(height/maxValue); //adding scaling
-    // if (verticalSpace < 2) (verticalSpace = 20);
+    let verticalSpace = Math.floor(this.height/10); //always same number of lines
 
-    for (let i = gridSpacing; i < height; i += verticalSpace) {
+    // initial offset
+    for (let i = 20; i < this.height; i += verticalSpace) {
       this.ctx!.beginPath();
       this.ctx!.moveTo(0, i);
-      this.ctx!.lineTo(width, i);
+      this.ctx!.lineTo(this.width, i);
       this.ctx!.stroke();
   
-      // Add axis values vertical
+      // Add vertical values 
       this.ctx!.fillStyle = '#FFF';
-      this.ctx!.fillText((Math.floor((height - i)/verticalSpace)).toString(), 5, i - 5);
+      this.ctx!.fillText((Math.ceil(((this.height - i)/this.height)*range + minValue)).toString(), 5, i - 5);
     }
+
+    // draw X axis for value 0
+    let xxx = this.height*maxValue/range;
+    this.ctx!.beginPath();
+    this.ctx!.strokeStyle = '#F00';
+      this.ctx!.moveTo(0, xxx);
+      this.ctx!.lineTo(this.width, xxx);
+      this.ctx!.stroke();
   
     // Draw vertical grid lines and axis values
-    for (let i = pointGap; i < width; i += pointGap) {
+    for (let i = pointGap; i < this.width; i += pointGap) {
       this.ctx!.beginPath();
+    this.ctx!.strokeStyle = '#FFF';
       this.ctx!.moveTo(i, 0);
-      this.ctx!.lineTo(i, height);
+      this.ctx!.lineTo(i, this.height);
       this.ctx!.stroke();
   
       // Add axis valuesv //not needed
-      this.ctx!.fillText(Math.floor((i/pointGap )).toString(), i, height - 5);
+      this.ctx!.fillText(Math.floor((i/pointGap )).toString(), i, this.height - 5);
     }
 
 
@@ -178,12 +173,12 @@ export class GraphComponent implements OnInit,  OnChanges {
 
     this.ctx!.strokeStyle = '#2bc';
     // Move to the first point
-    this.ctx!.moveTo(0, height - verticalSpace*this.data[0]); //need a factor to multiply
+    this.ctx!.moveTo(0, this.height - this.height*(this.data[0] - minValue)/range);
 
     // Draw lines connecting each point
     for (let i = 1; i < this.data.length; i++) {
       const x = i * pointGap;
-      const y = height - verticalSpace*this.data[i];
+      const y = (this.height - this.height*(this.data[i] - minValue)/range); //fix
       this.ctx!.lineTo(x, y);
     }
 

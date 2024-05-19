@@ -2,7 +2,9 @@
     <h3 style="writing-mode: sideways-lr; border: solid 1px red; position: relative; right: -20px;;">{{y_axis}}</h3>
     <div style="display: flex; flex-direction: column;" >
         <h2 >{{title}}</h2>
-        <canvas #chart style="border: 1px solid #ccc;" width="300" height="200"></canvas>
+        <div style="width: 300px; max-width:300px;overflow: scroll;">
+            <canvas #chart style="border: 1px solid #ccc;" width="600" height="200" ></canvas>
+        </div>
         <h3>{{x_axis}}</h3>
     </div>
 </div>

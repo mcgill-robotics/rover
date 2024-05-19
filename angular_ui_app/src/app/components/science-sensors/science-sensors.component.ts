@@ -22,7 +22,7 @@ export class ScienceSensorsComponent implements OnInit {
 
   // data array field in front end
   // g1, g2, g3, g4, m1, m, m, etc
-  d: number[][] = [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]];
+  d: number[][] = [[], [], [], [], [], [], [], [], [], [], [], []];
 
 
 
@@ -33,8 +33,8 @@ export class ScienceSensorsComponent implements OnInit {
   ngOnInit() {
     this.dataTopic = new ROSLIB.Topic({
       ros: this.ros,
-      name: "/science_data", //to be changed to proper topic name
-      // name: "/test_topic", //to be changed to proper topic name
+      // name: "/science_data", //to be changed to proper topic name
+      name: "/test_topic", //to be changed to proper topic name
       messageType: 'std_msgs/Float32MultiArray'
     });
 
@@ -68,9 +68,10 @@ export class ScienceSensorsComponent implements OnInit {
           continue //skips other geiger
         }  
         // using concat to create new array for ngOnchange to work in graph
-        this.d[k] = this.d[k].concat(message.data[k ]);
+        this.d[k] = this.d[k].concat(message.data[k]);
+        // console.log(this.d);
         // Saving data to store
-        this.scienceService.storeData(message.data[k ], k);
+        this.scienceService.storeData(message.data[k], k);
       }
     })
     // this.dataTopic.subscribe((message: any) => {

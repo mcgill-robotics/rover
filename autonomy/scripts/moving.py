@@ -27,7 +27,7 @@ class No_obstacles:
     ori = None
 
     # distance tolerance
-    tol_d = 0.2
+    tol_d = 0.15
 
     # angular tolerance (in degrees)
     tol_a = 1
@@ -98,8 +98,7 @@ class No_obstacles:
         dx = cur_dest[0] - self.pos.x
         dy = cur_dest[1] - self.pos.y
         return math.sqrt(dx*dx + dy*dy)
-
-
+    
     def navigation(self, msg):
         # If its empty you just return
         if (len(self.cur_path) == 0):
@@ -136,13 +135,11 @@ class No_obstacles:
 
         slow = 1
         turn = 1
-        if angle >= 45:
-            slow = 3
-            turn = 1.5
+        if (angle > 15):
+            slow = angle/15
+            turn = 1 - (angle/200)
 
-         
         
-
         # Find sign of angle using cross product
         cross = dx1*dy2 - dx2*dy1
         
@@ -152,12 +149,11 @@ class No_obstacles:
             sign = -1
         
         dist_left_global = self.global_dist()
-
         # Thighness of turn is higher for smaller distance and higher angle
         speed_factor = math.sqrt(dist_left_global)*0.1
         if (speed_factor > 0.1):
             speed_factor = 0.1
-        self.vel_pub.publish(Twist(Vector3(speed_factor/slow,0,0), Vector3(0,0,sign*math.sqrt(angle/(30*turn)))))
+        self.vel_pub.publish(Twist(Vector3(speed_factor/slow,0,0), Vector3(0,0,sign*math.sqrt(angle/(70*turn)))))
             
 if __name__ == '__main__':
     No_obstacles()

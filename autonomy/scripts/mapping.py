@@ -7,13 +7,12 @@ import sensor_msgs.point_cloud2 as pc2
 from gazebo_msgs.msg._ModelStates import ModelStates
 from geometry_msgs.msg import Pose, Point, Quaternion
 from visualization_msgs.msg import Marker
-from autonomy_config import CAMERA_POSITION_OFFSET, ROUNDING_COEF, ROVER_MODEL_NAME
+from autonomy_config import CAMERA_POSITION_OFFSET, ROUNDING_COEF
 import numpy as np
 from typing import Set, Tuple, List
-from scipy.spatial import ConvexHull
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.msg import MapMetaData
-from queue import PriorityQueue, Queue
+from queue import PriorityQueue
 
 class Block:
     def __init__(self):
@@ -52,7 +51,7 @@ class PointCloudTracker:
     ori = Quaternion()
 
     # Landmark arrival tolerance
-    tol_d = 0.1
+    tol_d = 0.15
 
     # Contains open nodes, and their -F score to keep order
     openset = PriorityQueue()
@@ -91,24 +90,33 @@ class PointCloudTracker:
         self.pos = msg.pose[1].position
         self.ori = msg.pose[1].orientation
 
+        if (len(self.landmarks) == 0):
+            exit()
         # If at landmark, remove it and run path update
         if abs(self.pos.x - self.landmarks[-1][0]) < self.tol_d and abs(self.pos.y - self.landmarks[-1][1]) < self.tol_d:
             self.landmarks.pop()
-            self.update_path()
+            if (not len(self.landmarks) == 0):
+                self.update_path()
+            else: 
+                exit()
 
     def mark_pos(self):
         marker = Marker()
         marker.header.frame_id = self.FIXED_FRAME_ID
-        marker.type = marker.SPHERE
+        marker.type = marker.ARROW
         marker.action = marker.ADD
-        marker.scale.x = 0.2
-        marker.scale.y = 0.2
-        marker.scale.z = 0.2
+        marker.scale.x = 0.25
+        marker.scale.y = 0.08
+        marker.scale.z = 0.08
         marker.color.a = 1.0
         marker.color.r = 1.0
         marker.color.g = 0.0
         marker.color.b = 0.0
-        marker.pose.orientation.w = 1.0
+        marker.pose.orientation.w = self.ori.w
+        marker.pose.orientation.x = self.ori.x
+        marker.pose.orientation.y = self.ori.y
+        marker.pose.orientation.z = self.ori.z
+
         marker.pose.position.x = self.pos.x
         marker.pose.position.y = self.pos.y
         marker.pose.position.z = self.pos.z
@@ -128,6 +136,10 @@ class PointCloudTracker:
         marker.color.r = 0.0
         marker.color.g = 1.0
         marker.color.b = 0.0
+        marker.pose.orientation.w = 1
+        marker.pose.orientation.x = 0
+        marker.pose.orientation.y = 0
+        marker.pose.orientation.z = 0
         for landmark in self.landmarks:
             marker.points.append(Point(landmark[0],landmark[1],0.1))
 
@@ -163,8 +175,8 @@ class PointCloudTracker:
         return Trw @ Tcr @ P
 
     def pcloud2_analysis(self, msg: PointCloud2) -> None:
-        # skip messages which older then 1.3 sec
-        if (msg.header.stamp.secs + 1.3 < rospy.get_time()):
+        # skip messages which older then 1.1 sec
+        if (msg.header.stamp.secs + 1 < rospy.get_time()):
             return
 
         rover_position_tuple = (self.pos.x, self.pos.y, self.pos.z)
@@ -232,14 +244,14 @@ class PointCloudTracker:
             # If there is an avg value
             if (not self.map[X+dx][Y+dy].avg == None):
                 if (n%2 == 0):
-                    g = 707*abs(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg)
+                    g = 1.2*707*abs(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg)
                 else:
-                    g = 1000*abs(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg)
+                    g = 1.2*1000*abs(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg)
                 if g > max_g:
                     max_g = g
             
 
-            dangerous_obstacles = []
+            dangerous_obstacles = False
             # if there is a gradient value and there is an avg value
             if ((not self.map[X+dx][Y+dy].gradient == None) and (not self.map[X+dx][Y+dy].avg == None)):
                 if (g > self.map[X+dx][Y+dy].gradient):
@@ -247,14 +259,14 @@ class PointCloudTracker:
                         self.map[X+dx][Y+dy].gradient = g
                     else:
                         if self.map[X+dx][Y+dy].on_path:
-                            dangerous_obstacles.append([X+dx, Y+dy])
+                            dangerous_obstacles = True
                         self.map[X+dx][Y+dy].gradient = 100
                         for j in range(0,56):
                             dxx = self.surr_40[j][0]
                             dyy = self.surr_40[j][1]
                             self.map[X+dx + dxx][Y+dy+dyy].gradient = 100
                             if self.map[X+dx + dxx][Y+dy+dyy].on_path:
-                                dangerous_obstacles.append([X+dx + dxx, Y+dy+dyy])
+                                dangerous_obstacles = True
 
         old_g = self.map[X][Y].gradient
 
@@ -262,20 +274,20 @@ class PointCloudTracker:
             self.map[X][Y].gradient = max_g
         else:
             if self.map[X][Y].on_path:
-                dangerous_obstacles.append([X, Y])
+                dangerous_obstacles = True
             self.map[X][Y].gradient = 100
             for i in range(0, 56):
                 dxxx = self.surr_40[i][0]
                 dyyy = self.surr_40[i][1]
                 self.map[X+dxxx][Y+dyyy].gradient = 100
                 if self.map[X+dxxx][Y+dyyy].on_path:
-                    dangerous_obstacles.append([X+dxxx, Y+dyyy])
+                    dangerous_obstacles = True
 
         if (not old_g == None):
-            if (old_g > max_g):
+            if (old_g == 100):
                 self.map[X][Y].gradient = old_g
 
-        if not len(dangerous_obstacles) == 0:
+        if dangerous_obstacles:
             self.update_path()
     
     # Find the path, send it to moving.py

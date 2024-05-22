@@ -46,7 +46,7 @@ class No_obstacles:
             self.vel_pub.publish(Twist(Vector3(0,0,0), Vector3(0,0,0)))
             self.stopped = True
             return
-
+        self.tol_d = 0.3 # The first point is too uncertain make sure to nuke it
         self.stopped = False
         h = int(len(array)/2)
 
@@ -100,27 +100,28 @@ class No_obstacles:
         return math.sqrt(dx*dx + dy*dy)
     
     def navigation(self, msg):
-        # If its empty you just return
-        if (len(self.cur_path) == 0):
-            return
-        
         # When it needs to be stopped
         if self.stopped:
             self.vel_pub.publish(Twist(Vector3(0,0,0), Vector3(0,0,0)))
             return
-
+        
+        # If its empty you just return
+        if (len(self.cur_path) == 0):
+            return
+        
         # Update Position and Orientation, Keep the previous one
         self.pos = msg.pose[1].position
         self.ori = self.quart_2D(msg.pose[1].orientation)
         
-        # Check if turn needed
-        if self.turn_need:
-            self.turn()
-            return
-
         # Check if rover arrived (sub)
         if abs(self.pos.x - self.cur_path[-1][0]) < self.tol_d and abs(self.pos.y - self.cur_path[-1][1]) < self.tol_d:
             self.cur_path.pop()
+            self.tol_d = 0.15
+            return
+        
+        # Check if turn needed
+        if self.turn_need:
+            self.turn()
             return
         
         dx1, dy1 = self.ori

@@ -13,6 +13,8 @@ from typing import Set, Tuple, List
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.msg import MapMetaData
 from queue import PriorityQueue
+import message_filters
+from time import sleep
 
 class Block:
     def __init__(self):
@@ -43,8 +45,8 @@ class PointCloudTracker:
     
     # Current Position
     pos = Point()
-    pos.x = 0
-    pos.y = 0
+    pos.x = -4.95
+    pos.y = -4.95
     pos.z = 0
 
     # Current Orientation
@@ -60,10 +62,17 @@ class PointCloudTracker:
     node_table = dict()
 
     # Entire Landmarks Left
-    landmarks = [[7,0]]
+    landmarks = [[3.45,3.45]]
     
     # Current full path
     cur_p = None
+
+    # Particular POINT
+    pp_x = None
+    pp_y = None
+
+    # Distance from pp to nearest obstacle
+    dist_pp_nobs = None
 
     # Frame ID
     FIXED_FRAME_ID = "map"
@@ -83,12 +92,32 @@ class PointCloudTracker:
         self.map_grid = {}
 
     def listener(self) -> None:
-        rospy.Subscriber("camera/depth/points", PointCloud2, self.pcloud2_analysis)
+        data_pc = message_filters.Subscriber("camera/depth/points", PointCloud2)
+        pose_pc = message_filters.Subscriber("/gazebo/model_states", ModelStates)
+        ts = message_filters.ApproximateTimeSynchronizer([data_pc, pose_pc], 10, 0.05, allow_headerless=True)
+        ts.registerCallback(self.pcloud2_analysis)
         rospy.spin()
 
     def update_pos(self, msg):
         self.pos = msg.pose[1].position
         self.ori = msg.pose[1].orientation
+
+        # Update Path if you got close enough
+        if (not self.dist_pp_nobs == None):
+            if (self.dist_pp_nobs < 0.5):
+                self.dist_pp_nobs = None
+                self.pp_x = None
+                self.pp_y = None
+                self.update_path()
+            else:
+                dx = self.pos.x - self.pp_x
+                dy = self.pos.y - self.pp_y
+                curr_dist = math.sqrt(dx*dx + dy*dy)
+                if (curr_dist > self.dist_pp_nobs/3):
+                    self.dist_pp_nobs = None
+                    self.pp_x = None
+                    self.pp_y = None
+                    self.update_path()
 
         if (len(self.landmarks) == 0):
             exit()
@@ -105,7 +134,7 @@ class PointCloudTracker:
         marker.header.frame_id = self.FIXED_FRAME_ID
         marker.type = marker.ARROW
         marker.action = marker.ADD
-        marker.scale.x = 0.25
+        marker.scale.x = 0.3
         marker.scale.y = 0.08
         marker.scale.z = 0.08
         marker.color.a = 1.0
@@ -121,8 +150,6 @@ class PointCloudTracker:
         marker.pose.position.y = self.pos.y
         marker.pose.position.z = self.pos.z
         self.rviz_rov_marker_pub.publish(marker)
-
-
 
     def mark_landmarks(self):
         marker = Marker()
@@ -174,14 +201,17 @@ class PointCloudTracker:
         ))
         return Trw @ Tcr @ P
 
-    def pcloud2_analysis(self, msg: PointCloud2) -> None:
+    def pcloud2_analysis(self, msg1, msg2: PointCloud2) -> None:
         # skip messages which older then 1.1 sec
-        if (msg.header.stamp.secs + 1 < rospy.get_time()):
+        msg_time = msg1.header.stamp.secs
+        if (msg_time + 1 < rospy.get_time()):
             return
+        p = msg2.pose[1].position
+        o = msg2.pose[1].orientation
+        rover_position_tuple = (p.x, p.y, p.z)
+        rover_orientation_tuple = (o.x, o.y, o.z, o.w)
 
-        rover_position_tuple = (self.pos.x, self.pos.y, self.pos.z)
-        rover_orientation_tuple = (self.ori.x, self.ori.y, self.ori.z, self.ori.w)
-        points_np = np.array(list(pc2.read_points(msg, field_names=['x', 'y', 'z'], skip_nans=True)))
+        points_np = np.array(list(pc2.read_points(msg1, field_names=['x', 'y', 'z'], skip_nans=True)))
         points_transformed_np = np.round(self.apply_camera_pose_transform(points_np, rover_position_tuple, rover_orientation_tuple).T, decimals=ROUNDING_COEF)
         
         new_obstacle_points = points_transformed_np
@@ -202,7 +232,20 @@ class PointCloudTracker:
                 current_block.avg = (current_block.avg*current_block.n + current_z)/(current_block.n+1)
                 current_block.n = current_block.n + 1
 
-            self.update_gradients(X, Y)
+            dangerous_obstacles = self.update_gradients(X, Y)
+            # Find which obstacle was the closest
+            if not len(dangerous_obstacles) == 0:
+                if (self.pp_x == None):
+                    self.pp_x = p.x
+                    self.pp_y = p.y
+                for point in dangerous_obstacles:
+                    [xo , xy] = self.XY_to_xym(point[0], point[1])
+                    dx = xo - self.pp_x
+                    dy = xy - self.pp_y
+                    if (self.dist_pp_nobs == None):
+                        self.dist_pp_nobs = math.sqrt(dx*dx + dy*dy)
+                    elif (self.dist_pp_nobs > math.sqrt(dx*dx + dy*dy)):
+                        self.dist_pp_nobs = math.sqrt(dx*dx + dy*dy)
 
         # We have updated sensor values, its time to load them to the rviz
         header = Header()
@@ -229,7 +272,7 @@ class PointCloudTracker:
                 else: 
                     cells[m] = -1
                 m = m + 1
-            
+    
         self.rviz_map_pub.publish(OccupancyGrid(header, MMD, cells))
         self.mark_pos()
          
@@ -251,7 +294,7 @@ class PointCloudTracker:
                     max_g = g
             
 
-            dangerous_obstacles = False
+            dangerous_obstacles = []
             # if there is a gradient value and there is an avg value
             if ((not self.map[X+dx][Y+dy].gradient == None) and (not self.map[X+dx][Y+dy].avg == None)):
                 if (g > self.map[X+dx][Y+dy].gradient):
@@ -259,36 +302,30 @@ class PointCloudTracker:
                         self.map[X+dx][Y+dy].gradient = g
                     else:
                         if self.map[X+dx][Y+dy].on_path:
-                            dangerous_obstacles = True
+                            dangerous_obstacles.append((X+dx, Y+dy))
                         self.map[X+dx][Y+dy].gradient = 100
                         for j in range(0,56):
                             dxx = self.surr_40[j][0]
                             dyy = self.surr_40[j][1]
                             self.map[X+dx + dxx][Y+dy+dyy].gradient = 100
                             if self.map[X+dx + dxx][Y+dy+dyy].on_path:
-                                dangerous_obstacles = True
+                                dangerous_obstacles.append((X+dx+ dxx, Y+dy+dyy))
 
         old_g = self.map[X][Y].gradient
-
+        # You dont need to check if its on path, because its buffer will always be before
         if (max_g < 100):
             self.map[X][Y].gradient = max_g
         else:
-            if self.map[X][Y].on_path:
-                dangerous_obstacles = True
             self.map[X][Y].gradient = 100
             for i in range(0, 56):
                 dxxx = self.surr_40[i][0]
                 dyyy = self.surr_40[i][1]
                 self.map[X+dxxx][Y+dyyy].gradient = 100
-                if self.map[X+dxxx][Y+dyyy].on_path:
-                    dangerous_obstacles = True
 
         if (not old_g == None):
             if (old_g == 100):
                 self.map[X][Y].gradient = old_g
-
-        if dangerous_obstacles:
-            self.update_path()
+        return dangerous_obstacles
     
     # Find the path, send it to moving.py
     def update_path(self):
@@ -499,5 +536,4 @@ if __name__ == '__main__':
     trcker.mark_landmarks()
     trcker.update_path()
     trcker.listener()
-
 

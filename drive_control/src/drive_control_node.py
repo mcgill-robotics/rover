@@ -1,16 +1,10 @@
 import os, sys
-import time
 currentdir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentdir)
 import rospy
-import numpy as np
 from steering import Steering
-from std_msgs.msg import String
-from std_msgs.msg import Float32MultiArray
 from drive_control.msg import WheelSpeed
 from geometry_msgs.msg import Twist
-from scipy.ndimage import gaussian_filter1d
-import scipy.stats as st
 
 class Node_DriveControl():
 
@@ -25,15 +19,7 @@ class Node_DriveControl():
         self.wheel_base_length = 0.28 # In meters.
         self.wheel_speed = [0, 0] # Array elements: Left wheel speed, right wheel speed.
         self.steering = Steering(self.wheel_radius, self.wheel_base_length)
-        self.sample_size = 50 # The greater the value, the more "smoothing" of the wheel speeds.
-        self.basis = self.gkern(kernlen=50) # Gaussian kernel array. "kernlen" must be the same as "self.sample_size".
 
-        # Velocity samples for four wheels
-        self.front_left = np.zeros(self.sample_size).tolist()
-        self.back_left = np.zeros(self.sample_size).tolist()
-        self.front_right = np.zeros(self.sample_size).tolist()
-        self.back_right = np.zeros(self.sample_size).tolist()
-        
         rospy.init_node('drive_controller')
         self.angular_velocity_publisher = rospy.Publisher('/wheel_velocity_cmd', WheelSpeed, queue_size=1)
         self.robot_twist_subscriber = rospy.Subscriber("rover_velocity_controller/cmd_vel", Twist, self.twist_to_velocity)
@@ -49,50 +35,14 @@ class Node_DriveControl():
         wR = robot_twist.angular.z
         self.wheel_speed = self.steering.steering_control(vR, wR)
 
-
-    # Function that yields a 1D gaussian basis
-    # Source: https://stackoverflow.com/questions/29731726/how-to-calculate-a-gaussian-kernel-matrix-efficiently-in-numpy
-    def gkern(self, kernlen=10, sigma=3):
-        x = np.linspace(-sigma, sigma, kernlen+1)
-        kern1d = np.diff(st.norm.cdf(x))
-        return kern1d/kern1d.sum()
-
-
     def run(self):
         while not rospy.is_shutdown():
+
             cmd = WheelSpeed() # Create the wheel speed message.        
-            print(f"Desired speed: {self.wheel_speed}")
-            
-            # Velocity filtering:
-
-            # Append the most recent steering values.
-            self.front_left.append(self.wheel_speed[0])
-            self.back_left.append(self.wheel_speed[0])
-            self.front_right.append(self.wheel_speed[1])
-            self.back_right.append(self.wheel_speed[1])
-
-            # Remove the oldest values to keep the array a constant length.
-            self.front_left.pop(0)
-            self.back_left.pop(0)
-            self.front_right.pop(0)
-            self.back_right.pop(0)
-            
-            front_left = np.asarray(self.front_left)
-            back_left = np.asarray(self.back_left)
-            front_right = np.asarray(self.front_right)
-            back_right = np.asarray(self.back_right)
-            
-            # Local average filter calculation.
-            correct_lf = np.sum(front_left * self.basis)
-            correct_lb = np.sum(back_left * self.basis)
-            correct_rf = np.sum(front_right * self.basis)
-            correct_rb = np.sum(back_right * self.basis)
-
-            # Populate the message with the averaged values.
-            cmd.left[0], cmd.left[1] = correct_lf, correct_lb
-            cmd.right[0], cmd.right[1] = correct_rf, correct_rb
-
-            print(cmd)
+            print(f"Speed: {self.wheel_speed}")
+            # Populate the message with the steering values.
+            cmd.left[0], cmd.left[1] = self.wheel_speed[0], self.wheel_speed[0]
+            cmd.right[0], cmd.right[1] = self.wheel_speed[1], self.wheel_speed[1]
 
             self.angular_velocity_publisher.publish(cmd) # Send the angular speeds.
 

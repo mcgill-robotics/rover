@@ -158,10 +158,10 @@ class Node_GamepadProcessing:
         steer = msg.A4
 
         # calc. for linear velocity
-        self.roverLinearVelocity = self.maxLinearVelocity * drive
+        self.roverLinearVelocity = self.maxLinearVelocity * drive * drive * drive
 
         # calc. for angular velocity
-        self.roverAngularVelocity = self.maxAngularVelocity * steer
+        self.roverAngularVelocity = self.maxAngularVelocity * steer * steer * steer
 
         # Assigns values to a Twist msg, then publish it to ROS
         roverTwist = Twist()
@@ -197,5 +197,5 @@ class Node_GamepadProcessing:
 
 
 if __name__ == "__main__":
-    gamepadProcess = Node_GamepadProcessing(20, 10)
+    gamepadProcess = Node_GamepadProcessing(5, 10)
     #rospy.spin()

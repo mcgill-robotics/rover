@@ -9,9 +9,7 @@ button {
     display: inline-block;
     width:fit-content;
     margin: 0 3px;
-    width: 25px;
-    color-scheme: black;
-    background-color: aqua;
+    background-color: #B6CA7B;
 }
 
 .buttons {
@@ -23,4 +21,17 @@ p {
     margin-top: 20px;
     display: flex;
     height: 10px;
+}
+
+table {
+    width: 96%;
+    margin: 2%;
+    padding: 2px;
+    border: 3px solid gray;
+}
+
+td {
+    padding: 5px;
+    border: 1px solid gray;
+    width: 33.3%;
 }

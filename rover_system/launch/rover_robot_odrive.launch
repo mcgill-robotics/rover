@@ -2,10 +2,16 @@
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
 
     <!-- Launch GamepadProcess.py -->
-    <node name="gamepad_process" pkg="human_control_interface" type="GamepadProcess.py" output="screen"/>
+    <node name="gamepad_process" pkg="human_control_interface" type="GamepadProcess.py" output="log"/>
 
     <!-- Launch drive_control_node.py -->
-    <node name="drive_control_node" pkg="drive_control" type="drive_control_node.py" output="screen"/>
+    <node name="drive_control_node" pkg="drive_control" type="drive_control_node.py" output="log"/>
+
+    <!-- Launch Angular UI -->
+    <node name="angular_ui_app_main" pkg="angular_ui_app" type="start_ui_server.sh" output="screen"/>
+
+    <!-- Start Webrtc Camera Server -->
+    <node name="angular_ui_app_webrtc" pkg="angular_ui_app" type="start_webrtc_server.py" output="log"/>
 
     <!-- Launch ODrive.py -->
     <node name="odrive_interface" pkg="odrive_interface" type="ODrive.py" output="screen"/>

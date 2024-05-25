@@ -5,7 +5,6 @@ import { PowerPageComponent } from './components/power/power-page/power-page.com
 import { DriveComponent } from './components/drive/drive.component';
 import { SciencePageComponent } from './components/science/science-page/science-page.component';
 import { ArmComponent } from './components/arm/arm.component';
-import { GpsPageComponent } from './components/gps/gps-page/gps-page.component';
 import { AntennaComponent } from './components/antenna/antenna.component';
 
 
@@ -15,7 +14,6 @@ const routes: Routes = [
   {path: 'drive', component: DriveComponent},
   {path: 'science', component: SciencePageComponent},
   {path: 'arm', component: ArmComponent},
-  {path: 'gps', component: GpsPageComponent},
 ];
 
 

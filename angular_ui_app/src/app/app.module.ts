@@ -10,18 +10,13 @@ import { PowerPageComponent } from './components/power/power-page/power-page.com
 import { DriveComponent } from './components/drive/drive.component';
 import { ArmComponent } from './components/arm/arm.component';
 import { SciencePageComponent } from './components/science/science-page/science-page.component';
-import { GpsPageComponent } from './components/gps/gps-page/gps-page.component';
-import { Button1Component } from './sandbox/buttons/button1/button1.component';
-import { CameraTestComponent } from './sandbox/camera-test/camera-test.component';
-import { ArmTestComponent } from './sandbox/arm-test/arm-test.component';
-
+import { GpsComponent } from './components/gps/gps.component';
 import { FormsModule } from '@angular/forms'
+import { HttpClientModule } from '@angular/common/http';
 import { AntennaComponent } from './components/antenna/antenna.component';
 import { GenericComponent } from './components/generic/genric.component';
 import { HeaderComponent } from './components/header/header.component';
 import { DrivePageComponent } from './pages/drive-page/drive-page.component';
-// jquery
-// import * as $ from "jquery";
 
 @NgModule({
   declarations: [
@@ -33,10 +28,7 @@ import { DrivePageComponent } from './pages/drive-page/drive-page.component';
     DriveComponent,
     ArmComponent,
     SciencePageComponent,
-    GpsPageComponent,
-    Button1Component,
-    CameraTestComponent,
-    ArmTestComponent,
+    GpsComponent,
     GenericComponent,
     HeaderComponent,
     DrivePageComponent,
@@ -44,6 +36,7 @@ import { DrivePageComponent } from './pages/drive-page/drive-page.component';
   imports: [
     FormsModule,
     BrowserModule,
+    HttpClientModule,
     AppRoutingModule,
   ],
   providers: [RosService],

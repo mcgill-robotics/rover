@@ -1,11 +1,42 @@
 <link rel="stylesheet" href="/assets/leaflet.css" />
 
 <app-generic height="375px" width="375px">
-  <div class="gps">
-    <div class="map-container">
-      <div class="map-frame">
-        <div id="map"></div>
-      </div>
+  <div id="map">
+    <div>
+      <button id="updateMarkersBtn" (click)="showModal = true">Markers</button>
     </div>
   </div>
 </app-generic>
+
+<div class='modal' *ngIf="showModal === true">
+  <div class="inner-modal">
+    <button style="position: absolute; top: 10px; right: 10px;" (click)="showModal = false">Close</button>
+    Add Landmark
+    <div>
+      <input type="text" #landmarkNameInput placeholder="Landmark Name">
+      <input type="number" #landmarkLatInput placeholder="Latitude">
+      <input type="number" #landmarkLngInput placeholder="Longitude">
+    </div>
+    <button (click)="addLandmark(landmarkNameInput.value, landmarkLatInput.value, landmarkLngInput.value)">Add</button>
+
+    <hr/>
+
+    Add Debris
+    <div>
+      <input type="text" #debrisNameInput placeholder="Debris Name">
+      <input type="number" #debrisLatInput placeholder="Latitude">
+      <input type="number" #debrisLngInput placeholder="Longitude">
+      <input type="number" #debrisRadius placeholder="Radius (m)">
+  </div>
+  <button (click)="addDebrisArea(debrisNameInput.value, debrisLatInput.value, debrisLngInput.value, debrisRadius.value)">Add</button>
+
+  <hr/>
+  <div style="height: 200px; width: 95%; margin: auto; border: 1px solid black; overflow-y: scroll;">
+    <div *ngFor="let marker of markerDict | keyvalue">
+      <div>{{marker.key}}</div>
+      <!-- <div>{{marker.value.lat}}</div>
+      <div>{{marker.value.lng}}</div> -->
+      <button (click)="removeMarker(marker.key)">Remove</button>
+    </div>
+  </div>
+</div>

@@ -14,6 +14,10 @@ export class GpsComponent implements AfterViewInit {
   private map: L.Map;
   private ros: ROSLIB.Ros;
   private gps_subscriber: ROSLIB.Topic;
+  showModal : boolean = false;
+
+  markerDict : { [key: string]: L.Marker } = {};
+  debrisDict : { [key: string]: L.Circle } = {};
 
   constructor(private markerService: MarkerService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -26,9 +30,8 @@ export class GpsComponent implements AfterViewInit {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 17,
-      minZoom: 12,
+      minZoom: 6,
     }).addTo(this.map);
-
   }
 
   ngOnInit() {
@@ -41,8 +44,8 @@ export class GpsComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initMap();
-    this.markerService.makeObjectiveMarkers(this.map);
-    this.markerService.makeDebrisAreas(this.map);
+    this.markerService.addDefaultObjectiveMarkers(this.map);
+    this.markerService.addDefaultDebrisAreas(this.map);
     this.markerService.makeRoverMarker(this.map);
     this.markerService.makeControlStationMarker(this.map);
 
@@ -50,5 +53,20 @@ export class GpsComponent implements AfterViewInit {
       this.markerService.set_gps_data(message);
       this.markerService.moveRoverMarker(this.map);
     });
+  }
+
+  addLandmark(name: string, lat: string, lon: string) {
+    this.markerDict[name] = this.markerService.makeNewObjectiveMarkers(this.map, name, Number(lat), Number(lon));
+  }
+
+  addDebrisArea(name: string, lat: string, lon: string, radius: string) {
+    this.debrisDict[name] = this.markerService.makeNewDebrisAreas(this.map, name, Number(lat), Number(lon), Number(radius));
+  }
+
+  removeMarker(name: string) {
+    alert("Removing marker: " + name);
+    this.map.removeLayer(this.markerDict[name]);
+    delete this.debrisDict[name];
+    console.log(this.debrisDict);
   }
 }

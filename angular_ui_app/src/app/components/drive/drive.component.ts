@@ -12,6 +12,7 @@ export class DriveComponent {
   ros: ROSLIB.Ros;
   gamepad_drive_pub: ROSLIB.Topic;
   pan_tilt_pub: ROSLIB.Topic;
+  drive_control_sub: ROSLIB.Topic;
 
   gagamepadService: GamepadService;
 
@@ -19,6 +20,9 @@ export class DriveComponent {
   pantilt_pitch: number = 90;
 
   angle_delta: number = 0.5;
+
+  cmd_vel_lin_x: number = 0;
+  cmd_vel_ang_z: number = 0;
 
   constructor(private gamepadService: GamepadService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -29,6 +33,17 @@ export class DriveComponent {
       ros : this.ros,
       name : '/angular_ui_app/drive',
       messageType : 'std_msgs/Float32MultiArray'
+    });
+
+    this.drive_control_sub = new ROSLIB.Topic({
+      ros: this.ros,
+      name: '/rover_velocity_controller/cmd_vel',
+      messageType: 'geometry_msgs/Twist'
+    });
+
+    this.drive_control_sub.subscribe((message: any) => {
+      this.cmd_vel_lin_x = message.linear.x;
+      this.cmd_vel_ang_z = message.angular.z;
     });
 
     this.pan_tilt_pub = new ROSLIB.Topic({

@@ -8,9 +8,9 @@ import * as L from 'leaflet';
 export class MarkerService {
   debris: string = '/assets/obstacle-markers.geojson';
   areas: string = '/assets/debris-areas.geojson';
-  private gps_data: number[] = [0, 0];
+  private gps_data: number[] = [45.5024, -73.6174];
   private prev_gps_data: number[] = [0, 0];
-  private control_station: number[] = [0, 0];
+  private control_station: number[] = [45.5024, -73.6174];
   private blueIcon: L.Icon;
   private redIcon: L.Icon;
   private blackIcon: L.Icon;
@@ -43,35 +43,45 @@ export class MarkerService {
     });
   }
 
-  makeObjectiveMarkers(map: L.Map): void { 
+  addDefaultObjectiveMarkers(map: L.Map): void {
     this.http.get(this.debris).subscribe((res: any) => {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
-        const marker = L.marker([lat, lon], {icon: this.redIcon, title: c.properties.name + " : "+lat +", "+lon});
-        marker.addTo(map);
+        this.makeNewObjectiveMarkers(map, c.properties.title, lat, lon);
       }
     });
-  };
+  }
 
-  makeDebrisAreas(map: L.Map): void { 
+  addDefaultDebrisAreas(map: L.Map): void {
     this.http.get(this.areas).subscribe((res: any) => {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
         const rad = c.geometry.size;
-        const area = L.circle([lat, lon], {radius: rad});
-        area.setStyle({color: 'orange'});
-        area.addTo(map).bindPopup(`Debris area: ${lat}, ${lon}`);
+        this.makeNewDebrisAreas(map, c.properties.title, lat, lon, rad);
       }
     });
+  }
+
+  makeNewObjectiveMarkers(map: L.Map, title: string, lat: number, long: number): L.Marker {
+    const marker = L.marker([lat, long], {icon: this.redIcon, title: title + " : "+lat +", "+long});
+    marker.addTo(map);
+    return marker;
+  };
+
+  makeNewDebrisAreas(map: L.Map, title: string, lat: number, long: number, radius: number): L.Circle {
+    const area = L.circle([lat, long], {radius: radius});
+    area.setStyle({color: 'orange'});
+    area.addTo(map).bindPopup(`Debris area: ${lat}, ${long}`);
+    return area;
   }
 
   makeRoverMarker(map: L.Map): void { 
     const rover  = L.latLng([this.gps_data[0], this.gps_data[1]]);
     this.roverMarker = L.marker(rover, {icon: this.blueIcon, rotationAngle: 90, title: "Rover" + " : "+this.gps_data[0] +", "+this.gps_data[1]});
     this.roverMarker.addTo(map);
-    map.setView(rover, 1);
+    map.setView(rover, 16);
   }
 
   makeControlStationMarker(map: L.Map): void { 

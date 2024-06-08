@@ -1,8 +1,17 @@
 <app-generic height="235px" width="640px">
     Controller <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button>
-    <div class="drive">
-        <div id="driveInfo">
-            <hr/>
+    <hr/>
+    <div style="display: flex; justify-content: space-around;">
+        <div>
+            cmd_vel
+            <div>
+                Linear X: {{cmd_vel_lin_x.toFixed(3)}}
+            </div>
+            <div>
+                Angular Z: {{cmd_vel_ang_z.toFixed(3)}}
+            </div>
+        </div>
+        <div>
             Wheel Feedback
             <div style="display: flex; justify-content: space-evenly;">
                 <div>

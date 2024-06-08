@@ -1,13 +1,47 @@
-.map-container {
-  height: 372px;
-  width: 372px;
-  // border: 1px solid black;
-}
-
-.map-frame {
-  height: 100%;
-}
-
 #map {
   height: 100%;
+}
+
+#updateMarkersBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px;
+  z-index: 4000;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+}
+
+#updateMarkersBtn:active {
+  background-color: #c7c7c7;
+}
+
+#updateMarkersBtn:hover {
+  background-color: #e6e6e6;
+}
+
+.modal {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.39);
+  z-index: 5000;
+  border-radius: 5px;
+}
+
+.inner-modal {
+  width: 900px;
+  height: 600px;
+  background-color: rgb(42, 63, 71);
+  padding: 20px;
+  border-radius: 5px;
+  border: #B6CA7B 2px solid;
+  position: absolute;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rospy
 import math
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, Image
 from std_msgs.msg import Header, Float32MultiArray
 import sensor_msgs.point_cloud2 as pc2
 from gazebo_msgs.msg._ModelStates import ModelStates
@@ -21,39 +21,39 @@ class Block:
         self.avg = None  
         self.n = 0  
         self.gradient = None
+        self.buffer = -1
         self.on_path = False
+        self.last_update = 0
 
 class PointCloudTracker:
-    # 2D Array representing the map. Each entry is linked to a 0.1m square
-    # The square (0t0.1, 0t0.1) is [150][150]
-    # X = (floor(x) + 150) +  floor(dec(x)*10) 
-    # Entry = 0(Green): This block is known to be obstacless
-    # Entry = 1(Yellow): We dont know if there is or not an obstacle
-    # Entry = 2, 3, 4, 5, 6, ...(Red): This block is known to be obstaclefull. If entry is 3, you know
-    # the block is part of obstacle 3. This means that there are other red blocks around it that are part of obstacle 3 
-    # You might need to perform obstacle merging.
     n1 = 300
     n2 = 300
+    r = 0.1
     map = np.empty((n1, n2), dtype=Block)
-    
-    surr_8 = [[-1, 1], [-1, 0], [-1, -1], [0, 1], [1, 1], [0, -1], [1, -1], [1, 0]]
-    surr_40 = [[0,7],[1,7],[2,7],[3,7],[4,7],[4,6],[5,6],[6,6],[6,5],[6,4],[7,4],[7,3],
-               [7,2],[7,1],[7,0],[7,-1],[7,-2],[7,-3],[7,-4],[6,-4],[6,-5],[6,-6],[5,-6],
-               [4,-6],[4,-7],[3,-7],[2,-7],[1,-7],[0,-7],[-1,7],[-2,7],[-3,7],[-4,7],[-4,6],
-               [-5,6],[-6,6],[-6,5],[-6,4],[-7,4],[-7,3],[-7,2],[-7,1],[-7,0],[-7,-1],[-7,-2],
-               [-7,-3],[-7,-4],[-6,-4],[-6,-5],[-6,-6],[-5,-6],[-4,-6],[-4,-7],[-3,-7],[-2,-7],[-1,-7]]
-    
+
+    surr_8 = [[-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1]]
+    surr_40 = [[0, 5], [1, 5], [2, 5], [3, 5], [3, 4], [4, 4], [4, 3], [5, 3], [5, 2], 
+              [5, 1], [5, 0], [5, -1], [5, -2], [5, -3], [4, -3], [4, -4], [3, -4], 
+              [3, -5], [2, -5], [1, -5], [0, -5],[-1, 5], [-2, 5], [-3, 5], [-3, 4], 
+              [-4, 4], [-4, 3], [-5, 3], [-5, 2], [-5, 1], [-5, 0], [-5, -1], [-5, -2], 
+              [-5, -3], [-4, -3], [-4, -4], [-3, -4], [-3, -5], [-2, -5], [-1, -5]]
+    # surr_40 = [[0,7],[1,7],[2,7],[3,7],[4,7],[4,6],[5,6],[6,6],[6,5],[6,4],[7,4],[7,3],
+    #            [7,2],[7,1],[7,0],[7,-1],[7,-2],[7,-3],[7,-4],[6,-4],[6,-5],[6,-6],[5,-6],
+    #            [4,-6],[4,-7],[3,-7],[2,-7],[1,-7],[0,-7],[-1,7],[-2,7],[-3,7],[-4,7],[-4,6],
+    #            [-5,6],[-6,6],[-6,5],[-6,4],[-7,4],[-7,3],[-7,2],[-7,1],[-7,0],[-7,-1],[-7,-2],
+    #            [-7,-3],[-7,-4],[-6,-4],[-6,-5],[-6,-6],[-5,-6],[-4,-6],[-4,-7],[-3,-7],[-2,-7],[-1,-7]]
+    surr_12 = [[-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [2, 0], [-2, 0], [0, 2], [0, -2]]
+
+    bufferF_or_gradientT_display = True # F = buffer, T = Gradient
+
     # Current Position
     pos = Point()
-    pos.x = -4.95
-    pos.y = -4.95
-    pos.z = 0
 
     # Current Orientation
     ori = Quaternion()
 
     # Landmark arrival tolerance
-    tol_d = 0.15
+    tol_d = 0.3
 
     # Contains open nodes, and their -F score to keep order
     openset = PriorityQueue()
@@ -62,7 +62,7 @@ class PointCloudTracker:
     node_table = dict()
 
     # Entire Landmarks Left
-    landmarks = [[3.45,3.45]]
+    landmarks = [[11,6]] # 11,6
     
     # Current full path
     cur_p = None
@@ -77,6 +77,19 @@ class PointCloudTracker:
     # Frame ID
     FIXED_FRAME_ID = "map"
 
+    # Current Point Cloud ID
+    pcid = 0
+
+    # List of obstacles found on path
+    dangerous_obstacles = []
+
+    # Buffer Levels
+    BUFFER_LVL_2 = 100
+    BUFFER_LVL_1 = 65
+    BUFFER_LVL_0 = 0
+
+    # Obstacle Sensitivity
+    OBS_SENS = 0.79 # 0.45
 
     def __init__(self) -> None:
         for i in range(self.n1):
@@ -92,19 +105,19 @@ class PointCloudTracker:
         self.map_grid = {}
 
     def listener(self) -> None:
-        data_pc = message_filters.Subscriber("camera/depth/points", PointCloud2)
+        data_pc = message_filters.Subscriber("zed2/point_cloud/cloud_registered", PointCloud2)
         pose_pc = message_filters.Subscriber("/gazebo/model_states", ModelStates)
-        ts = message_filters.ApproximateTimeSynchronizer([data_pc, pose_pc], 10, 0.05, allow_headerless=True)
+        ts = message_filters.ApproximateTimeSynchronizer([data_pc, pose_pc], 60, 0.01, allow_headerless=True, reset=True)
         ts.registerCallback(self.pcloud2_analysis)
         rospy.spin()
 
     def update_pos(self, msg):
-        self.pos = msg.pose[1].position
-        self.ori = msg.pose[1].orientation
+        self.pos = msg.pose[15].position
+        self.ori = msg.pose[15].orientation
 
         # Update Path if you got close enough
         if (not self.dist_pp_nobs == None):
-            if (self.dist_pp_nobs < 0.5):
+            if (self.dist_pp_nobs < 0.8):
                 self.dist_pp_nobs = None
                 self.pp_x = None
                 self.pp_y = None
@@ -148,7 +161,7 @@ class PointCloudTracker:
 
         marker.pose.position.x = self.pos.x
         marker.pose.position.y = self.pos.y
-        marker.pose.position.z = self.pos.z
+        marker.pose.position.z = 0.1
         self.rviz_rov_marker_pub.publish(marker)
 
     def mark_landmarks(self):
@@ -176,7 +189,7 @@ class PointCloudTracker:
     
     def apply_camera_pose_transform(self, points_tuple: tuple, rover_position_tuple: tuple, camera_orientation_tuple: tuple) -> np.array:
         Drw = np.reshape(np.array(rover_position_tuple), (3, 1))
-        Rrw = self.quaternion_rotation_matrix(camera_orientation_tuple)
+        Rrw = self.quaternion_rotation_matrix(self.quaternion_multiplication(camera_orientation_tuple, (0, 0.2064604, 0, 0.978455)))
         Trw = np.vstack((
             np.hstack((Rrw, Drw)), 
             np.hstack((np.zeros((1, 3)), np.array([[1]])))
@@ -200,14 +213,26 @@ class PointCloudTracker:
             np.ones((points_tuple.shape[0],))
         ))
         return Trw @ Tcr @ P
+    
+    def quaternion_multiplication(self, quaternion1, quaternion0):
+        x0, y0, z0, w0 = quaternion0
+        x1, y1, z1, w1 = quaternion1
+        return (x1*w0 + y1*z0 - z1*y0 + w1*x0,
+                -x1*z0 + y1*w0 + z1*x0 + w1*y0,
+                x1*y0 - y1*x0 + z1*w0 + w1*z0,
+                -x1*x0 - y1*y0 - z1*z0 + w1*w0)
 
     def pcloud2_analysis(self, msg1, msg2: PointCloud2) -> None:
         # skip messages which older then 1.1 sec
-        msg_time = msg1.header.stamp.secs
-        if (msg_time + 1 < rospy.get_time()):
+        if (msg1.header.stamp.secs + 1 < rospy.get_time()):
             return
-        p = msg2.pose[1].position
-        o = msg2.pose[1].orientation
+
+        # make sure angular speed was small enough else there will be much of an error on the pointclouds position
+        if (abs(msg2.twist[15].angular.x) + abs(msg2.twist[15].angular.y) + abs(msg2.twist[15].angular.z) > 0.2):
+            return
+        self.pcid = self.pcid + 1
+        p = msg2.pose[15].position
+        o = msg2.pose[15].orientation
         rover_position_tuple = (p.x, p.y, p.z)
         rover_orientation_tuple = (o.x, o.y, o.z, o.w)
 
@@ -215,30 +240,42 @@ class PointCloudTracker:
         points_transformed_np = np.round(self.apply_camera_pose_transform(points_np, rover_position_tuple, rover_orientation_tuple).T, decimals=ROUNDING_COEF)
         
         new_obstacle_points = points_transformed_np
-
         # Iterate through the array and map the 2s
+        changed_points = set()
         for i in range(len(new_obstacle_points)):   # Iterate over rows
+            if (not i%20 == 0): # Only use 1 point out if 10
+                continue
             current_x = new_obstacle_points[i][0]
             current_y = new_obstacle_points[i][1]
             current_z = new_obstacle_points[i][2]
             [X, Y]= self.xy_to_XY(current_x, current_y)
 
-            current_block = self.map[X][Y]
+            if (X < (self.n1-8) and Y < (self.n2-8) and X > 8 and Y > 8):
+                current_block = self.map[X][Y]
 
-            if current_block.avg == None:
-                current_block.n = 1
-                current_block.avg = current_z
-            else:
-                current_block.avg = (current_block.avg*current_block.n + current_z)/(current_block.n+1)
-                current_block.n = current_block.n + 1
+                if current_block.avg == None:
+                    current_block.n = 1
+                    current_block.avg = current_z
+                    current_block.last_update = self.pcid
+                else:
+                    if not current_block.last_update == self.pcid: 
+                        current_block.n = int(0.75*current_block.n) # Reduce weight of older points
+                        current_block.last_update = self.pcid
+                    current_block.avg = (current_block.avg*current_block.n + current_z)/(current_block.n+1)
+                    current_block.n = current_block.n + 1
+                    if (current_block.n%10 == 0): # Only send the point to be updated if n is a multiple of 10
+                        changed_points.add((X,Y))
+                    
 
-            dangerous_obstacles = self.update_gradients(X, Y)
+        for point in changed_points:
+            (X, Y) = point
+            self.update_gradients(X, Y)
             # Find which obstacle was the closest
-            if not len(dangerous_obstacles) == 0:
+            if not len(self.dangerous_obstacles) == 0:
                 if (self.pp_x == None):
                     self.pp_x = p.x
                     self.pp_y = p.y
-                for point in dangerous_obstacles:
+                for point in self.dangerous_obstacles:
                     [xo , xy] = self.XY_to_xym(point[0], point[1])
                     dx = xo - self.pp_x
                     dy = xy - self.pp_y
@@ -254,79 +291,107 @@ class PointCloudTracker:
                 
         MMD = MapMetaData()
         MMD.map_load_time = rospy.Time.now()
-        MMD.resolution = 0.1
-        MMD.width = 300
-        MMD.height = 300
-        MMD.origin = Pose(Point(-15,-15,0), Quaternion(0,0,0,1))
+        MMD.resolution = self.r
+        MMD.width = self.n1
+        MMD.height = self.n2
+        MMD.origin = Pose(Point(-self.n1*0.5*self.r,-self.n2*0.5*self.r,0), Quaternion(0,0,0,1))
 
         cells = np.zeros(self.n1*self.n2, dtype=int)
         # Form Proper shaped array from map
         m = 0
         for j in range(0, self.n2):
             for i in range(0, self.n1):
-                g = self.map[i][j].gradient
-                if (self.map[i][j].on_path):
-                    cells[m] = 127
-                elif (not g == None):
-                    cells[m] = int(g)
+                if self.bufferF_or_gradientT_display:
+                    g = self.map[i][j].gradient
+                    if (self.map[i][j].on_path):
+                        cells[m] = 127
+                    elif (not g == None):
+                        if g > 100:
+                            g = 100
+                        cells[m] = int(g)
+                    else: 
+                        cells[m] = -1
                 else: 
-                    cells[m] = -1
+                    g = self.map[i][j].buffer
+                    if (self.map[i][j].on_path):
+                        cells[m] = 127
+                    elif (g == self.BUFFER_LVL_2):
+                        cells[m] = -128
+                    elif (g == self.BUFFER_LVL_1): 
+                        cells[m] = -50
+                    else:
+                        cells[m] = g
                 m = m + 1
-    
         self.rviz_map_pub.publish(OccupancyGrid(header, MMD, cells))
         self.mark_pos()
          
          
     # The average at X, Y was changed. This means that the gradient of 9 blocks need to be updated.
-    # Also, make sure that None cases are checked. 
+    # Also, make sure that None cases are checked. Assume that if the is less than 5 samples to form the average
+    # It is not enough to be significant. We know for a fact that at [X][Y] there is 5 because its only called if
+    # there is at least 5. You only need to change others.
     def update_gradients(self, X, Y):
         max_g = 0
+        surr_g = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.dangerous_obstacles = []
         for n in range(0, 8):
             dx = self.surr_8[n][0]
             dy = self.surr_8[n][1]
-            # If there is an avg value
-            if (not self.map[X+dx][Y+dy].avg == None):
+            # If there is a avg value
+            if (not self.map[X+dx][Y+dy].avg == None and self.map[X+dx][Y+dy].n >= 10):
                 if (n%2 == 0):
-                    g = 1.2*707*abs(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg)
+                    g = self.OBS_SENS*707*(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg) #0.5
                 else:
-                    g = 1.2*1000*abs(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg)
-                if g > max_g:
-                    max_g = g
-            
+                    g = self.OBS_SENS*1000*(self.map[X][Y].avg - self.map[X+dx][Y+dy].avg) #0.5
+                surr_g[n] = g
+                g = abs(g)
 
-            dangerous_obstacles = []
             # if there is a gradient value and there is an avg value
-            if ((not self.map[X+dx][Y+dy].gradient == None) and (not self.map[X+dx][Y+dy].avg == None)):
-                if (g > self.map[X+dx][Y+dy].gradient):
-                    if (g < 100):
+            if ((not self.map[X+dx][Y+dy].gradient == None) and (not self.map[X+dx][Y+dy].avg == None) and (self.map[X+dx][Y+dy].n >= 10)):
+                if (g > self.map[X+dx][Y+dy].gradient): # Gradient needs to be changed
+                    if (g < self.BUFFER_LVL_1):
                         self.map[X+dx][Y+dy].gradient = g
+                        if self.BUFFER_LVL_0 > self.map[X+dx][Y+dy].buffer:
+                            self.map[X+dx][Y+dy].buffer = self.BUFFER_LVL_0
+                    elif (g < self.BUFFER_LVL_2):
+                        self.map[X+dx][Y+dy].gradient = g
+                        self.buffer_create(X+dx, Y+dy, self.BUFFER_LVL_1)
                     else:
-                        if self.map[X+dx][Y+dy].on_path:
-                            dangerous_obstacles.append((X+dx, Y+dy))
-                        self.map[X+dx][Y+dy].gradient = 100
-                        for j in range(0,56):
-                            dxx = self.surr_40[j][0]
-                            dyy = self.surr_40[j][1]
-                            self.map[X+dx + dxx][Y+dy+dyy].gradient = 100
-                            if self.map[X+dx + dxx][Y+dy+dyy].on_path:
-                                dangerous_obstacles.append((X+dx+ dxx, Y+dy+dyy))
+                        self.map[X+dx][Y+dy].gradient = g
+                        self.buffer_create(X+dx, Y+dy, self.BUFFER_LVL_2)
 
-        old_g = self.map[X][Y].gradient
-        # You dont need to check if its on path, because its buffer will always be before
-        if (max_g < 100):
+        # Compute max_g
+        max_g = abs(max(surr_g, key=abs))
+        for n in range(0, 8):
+            g0 = surr_g[n]    
+            g3 = surr_g[(n + 3)%8] 
+            g4 = surr_g[(n + 4)%8]
+            g5 = surr_g[(n + 5)%8]
+            g_op = max(0.65*abs(g0 + g3), 0.65*abs(g0 + g4), 0.65*abs(g0 + g5))
+            if (g_op > max_g):
+                max_g = g_op
+
+        if (max_g < self.BUFFER_LVL_1):
             self.map[X][Y].gradient = max_g
+            if self.BUFFER_LVL_0 > self.map[X][Y].buffer:
+                self.map[X][Y].buffer = self.BUFFER_LVL_0
+        elif (max_g < self.BUFFER_LVL_2):
+            self.map[X][Y].gradient = max_g
+            self.buffer_create(X, Y, self.BUFFER_LVL_1)
         else:
-            self.map[X][Y].gradient = 100
-            for i in range(0, 56):
-                dxxx = self.surr_40[i][0]
-                dyyy = self.surr_40[i][1]
-                self.map[X+dxxx][Y+dyyy].gradient = 100
+            self.map[X][Y].gradient = max_g
+            self.buffer_create(X, Y, self.BUFFER_LVL_2)
 
-        if (not old_g == None):
-            if (old_g == 100):
-                self.map[X][Y].gradient = old_g
-        return dangerous_obstacles
-    
+    # Helper Function to create buffer
+    def buffer_create(self, X, Y, buffer_lvl):
+        for j in range(0,40):
+            dxx = self.surr_40[j][0]
+            dyy = self.surr_40[j][1]
+            if buffer_lvl > self.map[X+dxx][Y+dyy].buffer:
+                self.map[X+dxx][Y+dyy].buffer = buffer_lvl
+            if buffer_lvl >= self.BUFFER_LVL_1 and self.map[X+dxx][Y+dyy].on_path:
+                self.dangerous_obstacles.append((X+dxx, Y+dyy))
+
     # Find the path, send it to moving.py
     def update_path(self):
         #   While the path is  being updated, the rover must be stopped
@@ -347,7 +412,6 @@ class PointCloudTracker:
         B = self.xy_to_XY(x2, y2)
 
         new_path_XY = self.pathfinding(tuple(A), tuple(B))
-
         # new_path_XY contains the entire path, update the on_path fields.
         # Nuke old fields
         if (not self.cur_p == None):
@@ -357,7 +421,6 @@ class PointCloudTracker:
                 self.map[X][Y].on_path = False
 
         self.cur_p = new_path_XY
-
         # Enforce new fields
         for point in self.cur_p:
             X = point[0]
@@ -365,7 +428,6 @@ class PointCloudTracker:
             self.map[X][Y].on_path = True
 
         new_path_XY = self.path_reduction(new_path_XY)
-
         sent_array = []
         for point in new_path_XY:
             [x, y] = self.XY_to_xym(point[0], point[1])
@@ -373,7 +435,6 @@ class PointCloudTracker:
             sent_array.append(y)
         f = Float32MultiArray()
         f.data = sent_array
-
         while (self.new_path.get_num_connections() < 1):
             pass
         self.new_path.publish(f)
@@ -422,10 +483,10 @@ class PointCloudTracker:
     
 
     def xy_to_XY(self, x, y):
-        return [int(10*math.floor(x) + self.n1/2) +  math.floor(x%1 *10), int(10*math.floor(y) + self.n2/2) +  math.floor(y%1 *10)]
+        return [int(math.floor(x)/self.r + self.n1/2) +  math.floor((x%1) /self.r), int(math.floor(y)/self.r + self.n2/2) +  math.floor((y%1) /self.r)]
 
     def XY_to_xym(self, X, Y):
-        return [(0.1*X) - 15 + 0.05, (0.1*Y) - 15 + 0.05]
+        return [(self.r*X) - self.n1*0.5*self.r + self.r/2, (self.r*Y) - self.n2*0.5*self.r + self.r/2]
 
     # A is the grid coordinates of starting position
     # B is the grid coordinates of ending position
@@ -454,16 +515,21 @@ class PointCloudTracker:
             dx = self.surr_8[n][0]
             dy = self.surr_8[n][1]
             
-            if ((X + dx >= 0) and (X + dx <= self.n1) and (Y + dy >= 0) and (Y + dy <= self.n2) and ((self.map[X+dx, Y+dy].gradient == None) or (self.map[X+dx, Y+dy].gradient < 100))):
+            if ((X + dx >= 0) and (X + dx < self.n1) and (Y + dy >= 0) and (Y + dy < self.n2) and (self.map[X+dx, Y+dy].buffer < self.BUFFER_LVL_2)):
                 cur_neigh = (X+dx, Y+dy)
 
                 # Calculate H
                 H = self.h_score(cur_neigh, B)
 
+                # Buffer Extra Weight
+                if (self.map[X+dx, Y+dy].buffer == self.BUFFER_LVL_0 or self.map[X+dx, Y+dy].buffer == -1):
+                    G_plus = 0
+                elif (self.map[X+dx, Y+dy].buffer == self.BUFFER_LVL_1):
+                    G_plus = 35
                 if (n%2 == 0):
-                    G_try = G + 1.414
+                    G_try = G + 1.414 + G_plus
                 else:
-                    G_try = G + 1
+                    G_try = G + 1 + G_plus
                 
                 try:
                     if (self.node_table[cur_neigh][0] > G_try):
@@ -510,24 +576,21 @@ class PointCloudTracker:
     # Reduces the path to a minimum of instructions
     def path_reduction(self, full_path):
         n1 = full_path[0]
-        n2 = full_path[1]
+        n2 = full_path[2]
         dx1 = n2[0] - n1[0]
         dy1 = n2[1] - n1[1]
-
         red_path = []
-        for n in range(2, len(full_path)):
+        for n in range(2, int(len(full_path)/2)):
             n1 = n2
-            n2 = full_path[n]
-
+            n2 = full_path[2*n]
             dx2 = n2[0] - n1[0]
             dy2 = n2[1] - n1[1]
-
+            red_path.append(n1)
             if (not (dx1 == dx2 and dy1 == dy2)): # if direction change
-                red_path.append(n1)
-
+                red_path.append(full_path[2*n-1])
+            red_path.append(n2)
             dx1 = dx2
             dy1 = dy2
-        
         red_path.append(full_path[len(full_path) - 1])
         return red_path
 

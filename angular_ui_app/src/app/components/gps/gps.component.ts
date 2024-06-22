@@ -16,7 +16,7 @@ export class GpsComponent implements AfterViewInit {
   private gps_subscriber: ROSLIB.Topic;
   showModal : boolean = false;
 
-  markerDict : { [key: string]: L.Marker } = {};
+  markerDict : { [key: string]: L.Marker } = {}; // to keep track of markers and debris aread on the map 
   debrisDict : { [key: string]: L.Circle } = {};
 
   constructor(private markerService: MarkerService, private rosService: RosService) {

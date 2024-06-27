@@ -109,8 +109,8 @@ class ArmControlGUI(QWidget):
             "Waist": (-90, 90, 0, 1),
         }
         self.joint_brushed_lst = {
-            "EndEffector": (-400, 400, 0, 1),
-            "WristRoll": (0, 360, 0, 1),
+            "EndEffector": (-100, 100, 0, 1),
+            "WristRoll": (-100, 100, 0, 1),
             "WristPitch": (-30, 30, 0, 1),
         }
         self.joint_drive_lst = {

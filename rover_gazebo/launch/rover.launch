@@ -41,6 +41,13 @@
         <node name="base_controller_spawner" pkg="controller_manager" type="spawner" 
                 args="rover_joint_state_controller
                       rover_velocity_controller
+                      joint_1_controller
+                      joint_2_controller
+                      joint_3_controller
+                      joint_4_controller
+                      joint_5_controller
+                      joint_6_controller
+                      joint_7_controller
                       "/>
 
         <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">

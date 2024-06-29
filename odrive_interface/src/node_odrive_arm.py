@@ -41,6 +41,7 @@ class NodeODriveInterfaceArm:
             "rover_arm_elbow": "383834583539",
             # 0x386434413539 = 62003024573753 in decimal
             "rover_arm_shoulder": "386434413539",
+            # Not installed yet
             "rover_arm_waist": "0",
         }
         self.joint_dict = {
@@ -127,6 +128,85 @@ class NodeODriveInterfaceArm:
         self.joint_dict["rover_arm_shoulder"].pos_cmd = msg.data[1]
         self.joint_dict["rover_arm_waist"].pos_cmd = msg.data[2]
 
+        # APPLY Position Cmd
+        for joint_name, joint_obj in self.joint_dict.items():
+            if not joint_obj.odrv:
+                continue
+            try:
+                # setpoint in radians
+                setpoint = joint_obj.pos_cmd * joint_obj.gear_ratio / 360
+                joint_obj.odrv.axis0.controller.input_pos = setpoint
+            except fibre.libfibre.ObjectLostError:
+                joint_obj.odrv = None
+            except Exception as e:
+                print(
+                    f"Cannot apply setpoint {setpoint} to joint: {joint_name} - {str(e)}"
+                )
+
+    # SEND ODRIVE INFO AND HANDLE ERRORS
+    def handle_joints_error(self):
+        for joint_name, joint_obj in self.joint_dict.items():
+            with self.locks[joint_name]:  # Use a lock specific to each joint
+                if joint_obj.odrv is not None:
+                    if (
+                        joint_obj.odrv.axis0.current_state
+                        != AxisState.CLOSED_LOOP_CONTROL
+                    ):
+                        if not joint_obj.is_reconnecting:
+                            print(
+                                f"{joint_name} is not in closed loop control, recalibrating..."
+                            )
+                            joint_obj.is_reconnecting = True
+                            t = threading.Thread(
+                                target=self.calibrate_and_enter_closed_loop,
+                                args=(joint_obj,),
+                                # target=joint_obj.enter_closed_loop_control
+                            )
+                            self.threads.append(t)
+                            t.start()
+                    else:
+                        # Handle case where 'axis0' is not available
+                        # print(
+                        #     f"Cannot check current state for {joint_name}, 'axis0' attribute missing."
+                        # )
+                        pass
+                else:
+                    # ODrive interface is None, indicating a disconnection or uninitialized state
+                    if not joint_obj.is_reconnecting:
+                        print(f"RECONNECTING {joint_name}...")
+                        joint_obj.is_reconnecting = True
+                        t = threading.Thread(
+                            target=self.reconnect_joint,
+                            args=(joint_name, joint_obj),
+                        )
+                        t.start()
+
+    # Send joints angle feedback to ROS
+    def publish_joints_feedback(self):
+        feedback = Float32MultiArray()
+        for joint_name, joint_obj in self.joint_dict.items():
+            if not joint_obj.odrv:
+                continue
+            try:
+                # Assuming .odrv.axis0.pos_vel_mapper.pos_abs and .gear_ratio are correct
+                feedback.data.append(
+                    360
+                    * (
+                        joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
+                        / joint_obj.gear_ratio
+                    )
+                )
+            # Default value in case lose connection to ODrive
+            except fibre.libfibre.ObjectLostError:
+                joint_obj.odrv = None
+                feedback.data.append(0.0)
+            except Exception as e:
+                print(f"Cannot get feedback from joint: {joint_name} - {str(e)}")
+                feedback.data.append(0.0)
+
+        # Publish
+        self.odrive_pos_fb_publisher.publish(feedback)
+
     def reconnect_joint(self, joint_name, joint_obj):
         # Attempt to reconnect...
         # Update joint_obj.odrv as necessary...
@@ -205,90 +285,24 @@ class NodeODriveInterfaceArm:
         thread = threading.Thread(target=self.print_joint_state_periodically)
         thread.start()
 
-        # MAIN LOOP
+        # MAIN LOOP ---------------------------------------------------------------
         while not rospy.is_shutdown():
             # PRINT TIMESTAMP
             # print(f"Time: {rospy.get_time()}")
 
             # ODRIVE POSITION FEEDBACK, different from the outshaft feedback
-            feedback = Float32MultiArray()
-            for joint_name, joint_obj in self.joint_dict.items():
-                if not joint_obj.odrv:
-                    continue
-                try:
-                    # Assuming .odrv.axis0.pos_vel_mapper.pos_abs and .gear_ratio are correct
-                    feedback.data.append(
-                        360
-                        * (
-                            joint_obj.odrv.axis0.pos_vel_mapper.pos_abs
-                            / joint_obj.gear_ratio
-                        )
-                    )
-                # Default value in case lose connection to ODrive
-                except fibre.libfibre.ObjectLostError:
-                    joint_obj.odrv = None
-                    feedback.data.append(0.0)
-                except Exception as e:
-                    print(f"Cannot get feedback from joint: {joint_name} - {str(e)}")
-                    feedback.data.append(0.0)
-
-            # Publish
-            self.odrive_pos_fb_publisher.publish(feedback)
+            self.publish_joints_feedback()
 
             # APPLY Position Cmd
-            for joint_name, joint_obj in self.joint_dict.items():
-                if not joint_obj.odrv:
-                    continue
-                try:
-                    # setpoint in radians
-                    setpoint = joint_obj.pos_cmd * joint_obj.gear_ratio / 360
-                    joint_obj.odrv.axis0.controller.input_pos = setpoint
-                except fibre.libfibre.ObjectLostError:
-                    joint_obj.odrv = None
-                except Exception as e:
-                    print(
-                        f"Cannot apply setpoint {setpoint} to joint: {joint_name} - {str(e)}"
-                    )
+            # Done by the handle_arm_cmd function
 
             # PRINT POSITIONS TO CONSOLE
             # print_joint_state_from_dict(self.joint_dict)
 
-            # SEND ODRIVE INFO AND HANDLE ERRORS
-            for joint_name, joint_obj in self.joint_dict.items():
-                with self.locks[joint_name]:  # Use a lock specific to each joint
-                    if joint_obj.odrv is not None:
-                        if (
-                            joint_obj.odrv.axis0.current_state
-                            != AxisState.CLOSED_LOOP_CONTROL
-                        ):
-                            if not joint_obj.is_reconnecting:
-                                print(
-                                    f"{joint_name} is not in closed loop control, recalibrating..."
-                                )
-                                joint_obj.is_reconnecting = True
-                                t = threading.Thread(
-                                    target=self.calibrate_and_enter_closed_loop,
-                                    args=(joint_obj,),
-                                    # target=joint_obj.enter_closed_loop_control
-                                )
-                                t.start()
-                        else:
-                            # Handle case where 'axis0' is not available
-                            # print(
-                            #     f"Cannot check current state for {joint_name}, 'axis0' attribute missing."
-                            # )
-                            pass
-                    else:
-                        # ODrive interface is None, indicating a disconnection or uninitialized state
-                        if not joint_obj.is_reconnecting:
-                            print(f"RECONNECTING {joint_name}...")
-                            joint_obj.is_reconnecting = True
-                            t = threading.Thread(
-                                target=self.reconnect_joint,
-                                args=(joint_name, joint_obj),
-                            )
-                            t.start()
+            # HANDLE ERRORS
+            self.handle_joints_error()
 
+            # Delay
             self.rate.sleep()
 
     def shutdown_hook(self):

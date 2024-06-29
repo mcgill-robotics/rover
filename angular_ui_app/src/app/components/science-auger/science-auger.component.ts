@@ -23,13 +23,13 @@ export class ScienceAugerComponent {
     this.augerTopic = new ROSLIB.Topic({
       ros: this.ros,
       name: "/augerCmd", //to be changed to proper topic name
-      messageType: 'std_msgs/Float32MultiArray'
+      messageType: 'std_msgs/Float64MultiArray'
     });
 
     this.carouselTopic = new ROSLIB.Topic({
       ros: this.ros,
       name: "/stepperCmd", //to be changed to proper topic name
-      messageType: 'std_msgs/Float32MultiArray'
+      messageType: 'std_msgs/Float64MultiArray'
     });
   }
 

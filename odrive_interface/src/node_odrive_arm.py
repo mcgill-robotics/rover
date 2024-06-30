@@ -57,6 +57,13 @@ class NodeODriveInterfaceArm:
             "rover_arm_waist": 0,
         }
 
+        # Joint limits in degrees
+        self.joint_pos_lim_dict = {
+            "rover_arm_elbow": [-30, 30],
+            "rover_arm_shoulder": [-30, 30],
+            "rover_arm_waist": [-30, 30],
+        }
+
         self.locks = {joint_name: Lock() for joint_name in self.joint_dict.keys()}
 
         # Subscriptions
@@ -229,6 +236,10 @@ class NodeODriveInterfaceArm:
         for key, value in self.joint_serial_numbers.items():
             # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
             self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
+
+            # Set limits
+            self.joint_dict[key].pos_min_deg = self.joint_pos_lim_dict[key][0]
+            self.joint_dict[key].pos_max_deg = self.joint_pos_lim_dict[key][1]
 
             if value == "0":
                 print(

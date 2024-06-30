@@ -132,6 +132,10 @@ class ODriveJoint:
         self.vel_fb = 0
         self.direction = 1
 
+        # Configs
+        self.pos_max_deg = 360
+        self.pos_min_deg = -360
+
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")
         self.odrv.config.gpio12_mode = (

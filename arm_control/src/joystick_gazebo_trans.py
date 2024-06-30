@@ -10,4 +10,17 @@ from std_msgs.msg import Float32MultiArray
 from arm_kinematics import jointLowerLimits, jointUpperLimits
 from std_msgs.msg import String
 
+class Joystick_Gazebo_Trans():
 
+    def __init__(self):
+        
+
+    
+    def run (self):
+
+    
+    def BrushedProcess (self, brushedInp: Float32MultiArray):
+
+
+    def BrushlessProcess (self, brushlessInp: Float32MultiArray):
+        

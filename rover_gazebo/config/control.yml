@@ -61,31 +61,31 @@ joint_1_controller:
     pid: {p: 100.0, i: 0.01, d: 10.0}
 
 joint_2_controller:
-    type: velocity_controllers/JointVelocityController
+    type: position_controllers/JointPositionController
     joint: joint_2
     pid: {p: 100.0, i: 0.01, d: 10.0}
 
 joint_3_controller:
-    type: velocity_controllers/JointVelocityController
+    type: position_controllers/JointPositionController
     joint: joint_3
     pid: {p: 100.0, i: 0.01, d: 10.0}
 
 joint_4_controller:
-    type: velocity_controllers/JointVelocityController
+    type: position_controllers/JointPositionController
     joint: joint_4
     pid: {p: 100.0, i: 0.01, d: 10.0}
 
 joint_5_controller:
-    type: velocity_controllers/JointVelocityController
+    type: position_controllers/JointPositionController
     joint: joint_5
     pid: {p: 100.0, i: 0.01, d: 10.0}
 
 joint_6_controller:
-    type: velocity_controllers/JointVelocityController
+    type: position_controllers/JointPositionController
     joint: joint_6
     pid: {p: 100.0, i: 0.01, d: 10.0}
 
 joint_7_controller:
-    type: velocity_controllers/JointVelocityController
+    type: position_controllers/JointPositionController
     joint: joint_7
     pid: {p: 100.0, i: 0.01, d: 10.0}

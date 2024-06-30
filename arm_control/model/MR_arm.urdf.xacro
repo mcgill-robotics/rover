@@ -210,7 +210,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/finger.stl" />
+          <mesh filename="package://arm_control/model/meshes/finger.stl" />
         </geometry>
       </visual>
       <collision>
@@ -231,7 +231,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://arm_control/meshes/finger.stl" />
+          <mesh filename="package://arm_control/model/meshes/finger.stl" />
         </geometry>
       </visual>
       <collision>

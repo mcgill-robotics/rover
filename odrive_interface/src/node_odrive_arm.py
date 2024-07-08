@@ -231,7 +231,7 @@ class NodeODriveInterfaceArm:
             print(f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
             joint_obj.enter_closed_loop_control()
 
-    def run(self):
+    def setup_odrive(self):
         # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
         for key, value in self.joint_serial_numbers.items():
             # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
@@ -296,6 +296,7 @@ class NodeODriveInterfaceArm:
         thread = threading.Thread(target=self.print_joint_state_periodically)
         thread.start()
 
+    def loop_odrive(self):
         # MAIN LOOP ---------------------------------------------------------------
         while not rospy.is_shutdown():
             # PRINT TIMESTAMP
@@ -315,6 +316,10 @@ class NodeODriveInterfaceArm:
 
             # Delay
             self.rate.sleep()
+
+    def run(self):
+        self.setup_odrive()
+        self.loop_odrive()
 
     def shutdown_hook(self):
         print("Shutdown initiated. Setting all motors to idle state.")

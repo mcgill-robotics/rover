@@ -71,9 +71,10 @@ export class MarkerService {
   };
 
   makeNewDebrisAreas(map: L.Map, title: string, lat: number, long: number, radius: number): L.Circle {
-    const area = L.circle([lat, long], {radius: radius});
+    const area = L.circle([lat, long], {radius: radius})
     area.setStyle({color: 'orange'});
-    area.addTo(map).bindPopup(`Debris area: ${lat}, ${long}`);
+    console.log(area);
+    area.addTo(map).bindPopup(`Debris area: ${lat}, ${long}`); 
     return area;
   }
 

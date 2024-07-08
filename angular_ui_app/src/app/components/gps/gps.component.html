@@ -31,12 +31,25 @@
   <button (click)="addDebrisArea(debrisNameInput.value, debrisLatInput.value, debrisLngInput.value, debrisRadius.value)">Add</button>
 
   <hr/>
-  <div style="height: 200px; width: 95%; margin: auto; border: 1px solid black; overflow-y: scroll;">
-    <div *ngFor="let marker of markerDict | keyvalue">
-      <div>{{marker.key}}</div>
-      <!-- <div>{{marker.value.lat}}</div>
-      <div>{{marker.value.lng}}</div> -->
-      <button (click)="removeMarker(marker.key)">Remove</button>
+  <div class="list-section">
+    <h3>Landmarks</h3>
+    <div class="scrollable-list">
+      <div *ngFor="let marker of markerDict | keyvalue">
+        <div>{{marker.key}}</div>
+        <button (click)="removeMarker(marker.key)">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="list-section">
+    <h3>Debris</h3>
+    <div class="scrollable-list"></div>
+      <div *ngFor="let debris of debrisDict | keyvalue">
+        <div>{{debris.key}}</div>
+        <button (click)="removeMarker(debris.key)">Remove</button>
+      </div>
     </div>
   </div>
 </div>

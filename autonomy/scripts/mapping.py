@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 import rospy
 import math
-from sensor_msgs.msg import PointCloud2, Image
+from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Header, Float32MultiArray
 import sensor_msgs.point_cloud2 as pc2
-from gazebo_msgs.msg._ModelStates import ModelStates
 from geometry_msgs.msg import Pose, Point, Quaternion
 from visualization_msgs.msg import Marker
 from autonomy_config import CAMERA_POSITION_OFFSET, ROUNDING_COEF
 import numpy as np
 from typing import Set, Tuple, List
-from nav_msgs.msg import OccupancyGrid
-from nav_msgs.msg import MapMetaData
+from nav_msgs.msg import OccupancyGrid, MapMetaData, Odometry
 from queue import PriorityQueue
 import message_filters
 from time import sleep
@@ -26,8 +24,11 @@ class Block:
         self.last_update = 0
 
 class PointCloudTracker:
-    n1 = 300
-    n2 = 300
+    gps_n = 0
+    initial_gps = [0, 0] # Value is only good when gps_n = 100
+
+    n1 = 600
+    n2 = 600
     r = 0.1
     map = np.empty((n1, n2), dtype=Block)
 
@@ -53,7 +54,7 @@ class PointCloudTracker:
     ori = Quaternion()
 
     # Landmark arrival tolerance
-    tol_d = 0.3
+    tol_d = 1.2
 
     # Contains open nodes, and their -F score to keep order
     openset = PriorityQueue()
@@ -62,7 +63,8 @@ class PointCloudTracker:
     node_table = dict()
 
     # Entire Landmarks Left
-    landmarks = [[11,6]] # 11,6
+    landmarks = [[45.536465, -73.630130]] # 11,6
+    # [45.536503, -73.630101]
     
     # Current full path
     cur_p = None
@@ -97,23 +99,50 @@ class PointCloudTracker:
                 self.map[i][j] = Block()
         self.obstacle_points: Set[Tuple[float, float, float]] = set() 
         rospy.init_node('publisher_and_listener', anonymous=True)
-        self.pose_sub = rospy.Subscriber("/gazebo/model_states", ModelStates, self.update_pos)
+        self.gps_sub = rospy.Subscriber("fake/gps", Float32MultiArray, self.gps_handler)
+        
+    def pubs_and_list(self):
+        self.pose_sub = rospy.Subscriber("/gazebo/zed2/odom", Odometry, self.update_pos)
         self.rviz_rov_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
         self.rviz_landmark_marker_pub = rospy.Publisher('landmarks', Marker, queue_size=10)
         self.new_path = rospy.Publisher('/path', Float32MultiArray, queue_size=10)
         self.rviz_map_pub = rospy.Publisher('/gradient_grid', OccupancyGrid, queue_size=10)
         self.map_grid = {}
 
-    def listener(self) -> None:
+    def cam_listener(self) -> None:
         data_pc = message_filters.Subscriber("zed2/point_cloud/cloud_registered", PointCloud2)
-        pose_pc = message_filters.Subscriber("/gazebo/model_states", ModelStates)
-        ts = message_filters.ApproximateTimeSynchronizer([data_pc, pose_pc], 60, 0.01, allow_headerless=True, reset=True)
+        pose_pc = message_filters.Subscriber("/gazebo/zed2/odom", Odometry)
+        ts = message_filters.TimeSynchronizer([data_pc, pose_pc], 5)
         ts.registerCallback(self.pcloud2_analysis)
         rospy.spin()
 
+    def gps_handler(self, msg):
+        if self.gps_n == 100:
+            return
+        self.gps_n = self.gps_n + 1
+        self.initial_gps[0] = self.initial_gps[0] + msg.data[0]
+        self.initial_gps[1] = self.initial_gps[1] + msg.data[1]
+        if self.gps_n == 100:
+            self.initial_gps[0] = self.initial_gps[0]/100
+            self.initial_gps[1] = self.initial_gps[1]/100
+
+    def convert_landmarks(self):
+        while self.gps_n < 100:
+            pass
+        
+        ref_lat_rad = math.radians(self.initial_gps[0])
+        ref_lon_rad = math.radians(self.initial_gps[1])
+        for landmark in self.landmarks:
+            lat_rad = math.radians(landmark[0])
+            lon_rad = math.radians(landmark[1])
+
+            # Calculate x and y
+            landmark[0] = 6371000 * (lat_rad - ref_lat_rad)
+            landmark[1] = 6371000 * (lon_rad - ref_lon_rad) * math.cos(ref_lat_rad)
+    
     def update_pos(self, msg):
-        self.pos = msg.pose[15].position
-        self.ori = msg.pose[15].orientation
+        self.pos = msg.pose.pose.position
+        self.ori = msg.pose.pose.orientation
 
         # Update Path if you got close enough
         if (not self.dist_pp_nobs == None):
@@ -222,17 +251,17 @@ class PointCloudTracker:
                 x1*y0 - y1*x0 + z1*w0 + w1*z0,
                 -x1*x0 - y1*y0 - z1*z0 + w1*w0)
 
-    def pcloud2_analysis(self, msg1, msg2: PointCloud2) -> None:
+    def pcloud2_analysis(self, msg1, msg2) -> None:
         # skip messages which older then 1.1 sec
         if (msg1.header.stamp.secs + 1 < rospy.get_time()):
             return
 
         # make sure angular speed was small enough else there will be much of an error on the pointclouds position
-        if (abs(msg2.twist[15].angular.x) + abs(msg2.twist[15].angular.y) + abs(msg2.twist[15].angular.z) > 0.2):
-            return
+        # if (abs(msg2.twist.twist.angular.x) + abs(msg2.twist.twist.angular.y) + abs(msg2.twist.twist.angular.z) > 0.2):
+        #    return
         self.pcid = self.pcid + 1
-        p = msg2.pose[15].position
-        o = msg2.pose[15].orientation
+        p = msg2.pose.pose.position
+        o = msg2.pose.pose.orientation
         rover_position_tuple = (p.x, p.y, p.z)
         rover_orientation_tuple = (o.x, o.y, o.z, o.w)
 
@@ -259,7 +288,7 @@ class PointCloudTracker:
                     current_block.last_update = self.pcid
                 else:
                     if not current_block.last_update == self.pcid: 
-                        current_block.n = int(0.75*current_block.n) # Reduce weight of older points
+                        current_block.n = int(1.05*current_block.n) # Reduce weight of older points
                         current_block.last_update = self.pcid
                     current_block.avg = (current_block.avg*current_block.n + current_z)/(current_block.n+1)
                     current_block.n = current_block.n + 1
@@ -269,7 +298,7 @@ class PointCloudTracker:
 
         for point in changed_points:
             (X, Y) = point
-            self.update_gradients(X, Y)
+            self.update_gradients(X, Y, p)
             # Find which obstacle was the closest
             if not len(self.dangerous_obstacles) == 0:
                 if (self.pp_x == None):
@@ -330,7 +359,7 @@ class PointCloudTracker:
     # Also, make sure that None cases are checked. Assume that if the is less than 5 samples to form the average
     # It is not enough to be significant. We know for a fact that at [X][Y] there is 5 because its only called if
     # there is at least 5. You only need to change others.
-    def update_gradients(self, X, Y):
+    def update_gradients(self, X, Y, p):
         max_g = 0
         surr_g = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.dangerous_obstacles = []
@@ -355,10 +384,10 @@ class PointCloudTracker:
                             self.map[X+dx][Y+dy].buffer = self.BUFFER_LVL_0
                     elif (g < self.BUFFER_LVL_2):
                         self.map[X+dx][Y+dy].gradient = g
-                        self.buffer_create(X+dx, Y+dy, self.BUFFER_LVL_1)
+                        self.buffer_create(X+dx, Y+dy, self.BUFFER_LVL_1, p)
                     else:
                         self.map[X+dx][Y+dy].gradient = g
-                        self.buffer_create(X+dx, Y+dy, self.BUFFER_LVL_2)
+                        self.buffer_create(X+dx, Y+dy, self.BUFFER_LVL_2, p)
 
         # Compute max_g
         max_g = abs(max(surr_g, key=abs))
@@ -377,13 +406,13 @@ class PointCloudTracker:
                 self.map[X][Y].buffer = self.BUFFER_LVL_0
         elif (max_g < self.BUFFER_LVL_2):
             self.map[X][Y].gradient = max_g
-            self.buffer_create(X, Y, self.BUFFER_LVL_1)
+            self.buffer_create(X, Y, self.BUFFER_LVL_1, p)
         else:
             self.map[X][Y].gradient = max_g
-            self.buffer_create(X, Y, self.BUFFER_LVL_2)
+            self.buffer_create(X, Y, self.BUFFER_LVL_2, p)
 
     # Helper Function to create buffer
-    def buffer_create(self, X, Y, buffer_lvl):
+    def buffer_create(self, X, Y, buffer_lvl, p):
         for j in range(0,40):
             dxx = self.surr_40[j][0]
             dyy = self.surr_40[j][1]
@@ -391,7 +420,13 @@ class PointCloudTracker:
                 self.map[X+dxx][Y+dyy].buffer = buffer_lvl
             if buffer_lvl >= self.BUFFER_LVL_1 and self.map[X+dxx][Y+dyy].on_path:
                 self.dangerous_obstacles.append((X+dxx, Y+dyy))
-
+                if (((p.x - X+dxx)**2 + (p.y - Y+dyy)**2) < 0.64):
+                    s = Float32MultiArray()
+                    s.data = []
+                    while (self.new_path.get_num_connections() < 1):
+                        pass
+                    self.new_path.publish(s)
+            
     # Find the path, send it to moving.py
     def update_path(self):
         #   While the path is  being updated, the rover must be stopped
@@ -401,7 +436,6 @@ class PointCloudTracker:
         while (self.new_path.get_num_connections() < 1):
             pass
         self.new_path.publish(s)
-
         x1 = self.pos.x
         y1 = self.pos.y
 
@@ -410,8 +444,15 @@ class PointCloudTracker:
 
         A = self.xy_to_XY(x1, y1)
         B = self.xy_to_XY(x2, y2)
-
-        new_path_XY = self.pathfinding(tuple(A), tuple(B))
+        new_path_XY = self.pathfinding(tuple(A), tuple(B), self.BUFFER_LVL_1)
+        if (not new_path_XY[0]):
+            print('Allowing Yellow')
+            new_path_XY = self.pathfinding(tuple(A), tuple(B), self.BUFFER_LVL_2)
+        if (new_path_XY[0]):
+            new_path_XY = new_path_XY[1]
+        else: 
+            print("No Path Available")
+            exit()
         # new_path_XY contains the entire path, update the on_path fields.
         # Nuke old fields
         if (not self.cur_p == None):
@@ -419,7 +460,6 @@ class PointCloudTracker:
                 X = point[0]
                 Y = point[1]
                 self.map[X][Y].on_path = False
-
         self.cur_p = new_path_XY
         # Enforce new fields
         for point in self.cur_p:
@@ -439,7 +479,6 @@ class PointCloudTracker:
             pass
         self.new_path.publish(f)
             
-
 
     def quaternion_rotation_matrix(self, Q: tuple):
         """
@@ -478,7 +517,6 @@ class PointCloudTracker:
         rot_matrix = np.array([[r00, r01, r02],
                             [r10, r11, r12],
                             [r20, r21, r22]])
-                                
         return rot_matrix
     
 
@@ -492,22 +530,24 @@ class PointCloudTracker:
     # B is the grid coordinates of ending position
     # This method uses a modified A* pathing algorithm allowing diagonal movement
     # The inputs are Tuples
-    def pathfinding(self, A, B):
+    # Returns (True, path) if it worked or (False, None) if it didnt
+    def pathfinding(self, A, B, unallowed):
         self.openset = PriorityQueue()
         self.node_table.clear()
         self.openset.put((0, A))
         self.node_table[A] = [0, None]
 
-        while True:
+        while not self.openset.empty():
             cur_node = self.openset.get()[1]
-            if (cur_node == B):
-                return self.pathing_done(A, B)
-            self.update_neighbors(cur_node, B)
+            if (abs(cur_node[0] - B[0]) <= (1/self.r) and abs(cur_node[1] - B[1]) <= (1/self.r)): # If you are close enough to landmark pathing is done
+                return (True, self.pathing_done(A, cur_node))
+            self.update_neighbors(cur_node, B, unallowed)
+        return (False, None)
 
     # Updates openset and node_table from neighboors of Node. 
     # It makes sure that the node is not out of bounds, and it
     # is not an obstacle
-    def update_neighbors(self, Node, B):
+    def update_neighbors(self, Node, B, unallowed):
         X = Node[0]
         Y = Node[1]
         G = self.node_table[Node][0]
@@ -515,21 +555,16 @@ class PointCloudTracker:
             dx = self.surr_8[n][0]
             dy = self.surr_8[n][1]
             
-            if ((X + dx >= 0) and (X + dx < self.n1) and (Y + dy >= 0) and (Y + dy < self.n2) and (self.map[X+dx, Y+dy].buffer < self.BUFFER_LVL_2)):
+            if ((X + dx >= 0) and (X + dx < self.n1) and (Y + dy >= 0) and (Y + dy < self.n2) and (self.map[X+dx, Y+dy].buffer < unallowed)):
                 cur_neigh = (X+dx, Y+dy)
 
                 # Calculate H
                 H = self.h_score(cur_neigh, B)
 
-                # Buffer Extra Weight
-                if (self.map[X+dx, Y+dy].buffer == self.BUFFER_LVL_0 or self.map[X+dx, Y+dy].buffer == -1):
-                    G_plus = 0
-                elif (self.map[X+dx, Y+dy].buffer == self.BUFFER_LVL_1):
-                    G_plus = 35
                 if (n%2 == 0):
-                    G_try = G + 1.414 + G_plus
+                    G_try = G + 1.4142
                 else:
-                    G_try = G + 1 + G_plus
+                    G_try = G + 1
                 
                 try:
                     if (self.node_table[cur_neigh][0] > G_try):
@@ -595,8 +630,11 @@ class PointCloudTracker:
         return red_path
 
 if __name__ == '__main__':
-    trcker = PointCloudTracker()
-    trcker.mark_landmarks()
-    trcker.update_path()
-    trcker.listener()
+    tracker = PointCloudTracker()
+    tracker.convert_landmarks()
+    # print(tracker.landmarks)
+    tracker.pubs_and_list()
+    tracker.mark_landmarks()
+    tracker.update_path()
+    tracker.cam_listener()
 

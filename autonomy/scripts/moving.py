@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist
 from gazebo_msgs.msg import ModelStates
 import math
 from geometry_msgs.msg import Vector3
+from nav_msgs.msg import Odometry
 
 # Works in three steps 
 # 1. Robot goes forward to be able to discern its current direction
@@ -27,7 +28,7 @@ class No_obstacles:
     ori = None
 
     # distance tolerance
-    tol_d = 0.15
+    tol_d = 0.1
 
     # angular tolerance (in degrees)
     tol_a = 3
@@ -35,7 +36,7 @@ class No_obstacles:
     def __init__(self):
         rospy.init_node('a_to_b')
         self.vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.pose_sub = rospy.Subscriber("/gazebo/model_states", ModelStates, self.navigation)
+        self.pose_sub = rospy.Subscriber("/gazebo/zed2/odom", Odometry, self.navigation)
         self.path_sub = rospy.Subscriber("/path", Float32MultiArray, self.update_path)
         rospy.spin()
 
@@ -64,7 +65,9 @@ class No_obstacles:
         return (q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z), 2.0*(q.x*q.y + q.w*q.z)
 
     def get_pitch(self, q):
-        return math.asin(2.0*(q.x*q.z - q.w*q.y))*180/math.pi
+        pitch = math.asin(2.0*(q.x*q.z - q.w*q.y))*180/math.pi
+        return pitch
+    
     
     # returns the 2D angle of required orientation
     def required_ori(self):
@@ -81,9 +84,9 @@ class No_obstacles:
     
     def navigation(self, msg):
         # Update Position and Orientation, Keep the previous one
-        self.pos = msg.pose[15].position
-        self.ori = self.quart_2D(msg.pose[15].orientation)
-        pitch = self.get_pitch(msg.pose[15].orientation)
+        self.pos = msg.pose.pose.position
+        self.ori = self.quart_2D(msg.pose.pose.orientation)
+        pitch = self.get_pitch(msg.pose.pose.orientation)
 
         # If its empty you just return
         if (len(self.cur_path) == 0 and not self.stop_need):
@@ -104,10 +107,17 @@ class No_obstacles:
         dx2, dy2 = self.required_ori()
         dist_left = math.sqrt(dx2*dx2 + dy2*dy2)
         # Find angle between both vectors
-        post = (dx1*dx2 + dy1*dy2)/(math.sqrt(dx1*dx1 + dy1*dy1)*dist_left)
+
+        try:
+            post = (dx1*dx2 + dy1*dy2)/(math.sqrt(dx1*dx1 + dy1*dy1)*dist_left)
+        except ZeroDivisionError:
+            if (dx1*dx2 + dy1*dy2) > 0:
+                post = 1
+            else:
+                post = -1
         if post > 1:
             post = 1
-        if post < -1:
+        elif post < -1:
             post = -1
         angle = math.acos(post)*180/math.pi
         if angle >= 90:
@@ -122,6 +132,8 @@ class No_obstacles:
 
         if self.turn_need:
             if (angle > self.tol_a):
+                if (angle > 4):
+                    angle = 4
                 self.vel_pub.publish(Twist(Vector3(pitch/85,0,0), Vector3(0,0,sign*math.sqrt(angle/35))))
             else:
                 self.turn_need = False
@@ -136,6 +148,8 @@ class No_obstacles:
             speed_factor = 100*math.sqrt(dist_left_global)
             if (speed_factor > 0.05):
                 speed_factor = 0.05
+            elif (speed_factor < 0.02):
+                speed_factor = 0.02
             if pitch < 0: # Negative pitch will make the robot go backwards if its too big
                 pitch = pitch/100
                 if pitch > -7:

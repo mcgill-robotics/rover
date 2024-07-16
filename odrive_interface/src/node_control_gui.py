@@ -8,6 +8,7 @@ sys.path.append(currentdir + "/../..")
 
 # try statement to force it to stay below the directory settings throughout autoformatting
 try:
+    from collections import namedtuple
     import scipy.stats as st
     from scipy.ndimage import gaussian_filter1d
     import numpy as np
@@ -94,28 +95,33 @@ class ArrowWidget(QWidget):
             qp.drawLine(center.x(), center.y(), int(end_point_x), int(end_point_y))
 
 
+# Define a namedtuple for joint properties
+Joint = namedtuple("Joint", ["min_val", "max_val", "init_val", "direction"])
+
+
 class ArmControlGUI(QWidget):
     def __init__(self):
-        # Define ranges for each joint: (min, max, initial)
         self.sliders = {}
-        self.labels = []
+        self.labels = {}
         self.downButtons = []
         self.upButtons = []
-        self.joint_brushless_lst = {
-            "arm_brushless_elbow": (-30, 30, 0, 1),
-            "arm_brushless_shoulder": (-30, 30, 0, 1),
-            "arm_brushless_waist": (-90, 90, 0, 1),
-        }
-        self.joint_brushed_lst = {
-            "arm_brushed_end_effector": (-100, 100, 0, 1),
-            "arm_brushed_wrist_roll": (-100, 100, 0, 1),
-            "arm_brushed_wrist_pitch": (-30, 30, 0, 1),
-        }
-        self.joint_drive_lst = {
-            "drive_lb": (-200, 200, 0, -1),
-            "drive_lf": (-200, 200, 0, -1),
-            "driev_rb": (-200, 200, 0, 1),
-            "drive_rf": (-200, 200, 0, 1),
+        self.joints = {
+            "brushless": {
+                "arm_brushless_elbow": Joint(-30, 30, 0, 1),
+                "arm_brushless_shoulder": Joint(-30, 30, 0, 1),
+                "arm_brushless_waist": Joint(-50, 50, 0, 1),
+            },
+            "brushed": {
+                "arm_brushed_end_effector": Joint(-100, 100, 0, 1),
+                "arm_brushed_wrist_roll": Joint(-100, 100, 0, 1),
+                "arm_brushed_wrist_pitch": Joint(-30, 30, 0, 1),
+            },
+            "drive": {
+                "drive_lb": Joint(-200, 200, 0, -1),
+                "drive_lf": Joint(-200, 200, 0, -1),
+                "drive_rb": Joint(-200, 200, 0, 1),
+                "drive_rf": Joint(-200, 200, 0, 1),
+            },
         }
 
         super(ArmControlGUI, self).__init__()
@@ -149,12 +155,11 @@ class ArmControlGUI(QWidget):
         self.keyStates = {}  # Tracks the press state of each key
 
     def initUI(self):
-        # main_layout = QVBoxLayout()
         main_layout = QHBoxLayout()
 
-        # ARM ----------------------------------------------------------------
+        # Brushless group
         brushless_group_layout = self.create_motor_group(
-            "Brushless", self.joint_brushless_lst
+            "Brushless", self.joints["brushless"]
         )
         self.brushless_outshaft_fb_label = QLabel(
             "Fb Brushless - Elbow: 0, Shoulder: 0, Waist: 0"
@@ -166,41 +171,58 @@ class ArmControlGUI(QWidget):
         self.brushless_odrive_fb_label.setAlignment(Qt.AlignCenter)
         brushless_group_layout.addWidget(self.brushless_outshaft_fb_label)
         brushless_group_layout.addWidget(self.brushless_odrive_fb_label)
+
+        # Add reset button for Brushless group
+        self.resetBrushlessButton = QPushButton("Reset Brushless")
+        self.resetBrushlessButton.clicked.connect(
+            lambda: self.resetSliders("brushless")
+        )
+        brushless_group_layout.addWidget(self.resetBrushlessButton)
+
         main_layout.addLayout(brushless_group_layout)
 
+        # Brushed group
         brushed_group_layout = self.create_motor_group(
-            "Brushed", self.joint_brushed_lst
+            "Brushed", self.joints["brushed"]
         )
         self.fbLabelBrushed = QLabel("Fb Brushed - Elbow: 0, Shoulder: 0, Waist: 0")
         self.fbLabelBrushed.setAlignment(Qt.AlignCenter)
         brushed_group_layout.addWidget(self.fbLabelBrushed)
+
+        # Add reset button for Brushed group
+        self.resetBrushedButton = QPushButton("Reset Brushed")
+        self.resetBrushedButton.clicked.connect(lambda: self.resetSliders("brushed"))
+        brushed_group_layout.addWidget(self.resetBrushedButton)
+
         main_layout.addLayout(brushed_group_layout)
 
-        # DRIVE --------------------------------------------------------------
-        drive_group_layout = self.create_motor_group("Drive", self.joint_drive_lst, 5)
+        # Drive group
+        drive_group_layout = self.create_motor_group("Drive", self.joints["drive"])
         self.fbLabelDrive = QLabel("Drive Fb - LB: 0, LF: 0, RB: 0, RF: 0")
         self.fbLabelDrive.setAlignment(Qt.AlignCenter)
         self.drive_cmd_label = QLabel("Drive Cmd - LB: 0, LF: 0, RB: 0, RF: 0")
         self.drive_cmd_label.setAlignment(Qt.AlignCenter)
-        # Setup a label to display key presses (for demonstration)
         self.drive_twist_label = QLabel(
             "Press arrow keys, WASD, or space to interact", self
         )
-
         self.drive_twist_label.setAlignment(Qt.AlignCenter)
-
         drive_group_layout.addWidget(self.fbLabelDrive)
         drive_group_layout.addWidget(self.drive_cmd_label)
         drive_group_layout.addWidget(self.drive_twist_label)
 
+        # Add reset button for Drive group
+        self.resetDriveButton = QPushButton("Reset Drive")
+        self.resetDriveButton.clicked.connect(lambda: self.resetSliders("drive"))
+        drive_group_layout.addWidget(self.resetDriveButton)
+
         main_layout.addLayout(drive_group_layout)
 
-        # Reset Button
-        self.resetButton = QPushButton("Reset")
-        self.resetButton.clicked.connect(self.resetSliders)
-        main_layout.addWidget(self.resetButton)
+        # Add total reset button
+        self.totalResetButton = QPushButton("Total Reset")
+        self.totalResetButton.clicked.connect(lambda: self.resetSliders("all"))
+        main_layout.addWidget(self.totalResetButton)
 
-        # Arrow Widget
+        # Arrow widget
         self.arrow_widget = ArrowWidget()
         main_layout.addWidget(self.arrow_widget)
 
@@ -222,7 +244,7 @@ class ArmControlGUI(QWidget):
         event.accept()
 
     def update_movement(self):
-        print(self.keyStates)
+        # print(self.keyStates)
 
         self.keyboard_accumulator_linear = 0.0
         self.keyboard_accumulator_twist = 0.0
@@ -316,100 +338,77 @@ class ArmControlGUI(QWidget):
 
         self.publish_drive_twist()
 
-    def create_motor_group(self, motorType, jointRanges, increment=1):
+    def create_joint_control(self, joint_name, joint_properties, group_layout):
+        hbox = QHBoxLayout()
+
+        down_btn = QPushButton("-")
+        self.downButtons.append(down_btn)
+
+        slider = QSlider(Qt.Horizontal)
+        slider.setMinimum(joint_properties.min_val)
+        slider.setMaximum(joint_properties.max_val)
+        slider.setValue(joint_properties.init_val)
+        slider.valueChanged[int].connect(
+            lambda value, j=joint_name: self.onChangeCmd(j)
+        )
+        self.sliders[joint_name] = slider
+
+        up_btn = QPushButton("+")
+        self.upButtons.append(up_btn)
+
+        label = QLabel(f"{joint_name} Cmd: {joint_properties.init_val}")
+        self.labels[joint_name] = label
+
+        down_btn.clicked.connect(lambda checked, j=joint_name: self.adjustCmd(j, -1))
+        up_btn.clicked.connect(lambda checked, j=joint_name: self.adjustCmd(j, 1))
+
+        hbox.addWidget(down_btn)
+        hbox.addWidget(slider)
+        hbox.addWidget(up_btn)
+
+        group_layout.addWidget(label)
+        group_layout.addLayout(hbox)
+
+    # VBox so the joints are stacked vertically
+    def create_motor_group(self, motor_type, joint_dict):
         vbox = QVBoxLayout()
-        vbox.addWidget(QLabel(f"{motorType} Motor Control"))
+        vbox.addWidget(QLabel(f"{motor_type} Motor Control"))
 
-        for joint, (minVal, maxVal, initVal, direction) in jointRanges.items():
-            hbox = QHBoxLayout()
-
-            downBtn = QPushButton("-")
-            self.downButtons.append(downBtn)
-
-            slider = QSlider(Qt.Horizontal)
-            slider.setMinimum(minVal)
-            slider.setMaximum(maxVal)
-            # Set the initial value
-            slider.setValue(initVal)
-            slider.valueChanged[int].connect(lambda value, j=joint: self.onChangeCmd(j))
-            self.sliders[joint] = slider
-
-            upBtn = QPushButton("+")
-            self.upButtons.append(upBtn)
-
-            label = QLabel(f"{joint} Cmd: {initVal}")
-            self.labels.append(label)
-
-            downBtn.clicked.connect(
-                lambda checked, j=joint: self.adjustCmd(j, -increment)
-            )
-            upBtn.clicked.connect(lambda checked, j=joint: self.adjustCmd(j, increment))
-
-            hbox.addWidget(downBtn)
-            hbox.addWidget(slider)
-            hbox.addWidget(upBtn)
-
-            # labels on top of the sliders
-            vbox.addWidget(label)
-            vbox.addLayout(hbox)
+        for joint_name, joint_properties in joint_dict.items():
+            self.create_joint_control(joint_name, joint_properties, vbox)
 
         return vbox
 
-    def resetSliders(self):
-        # Reset brushless sliders
-        for joint, (
-            minVal,
-            maxVal,
-            initVal,
-            direction,
-        ) in self.joint_brushless_lst.items():
-            self.sliders[joint].setValue(initVal)
-            # Optionally, update the label as well
-            index = self.labels.index(
-                next(filter(lambda x: x.text().startswith(joint), self.labels))
-            )
-            self.labels[index].setText(f"{joint} Cmd: {initVal}")
-
-        # Reset brushed sliders
-        for joint, (
-            minVal,
-            maxVal,
-            initVal,
-            direction,
-        ) in self.joint_brushed_lst.items():
-            self.sliders[joint].setValue(initVal)
-            # Optionally, update the label as well
-            index = self.labels.index(
-                next(filter(lambda x: x.text().startswith(joint), self.labels))
-            )
-            self.labels[index].setText(f"{joint} Cmd: {initVal}")
-
-        # Reset drive sliders
-        for joint, (minVal, maxVal, initVal, direction) in self.joint_drive_lst.items():
-            self.sliders[joint].setValue(initVal)
-            # Optionally, update the label as well
-            index = self.labels.index(
-                next(filter(lambda x: x.text().startswith(joint), self.labels))
-            )
-            self.labels[index].setText(f"{joint} Cmd: {initVal}")
+    def resetSliders(self, group):
+        if group == "all":
+            for joint_category in self.joints.values():
+                for joint, props in joint_category.items():
+                    self.sliders[joint].setValue(props.init_val)
+                    self.labels[joint].setText(f"{joint} Cmd: {props.init_val}")
+        else:
+            for joint, props in self.joints[group].items():
+                self.sliders[joint].setValue(props.init_val)
+                self.labels[joint].setText(f"{joint} Cmd: {props.init_val}")
 
     def adjustCmd(self, joint, delta):
-        # Determine the joint's range based on whether it's in the brushless or brushed list.
-        if joint in self.joint_brushless_lst:
-            joint_range = self.joint_brushless_lst[joint]
-        elif joint in self.joint_brushed_lst:
-            joint_range = self.joint_brushed_lst[joint]
-        elif joint in self.joint_drive_lst:
-            joint_range = self.joint_drive_lst[joint]
-        else:
-            print(f"Joint '{joint}' not found in either motor list.")
+        # Determine the joint's range based on whether it's in the brushless, brushed, or drive list.
+        joint_props = None
+        for joint_category in self.joints.values():
+            if joint in joint_category:
+                joint_props = joint_category[joint]
+                break
+
+        if not joint_props:
+            print(f"Joint '{joint}' not found in any motor list.")
             return
 
         # Get the slider associated with the joint.
         slider = self.sliders[joint]
 
         # Calculate the new value, ensuring it stays within the specified range.
-        newValue = max(joint_range[0], min(joint_range[1], slider.value() + delta))
+        newValue = max(
+            joint_props.min_val, min(joint_props.max_val, slider.value() + delta)
+        )
 
         # Set the new value to the slider.
         slider.setValue(newValue)
@@ -418,43 +417,32 @@ class ArmControlGUI(QWidget):
         # self.onChangeCmd(joint)
 
     def onChangeCmd(self, joint):
-        # Convert items to a list to be able to slice
+        print(f"Cmd changed for {joint}, new value: {self.sliders[joint].value()}")
         items = list(self.sliders.items())
 
-        # For brushless motors
-        cmdMsgBrushless = Float32MultiArray()
-        cmdMsgBrushless.data = [float(slider.value()) for key, slider in items[0:3]]
-        self.arm_brushless_cmd_publisher.publish(cmdMsgBrushless)
+        if joint in self.joints["brushless"]:
+            cmdMsgBrushless = Float32MultiArray()
+            cmdMsgBrushless.data = [float(slider.value()) for key, slider in items[0:3]]
+            self.arm_brushless_cmd_publisher.publish(cmdMsgBrushless)
 
-        # For brushed motors
-        cmdMsgBrushed = Float32MultiArray()
-        cmdMsgBrushed.data = [float(slider.value()) for key, slider in items[3:6]]
-        self.arm_brushed_cmd_publisher.publish(cmdMsgBrushed)
+        elif joint in self.joints["brushed"]:
+            cmdMsgBrushed = Float32MultiArray()
+            cmdMsgBrushed.data = [float(slider.value()) for key, slider in items[3:6]]
+            self.arm_brushed_cmd_publisher.publish(cmdMsgBrushed)
 
-        # For drive motors
-        cmdMsgDrive = WheelSpeed()
-        # flip is done in odrive_interface
-        # cmdMsgDrive.left[0] = items[6][1].value() * \
-        #     self.joint_drive_lst["LB"][3]
-        # cmdMsgDrive.left[1] = items[7][1].value() * \
-        #     self.joint_drive_lst["LF"][3]
-        # cmdMsgDrive.right[0] = items[8][1].value() * \
-        #     self.joint_drive_lst["RB"][3]
-        # cmdMsgDrive.right[1] = items[9][1].value() * \
-        #     self.joint_drive_lst["RF"][3]
-        cmdMsgDrive.left[0] = items[6][1].value()
-        cmdMsgDrive.left[1] = items[7][1].value()
-        cmdMsgDrive.right[0] = items[8][1].value()
-        cmdMsgDrive.right[1] = items[9][1].value()
-        # print(type(items[6][1]))
-        self.drive_cmd_publisher.publish(cmdMsgDrive)
+        elif joint in self.joints["drive"]:
+            cmdMsgDrive = WheelSpeed()
+            cmdMsgDrive.left[0] = items[6][1].value()
+            cmdMsgDrive.left[1] = items[7][1].value()
+            cmdMsgDrive.right[0] = items[8][1].value()
+            cmdMsgDrive.right[1] = items[9][1].value()
+            self.drive_cmd_publisher.publish(cmdMsgDrive)
 
-        # Update labels
-        for i, (joint, slider) in enumerate(items):
-            self.labels[i].setText(f"{joint} Cmd: {slider.value()}")
+        for key, slider in self.sliders.items():
+            self.labels[key].setText(f"{key} Cmd: {slider.value()}")
 
     def on_update_brushless_outshaft_fb(self, data):
-        names = list(self.joint_brushless_lst.keys())
+        names = list(self.joints["brushless"].keys())
         fbText = f"""Fb Brushless - {names[0]}: {data.data[0]:.2f}, {names[1]}: {
                 data.data[1]:.2f}, {names[2]}: {data.data[2]:.2f}"""
         self.brushless_outshaft_fb_label.setText(fbText)
@@ -465,7 +453,7 @@ class ArmControlGUI(QWidget):
         )
 
     def on_update_brushed_fb(self, data):
-        names = list(self.joint_brushed_lst.keys())
+        names = list(self.joints["brushed"].keys())
         print(f"Fb Brushed - {names[0]}: {data.data[0]:.2f}")
         print(f"{names[1]}: {data.data[1]:.2f}")
         print(f"{names[2]}: {data.data[2]:.2f}")
@@ -477,15 +465,17 @@ class ArmControlGUI(QWidget):
         self.fbLabelBrushed.setText(fbText)  # Corrected to update the brushed label
 
     def update_drive_fb(self, data):
-        print(f"Drive Fb - LB: {data.left[0] * self.joint_drive_lst['LB'][3]:.2f}")
-        print(f"LF: {data.left[1] * self.joint_drive_lst['LF'][3]:.2f}")
-        print(f"RB: {data.right[0] * self.joint_drive_lst['RB'][3]:.2f}")
-        print(f"RF: {data.right[1] * self.joint_drive_lst['RF'][3]:.2f}")
+        print(
+            f"Drive Fb - LB: {data.left[0] * self.joints['drive']['drive_lb'].direction:.2f}"
+        )
+        print(f"LF: {data.left[1] * self.joints['drive']['drive_lf'].direction:.2f}")
+        print(f"RB: {data.right[0] * self.joints['drive']['drive_rb'].direction:.2f}")
+        print(f"RF: {data.right[1] * self.joints['drive']['drive_rf'].direction:.2f}")
         fbText = (
-            f"Drive Fb - LB: {data.left[0] * self.joint_drive_lst['LB'][3]:.2f}, "
-            f"LF: {data.left[1] * self.joint_drive_lst['LF'][3]:.2f}, "
-            f"RB: {data.right[0] * self.joint_drive_lst['RB'][3]:.2f}, "
-            f"RF: {data.right[1] * self.joint_drive_lst['RF'][3]:.2f}"
+            f"Drive Fb - LB: {data.left[0] * self.joints['drive']['drive_lb'].direction:.2f}, "
+            f"LF: {data.left[1] * self.joints['drive']['drive_lf'].direction:.2f}, "
+            f"RB: {data.right[0] * self.joints['drive']['drive_rb'].direction:.2f}, "
+            f"RF: {data.right[1] * self.joints['drive']['drive_rf'].direction:.2f}"
         )
         self.fbLabelDrive.setText(fbText)
         # If you want to use the other format, uncomment the following and comment out the above setText line.

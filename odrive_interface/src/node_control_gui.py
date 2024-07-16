@@ -443,59 +443,39 @@ class ArmControlGUI(QWidget):
 
     def on_update_brushless_outshaft_fb(self, data):
         names = list(self.joints["brushless"].keys())
-        fbText = f"""Fb Brushless - {names[0]}: {data.data[0]:.2f}, {names[1]}: {
-                data.data[1]:.2f}, {names[2]}: {data.data[2]:.2f}"""
+        fbText = f"""Fb Brushless - {names[0]}: {data.data[0]:.2f}, {names[1]}: {data.data[1]:.2f}, {names[2]}: {data.data[2]:.2f}"""
+        # print(fbText)
         self.brushless_outshaft_fb_label.setText(fbText)
 
     def on_update_brushless_odrive_fb_odrive(self, data):
-        self.brushless_odrive_fb_label.setText(
-            f"""Odrive Pos Fb - Elbow: {data.data[0]:.2f}, Shoulder: {data.data[1]:.2f}, Waist: {data.data[2]:.2f}"""
-        )
+        fbText = f"""Odrive Pos Fb - Elbow: {data.data[0]:.2f}, Shoulder: {data.data[1]:.2f}, Waist: {data.data[2]:.2f}"""
+        # print(fbText)
+        self.brushless_odrive_fb_label.setText(fbText)
 
     def on_update_brushed_fb(self, data):
         names = list(self.joints["brushed"].keys())
-        print(f"Fb Brushed - {names[0]}: {data.data[0]:.2f}")
-        print(f"{names[1]}: {data.data[1]:.2f}")
-        print(f"{names[2]}: {data.data[2]:.2f}")
-        fbText = (
-            f"Fb Brushed - {names[0]}: {data.data[0]:.2f}, "
-            f"{names[1]}: {data.data[1]:.2f}, "
-            f"{names[2]}: {data.data[2]:.2f}"
-        )
+        fbText = f"""Fb Brushed - {names[0]}: {data.data[0]:.2f}, {names[1]}: {data.data[1]:.2f}, {names[2]}: {data.data[2]:.2f}"""
+        # print(fbText)
         self.fbLabelBrushed.setText(fbText)  # Corrected to update the brushed label
 
     def update_drive_fb(self, data):
-        print(
-            f"Drive Fb - LB: {data.left[0] * self.joints['drive']['drive_lb'].direction:.2f}"
-        )
-        print(f"LF: {data.left[1] * self.joints['drive']['drive_lf'].direction:.2f}")
-        print(f"RB: {data.right[0] * self.joints['drive']['drive_rb'].direction:.2f}")
-        print(f"RF: {data.right[1] * self.joints['drive']['drive_rf'].direction:.2f}")
         fbText = (
-            f"Drive Fb - LB: {data.left[0] * self.joints['drive']['drive_lb'].direction:.2f}, "
-            f"LF: {data.left[1] * self.joints['drive']['drive_lf'].direction:.2f}, "
-            f"RB: {data.right[0] * self.joints['drive']['drive_rb'].direction:.2f}, "
-            f"RF: {data.right[1] * self.joints['drive']['drive_rf'].direction:.2f}"
+            f"""Drive Fb - LB: {data.left[0] * self.joints['drive']['drive_lb'].direction:.2f}, """
+            f"""LF: {data.left[1] * self.joints['drive']['drive_lf'].direction:.2f}, """
+            f"""RB: {data.right[0] * self.joints['drive']['drive_rb'].direction:.2f}, """
+            f"""RF: {data.right[1] * self.joints['drive']['drive_rf'].direction:.2f}"""
         )
+        # print(fbText)
         self.fbLabelDrive.setText(fbText)
-        # If you want to use the other format, uncomment the following and comment out the above setText line.
-        # fbText = (f"Drive Fb - LB: {data.left[0]:.2f}, "
-        #           f"LF: {data.left[1]:.2f}, "
-        #           f"RB: {data.right[0]:.2f}, "
-        #           f"RF: {data.right[1]:.2f}")
-        # self.fbLabelDrive.setText(fbText)
 
     def on_update_drive_cmd(self, data):
-        print(f"Drive Cmd - LB: {data.left[0]:.2f}")
-        print(f"LF: {data.left[1]:.2f}")
-        print(f"RB: {data.right[0]:.2f}")
-        print(f"RF: {data.right[1]:.2f}")
         cmdText = (
-            f"Drive Cmd - LB: {data.left[0]:.2f}, "
-            f"LF: {data.left[1]:.2f}, "
-            f"RB: {data.right[0]:.2f}, "
-            f"RF: {data.right[1]:.2f}"
+            f"""Drive Cmd - LB: {data.left[0]:.2f}, """
+            f"""LF: {data.left[1]:.2f}, """
+            f"""RB: {data.right[0]:.2f}, """
+            f"""RF: {data.right[1]:.2f}"""
         )
+        print(cmdText)
         self.drive_cmd_label.setText(cmdText)
 
     def ros_setup(self):

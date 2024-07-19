@@ -40,5 +40,8 @@ catkin_package(
 catkin_install_python(PROGRAMS
   src/arm_controller.py
   sim/arm_sim.py
+  sim/arm_viz.py
+  sim/arm_viz2.py
+  sim/arm_viz_rviz.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -69,11 +69,13 @@ class Node_ArmSim:
             self.desiredJointPos[5] + cmds.data[0], -0.3, 0.11
         )
         self.desiredJointPos[6] = self.desiredJointPos[5]
+        print("Updated desiredJointPos for brushed motors:", self.desiredJointPos)
 
     def updateArmBrushlessSim(self, cmds: Float32MultiArray):
         self.desiredJointPos[2], self.desiredJointPos[1], self.desiredJointPos[0] = (
             tuple(x * (pi / 180) for x in cmds.data)
         )
+        print("Updated desiredJointPos for brushless motors:", self.desiredJointPos)
 
     def run(self):
         while not rospy.is_shutdown():

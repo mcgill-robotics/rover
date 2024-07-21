@@ -108,7 +108,7 @@ class ArmControlGUI(QWidget):
         self.joints = {
             "brushless": {
                 "arm_brushless_elbow": Joint(-30, 30, 0, 1),
-                "arm_brushless_shoulder": Joint(-30, 30, 0, 1),
+                "arm_brushless_shoulder": Joint(-50, 50, 0, 1),
                 "arm_brushless_waist": Joint(-50, 50, 0, 1),
             },
             "brushed": {
@@ -287,6 +287,7 @@ class ArmControlGUI(QWidget):
         self.publish_drive_twist()
 
     def publish_drive_twist(self):
+        print(f"Publishing twist - Linear: {self.rover_linear_vel}, Angular: {self.rover_angular_vel}")
         # Publish the velocities
         roverTwist = Twist()
         roverTwist.linear.x = self.rover_linear_vel
@@ -491,7 +492,7 @@ class ArmControlGUI(QWidget):
             "/wheel_velocity_cmd", WheelSpeed, queue_size=10
         )
         self.drive_twist_publisher = rospy.Publisher(
-            "rover_velocity_controller/cmd_vel", Twist, queue_size=1
+            "rover_velocity_controller/cmd_vel", Twist, queue_size=10
         )
 
         # Subscribers

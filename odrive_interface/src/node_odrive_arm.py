@@ -33,6 +33,8 @@ class NodeODriveInterfaceArm:
     def __init__(self):
         self.is_homed = False
         self.is_calibrated = False
+        self.threads = []
+        self.shutdown_flag = False
 
         # CONFIGURATION ---------------------------------------------------------------
         # Serial number of the ODrive controlling the joint
@@ -66,8 +68,9 @@ class NodeODriveInterfaceArm:
 
         self.locks = {joint_name: Lock() for joint_name in self.joint_dict.keys()}
 
-        # Subscriptions
         rospy.init_node("odrive_interface_arm", disable_signals=True)
+
+        # Subscriptions
         self.outshaft_pos_fb_subscriber = rospy.Subscriber(
             "/armBrushlessFb",
             Float32MultiArray,
@@ -86,19 +89,12 @@ class NodeODriveInterfaceArm:
             "/odrive_armBrushlessFb", Float32MultiArray, queue_size=1
         )
 
+        rospy.on_shutdown(self.shutdown_hook)
+
         # Frequency of the ODrive I/O
         self.rate = rospy.Rate(100)
 
-        rospy.on_shutdown(self.shutdown_hook)
-
-        self.threads = []
-
         self.run()
-
-    def print_joint_state_periodically(self):
-        while True:
-            print_joint_state_from_dict(self.joint_dict)
-            time.sleep(0.5)  # Sleep for 500ms
 
     # Update encoder angle from external encoders
     def handle_outshaft_fb(self, msg):
@@ -120,10 +116,16 @@ class NodeODriveInterfaceArm:
                         / 360
                     )
                     joint_obj.odrv.axis0.set_abs_pos(temp)
+                    print("Homing joint: ", joint_name)
                 except Exception as e:
                     print(
                         f"Cannot home joint: {joint_name} to position: {self.joint_pos_outshaft_dict[joint_name]} - {str(e)}"
                     )
+
+            # Set all pos_cmd to 0
+            for joint_name, joint_obj in self.joint_dict.items():
+                joint_obj.pos_cmd = 0
+            self.apply_arm_cmd()
             self.is_homed = True
 
     # Receive setpoint from external control node
@@ -134,7 +136,9 @@ class NodeODriveInterfaceArm:
         self.joint_dict["rover_arm_elbow"].pos_cmd = msg.data[0]
         self.joint_dict["rover_arm_shoulder"].pos_cmd = msg.data[1]
         self.joint_dict["rover_arm_waist"].pos_cmd = msg.data[2]
+        self.apply_arm_cmd()
 
+    def apply_arm_cmd(self):
         # APPLY Position Cmd
         for joint_name, joint_obj in self.joint_dict.items():
             if not joint_obj.odrv:
@@ -143,6 +147,7 @@ class NodeODriveInterfaceArm:
                 # setpoint in radians
                 setpoint = joint_obj.pos_cmd * joint_obj.gear_ratio / 360
                 joint_obj.odrv.axis0.controller.input_pos = setpoint
+                print(f"Setpoint applied to {joint_name}: {setpoint}")
             except fibre.libfibre.ObjectLostError:
                 joint_obj.odrv = None
             except Exception as e:
@@ -165,7 +170,8 @@ class NodeODriveInterfaceArm:
                             )
                             joint_obj.is_reconnecting = True
                             t = threading.Thread(
-                                target=self.calibrate_and_enter_closed_loop,
+                                target=self.enter_closed_loop_control,
+                                # target=self.calibrate_and_enter_closed_loop,
                                 args=(joint_obj,),
                                 # target=joint_obj.enter_closed_loop_control
                             )
@@ -223,7 +229,7 @@ class NodeODriveInterfaceArm:
         with self.locks[joint_name]:
             joint_obj.is_reconnecting = False
 
-    def calibrate_and_enter_closed_loop(self, joint_obj):
+    def calibrate_and_enter_closed_loop_control(self, joint_obj):
         if joint_obj.odrv is not None:
             print(f"CALIBRATING joint {joint_obj.name}...")
             joint_obj.calibrate()
@@ -231,8 +237,13 @@ class NodeODriveInterfaceArm:
             print(f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
             joint_obj.enter_closed_loop_control()
 
+    def enter_closed_loop_control(self, joint_obj):
+        if joint_obj.odrv is not None:
+            print(f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
+            joint_obj.enter_closed_loop_control()
+
     def setup_odrive(self):
-        # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
+        # CONNECT -----------------------------------------------------
         for key, value in self.joint_serial_numbers.items():
             # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
             self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
@@ -251,6 +262,7 @@ class NodeODriveInterfaceArm:
 
         print("Connection step completed.")
 
+        # CALIBRATE AND ENTER CLOSED LOOP CONTROL -----------------------------------------------------
         for joint_name, joint_obj in self.joint_dict.items():
             if joint_obj.odrv is None:
                 continue
@@ -292,9 +304,10 @@ class NodeODriveInterfaceArm:
 
         print("Entering closed loop control step completed.")
 
-        # PRINT POSITIONS TO CONSOLE
-        thread = threading.Thread(target=self.print_joint_state_periodically)
-        thread.start()
+    def print_loop(self):
+        while True:
+            print_joint_state_from_dict(self.joint_dict, sync_print=True)
+            time.sleep(0.2)
 
     def loop_odrive(self):
         # MAIN LOOP ---------------------------------------------------------------
@@ -308,9 +321,6 @@ class NodeODriveInterfaceArm:
             # APPLY Position Cmd
             # Done by the handle_arm_cmd function
 
-            # PRINT POSITIONS TO CONSOLE
-            # print_joint_state_from_dict(self.joint_dict)
-
             # HANDLE ERRORS
             self.handle_joints_error()
 
@@ -321,10 +331,13 @@ class NodeODriveInterfaceArm:
         self.setup_odrive()
         thread = threading.Thread(target=self.loop_odrive)
         thread.start()
+        print_thread = threading.Thread(target=self.print_loop)
+        print_thread.start()
         rospy.spin()
         self.shutdown_hook()
 
     def shutdown_hook(self):
+        self.shutdown_flag = True
         print("Shutdown initiated. Setting all motors to idle state.")
         for joint_name, joint_obj in self.joint_dict.items():
             if not joint_obj.odrv:

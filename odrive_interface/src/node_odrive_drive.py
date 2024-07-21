@@ -28,22 +28,25 @@ class NodeODriveInterfaceDrive:
         # CONFIGURATION ---------------------------------------------------------------
         # Serial number of the ODrive controlling the joint
         self.joint_serial_numbers = {
-            "rover_drive_rf": "384F34683539",
-            "rover_drive_lf": "386134503539",
-            "rover_drive_rb": "387134683539",
-            "rover_drive_lb": "385C347A3539",
+            # "rover_drive_rf": "384F34683539",
+            "rover_drive_rf": "385C347A3539",
+            # "rover_drive_lf": "386134503539",
+            "rover_drive_lf": "387134683539",
+            # "rover_drive_rb": "387134683539",
+            "rover_drive_rb": "386134503539",
+            # "rover_drive_lb": "385C347A3539",
+            "rover_drive_lb": "384F34683539",
         }
 
         # VARIABLES -------------------------------------------------------------------
         # Dictionary of ODriveJoint objects, key is the joint name in string format, value is the ODriveJoint object
         self.joint_dict = {
-            "rover_drive_rf": None,
-            "rover_drive_lf": None,
+            # "rover_drive_rf": None,
+            # "rover_drive_lf": None,
             "rover_drive_rb": None,
-            "rover_drive_lb": None,
+            # "rover_drive_lb": None,
         }
-        self.locks = {joint_name: Lock()
-                      for joint_name in self.joint_dict.keys()}
+        self.locks = {joint_name: Lock() for joint_name in self.joint_dict.keys()}
 
         # Subscriptions
         rospy.init_node("odrive_interface_drive")
@@ -70,10 +73,22 @@ class NodeODriveInterfaceDrive:
         if not self.is_calibrated:
             print("ODrive not calibrated. Ignoring command.")
             return
-        self.joint_dict["rover_drive_lb"].vel_cmd = msg.left[0]
-        self.joint_dict["rover_drive_lf"].vel_cmd = msg.left[1]
-        self.joint_dict["rover_drive_rb"].vel_cmd = msg.right[0]
-        self.joint_dict["rover_drive_rf"].vel_cmd = msg.right[1]
+        try:
+            self.joint_dict["rover_drive_lb"].vel_cmd = msg.left[0]
+        except KeyError:
+            print("KeyError: 'rover_drive_lb' not found in joint_dict")
+        try:
+            self.joint_dict["rover_drive_lf"].vel_cmd = msg.left[1]
+        except KeyError:
+            print("KeyError: 'rover_drive_lf' not found in joint_dict")
+        try:
+            self.joint_dict["rover_drive_rb"].vel_cmd = msg.right[0]
+        except KeyError:
+            print("KeyError: 'rover_drive_rb' not found in joint_dict")
+        try:
+            self.joint_dict["rover_drive_rf"].vel_cmd = msg.right[1]
+        except KeyError:
+            print("KeyError: 'rover_drive_rf' not found in joint_dict")
 
     def reconnect_joint(self, joint_name, joint_obj):
         # Attempt to reconnect...
@@ -89,8 +104,7 @@ class NodeODriveInterfaceDrive:
             print(f"CALIBRATING joint {joint_obj.name}...")
             joint_obj.calibrate()
 
-            print(
-                f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
+            print(f"ENTERING CLOSED LOOP CONTROL for joint {joint_obj.name}...")
             joint_obj.enter_closed_loop_control()
 
     def run(self):
@@ -99,9 +113,13 @@ class NodeODriveInterfaceDrive:
         enter_closed_loop_threads = []
 
         # SETUP ODRIVE CONNECTIONS -----------------------------------------------------
-        for key, value in self.joint_serial_numbers.items():
+        # for key, value in self.joint_serial_numbers.items():
+        for key, value in self.joint_dict.items():
             # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
-            self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
+            # self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
+            self.joint_dict[key] = ODriveJoint(
+                name=key, serial_number=self.joint_serial_numbers[key]
+            )
 
             if value == 0:
                 print(
@@ -148,11 +166,22 @@ class NodeODriveInterfaceDrive:
         print("Enter closed loop control step completed.")
 
         # Set the direction of the motors
-        self.joint_dict["rover_drive_lb"].direction = -1
-        self.joint_dict["rover_drive_lf"].direction = -1
-        self.joint_dict["rover_drive_rb"].direction = 1
-        self.joint_dict["rover_drive_rf"].direction = 1
-
+        try:
+            self.joint_dict["rover_drive_lb"].direction = -1
+        except KeyError:
+            print("KeyError: 'rover_drive_lb' not found in joint_dict")
+        try:
+            self.joint_dict["rover_drive_lf"].direction = -1
+        except KeyError:
+            print("KeyError: 'rover_drive_lf' not found in joint_dict")
+        try:
+            self.joint_dict["rover_drive_rb"].direction = 1
+        except KeyError:
+            print("KeyError: 'rover_drive_rb' not found in joint_dict")
+        try:
+            self.joint_dict["rover_drive_rf"].direction = 1
+        except KeyError:
+            print("KeyError: 'rover_drive_rf' not found in joint_dict")
         print("Entering closed loop control step completed.")
 
         # MAIN LOOP -----------------------------------------------------
@@ -175,10 +204,26 @@ class NodeODriveInterfaceDrive:
                     print(f"""Cannot get feedback from joint: {joint_name}""")
 
             # Publish
-            feedback.left[0] = self.joint_dict["rover_drive_lb"].vel_fb
-            feedback.left[1] = self.joint_dict["rover_drive_lf"].vel_fb
-            feedback.right[0] = self.joint_dict["rover_drive_rb"].vel_fb
-            feedback.right[1] = self.joint_dict["rover_drive_rf"].vel_fb
+            try:
+                feedback.left[0] = self.joint_dict["rover_drive_lb"].vel_fb
+            except KeyError:
+                print("KeyError: 'rover_drive_lb' not found in joint_dict")
+                feedback.left[0] = 0.0  # Default value if key is missing
+            try:
+                feedback.left[1] = self.joint_dict["rover_drive_lf"].vel_fb
+            except KeyError:
+                print("KeyError: 'rover_drive_lf' not found in joint_dict")
+                feedback.left[1] = 0.0  # Default value if key is missing
+            try:
+                feedback.right[0] = self.joint_dict["rover_drive_rb"].vel_fb
+            except KeyError:
+                print("KeyError: 'rover_drive_rb' not found in joint_dict")
+                feedback.right[0] = 0.0  # Default value if key is missing
+            try:
+                feedback.right[1] = self.joint_dict["rover_drive_rf"].vel_fb
+            except KeyError:
+                print("KeyError: 'rover_drive_rf' not found in joint_dict")
+                feedback.right[1] = 0.0  # Default value if key is missing
             self.drive_fb_publisher.publish(feedback)
 
             # APPLY Velocity CMD
@@ -207,25 +252,35 @@ class NodeODriveInterfaceDrive:
                 with self.locks[joint_name]:  # Use a lock specific to each joint
                     if joint_obj.odrv is not None:
                         # Check if 'odrv' object has 'axis0' attribute before accessing it
-                        if hasattr(joint_obj.odrv, 'axis0') and joint_obj.odrv.axis0.current_state != AxisState.CLOSED_LOOP_CONTROL:
+                        if (
+                            hasattr(joint_obj.odrv, "axis0")
+                            and joint_obj.odrv.axis0.current_state
+                            != AxisState.CLOSED_LOOP_CONTROL
+                        ):
                             if not joint_obj.is_reconnecting:
                                 print(
-                                    f"{joint_name} is not in closed loop control, recalibrating...")
+                                    f"{joint_name} is not in closed loop control, recalibrating..."
+                                )
                                 joint_obj.is_reconnecting = True
                                 t = threading.Thread(
-                                    target=self.calibrate_and_enter_closed_loop, args=(joint_obj,))
+                                    target=self.calibrate_and_enter_closed_loop,
+                                    args=(joint_obj,),
+                                )
                                 t.start()
                         else:
                             # Handle case where 'axis0' is not available
                             print(
-                                f"Cannot check current state for {joint_name}, 'axis0' attribute missing.")
+                                f"Cannot check current state for {joint_name}, 'axis0' attribute missing."
+                            )
                     else:
                         # ODrive interface is None, indicating a disconnection or uninitialized state
                         if not joint_obj.is_reconnecting:
                             print(f"RECONNECTING {joint_name}...")
                             joint_obj.is_reconnecting = True
                             t = threading.Thread(
-                                target=self.reconnect_joint, args=(joint_name, joint_obj))
+                                target=self.reconnect_joint,
+                                args=(joint_name, joint_obj),
+                            )
                             t.start()
 
             #     try:

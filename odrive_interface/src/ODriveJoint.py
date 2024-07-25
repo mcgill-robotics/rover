@@ -271,10 +271,10 @@ class ODriveJoint:
             self.odrv = odrive.find_any(
                 serial_number=self.serial_number, timeout=self.timeout
             )
-            print("Successfully reconnected.")
+            print("Successfully reconnected to motor {}".format(self.name))
             self.is_reconnecting = False  # Set to False when reconnection is successful
         except (TimeoutError, fibre.libfibre.ObjectLostError) as e:
-            print(f"Failed to reconnect: {e}")
+            print(f"Failed to reconnect to motor {self.name}. Error: {e}")
             self.odrv = None
         finally:
             if (
@@ -683,7 +683,7 @@ def main():
         test_odrv_joint.odrv.axis0.commutation_mapper.config.use_index_gpio = False
         test_odrv_joint.odrv.axis0.pos_vel_mapper.config.use_index_gpio = False
         test_odrv_joint.odrv.config.enable_uart_a = False
-        
+
     if test_joint_name == "rover_drive_rb":
         test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
         test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5

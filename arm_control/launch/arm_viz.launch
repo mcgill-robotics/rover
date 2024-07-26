@@ -13,8 +13,8 @@
         type="joint_state_publisher_gui" /> -->
 
     <!-- Joint State Publisher -->
-    <node name="joint_state_publisher" pkg="joint_state_publisher"
-        type="joint_state_publisher" />
+    <!-- <node name="joint_state_publisher" pkg="joint_state_publisher"
+        type="joint_state_publisher" /> -->
 
     <!-- Robot State Publisher -->
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />

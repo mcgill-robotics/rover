@@ -6,7 +6,8 @@ import rospy
 from human_control_interface.msg import Joystick_input
 from arm_control.msg import ArmControllerInput
 
-class Node_Joystick():
+
+class Node_Joystick:
     """Gets joystick data and publishes the data to the joystick_data topic
 
     Topic data : Float32MultiArray
@@ -32,17 +33,24 @@ class Node_Joystick():
         Hat X axis  : -1, 0, or 1
         Hat Y axis  : -1, 0, or 1
     """
+
     def __init__(self):
         # Initialize Joystick
         try:
             self.joystick = Joystick()
+            print("Joystick initialized")
         except AssertionError as error:
             rospy.logerr(str(error))
+            print("Joystick not initialized")
 
         # Initialize ROS
         rospy.init_node("joystick", anonymous=False)
-        self.joystick_publisher = rospy.Publisher("joystick_data", Joystick_input, queue_size=1)
-        self.arm_publisher = rospy.Publisher("arm_controller_input", ArmControllerInput, queue_size=1)
+        self.joystick_publisher = rospy.Publisher(
+            "joystick_data", Joystick_input, queue_size=1
+        )
+        self.arm_publisher = rospy.Publisher(
+            "arm_controller_input", ArmControllerInput, queue_size=1
+        )
 
         self.prevB3 = 0
         self.prevB4 = 0
@@ -53,7 +61,7 @@ class Node_Joystick():
         self.prevB10 = 0
         self.prevB11 = 0
         self.prevB12 = 0
-        #self.modeState = False 
+        # self.modeState = False
         self.clawState = False
         self.mode = 0
 
@@ -61,8 +69,7 @@ class Node_Joystick():
         self.run()
 
     def run(self):
-        """Runs the node loop for getting and updating the joystick information for user control
-        """
+        """Runs the node loop for getting and updating the joystick information for user control"""
         while not rospy.is_shutdown():
             if rospy.is_shutdown():
                 exit()
@@ -89,17 +96,26 @@ class Node_Joystick():
                 msg.A4 = self.joystick.data.a4
                 msg.Hat_X = self.joystick.data.hat_x
                 msg.Hat_Y = self.joystick.data.hat_y
-                if (abs(msg.A1)<0.1): msg.A1=0
-                if (abs(msg.A2)<0.1): msg.A2=0
-                if (abs(msg.A3)<0.1): msg.A3=0
-                if (msg.A1!=0 and abs(msg.A2)/abs(msg.A1)<0.3): msg.A2=0
-                if (msg.A1!=0 and abs(msg.A3)/abs(msg.A1)<0.3): msg.A3=0
+                if abs(msg.A1) < 0.1:
+                    msg.A1 = 0
+                if abs(msg.A2) < 0.1:
+                    msg.A2 = 0
+                if abs(msg.A3) < 0.1:
+                    msg.A3 = 0
+                if msg.A1 != 0 and abs(msg.A2) / abs(msg.A1) < 0.3:
+                    msg.A2 = 0
+                if msg.A1 != 0 and abs(msg.A3) / abs(msg.A1) < 0.3:
+                    msg.A3 = 0
 
-                if (msg.A2!=0 and abs(msg.A1)/abs(msg.A2)<0.3): msg.A1=0
-                if (msg.A2!=0 and abs(msg.A3)/abs(msg.A2)<0.3): msg.A3=0
+                if msg.A2 != 0 and abs(msg.A1) / abs(msg.A2) < 0.3:
+                    msg.A1 = 0
+                if msg.A2 != 0 and abs(msg.A3) / abs(msg.A2) < 0.3:
+                    msg.A3 = 0
 
-                if (msg.A3!=0 and abs(msg.A1)/abs(msg.A3)<0.3): msg.A1=0
-                if (msg.A3!=0 and abs(msg.A2)/abs(msg.A3)<0.3): msg.A2=0
+                if msg.A3 != 0 and abs(msg.A1) / abs(msg.A3) < 0.3:
+                    msg.A1 = 0
+                if msg.A3 != 0 and abs(msg.A2) / abs(msg.A3) < 0.3:
+                    msg.A2 = 0
 
                 self.joystick_publisher.publish(msg)
 
@@ -119,7 +135,7 @@ class Node_Joystick():
                     arm_ctrl.Z_dir = -1 * arm_ctrl.Z_dir
 
                 arm_ctrl.MaxVelPercentage = msg.A4
-                arm_ctrl.MaxVelPercentage = 1+ arm_ctrl.MaxVelPercentage
+                arm_ctrl.MaxVelPercentage = 1 + arm_ctrl.MaxVelPercentage
 
                 if self.risingEdge(msg.B8, self.prevB8):
                     self.mode = 1
@@ -133,7 +149,7 @@ class Node_Joystick():
                     self.mode = 5
                 if self.risingEdge(msg.B11, self.prevB11):
                     self.mode = 0
-               
+
                 arm_ctrl.Mode = self.mode
 
                 self.prevB3 = msg.B3
@@ -156,15 +172,13 @@ class Node_Joystick():
     def risingEdge(self, prevSignal, nextSignal):
         if prevSignal < nextSignal:
             return True
-        else: 
+        else:
             return False
 
-    
 
+class Joystick:
+    """Driver to get the event inputs from the Logitech Extreme 3D Pro Joystick"""
 
-class Joystick():
-    """Driver to get the event inputs from the Logitech Extreme 3D Pro Joystick
-    """
     def __init__(self):
         """Constructor for the Joystick Driver
 
@@ -191,37 +205,51 @@ class Joystick():
             try:
                 controller1 = pygame.joystick.Joystick(0)
                 controller1.init()
-                print ("SINGLE CONTROLL DETECTED ", controller1.get_id(), " ", controller1.get_name())
+                print(
+                    "SINGLE CONTROLL DETECTED ",
+                    controller1.get_id(),
+                    " ",
+                    controller1.get_name(),
+                )
             except:
                 print("controller not intialised")
             try:
                 controller2 = pygame.joystick.Joystick(1)
                 controller2.init()
-                print ("DOUBLE CONTROLL DETECTED ", controller2.get_id(), " ", controller2.get_name())
+                print(
+                    "DOUBLE CONTROLL DETECTED ",
+                    controller2.get_id(),
+                    " ",
+                    controller2.get_name(),
+                )
             except:
                 print(controller2.get_name(), " failed")
-        
-            #if controller.get_id() == 0 or controller.get_name() == "Logitech Extreme 3D":
+
+            # if controller.get_id() == 0 or controller.get_name() == "Logitech Extreme 3D":
             if controller1.get_name() == "Logitech Extreme 3D":
                 self.controller = controller1
             else:
                 self.controller = controller2
-                #print("gamepad initalize success")
+                # print("gamepad initalize success")
         else:
             # Either no Joystick found or multiple detected (currently unsupported)
             self.controller = None
 
         if self.controller is None:
-            raise AssertionError("Joystick not initialized properly, make sure you have one connected")
+            raise AssertionError(
+                "Joystick not initialized properly, make sure you have one connected"
+            )
 
     def update(self):
-        """Gets the latest data from the joystick from event information received from the joystick
-        """
-        if  self.controller.get_name() == "Logitech Extreme 3D":
+        """Gets the latest data from the joystick from event information received from the joystick"""
+        if self.controller.get_name() == "Logitech Extreme 3D":
             for an_event in pygame.event.get():
                 try:
                     # Get event information
-                    if an_event.type == pygame.JOYBUTTONDOWN or an_event.type == pygame.JOYBUTTONUP:
+                    if (
+                        an_event.type == pygame.JOYBUTTONDOWN
+                        or an_event.type == pygame.JOYBUTTONUP
+                    ):
                         self.data.b1 = self.controller.get_button(0)
                         self.data.b2 = self.controller.get_button(1)
                         self.data.b3 = self.controller.get_button(2)
@@ -251,9 +279,8 @@ class Joystick():
                     pass
 
     def printData(self):
-        """Sends copy of joystick data to the standard output (sys.out)
-        """
-        data = ''
+        """Sends copy of joystick data to the standard output (sys.out)"""
+        data = ""
         # Buttons
         data += f"B1 {self.data.b1}| "
         data += f"B2 {self.data.b2}| "
@@ -276,12 +303,13 @@ class Joystick():
 
         # Hat
         data += f"HAT {self.data.hat}"
-        
+
         print(data)
 
-class JoystickData():
-    """Object containing mapping of the Logitech Extreme 3D Pro
-    """
+
+class JoystickData:
+    """Object containing mapping of the Logitech Extreme 3D Pro"""
+
     def __init__(self):
         # Buttons
         self.b1 = 0

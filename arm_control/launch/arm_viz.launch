@@ -1,0 +1,30 @@
+<launch>
+    <!-- Define arguments for model, GUI, and RViz configuration -->
+    <arg name="model" default="$(find arm_control)/model/MR_arm.urdf" />
+    <arg name="gui" default="true" />
+    <arg name="rvizconfig" default="$(find arm_control)/rviz/arm_viz.rviz" />
+
+    <!-- Load the robot description from the URDF file -->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+    <param name="use_gui" value="$(arg gui)" />
+
+    <!-- Joint State Publisher GUI -->
+    <!-- <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui"
+        type="joint_state_publisher_gui" /> -->
+
+    <!-- Joint State Publisher -->
+    <!-- <node name="joint_state_publisher" pkg="joint_state_publisher"
+        type="joint_state_publisher" /> -->
+
+    <!-- Robot State Publisher -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+    <!-- RViz Visualization -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+    <!-- Node Control GUI -->
+    <node name="node_control_gui" pkg="odrive_interface" type="node_control_gui.py" output="screen" />
+
+    <!-- Node to convert Cmd to joint_state -->
+    <node name="arm_viz_rviz" pkg="arm_control" type="arm_viz_rviz.py" output="screen" />
+</launch>

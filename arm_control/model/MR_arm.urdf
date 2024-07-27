@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 
 <robot name="mr_arm">
   <!-- Base link is the center of the robot's bottom plate -->
@@ -6,24 +6,24 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/Link0.stl" />
+        <mesh filename="package://arm_control/model/meshes/Link0.stl" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/collision_Link0.stl" />
+        <mesh filename="package://arm_control/model/meshes/collision_Link0.stl" />
       </geometry>
     </collision>
   </link>
 
-  <joint name="joint_1" type="revolute">
+  <joint name="joint_waist" type="revolute">
     <origin xyz="0 0 0" rpy="0 0 0" />
     <parent link="link_0" />
     <child link="link_1" />
     <axis xyz="0 0 1" />
     <limit effort="10.0" velocity="2.61799" lower="-3.141592" upper="3.141592" />
-    <dynamics damping="0.5"/>
+    <dynamics damping="0.5" />
   </joint>
 
   <!-- Joint 1 -->
@@ -31,24 +31,24 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/Link1.stl" />
+        <mesh filename="package://arm_control/model/meshes/Link1.stl" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/collision_Link1.stl" />
+        <mesh filename="package://arm_control/model/meshes/collision_Link1.stl" />
       </geometry>
     </collision>
   </link>
 
-  <joint name="joint_2" type="revolute">
+  <joint name="joint_shoulder" type="revolute">
     <origin xyz="0 0 0.0575" rpy="0 0 0" />
     <parent link="link_1" />
     <child link="link_2" />
     <axis xyz="0 1 0" />
     <limit effort="10.0" velocity="2.61799" lower="-1.570796327" upper="1.570796327" />
-    <dynamics damping="0.5"/>
+    <dynamics damping="0.5" />
   </joint>
 
 
@@ -56,24 +56,24 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/Link2.stl" />
+        <mesh filename="package://arm_control/model/meshes/Link2.stl" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/collision_Link2.stl" />
+        <mesh filename="package://arm_control/model/meshes/collision_Link2.stl" />
       </geometry>
     </collision>
   </link>
 
-  <joint name="joint_3" type="revolute">
+  <joint name="joint_elbow" type="revolute">
     <origin xyz="0 0 0.5" rpy="0 0 0" />
     <parent link="link_2" />
     <child link="link_3" />
     <axis xyz="0 1 0" />
     <limit effort="10.0" velocity="2.61799" lower="-1.570796327" upper="1.570796327" />
-    <dynamics damping="0.5"/>
+    <dynamics damping="0.5" />
   </joint>
 
 
@@ -81,24 +81,24 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/Link3.stl" />
+        <mesh filename="package://arm_control/model/meshes/Link3.stl" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/collision_Link3.stl" />
+        <mesh filename="package://arm_control/model/meshes/collision_Link3.stl" />
       </geometry>
     </collision>
   </link>
 
-  <joint name="joint_4" type="revolute">
+  <joint name="joint_wrist_pitch" type="revolute">
     <origin xyz="0.4 0 0" rpy="0 0 0" />
     <parent link="link_3" />
     <child link="link_4" />
     <axis xyz="0 1 0" />
     <limit effort="10.0" velocity="2.61799" lower="-1.570796327" upper="1.570796327" />
-    <dynamics damping="0.5"/>
+    <dynamics damping="0.5" />
   </joint>
 
 
@@ -106,24 +106,24 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/Link4.stl" />
+        <mesh filename="package://arm_control/model/meshes/Link4.stl" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/collision_Link4.stl" />
+        <mesh filename="package://arm_control/model/meshes/collision_Link4.stl" />
       </geometry>
     </collision>
   </link>
 
-  <joint name="joint_5" type="revolute">
+  <joint name="joint_wrist_roll" type="revolute">
     <origin xyz="0.034 0 0" rpy="0 0 0" />
     <parent link="link_4" />
     <child link="link_5" />
     <axis xyz="1 0 0" />
     <limit effort="10.0" velocity="2.61799" lower="-3.141592" upper="3.141592" />
-    <dynamics damping="0.5"/>
+    <dynamics damping="0.5" />
   </joint>
 
 
@@ -131,25 +131,25 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/Link5.stl" />
+        <mesh filename="package://arm_control/model/meshes/Link5.stl" />
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/collision_Link5.stl" />
+        <mesh filename="package://arm_control/model/meshes/collision_Link5.stl" />
       </geometry>
     </collision>
   </link>
 
 
-  <joint name="joint_6" type="revolute">
+  <joint name="joint_end_effector" type="revolute">
     <origin xyz="0.050 -0.045 -0.01" rpy="0 0 1.570796327" />
     <parent link="link_5" />
     <child link="link_6" />
     <axis xyz="0 0 1" />
     <limit effort="10.0" velocity="2.61799" lower="-3.141592" upper="3.141592" />
-    <dynamics damping="0.5"/>
+    <dynamics damping="0.5" />
   </joint>
 
   <joint name="joint_7" type="revolute">
@@ -158,7 +158,7 @@
     <child link="link_7" />
     <axis xyz="0 0 1" />
     <limit effort="10.0" velocity="2.61799" lower="-3.141592" upper="3.141592" />
-    <dynamics damping="0.5"/>
+    <dynamics damping="0.5" />
   </joint>
 
 
@@ -166,7 +166,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/finger.stl" />
+        <mesh filename="package://arm_control/model/meshes/finger.stl" />
       </geometry>
     </visual>
     <collision>
@@ -182,7 +182,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0" />
       <geometry>
-        <mesh filename="meshes/finger.stl" />
+        <mesh filename="package://arm_control/model/meshes/finger.stl" />
       </geometry>
     </visual>
     <collision>

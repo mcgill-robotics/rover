@@ -1,0 +1,8 @@
+<launch>
+    <!-- For receiving/sending data from/to the servos and the foot sensors -->
+    <node pkg="odrive_interface" type="node_control_gui.py" name="odrive_interface_gui"
+        output="screen">
+    </node>
+    <node pkg="drive_control" type="drive_control_node.py" name="drive_controller" output="screen">
+    </node>
+</launch>

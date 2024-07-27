@@ -1,0 +1,56 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+    Properties:
+      Name: Displays
+  - Class: rviz/Views
+    Name: Views
+    Properties:
+      Name: Views
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160;160;160
+      Enabled: true
+      Name: Grid
+      Reference Frame: world
+      Value: true
+    - Class: rviz/RobotModel
+      Enabled: true
+      Name: Robot Model 1
+      Robot Description: robot1/robot_description
+      Alpha: 1.0
+      Value: true
+      TF Prefix: robot1
+    - Class: rviz/RobotModel
+      Enabled: true
+      Name: Robot Model 2
+      Robot Description: robot2/robot_description
+      Alpha: 1.0
+      Value: true
+      TF Prefix: robot2
+  Global Options:
+    Background Color: 48;48;48
+    Fixed Frame: world
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 6
+      Focal Point: 0;0;0
+      Name: Orbit
+      Near Clip Distance: 0.01
+      Pitch: 0.785
+      Target Frame: world
+      Value: true
+      Yaw: 1.571

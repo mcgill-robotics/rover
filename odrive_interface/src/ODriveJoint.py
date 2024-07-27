@@ -9,12 +9,20 @@ import odrive.config
 
 from odrive.enums import *
 from odrive.utils import dump_errors
+<<<<<<< HEAD
+=======
+from queue import Queue
+>>>>>>> odrive_rebase_mn297
 
 import time
 import threading
 import fibre
 import re
 import math
+<<<<<<< HEAD
+=======
+import sys
+>>>>>>> odrive_rebase_mn297
 
 try:
     import rospy
@@ -77,6 +85,7 @@ def watchdog(joint_dict, watchdog_stop_event):
             pass
 
 
+<<<<<<< HEAD
 def print_joint_state_from_dict(joint_dict):
     for joint_name, joint_obj in joint_dict.items():
         # Check if the odrive is connected
@@ -106,6 +115,51 @@ def print_joint_state_from_dict(joint_dict):
         print(f"""-pos_cmd={joint_obj.pos_cmd}""")
         print(f"""-vel_cmd={joint_obj.vel_cmd}""")
         print()
+=======
+def print_joint_state_from_dict(joint_dict, sync_print=False):
+    status_lines = []
+    for joint_name, joint_obj in joint_dict.items():
+        # Check if the odrive is connected
+        status = "connected" if joint_obj.odrv else "disconnected, odrv=None"
+        line = f"""{joint_name} {joint_obj.serial_number} ({status}) is_reconnecting={joint_obj.is_reconnecting}"""
+        status_lines.append(line)
+        if joint_obj.odrv:
+            status = "connected"
+            # Assuming dump_errors prints errors to stdout or logs them
+            # dump_errors(joint_obj.odrv)
+            current_state = f"""-current_state={AxisState(joint_obj.odrv.axis0.current_state).name}"""
+            pos_rel = f"""-pos_rel={joint_obj.odrv.axis0.pos_vel_mapper.pos_rel}"""
+            pos_abs = f"""-pos_abs={joint_obj.odrv.axis0.pos_vel_mapper.pos_abs}"""
+            input_pos = f"""-input_pos={joint_obj.odrv.axis0.controller.input_pos}"""
+            vel_estimate = (
+                f"""-vel_estimate={joint_obj.odrv.encoder_estimator0.vel_estimate}"""
+            )
+        else:
+            current_state = "-current_state=None"
+            pos_rel = "-pos_rel=None"
+            pos_abs = "-pos_abs=None"
+            input_pos = "-input_pos=None"
+            vel_estimate = "-vel_estimate=None"
+
+        status_lines.append(current_state)
+        status_lines.append(pos_rel)
+        status_lines.append(pos_abs)
+        status_lines.append(input_pos)
+        status_lines.append(vel_estimate)
+        pos_cmd = f"""-pos_cmd={joint_obj.pos_cmd}"""
+        vel_cmd = f"""-vel_cmd={joint_obj.vel_cmd}"""
+        status_lines.append(pos_cmd)
+        status_lines.append(vel_cmd)
+        status_lines.append("\n")  # Empty line for separation
+
+    status = "\n".join(status_lines)
+
+    if sync_print:
+        sys.stdout.write("\r" + status)
+        sys.stdout.flush()
+    else:
+        print(status)
+>>>>>>> odrive_rebase_mn297
 
 
 class ODriveJoint:
@@ -134,6 +188,13 @@ class ODriveJoint:
         self.vel_fb = 0
         self.direction = 1
 
+<<<<<<< HEAD
+=======
+        # Configs
+        self.pos_max_deg = 360
+        self.pos_min_deg = -360
+
+>>>>>>> odrive_rebase_mn297
     def config_lower_limit_switch(self):
         print("starting lower limit switch config...")
         self.odrv.config.gpio12_mode = (
@@ -191,14 +252,24 @@ class ODriveJoint:
         ):
             custom_sleep(0.5)
             print(
+<<<<<<< HEAD
                 "Motor {} is still entering homing. Current state: {}".format(
+=======
+                "Motor {} {} is still entering homing. Current state: {}".format(
+                    self.odrv.name,
+>>>>>>> odrive_rebase_mn297
                     self.odrv.serial_number,
                     AxisState(self.odrv.axis0.current_state).name,
                 )
             )
             dump_errors(self.odrv)
         print(
+<<<<<<< HEAD
             "SUCCESS: Motor {} is in state: {}.".format(
+=======
+            "SUCCESS: Motor {} {} is in state: {}.".format(
+                self.odrv.name,
+>>>>>>> odrive_rebase_mn297
                 self.odrv.serial_number,
                 AxisState(self.odrv.axis0.current_state).name,
             )
@@ -207,7 +278,12 @@ class ODriveJoint:
         while self.odrv.axis0.current_state == AxisState.HOMING:
             custom_sleep(1)
             print(
+<<<<<<< HEAD
                 "Motor {} is still homing. Current state: {}".format(
+=======
+                "Motor {} {} is still homing. Current state: {}".format(
+                    self.odrv.name,
+>>>>>>> odrive_rebase_mn297
                     self.odrv.serial_number,
                     AxisState(self.odrv.axis0.current_state).name,
                 )
@@ -243,10 +319,15 @@ class ODriveJoint:
             pass
 
     def reconnect(self):
+<<<<<<< HEAD
+=======
+        self.is_reconnecting
+>>>>>>> odrive_rebase_mn297
         try:
             self.odrv = odrive.find_any(
                 serial_number=self.serial_number, timeout=self.timeout
             )
+<<<<<<< HEAD
         except TimeoutError:
             print("TimeoutError in reconnect() ...")
             pass
@@ -258,6 +339,19 @@ class ODriveJoint:
             if self.odrv:
                 print("  re-connected in reconnect()")
             pass
+=======
+            print("Successfully reconnected to motor {}".format(self.name))
+            self.is_reconnecting = False  # Set to False when reconnection is successful
+        except (TimeoutError, fibre.libfibre.ObjectLostError) as e:
+            print(f"Failed to reconnect to motor {self.name}. Error: {e}")
+            self.odrv = None
+        finally:
+            if (
+                self.is_reconnecting
+            ):  # If still reconnecting, it means reconnection failed
+                self.is_reconnecting = False
+                # Handle failed reconnection if needed
+>>>>>>> odrive_rebase_mn297
 
     def calibrate(self):
         self.odrv.clear_errors()
@@ -266,7 +360,16 @@ class ODriveJoint:
         custom_sleep(0.2)
 
         # Wait for calibration to end
+<<<<<<< HEAD
         while (not self.odrv.axis0.current_state == AxisState.IDLE):
+=======
+        while (
+            # self.odrv.axis0.current_state == AxisState.MOTOR_CALIBRATION
+            # or self.odrv.axis0.current_state == AxisState.FULL_CALIBRATION_SEQUENCE
+            not self.odrv.axis0.current_state
+            == AxisState.IDLE
+        ):
+>>>>>>> odrive_rebase_mn297
             custom_sleep(1)
             print(
                 "Motor {} is still calibrating. Current state: {}".format(
@@ -298,8 +401,12 @@ class ODriveJoint:
                 )
             print(
                 "Calibration procedure failed in motor {}. Reason: {}".format(
+<<<<<<< HEAD
                     self.name,
                     ProcedureResult(result).name
+=======
+                    self.name, ProcedureResult(result).name
+>>>>>>> odrive_rebase_mn297
                 )
             )
             if result == ProcedureResult.DISARMED:
@@ -314,11 +421,23 @@ class ODriveJoint:
             print("Calibration successful!")
 
     def enter_closed_loop_control(self):
+<<<<<<< HEAD
         self.odrv.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
         while (
             self.odrv.axis0.current_state != AxisState.CLOSED_LOOP_CONTROL
             or self.odrv.axis0.current_state == AxisState.IDLE
         ):
+=======
+        max_retries = 5  # Maximum number of retries
+        retries = 0
+
+        self.odrv.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
+
+        while (
+            self.odrv.axis0.current_state != AxisState.CLOSED_LOOP_CONTROL
+            or self.odrv.axis0.current_state == AxisState.IDLE
+        ) and retries < max_retries:
+>>>>>>> odrive_rebase_mn297
             custom_sleep(0.5)
             print(
                 "Motor {} is still entering closed loop control. Current state: {}".format(
@@ -326,6 +445,7 @@ class ODriveJoint:
                     AxisState(self.odrv.axis0.current_state).name,
                 )
             )
+<<<<<<< HEAD
             dump_errors(self.odrv)
         print(
             "SUCCESS: Motor {} is in state: {}.".format(
@@ -333,6 +453,28 @@ class ODriveJoint:
                 AxisState(self.odrv.axis0.current_state).name,
             )
         )
+=======
+            self.odrv.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
+            dump_errors(self.odrv)
+            retries += 1
+
+        if retries == max_retries:
+            print(
+                "ERROR: Motor {} failed to enter closed loop control after {} retries.".format(
+                    self.name, max_retries
+                )
+            )
+            self.calibrate()
+            retries = 0
+        if self.odrv.axis0.current_state == AxisState.CLOSED_LOOP_CONTROL:
+            print(
+                "SUCCESS: Motor {} is in state: {}.".format(
+                    self.odrv.serial_number,
+                    AxisState(self.odrv.axis0.current_state).name,
+                )
+            )
+            self.is_reconnecting = False
+>>>>>>> odrive_rebase_mn297
 
     def calibrate_and_enter_closed_loop(self):
         if self.odrv is not None:
@@ -348,8 +490,12 @@ class ODriveJoint:
     def print_gpio_voltages(self):
         for i in [1, 2, 3, 4]:
             print(
+<<<<<<< HEAD
                 "voltage on GPIO{} is {} Volt".format(
                     i, self.odrv.get_adc_voltage(i))
+=======
+                "voltage on GPIO{} is {} Volt".format(i, self.odrv.get_adc_voltage(i))
+>>>>>>> odrive_rebase_mn297
             )
 
 
@@ -438,13 +584,30 @@ def main():
         "rover_arm_elbow": "383834583539",  # change as needed
         "rover_arm_shoulder": "386434413539",
         "rover_arm_waist": "0",
+<<<<<<< HEAD
+=======
+        "rover_drive_rf": "385C347A3539",
+        "rover_drive_lf": "387134683539",
+        "rover_drive_rb": "386134503539",
+        "rover_drive_lb": "384F34683539",
+>>>>>>> odrive_rebase_mn297
     }
 
     # Define the menu options
     menu_options = {
+<<<<<<< HEAD
         '1': "rover_arm_elbow",
         '2': "rover_arm_shoulder",
         '3': "rover_arm_waist"
+=======
+        "1": "rover_arm_elbow",
+        "2": "rover_arm_shoulder",
+        "3": "rover_arm_waist",
+        "4": "rover_drive_rf",
+        "5": "rover_drive_lf",
+        "6": "rover_drive_rb",
+        "7": "rover_drive_lb",
+>>>>>>> odrive_rebase_mn297
     }
 
     # Display the menu to the user
@@ -459,7 +622,12 @@ def main():
     if choice in menu_options:
         test_joint_name = menu_options[choice]
         print(
+<<<<<<< HEAD
             f"You selected: {test_joint_name}, serial number: {joint_serial_numbers[test_joint_name]}")
+=======
+            f"You selected: {test_joint_name}, serial number: {joint_serial_numbers[test_joint_name]}"
+        )
+>>>>>>> odrive_rebase_mn297
     else:
         print("Invalid choice. Exiting.")
         return
@@ -475,10 +643,22 @@ def main():
     setup_upper_lim_switch = False
 
     odrv = odrive.find_any(
+<<<<<<< HEAD
         serial_number=joint_serial_numbers[test_joint_name], timeout=5)
 
     test_odrv_joint = ODriveJoint(name=test_joint_name, odrv=odrv,
                                   gear_ratio=1, serial_number=joint_serial_numbers[test_joint_name])
+=======
+        serial_number=joint_serial_numbers[test_joint_name], timeout=5
+    )
+
+    test_odrv_joint = ODriveJoint(
+        name=test_joint_name,
+        odrv=odrv,
+        gear_ratio=1,
+        serial_number=joint_serial_numbers[test_joint_name],
+    )
+>>>>>>> odrive_rebase_mn297
 
     # ERASE CONFIG -----------------------------------------------------------------------
     if reapply_config:
@@ -489,7 +669,12 @@ def main():
     if test_joint_name == "rover_arm_elbow":
         print("APPLYING CONFIG for rover_arm_elbow...")
         test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+<<<<<<< HEAD
         test_odrv_joint.odrv.config.dc_max_positive_current = 5
+=======
+        test_odrv_joint.odrv.config.dc_max_positive_current = 6
+        test_odrv_joint.odrv.config.dc_max_negative_current = -0.1
+>>>>>>> odrive_rebase_mn297
         test_odrv_joint.odrv.config.brake_resistor0.enable = True
         test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
         test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
@@ -505,8 +690,13 @@ def main():
         test_odrv_joint.odrv.axis0.controller.config.control_mode = (
             ControlMode.POSITION_CONTROL
         )
+<<<<<<< HEAD
         test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
         test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 10
+=======
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 4
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 100
+>>>>>>> odrive_rebase_mn297
         test_odrv_joint.odrv.axis0.config.torque_soft_min = -2
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 2
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
@@ -522,6 +712,10 @@ def main():
         test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
         test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
         test_odrv_joint.odrv.config.dc_max_positive_current = 10
+<<<<<<< HEAD
+=======
+        test_odrv_joint.odrv.config.dc_max_negative_current = -0.1
+>>>>>>> odrive_rebase_mn297
         test_odrv_joint.odrv.config.brake_resistor0.enable = True
         test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
         test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
@@ -537,8 +731,13 @@ def main():
             ControlMode.POSITION_CONTROL
         )
         # vel_limit determines how fast, vel_limit_tolerance determines how much it can go over, so we avoid vel_limit violations
+<<<<<<< HEAD
         test_odrv_joint.odrv.axis0.controller.config.vel_limit = 3
         test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 10
+=======
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 4
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 100
+>>>>>>> odrive_rebase_mn297
         test_odrv_joint.odrv.axis0.config.torque_soft_min = -5
         test_odrv_joint.odrv.axis0.config.torque_soft_max = 5
         test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
@@ -548,6 +747,158 @@ def main():
         )
         test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
         test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
+<<<<<<< HEAD
+=======
+    if test_joint_name == "rover_arm_waist":
+        pass
+    if test_joint_name == "rover_drive_rf":
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
+        test_odrv_joint.odrv.config.dc_max_positive_current = 12
+        test_odrv_joint.odrv.config.dc_max_negative_current = -0.1
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 10
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 23
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 10
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 10
+        test_odrv_joint.odrv.axis0.motor.motor_thermistor.config.enabled = False
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.VELOCITY_CONTROL
+        )
+        # test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 2
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -math.inf
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = math.inf
+        test_odrv_joint.odrv.axis0.trap_traj.config.accel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_ramp_rate = 200
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.axis0.config.enable_watchdog = False
+        test_odrv_joint.odrv.inc_encoder0.config.enabled = True
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.inc_encoder0.config.cpr = 2400
+        test_odrv_joint.odrv.axis0.commutation_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.axis0.pos_vel_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.config.enable_uart_a = False
+
+    if test_joint_name == "rover_drive_lf":
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
+        test_odrv_joint.odrv.config.dc_max_positive_current = 12
+        test_odrv_joint.odrv.config.dc_max_negative_current = -0.1
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 10
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 23
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 10
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 10
+        test_odrv_joint.odrv.axis0.motor.motor_thermistor.config.enabled = False
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.VELOCITY_CONTROL
+        )
+        # test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 2
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -math.inf
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = math.inf
+        test_odrv_joint.odrv.axis0.trap_traj.config.accel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_ramp_rate = 200
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.axis0.config.enable_watchdog = False
+        test_odrv_joint.odrv.inc_encoder0.config.enabled = True
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.inc_encoder0.config.cpr = 2400
+        test_odrv_joint.odrv.axis0.commutation_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.axis0.pos_vel_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.config.enable_uart_a = False
+
+    if test_joint_name == "rover_drive_rb":
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
+        test_odrv_joint.odrv.config.dc_max_positive_current = 12
+        test_odrv_joint.odrv.config.dc_max_negative_current = -0.1
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 10
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 23
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 10
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 10
+        test_odrv_joint.odrv.axis0.motor.motor_thermistor.config.enabled = False
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.VELOCITY_CONTROL
+        )
+        # test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 2
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -math.inf
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = math.inf
+        test_odrv_joint.odrv.axis0.trap_traj.config.accel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_ramp_rate = 200
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.axis0.config.enable_watchdog = False
+        test_odrv_joint.odrv.inc_encoder0.config.enabled = True
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.inc_encoder0.config.cpr = 2400
+        test_odrv_joint.odrv.axis0.commutation_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.axis0.pos_vel_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.config.enable_uart_a = False
+
+    if test_joint_name == "rover_drive_lb":
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5
+        test_odrv_joint.odrv.config.dc_max_positive_current = 12
+        test_odrv_joint.odrv.config.dc_max_negative_current = -0.1
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.026006289308176098
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 10
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 23
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 10
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 10
+        test_odrv_joint.odrv.axis0.motor.motor_thermistor.config.enabled = False
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.VELOCITY_CONTROL
+        )
+        # test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.VEL_RAMP
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 2
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -math.inf
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = math.inf
+        test_odrv_joint.odrv.axis0.trap_traj.config.accel_limit = 200
+        test_odrv_joint.odrv.axis0.controller.config.vel_ramp_rate = 200
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.axis0.config.enable_watchdog = False
+        test_odrv_joint.odrv.inc_encoder0.config.enabled = True
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.INC_ENCODER0
+        test_odrv_joint.odrv.inc_encoder0.config.cpr = 2400
+        test_odrv_joint.odrv.axis0.commutation_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.axis0.pos_vel_mapper.config.use_index_gpio = False
+        test_odrv_joint.odrv.config.enable_uart_a = False
+>>>>>>> odrive_rebase_mn297
 
     # SAVE CONFIG -----------------------------------------------------------------------
     if reapply_config:
@@ -618,8 +969,12 @@ def main():
     # PROMPT FOR SETPOINT (INCREMENTAL AND ABSOLUTE) -----------------------------------------------------
     while True:
         try:
+<<<<<<< HEAD
             user_input = input(
                 "Enter command (increment 'i X' or absolute 'a X'): ")
+=======
+            user_input = input("Enter command (increment 'i X' or absolute 'a X'): ")
+>>>>>>> odrive_rebase_mn297
             # Using regular expression to parse the input
             match = re.match(r"([ia])\s*(-?\d+(\.\d+)?)", user_input)
             if not match:
@@ -637,8 +992,12 @@ def main():
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel
                 else:
                     current = test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_abs
+<<<<<<< HEAD
                 setpoint = current + \
                     (setpoint_increment * test_odrv_joint.gear_ratio)
+=======
+                setpoint = current + (setpoint_increment * test_odrv_joint.gear_ratio)
+>>>>>>> odrive_rebase_mn297
                 print(
                     f"""INCREMENTING {setpoint_increment}, setpoint={setpoint}, pos_rel={
                       test_odrv_joint.odrv.axis0.pos_vel_mapper.pos_rel}, current_state={test_odrv_joint.odrv.axis0.current_state}"""
@@ -652,7 +1011,20 @@ def main():
                     f"""SETTING SETPOINT to {setpoint}, current_state={
                         test_odrv_joint.odrv.axis0.current_state}"""
                 )
+<<<<<<< HEAD
                 test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
+=======
+                if (
+                    test_odrv_joint.odrv.axis0.controller.config.control_mode
+                    == ControlMode.VELOCITY_CONTROL
+                ):
+                    test_odrv_joint.odrv.axis0.controller.input_vel = setpoint
+                elif (
+                    test_odrv_joint.odrv.axis0.controller.config.control_mode
+                    == ControlMode.POSITION_CONTROL
+                ):
+                    test_odrv_joint.odrv.axis0.controller.input_pos = setpoint
+>>>>>>> odrive_rebase_mn297
 
             # Absolute command
             elif command == "a":

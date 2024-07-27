@@ -1,0 +1,10 @@
+<launch>
+    <!-- <include file="$(find hardware)/launch/cameras.launch"></include>
+    <include file="$(find hardware)/launch/imu.launch"></include>
+    <include file="$(find hardware)/launch/rosserial.launch"></include> -->
+    <node pkg="odrive_interface" type="node_odrive_drive.py" name="odrive_interface_drive"
+        output="screen">
+    </node>
+    <include file="$(find odrive_interface)/launch/drive_control.launch" />
+
+</launch>

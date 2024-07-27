@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(arm_control)
+project(odrive_interface_old)
+
 
 
 ## Find catkin macros and libraries
@@ -12,36 +13,31 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
 )
 
-
 catkin_python_setup()
 
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  ArmControllerInput.msg
+  MotorError.msg
+  MotorState.msg
 )
-
 
 generate_messages(
     DEPENDENCIES
     std_msgs
 )
 
-
 catkin_package(
     CATKIN_DEPENDS 
     roscpp
     rospy 
     std_msgs
-    LIBRARIES arm_control
+    LIBRARIES odrive_interface_old
     CATKIN_DEPENDS message_runtime
 )
 
 catkin_install_python(PROGRAMS
-  src/arm_controller.py
-  sim/arm_sim.py
-  sim/arm_viz.py
-  sim/arm_viz2.py
-  sim/arm_viz_rviz.py
+  src/ODrive.py
+
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

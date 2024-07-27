@@ -1,0 +1,40 @@
+<launch>
+    <!-- Define arguments for model, GUI, and RViz configuration -->
+    <arg name="model" default="$(find arm_control)/model/MR_arm.urdf" />
+    <arg name="gui" default="true" />
+    <arg name="rvizconfig" default="$(find arm_control)/rviz/arm_viz_double.rviz" />
+
+    <!-- Load the first robot description from the URDF file under namespace 'robot1' -->
+    <group ns="robot1">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+        <!-- You might need a joint_state_publisher -->
+        <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    </group>
+
+    <!-- Load the second robot description from the URDF file under namespace 'robot2' -->
+    <group ns="robot2">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+        <!-- You might need a joint_state_publisher -->
+        <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    </group>
+
+    <!-- Static transform from world to robot1/link_0 -->
+    <node pkg="tf" type="static_transform_publisher" name="world_to_robot1"
+        args="0 0 0 0 0 0 world robot1/link_0 100" />
+
+    <!-- Static transform from world to robot2/link_0 -->
+    <node pkg="tf" type="static_transform_publisher" name="world_to_robot2"
+        args="1 0 0 0 0 0 world robot2/link_0 100" />
+
+    <!-- RViz Visualization -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+
+    <!-- Node Control GUI -->
+    <!-- <node name="node_control_gui" pkg="odrive_interface" type="node_control_gui.py"
+    output="screen" /> -->
+
+    <!-- Node to convert Cmd to joint_state -->
+    <!-- <node name="arm_viz_rviz" pkg="arm_control" type="arm_viz_rviz.py" output="screen" /> -->
+</launch>

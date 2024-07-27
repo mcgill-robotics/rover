@@ -95,6 +95,7 @@ export class GamepadService {
   private updateJoystickStatus() {
     if (this.joystick_gamepad && this.relay_messages_joystick) {
       let new_gp = navigator.getGamepads()[this.joystick_gamepad.index];
+      // console.log(new_gp!.axes);
       this.joystick_callback(this.getJoystickInputDir(new_gp!));
     }
   }
@@ -105,6 +106,9 @@ export class GamepadService {
       "a2": gmpd.axes[1],
       "a3": gmpd.axes[2],
       "a4": gmpd.axes[3],
+      "a5": gmpd.axes[4],
+      "a6": gmpd.axes[5],
+      "a7": gmpd.axes[6],
       "b1": gmpd.buttons[0].pressed,
       "b2": gmpd.buttons[1].pressed,
       "b3": gmpd.buttons[2].pressed,

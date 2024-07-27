@@ -1,50 +1,66 @@
-import { Component, Input, Output, EventEmitter} from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import * as ROSLIB from 'roslib';
 import { GamepadService } from 'src/app/gamepad.service';
 import { RosService } from 'src/app/ros.service';
+
+interface Joint {
+  name: string;
+  button: number;
+  direction: number;
+  axis?: number;
+  position: number;
+}
 
 @Component({
   selector: 'app-arm-component',
   templateUrl: './arm.component.html',
   styleUrls: ['./arm.component.scss']
 })
-export class ArmComponent {
+export class ArmComponent implements OnInit {
   @Input() initialValue: number = 0;
 
-  // array contains initial values 
-  array  : number[]= [0,0,0];
-  prev_joystick_input_state: { [key: string]: number | boolean } | null = null;
-  last_arm_control_mode: number = 1;
-  maxVelPercentage: number = 0;
+  // Array to hold joint configurations
+  joints: Joint[] = [
+    { name: "joint_elbow", button: 5, direction: -1, position: 0.0 },
+    { name: "joint_shoulder", button: 1, direction: -1, position: 0.0 },
+    { name: "joint_waist", button: 2, direction: -1, axis: 6, position: 0.0 },
+    { name: "joint_end_effector", button: 4, direction: -1, position: 0.0 },
+    { name: "joint_wrist_roll", button: 6, direction: 1, axis: 1, position: 0.0 },
+    { name: "joint_wrist_pitch", button: 3, direction: 1, position: 0.0 },
+    { name: "joint_7", button: 7, direction: 1, position: 0.0 },
+  ];
+
+  baseAngleIncrement: number = 1e-2; // Base increment step size
+  minSpeedMultiplier: number = 0.1;
+  maxSpeedMultiplier: number = 10;
+  angleIncrement: number = this.baseAngleIncrement;
+  axisThreshold: number = 0.2; // Threshold for joystick axis movement
 
   ros: ROSLIB.Ros;
-  gamepad_arm_control_pub: ROSLIB.Topic;
+  brushed_pub: ROSLIB.Topic;
+  brushless_pub: ROSLIB.Topic;
   arm_brushed_sub: ROSLIB.Topic;
   arm_brushless_sub: ROSLIB.Topic;
-
-  arm_brushed_FB = [0,0,0];
-  arm_brushless_FB = [0,0,0];
+  arm_brushed_FB = [0, 0, 0];
+  arm_brushless_FB = [0, 0, 0];
 
   constructor(private gamepadService: GamepadService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
   }
 
-  increment(id: number) {
-    console.log("id: ", id);
-    this.array[id] += 0.5;
-    console.log("val 0: ", this.array[id]);
-  }
-
-  decrement(id: number) {
-    this.array[id] -= 0.5;
-  }
-
   ngOnInit() {
-    this.gamepad_arm_control_pub = new ROSLIB.Topic({
-      ros : this.ros,
-      name : '/arm_controller_input',
-      messageType : 'arm_control/ArmControllerInput'
+    this.brushed_pub = new ROSLIB.Topic({
+      ros: this.ros,
+      name: '/armBrushedCmd',
+      messageType: 'std_msgs/Float32MultiArray'
     });
+
+    this.brushless_pub = new ROSLIB.Topic({
+      ros: this.ros,
+      name: '/armBrushlessCmd',
+      messageType: 'std_msgs/Float32MultiArray'
+    });
+
 
     this.arm_brushed_sub = new ROSLIB.Topic({
       ros: this.ros,
@@ -66,57 +82,84 @@ export class ArmComponent {
       this.arm_brushless_FB = message.data;
     });
 
-    this.gamepadService.connectJoystickGamepad(
-      (input_dir: { [key: string]: number | boolean }) => {
-        if (this.prev_joystick_input_state == null) {
-          this.prev_joystick_input_state = input_dir;
-        }
-
-        this.maxVelPercentage = (1 - ((input_dir['a4'] as number) + 1) / 2) / 8;
-
-        let msg = {
-          X_dir: (input_dir['a2'] as number) ** 2,
-          Y_dir: (input_dir['a1'] as number) ** 2,
-          Z_dir: (input_dir['a3'] as number) ** 2,
-          MaxVelPercentage: this.maxVelPercentage,
-          Mode: this.last_arm_control_mode,
-        }
-
-        if (input_dir['a2'] as number > 0) {
-          msg.X_dir = -1 * msg.X_dir;
-        }
-
-        if (input_dir['a1'] as number > 0) {
-          msg.Y_dir = -1 * msg.Y_dir;
-        }
-
-        if (input_dir['a3'] as number < 0) {
-          msg.Z_dir = -1 * msg.Z_dir;
-        }
-
-        if (this.risingEdge(this.prev_joystick_input_state['b8'] as boolean, input_dir['b8'] as boolean)) {
-          msg.Mode = 1;
-        } else if (this.risingEdge(this.prev_joystick_input_state['b10'] as boolean, input_dir['b10'] as boolean)) {
-          msg.Mode = 2;
-        } else if (this.risingEdge(this.prev_joystick_input_state['b12'] as boolean, input_dir['b12'] as boolean)) {
-          msg.Mode = 3;
-        } else if (this.risingEdge(this.prev_joystick_input_state['b7'] as boolean, input_dir['b7'] as boolean)) {
-          msg.Mode = 4;
-        } else if (this.risingEdge(this.prev_joystick_input_state['b9'] as boolean, input_dir['b9'] as boolean)) {
-          msg.Mode = 5;
-        } else if (this.risingEdge(this.prev_joystick_input_state['b11'] as boolean, input_dir['b11'] as boolean)) {
-          msg.Mode = 0;
-        }
-
-        this.gamepad_arm_control_pub.publish(msg)
-        this.prev_joystick_input_state = input_dir;
-        this.last_arm_control_mode = msg.Mode;
-      },
-    );
+    // Setup gamepad connection
+    this.gamepadService.connectControllerGamepad(this.controllerCallback.bind(this));
+    this.gamepadService.connectJoystickGamepad(this.joystickCallback.bind(this));
   }
 
-  private risingEdge(prev: boolean, current: boolean): boolean {
-    return current && !prev;
+  private mapRange(value: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
+    return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+  }
+
+  private getJointByName(name: string): Joint | null {
+    return this.joints.find(joint => joint.name === name) || null;
+  }
+
+  private publishJointStates() {
+    const brushedMsg = new ROSLIB.Message({
+      data: [
+        this.getJointByName("joint_end_effector")?.position ?? 0,
+        this.getJointByName("joint_wrist_roll")?.position ?? 0,
+        this.getJointByName("joint_wrist_pitch")?.position ?? 0
+      ]
+    });
+
+    const brushlessMsg = new ROSLIB.Message({
+      data: [
+        this.getJointByName("joint_elbow")?.position ?? 0,
+        this.getJointByName("joint_shoulder")?.position ?? 0,
+        this.getJointByName("joint_waist")?.position ?? 0
+      ]
+    });
+
+    this.brushed_pub.publish(brushedMsg);
+    this.brushless_pub.publish(brushlessMsg);
+
+    // Log joint states
+    const jointStates = this.joints.map(joint => `${joint.name}: ${joint.position.toFixed(2)} degrees`).join(' | ');
+    console.log(jointStates);
+  }
+
+  private controllerCallback(input: { [key: string]: number | boolean }) {
+    this.updateJoints(input);
+  }
+
+  private joystickCallback(input: { [key: string]: number | boolean }) {
+    this.updateJoints(input);
+  }
+
+  private updateJoints(input: { [key: string]: number | boolean }) {
+    const speedControlValue = input['a7'] as number; // Speed control on axis 4
+    const speedMultiplier = this.mapRange(speedControlValue, -1, 1, this.maxSpeedMultiplier, this.minSpeedMultiplier);
+    this.angleIncrement = this.baseAngleIncrement * speedMultiplier;
+
+    this.joints.forEach(joint => {
+
+
+      const key = `a${joint.axis || 2}`;
+      const axisValue = input[key] as number; // Default to axis 1 if not specified
+      console.log(`key=${key} axisValue=${axisValue}`);
+      if (Math.abs(axisValue) > this.axisThreshold) {
+        if (input[`b${joint.button}`]) {
+          joint.position += this.angleIncrement * axisValue * joint.direction;
+        }
+      }
+    });
+
+    // Check if reset buttons are pressed
+    if (input['b10']) { // Button 10 for brushless joints reset
+      this.getJointByName("joint_elbow")!.position = 0.0;
+      this.getJointByName("joint_shoulder")!.position = 0.0;
+      this.getJointByName("joint_waist")!.position = 0.0;
+    }
+
+    if (input['b11']) { // Button 11 for brushed joints reset
+      this.getJointByName("joint_end_effector")!.position = 0.0;
+      this.getJointByName("joint_wrist_roll")!.position = 0.0;
+      this.getJointByName("joint_wrist_pitch")!.position = 0.0;
+    }
+
+    this.publishJointStates();
   }
 
   enableGamepad() {
@@ -126,9 +169,4 @@ export class ArmComponent {
   disableGamepad() {
     this.gamepadService.disableJoystickGamepad();
   }
-
-  formatNumber(value: number) {
-    return value.toFixed(3);
-  }
 }
-

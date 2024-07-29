@@ -12,7 +12,10 @@ CAMERA_POSITION_OFFSET = (0, 0, 0)  # visual odom
 # CAMERA_POSITION_OFFSET = (-0.285, 0, 1.1) #  mcgill rover
 
 # rounding coefficient for the points
-ROUNDING_COEF = 2
+ROUNDING_COEF = 1
+
+# distance restriction for new point clouds to filter out obects that are too far away to be read clearly
+MAX_DIST = 2.5
 
 class PointsFilters:
     # filter out points that are too close to ground

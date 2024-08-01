@@ -197,13 +197,30 @@ class NodeODriveInterfaceDrive:
 
             self.joint_dict[key].reconnect()
 
-        print("Connection step completed.")
+        # # CONNECT -----------------------------------------------------
+        # for joint_name, joint_obj in self.joint_dict.items():
+        #     if joint_obj.odrv is None:
+        #         continue
+        #     print(f"Creating reconnect() thread for joint {joint_obj.name}")
+        #     t = threading.Thread(
+        #         target=self.reconnect_joint,
+        #         args=(joint_name, joint_obj),
+        #     )
+        #     self.threads.append(t)
+        #     t.start()
+
+        # # Wait for all threads to complete
+        # for t in self.threads:
+        #     t.join()
+        # self.threads = []
+
+        # print("Connection step completed.")
 
         # CALIBRATE AND ENTER CLOSED LOOP CONTROL -----------------------------------------------------
         for joint_name, joint_obj in self.joint_dict.items():
             if joint_obj.odrv is None:
                 continue
-            print(f"Creating thread for joint {joint_obj.name}")
+            print(f"Creating calibrate() thread for joint {joint_obj.name}")
             t = threading.Thread(
                 target=joint_obj.calibrate,
             )
@@ -220,7 +237,9 @@ class NodeODriveInterfaceDrive:
         for joint_name, joint_obj in self.joint_dict.items():
             if joint_obj.odrv is None:
                 continue
-            print(f"Creating thread for joint {joint_obj.name}")
+            print(
+                f"Creating enter_closed_loop_control() thread for joint {joint_obj.name}"
+            )
             t = threading.Thread(
                 target=joint_obj.enter_closed_loop_control,
             )

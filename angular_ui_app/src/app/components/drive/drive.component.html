@@ -2,18 +2,42 @@
     Controller <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button>
     <div class="drive">
         <div id="driveInfo">
-            <hr/>
-            Wheel Feedback
+            <hr />
+            Wheel Feedback (m/s)
             <div style="display: flex; justify-content: space-evenly;">
                 <div>
-                    <p>0 LF</p>
-                    <p>0 LB</p>
+                    <p>{{wheelFeedback.leftFront.toFixed(2)}} LF</p>
+                    <p>{{wheelFeedback.leftBack.toFixed(2)}} LB</p>
                 </div>
                 <div>
-                    <p>RF 0</p>
-                    <p>RB 0</p>
+                    <p>RF {{wheelFeedback.rightFront.toFixed(2)}}</p>
+                    <p>RB {{wheelFeedback.rightBack.toFixed(2)}}</p>
                 </div>
             </div>
+        </div>
+        <hr />
+        <div id="wheelVelocityCmd">
+            Wheel Velocity Command (m/s)
+            <div style="display: flex; justify-content: space-evenly;">
+                <div>
+                    <p>{{wheelVelocityCmd.leftFront.toFixed(2)}} LF</p>
+                    <p>{{wheelVelocityCmd.leftBack.toFixed(2)}} LB</p>
+                </div>
+                <div>
+                    <p>RF {{wheelVelocityCmd.rightFront.toFixed(2)}}</p>
+                    <p>RB {{wheelVelocityCmd.rightBack.toFixed(2)}}</p>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div id="twistInfo">
+            Drive Twist
+            <p>Linear: {{rover_linear_vel.toFixed(2)}}, Angular: {{rover_angular_vel.toFixed(2)}}</p>
+        </div>
+        <hr />
+        <div id="panTiltInfo">
+            Pan-Tilt
+            <p>Pitch: {{pantilt_pitch.toFixed(2)}}, Yaw: {{pantilt_yaw.toFixed(2)}}</p>
         </div>
     </div>
 </app-generic>

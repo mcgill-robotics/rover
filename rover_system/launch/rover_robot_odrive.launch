@@ -18,6 +18,6 @@
         <node name="gamepad_process" pkg="human_control_interface" type="GamepadProcess.py" output="log"/>
         <node name="drive_control_node" pkg="drive_control" type="drive_control_node.py" output="log"/>
         <!-- Launch ODrive.py -->
-        <node name="odrive_interface" pkg="odrive_interface" type="ODrive.py" output="screen"/>
+        <node name="odrive_interface" pkg="odrive_interface" type="node_odrive_drive.py" output="screen"/>
     </group>
 </launch>

@@ -1,3 +1,4 @@
+import { tileLayerOffline, savetiles } from 'leaflet.offline';
 import { Component, AfterViewInit } from '@angular/core';
 import * as L from 'leaflet';
 import { MarkerService } from 'src/app/marker.service';
@@ -28,9 +29,28 @@ export class GpsComponent implements AfterViewInit {
       attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const baseLayer = tileLayerOffline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 17,
-      minZoom: 6,
+      minZoom: 14,
+    }).addTo(this.map);
+
+    savetiles(baseLayer, {
+      zoomlevels: [14, 15, 16, 17], // optional zoomlevels to save, default current zoomlevel
+      alwaysDownload: false,
+      confirm(layer: any, successCallback: any) {
+        // eslint-disable-next-line no-alert
+        if (window.confirm(`Save ${layer._tilesforSave.length}`)) {
+          successCallback();
+        }
+      },
+      confirmRemoval(layer: any, successCallback: any) {
+        // eslint-disable-next-line no-alert
+        if (window.confirm('Remove all the tiles?')) {
+          successCallback();
+        }
+      },
+      saveText: '<i class="fa fa-download" title="Save tiles"></i>',
+      rmText: '<i class="fa fa-trash" title="Remove tiles"></i>',
     }).addTo(this.map);
   }
 

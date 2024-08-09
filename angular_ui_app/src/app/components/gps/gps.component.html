@@ -3,7 +3,9 @@
 <app-generic height="375px" width="375px">
   <div id="map">
     <div>
-      <button id="updateMarkersBtn" (click)="showModal = true">Markers</button>
+      <a id="updateMarkersBtn" (click)="showModal = true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill" viewBox="0 0 16 16">
+        <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/>
+      </svg></a>
     </div>
   </div>
 </app-generic>
@@ -34,10 +36,24 @@
   <div class="list-section">
     <h3>Landmarks</h3>
     <div class="scrollable-list">
-      <div *ngFor="let marker of markerDict | keyvalue">
-        <div>{{marker.key}}</div>
-        <button (click)="removeMarker(marker.key)">Remove</button>
-      </div>
+      <table class="table" data-bs-theme="dark">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Lat</th>
+            <th scope="col">Long</th>
+            <th scope="col">Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let marker of markerDict | keyvalue">
+            <td>{{marker.key}}</td>
+            <td>{{marker.value.getLatLng().lat}}</td>
+            <td>{{marker.value.getLatLng().lng}}</td>
+            <td><button class="btn btn-danger p-1 m-0" (click)="removeMarker(marker.key)">x</button></td>  
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -45,11 +61,27 @@
 
   <div class="list-section">
     <h3>Debris</h3>
-    <div class="scrollable-list"></div>
-      <div *ngFor="let debris of debrisDict | keyvalue">
-        <div>{{debris.key}}</div>
-        <button (click)="removeMarker(debris.key)">Remove</button>
-      </div>
+    <div class="scrollable-list">
+      <table class="table" data-bs-theme="dark">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Lat</th>
+            <th scope="col">Long</th>
+            <th scope="col">Radius</th>
+            <th scope="col">Remove</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let debris of debrisDict | keyvalue">
+            <td>{{debris.key}}</td>
+            <td>{{debris.value.getLatLng().lat}}</td>
+            <td>{{debris.value.getLatLng().lng}}</td>
+            <td>{{debris.value.getRadius()}}</td>
+            <td><button class="btn btn-danger p-1 m-0" (click)="removeMarker(debris.key)">x</button></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>

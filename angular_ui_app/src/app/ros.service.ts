@@ -10,7 +10,7 @@ export class RosService {
 
   constructor() {
     this.ros = new ROSLIB.Ros({
-      url: 'ws://' + AppConstants.HOST_IP + ':9090'
+      url: 'ws://localhost:9090'
     });
 
     this.ros.on('connection', () => {

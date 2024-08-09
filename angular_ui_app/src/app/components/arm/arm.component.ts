@@ -83,7 +83,7 @@ export class ArmComponent implements OnInit {
     {
       name: "joint_wrist_pitch",
       button: 3,
-      direction: 1,
+      direction: -1,
       setpoint: 0.0,
       multiplier: 1,
       min: -30,
@@ -236,19 +236,26 @@ export class ArmComponent implements OnInit {
       console.log(`key=${key} axisValue=${axisValue}`);
       if (Math.abs(axisValue) > this.axisThreshold) {
         if (input[`b${joint.button}`]) {
-          joint.setpoint += this.angleIncrement * axisValue * joint.direction;
+          const increment = this.angleIncrement * axisValue * joint.direction * joint.multiplier;
+          const newSetpoint = joint.setpoint + increment;
+
+          // Enforce limits
+          joint.setpoint = Math.max(joint.min, Math.min(joint.max, newSetpoint));
+
         }
       }
     });
 
     // Check if reset buttons are pressed
-    if (input['b10']) { // Button 10 for brushless joints reset
+    if (input['b11']) { // Button 10 for brushless joints reset
+      console.log('Resetting brushless joints');
       this.getJointByName("joint_elbow")!.setpoint = 0.0;
       this.getJointByName("joint_shoulder")!.setpoint = 0.0;
       this.getJointByName("joint_waist")!.setpoint = 0.0;
     }
 
-    if (input['b11']) { // Button 11 for brushed joints reset
+    if (input['b12']) { // Button 11 for brushed joints reset
+      console.log('Resetting brushed joints');
       this.getJointByName("joint_end_effector")!.setpoint = 0.0;
       this.getJointByName("joint_wrist_roll")!.setpoint = 0.0;
       this.getJointByName("joint_wrist_pitch")!.setpoint = 0.0;

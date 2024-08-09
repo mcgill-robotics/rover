@@ -8,9 +8,11 @@ interface Joint {
   button: number;
   direction: number;
   axis?: number;
-  position: number;
+  setpoint: number;
+  multiplier: number;
+  min: number;
+  max: number;
 }
-
 @Component({
   selector: 'app-arm-component',
   templateUrl: './arm.component.html',
@@ -20,14 +22,82 @@ export class ArmComponent implements OnInit {
   @Input() initialValue: number = 0;
 
   // Array to hold joint configurations
+  // joints: Joint[] = [
+  //   { name: "joint_elbow", button: 5, direction: -1, position: 0.0 },
+  //   { name: "joint_shoulder", button: 1, direction: -1, position: 0.0 },
+  //   { name: "joint_waist", button: 2, direction: -1, axis: 6, position: 0.0 },
+  //   { name: "joint_end_effector", button: 4, direction: -1, position: 0.0 },
+  //   { name: "joint_wrist_roll", button: 6, direction: 1, axis: 1, position: 0.0 },
+  //   { name: "joint_wrist_pitch", button: 3, direction: 1, position: 0.0 },
+  //   { name: "joint_7", button: 7, direction: 1, position: 0.0 },
+  // ];
+
   joints: Joint[] = [
-    { name: "joint_elbow", button: 5, direction: -1, position: 0.0 },
-    { name: "joint_shoulder", button: 1, direction: -1, position: 0.0 },
-    { name: "joint_waist", button: 2, direction: -1, axis: 6, position: 0.0 },
-    { name: "joint_end_effector", button: 4, direction: -1, position: 0.0 },
-    { name: "joint_wrist_roll", button: 6, direction: 1, axis: 1, position: 0.0 },
-    { name: "joint_wrist_pitch", button: 3, direction: 1, position: 0.0 },
-    { name: "joint_7", button: 7, direction: 1, position: 0.0 },
+    {
+      name: "joint_elbow",
+      button: 5,
+      direction: -1,
+      setpoint: 0.0,
+      multiplier: 1,
+      min: -35,
+      max: 35
+    },
+    {
+      name: "joint_shoulder",
+      button: 1,
+      direction: -1,
+      setpoint: 0.0,
+      multiplier: 1,
+      min: -50,
+      max: 50
+    },
+    {
+      name: "joint_waist",
+      button: 2,
+      direction: -1,
+      axis: 6,
+      setpoint: 0.0,
+      multiplier: 1,
+      min: -90,
+      max: 90
+    },
+    {
+      name: "joint_end_effector",
+      button: 4,
+      direction: -1,
+      setpoint: 0.0,
+      multiplier: 10,
+      min: -100,
+      max: 100  // Assuming this is a gripper with 0-100% range
+    },
+    {
+      name: "joint_wrist_roll",
+      button: 6,
+      direction: 1,
+      axis: 1,
+      setpoint: 0.0,
+      multiplier: 10,
+      min: -100,
+      max: 100
+    },
+    {
+      name: "joint_wrist_pitch",
+      button: 3,
+      direction: 1,
+      setpoint: 0.0,
+      multiplier: 1,
+      min: -30,
+      max: 30
+    },
+    {
+      name: "joint_7",
+      button: 7,
+      direction: 1,
+      setpoint: 0.0,
+      multiplier: 1,
+      min: -90,
+      max: 90
+    },
   ];
 
   baseAngleIncrement: number = 1e-2; // Base increment step size
@@ -67,13 +137,13 @@ export class ArmComponent implements OnInit {
 
     this.arm_brushed_sub = new ROSLIB.Topic({
       ros: this.ros,
-      name: '/armBrushedFB',
+      name: '/armBrushedFb',
       messageType: 'std_msgs/Float32MultiArray'
     });
 
     this.arm_brushless_sub = new ROSLIB.Topic({
       ros: this.ros,
-      name: '/armBrushlessFB',
+      name: '/armBrushlessFb',
       messageType: 'std_msgs/Float32MultiArray'
     });
 
@@ -98,13 +168,23 @@ export class ArmComponent implements OnInit {
     return this.joints.find(joint => joint.name === name) || null;
   }
 
+  // updateJointPosition(jointName: string, increment: number) {
+  //   const joint = this.getJointByName(jointName);
+  //   if (joint) {
+  //     joint.position += increment;
+  //     this.publishJointStates();
+  //   }
+  // }
+
   updateJointPosition(jointName: string, increment: number) {
     const joint = this.getJointByName(jointName);
     if (joint) {
-      joint.position += increment;
+      const newPosition = joint.setpoint + (increment * joint.multiplier);
+      joint.setpoint = Math.max(joint.min, Math.min(joint.max, newPosition));
       this.publishJointStates();
     }
   }
+
 
   formatNumber(value: number) {
     return value.toFixed(3);
@@ -113,17 +193,17 @@ export class ArmComponent implements OnInit {
   private publishJointStates() {
     const brushedMsg = new ROSLIB.Message({
       data: [
-        this.getJointByName("joint_end_effector")?.position ?? 0,
-        this.getJointByName("joint_wrist_roll")?.position ?? 0,
-        this.getJointByName("joint_wrist_pitch")?.position ?? 0
+        this.getJointByName("joint_end_effector")?.setpoint ?? 0,
+        this.getJointByName("joint_wrist_roll")?.setpoint ?? 0,
+        this.getJointByName("joint_wrist_pitch")?.setpoint ?? 0
       ]
     });
 
     const brushlessMsg = new ROSLIB.Message({
       data: [
-        this.getJointByName("joint_elbow")?.position ?? 0,
-        this.getJointByName("joint_shoulder")?.position ?? 0,
-        this.getJointByName("joint_waist")?.position ?? 0
+        this.getJointByName("joint_elbow")?.setpoint ?? 0,
+        this.getJointByName("joint_shoulder")?.setpoint ?? 0,
+        this.getJointByName("joint_waist")?.setpoint ?? 0
       ]
     });
 
@@ -131,7 +211,7 @@ export class ArmComponent implements OnInit {
     this.brushless_pub.publish(brushlessMsg);
 
     // Log joint states
-    const jointStates = this.joints.map(joint => `${joint.name}: ${joint.position.toFixed(2)} degrees`).join(' | ');
+    const jointStates = this.joints.map(joint => `${joint.name}: ${joint.setpoint.toFixed(2)} degrees`).join(' | ');
     console.log(jointStates);
   }
 
@@ -156,22 +236,22 @@ export class ArmComponent implements OnInit {
       console.log(`key=${key} axisValue=${axisValue}`);
       if (Math.abs(axisValue) > this.axisThreshold) {
         if (input[`b${joint.button}`]) {
-          joint.position += this.angleIncrement * axisValue * joint.direction;
+          joint.setpoint += this.angleIncrement * axisValue * joint.direction;
         }
       }
     });
 
     // Check if reset buttons are pressed
     if (input['b10']) { // Button 10 for brushless joints reset
-      this.getJointByName("joint_elbow")!.position = 0.0;
-      this.getJointByName("joint_shoulder")!.position = 0.0;
-      this.getJointByName("joint_waist")!.position = 0.0;
+      this.getJointByName("joint_elbow")!.setpoint = 0.0;
+      this.getJointByName("joint_shoulder")!.setpoint = 0.0;
+      this.getJointByName("joint_waist")!.setpoint = 0.0;
     }
 
     if (input['b11']) { // Button 11 for brushed joints reset
-      this.getJointByName("joint_end_effector")!.position = 0.0;
-      this.getJointByName("joint_wrist_roll")!.position = 0.0;
-      this.getJointByName("joint_wrist_pitch")!.position = 0.0;
+      this.getJointByName("joint_end_effector")!.setpoint = 0.0;
+      this.getJointByName("joint_wrist_roll")!.setpoint = 0.0;
+      this.getJointByName("joint_wrist_pitch")!.setpoint = 0.0;
     }
 
     this.publishJointStates();

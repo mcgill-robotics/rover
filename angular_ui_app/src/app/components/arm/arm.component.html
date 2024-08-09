@@ -1,5 +1,3 @@
-<!-- <p>arm-page works! </p> -->
-<!-- <div style="display: flex; flex-wrap: wrap;"> -->
 <app-generic height="340px" width="500px">
     <div style="display: flex; justify-content: space-between;">
         <div>
@@ -7,6 +5,89 @@
             <button (click)="enableGamepad()">On</button>
             <button (click)="disableGamepad()">Off</button>
         </div>
+        <tr>
+            <th>speedControlValue</th>
+            <!-- ArmComponent this.speedControlValue -->
+            <td>{{formatNumber(speedControlValue)}}</td>
+        </tr>
     </div>
     <br />
+
+    <div class="arm">
+        <table>
+            <tr>
+                <th>Joint</th>
+                <th>Feedback</th>
+                <th>Command</th>
+                <th>Control</th>
+            </tr>
+            <tr>
+                <td>Elbow</td>
+                <td>{{formatNumber(arm_brushless_FB[0])}}</td>
+                <td>{{formatNumber(getJointByName('joint_elbow')?.position ?? 0)}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="updateJointPosition('joint_elbow', -1)">-</button>
+                        <button (click)="updateJointPosition('joint_elbow', 1)">+</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Shoulder</td>
+                <td>{{formatNumber(arm_brushless_FB[1])}}</td>
+                <td>{{formatNumber(getJointByName('joint_shoulder')?.position ?? 0)}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="updateJointPosition('joint_shoulder', -1)">-</button>
+                        <button (click)="updateJointPosition('joint_shoulder', 1)">+</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Waist</td>
+                <td>{{formatNumber(arm_brushless_FB[2])}}</td>
+                <td>{{formatNumber(getJointByName('joint_waist')?.position ?? 0)}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="updateJointPosition('joint_waist', -1)">-</button>
+                        <button (click)="updateJointPosition('joint_waist', 1)">+</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Wrist Pitch</td>
+                <td>{{formatNumber(arm_brushed_FB[2])}}</td>
+                <td>{{formatNumber(getJointByName('joint_wrist_pitch')?.position ?? 0)}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="updateJointPosition('joint_wrist_pitch', -1)">-</button>
+                        <button (click)="updateJointPosition('joint_wrist_pitch', 1)">+</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Wrist Roll</td>
+                <td>{{formatNumber(arm_brushed_FB[1])}}</td>
+                <td>{{formatNumber(getJointByName('joint_wrist_roll')?.position ?? 0)}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="updateJointPosition('joint_wrist_roll', -1)">-</button>
+                        <button (click)="updateJointPosition('joint_wrist_roll', 1)">+</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>End Effector</td>
+                <td>{{formatNumber(arm_brushed_FB[0])}}</td>
+                <td>{{formatNumber(getJointByName('joint_end_effector')?.position ?? 0)}}</td>
+                <td style="width: 15%;">
+                    <div id="buttons">
+                        <button (click)="updateJointPosition('joint_end_effector', -1)">-</button>
+                        <button (click)="updateJointPosition('joint_end_effector', 1)">+</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
 </app-generic>

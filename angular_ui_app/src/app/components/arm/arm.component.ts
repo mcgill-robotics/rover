@@ -42,7 +42,10 @@ export class ArmComponent implements OnInit {
   arm_brushed_sub: ROSLIB.Topic;
   arm_brushless_sub: ROSLIB.Topic;
   arm_brushed_FB = [0, 0, 0];
+  // Elbow, Shoulder, Waist
   arm_brushless_FB = [0, 0, 0];
+
+  speedControlValue = 0;
 
   constructor(private gamepadService: GamepadService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -91,8 +94,20 @@ export class ArmComponent implements OnInit {
     return (value - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
   }
 
-  private getJointByName(name: string): Joint | null {
+  getJointByName(name: string): Joint | null {
     return this.joints.find(joint => joint.name === name) || null;
+  }
+
+  updateJointPosition(jointName: string, increment: number) {
+    const joint = this.getJointByName(jointName);
+    if (joint) {
+      joint.position += increment;
+      this.publishJointStates();
+    }
+  }
+
+  formatNumber(value: number) {
+    return value.toFixed(3);
   }
 
   private publishJointStates() {
@@ -129,8 +144,8 @@ export class ArmComponent implements OnInit {
   }
 
   private updateJoints(input: { [key: string]: number | boolean }) {
-    const speedControlValue = input['a7'] as number; // Speed control on axis 4
-    const speedMultiplier = this.mapRange(speedControlValue, -1, 1, this.maxSpeedMultiplier, this.minSpeedMultiplier);
+    this.speedControlValue = input['a7'] as number; // Speed control on axis 4
+    const speedMultiplier = this.mapRange(this.speedControlValue, -1, 1, this.maxSpeedMultiplier, this.minSpeedMultiplier);
     this.angleIncrement = this.baseAngleIncrement * speedMultiplier;
 
     this.joints.forEach(joint => {

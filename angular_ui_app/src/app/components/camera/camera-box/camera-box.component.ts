@@ -11,8 +11,8 @@ export class CameraBoxComponent {
   isHovered: boolean = true;
   ros: ROSLIB.Ros;
 
-  @Input() topic : string;
-  @Input() size : string;
+  @Input() topic: string;
+  @Input() size: string;
 
   public imageSrc: string;
 
@@ -26,9 +26,9 @@ export class CameraBoxComponent {
     new ROSLIB.Topic({
       ros: this.ros,
       name: this.topic, //'/usb_cam/image_raw/compressed',
-      messageType: 'sensor_msgs/Image'
+      messageType: 'std_msgs/String'
     }).subscribe((message: any) => {
       this.imageSrc = 'data:image/jpeg;base64,' + message.data;
     });
   }
-}
+} 

@@ -15,10 +15,11 @@ export class GpsComponent implements AfterViewInit {
   private map: L.Map;
   private ros: ROSLIB.Ros;
   private gps_subscriber: ROSLIB.Topic;
-  showModal : boolean = false;
+  private points_history: L.LatLng[];
+  showModal: boolean = false;
 
-  markerDict : { [key: string]: L.Marker } = {}; // to keep track of markers and debris aread on the map 
-  debrisDict : { [key: string]: L.Circle } = {};
+  markerDict: { [key: string]: L.Marker } = {}; // to keep track of markers and debris aread on the map 
+  debrisDict: { [key: string]: L.Circle } = {};
 
   constructor(private markerService: MarkerService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
@@ -69,12 +70,18 @@ export class GpsComponent implements AfterViewInit {
     this.markerService.makeRoverMarker(this.map);
     this.markerService.makeControlStationMarker(this.map);
 
-    this.gps_subscriber.subscribe((message: ROSLIB.Message) => {
+    this.gps_subscriber.subscribe((message: any) => {
+      this.points_history.push(
+        L.latLng([message.data[0], message.data[1]])
+      );
+
+      this.markerService.makeRouteGPSWaypoints(this.map, this.points_history);
+
       this.markerService.set_gps_data(message);
       this.markerService.moveRoverMarker(this.map);
     });
 
-    this.loadMarkersFromStorage(); 
+    this.loadMarkersFromStorage();
   }
 
   addLandmark(name: string, lat: string, lon: string) {
@@ -136,5 +143,4 @@ export class GpsComponent implements AfterViewInit {
       this.debrisDict[debris.name] = this.markerService.makeNewDebrisAreas(this.map, debris.name, debris.lat, debris.lng, debris.radius);
     });
   }
-
 }

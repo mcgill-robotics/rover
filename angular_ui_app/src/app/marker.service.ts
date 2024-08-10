@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import * as LeafRotated from 'leaflet-rotatedmarker';
 import * as L from 'leaflet';
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -16,14 +18,14 @@ export class MarkerService {
   private blackIcon: L.Icon;
   private roverMarker: L.Marker;
 
-  constructor(private http: HttpClient) { 
+  constructor(private http: HttpClient) {
     this.blueIcon = new L.Icon({
       iconUrl: 'assets/map-pins/rover-location-icon.png',
-      iconSize: [41, 41], 
-      iconAnchor: [20, 20], 
+      iconSize: [41, 41],
+      iconAnchor: [20, 20],
       popupAnchor: [1, -34]
     });
-    
+
     this.redIcon = new L.Icon({
       iconUrl: 'assets/map-pins/red-map-pin.png',
       iconSize: [41, 41],
@@ -48,7 +50,7 @@ export class MarkerService {
       for (const c of res.features) {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
-        this.makeNewObjectiveMarkers(map, c.properties.title, lat, lon);
+        this.makeNewObjectiveMarkers(map, c.properties.name, lat, lon);
       }
     });
   }
@@ -59,35 +61,35 @@ export class MarkerService {
         const lon = c.geometry.coordinates[1];
         const lat = c.geometry.coordinates[0];
         const rad = c.geometry.size;
-        this.makeNewDebrisAreas(map, c.properties.title, lat, lon, rad);
+        this.makeNewDebrisAreas(map, c.properties.name, lat, lon, rad);
       }
     });
   }
 
   makeNewObjectiveMarkers(map: L.Map, title: string, lat: number, long: number): L.Marker {
-    const marker = L.marker([lat, long], {icon: this.redIcon, title: title + " : "+lat +", "+long});
+    const marker = L.marker([lat, long], { icon: this.redIcon, title: title + " : " + lat + ", " + long });
     marker.addTo(map);
     return marker;
   };
 
   makeNewDebrisAreas(map: L.Map, title: string, lat: number, long: number, radius: number): L.Circle {
-    const area = L.circle([lat, long], {radius: radius})
-    area.setStyle({color: 'orange'});
+    const area = L.circle([lat, long], { radius: radius })
+    area.setStyle({ color: 'orange' });
     console.log(area);
-    area.addTo(map).bindPopup(`Debris area: ${lat}, ${long}`); 
+    area.addTo(map).bindPopup(`Debris area: ${lat}, ${long}`);
     return area;
   }
 
-  makeRoverMarker(map: L.Map): void { 
-    const rover  = L.latLng([this.gps_data[0], this.gps_data[1]]);
-    this.roverMarker = L.marker(rover, {icon: this.blueIcon, rotationAngle: 90, title: "Rover" + " : "+this.gps_data[0] +", "+this.gps_data[1]});
+  makeRoverMarker(map: L.Map): void {
+    const rover = L.latLng([this.gps_data[0], this.gps_data[1]]);
+    this.roverMarker = L.marker(rover, { icon: this.blueIcon, rotationAngle: 90, title: "Rover" + " : " + this.gps_data[0] + ", " + this.gps_data[1] });
     this.roverMarker.addTo(map);
     map.setView(rover, 16);
   }
 
-  makeControlStationMarker(map: L.Map): void { 
+  makeControlStationMarker(map: L.Map): void {
     var control_station = L.latLng([this.control_station[0], this.control_station[1]]);
-    L.marker(control_station, {icon: this.blackIcon, title: "Control station" + " : "+this.control_station[0] +", "+this.control_station[1]}).addTo(map);
+    L.marker(control_station, { icon: this.blackIcon, title: "Control station" + " : " + this.control_station[0] + ", " + this.control_station[1] }).addTo(map);
   }
 
   set_gps_data(msg: any): void {
@@ -97,5 +99,10 @@ export class MarkerService {
   moveRoverMarker(map: L.Map): void {
     this.roverMarker.setLatLng([this.gps_data[0], this.gps_data[1]]);
     map.setView([this.gps_data[0], this.gps_data[1]]);
+  }
+
+  makeRouteGPSWaypoints(map: L.Map, points_history: L.LatLng[]): void {
+    var polyline = L.polyline(
+      points_history, { color: 'red' }).addTo(map);
   }
 }

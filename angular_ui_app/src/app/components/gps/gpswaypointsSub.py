@@ -8,8 +8,7 @@ output_file = "src/app/components/gps/GPSWaypoints.txt"
 
 
 def gps_callback(data):
-    print("Script started")
-
+    
     latitude = data.data[0]
     longitude = data.data[1]
 

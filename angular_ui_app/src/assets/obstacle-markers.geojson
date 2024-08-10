@@ -1,35 +1,135 @@
 {
-    "type": "FeatureCollection",
-    "features": [
-      {
-        "type": "Feature",
-        "geometry": {
-          "type": "Point",
-          "coordinates": [45.506267, -73.612412]
-        },
-        "properties": {
-          "name": "obstacle1"
-        }
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4228637,
+          -112.6417739
+        ]
       },
-      {
-        "type": "Feature",
-        "geometry": {
-          "type": "Point",
-          "coordinates": [45.506687, -73.612178]
-        },
-        "properties": {
-          "name": "obstacle2"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": {
-          "type": "Point",
-          "coordinates": [45.506875, -73.612070]
-        },
-        "properties": {
-          "name": "obstacle3"
-        }
+      "properties": {
+        "name": "Search-Path-CheckPoint1"
       }
-    ]
-  }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4230411,
+          -112.642048
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4230865,
+          -112.642417
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint3"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4228774,
+          -112.6432396
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint4"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4231923,
+          -112.642709
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint5"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4232874,
+          -112.641982
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint6"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4234627,
+          -112.6415903
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint7"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4236152,
+          -112.6412619
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint8"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4237984,
+          -112.6411514
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint9"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4239431,
+          -112.6410009
+        ]
+      },
+      "properties": {
+        "name": "Search-Path-CheckPoint10"
+      }
+    }
+  ]
+}

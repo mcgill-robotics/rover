@@ -1,17 +1,7 @@
 <launch>
-
     <arg name="start_drive" default="true" />
-    <arg name="start_webrtc" default="true" />
 
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
-
-    <!-- Launch Angular UI -->
-    <node name="angular_ui_app_main" pkg="angular_ui_app" type="start_ui_server.sh" output="screen"/>
-
-    <group if="$(arg start_webrtc)">
-    <!-- Start Webrtc Camera Server -->
-        <node name="angular_ui_app_webrtc" pkg="angular_ui_app" type="start_webrtc_server.py" output="log"/>
-    </group>
 
     <group if="$(arg start_drive)">
         <!-- Launch GamepadProcess.py -->

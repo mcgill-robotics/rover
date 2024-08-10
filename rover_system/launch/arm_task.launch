@@ -6,8 +6,5 @@
     <node pkg="camera_data" name="camera_pub_2" type="camera_publisher_2.py" output="screen">
     </node>
 
-    <node pkg="arm_control" type="arm_controller.py" name="arm_controller" output="screen">
-    </node>
-
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
   </launch>

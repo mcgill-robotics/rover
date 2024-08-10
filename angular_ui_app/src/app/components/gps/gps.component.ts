@@ -29,13 +29,14 @@ export class GpsComponent implements AfterViewInit {
       attributionControl: false,
     });
 
-    const baseLayer = tileLayerOffline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 17,
-      minZoom: 14,
+    const baseLayer = tileLayerOffline('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      maxZoom: 19,
+      minZoom: 15,
+      subdomains:['mt0','mt1','mt2','mt3']
     }).addTo(this.map);
 
     savetiles(baseLayer, {
-      zoomlevels: [14, 15, 16, 17], // optional zoomlevels to save, default current zoomlevel
+      zoomlevels: [15, 16, 17, 18, 19], // optional zoomlevels to save, default current zoomlevel
       alwaysDownload: false,
       confirm(layer: any, successCallback: any) {
         // eslint-disable-next-line no-alert

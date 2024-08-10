@@ -1,11 +1,3 @@
 <div style="position: relative;">
-    <div style="position: absolute; z-index: 2;">
-        <input type="number" name="" id="" placeholder="Device" [(ngModel)]="device_id" [style.display]="pc ?  'none' :'inline-block'" max="10" style="width: 50px">
-        <button id="start" (click)="start()"  [style.display]="pc ?  'none' :'inline-block'">Start</button>
-        Device: {{device_id}} {{error}}<button id="stop" (click)="stop()" [style.display]="pc ? 'inline-block' : 'none'">x</button>
-    </div>
-
-    <div style="position: absolute; z-index: 1;">
-        <video *ngIf="!error" #videoElement [style.display]="pc ? 'inline-block' : 'none'" id="video" autoplay="true" playsinline="true" width="100%"></video>
-    </div>
+    <img [src]="imageSrc" alt="ROS Image Stream" />
 </div>

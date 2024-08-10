@@ -1,7 +1,11 @@
 <app-generic *ngIf="camera_size === 'large'" height="480px" width="640px">
-    <app-camera-box/>
+    <div style="position: absolute ;margin-left: 85px; z-index: 1000;">
+        <input style="width: 50px;" [(ngModel)]="inputCamera">
+        <button style="margin-left: 35px;" (click)="changeCamera()">Change Camera</button>
+    </div>
+    <app-camera-box size="large" topic="/camera_frames"/>
 </app-generic>
 
 <app-generic *ngIf="camera_size === 'small'" height="375px" width="500px">
-    <app-camera-box/>
+    <app-camera-box size="small" topic="/camera2/usb_cam2/image_raw/compressed"/>
 </app-generic>

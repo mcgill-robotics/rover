@@ -17,6 +17,8 @@ export class GpsComponent implements AfterViewInit {
   private gps_subscriber: ROSLIB.Topic;
   showModal: boolean = false;
 
+  currentCoords: number[] = [0, 0];
+
   markerDict: { [key: string]: L.Marker } = {}; // to keep track of markers and debris aread on the map 
   debrisDict: { [key: string]: L.Circle } = {};
 
@@ -31,7 +33,7 @@ export class GpsComponent implements AfterViewInit {
 
     const baseLayer = tileLayerOffline('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
       maxZoom: 19,
-      minZoom: 15,
+      minZoom: 13,
       subdomains:['mt0','mt1','mt2','mt3']
     }).addTo(this.map);
 
@@ -70,9 +72,10 @@ export class GpsComponent implements AfterViewInit {
     this.markerService.makeRoverMarker(this.map);
     this.markerService.makeControlStationMarker(this.map);
 
-    this.gps_subscriber.subscribe((message: ROSLIB.Message) => {
+    this.gps_subscriber.subscribe((message: any) => {
       this.markerService.set_gps_data(message);
       this.markerService.moveRoverMarker(this.map);
+      this.currentCoords = message.data;
     });
 
     this.loadMarkersFromStorage();

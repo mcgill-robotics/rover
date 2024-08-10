@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { RosService } from 'src/app/ros.service';
 import * as ROSLIB from 'roslib';
 
@@ -11,6 +11,9 @@ export class CameraBoxComponent {
   isHovered: boolean = true;
   ros: ROSLIB.Ros;
 
+  @Input() topic : string;
+  @Input() size : string;
+
   public imageSrc: string;
 
   constructor(
@@ -22,8 +25,8 @@ export class CameraBoxComponent {
   ngOnInit() {
     new ROSLIB.Topic({
       ros: this.ros,
-      name: '/usb_cam/image_raw/compressed',
-      messageType: 'sensor_msgs/CompressedImage'
+      name: this.topic, //'/usb_cam/image_raw/compressed',
+      messageType: 'sensor_msgs/Image'
     }).subscribe((message: any) => {
       this.imageSrc = 'data:image/jpeg;base64,' + message.data;
     });

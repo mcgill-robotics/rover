@@ -5,21 +5,22 @@
             <div style="display: flex; justify-content: space-between;">
                 <div style="border: solid 1px salmon;">
                     <h2>Carousel</h2>
-                    <h3>
+                    <h4>
                         Rotation:{{orientationCounter}}
-                    </h3>
-                    <button (click)="turn()">Turn</button>
+                    </h4>
+                    <input [(ngModel)]="rotationAngle" placeholder="Angle" > <button (click)="turn()">Turn</button>
+                    <p>You entered: {{ rotationAngle }}</p>
                 </div>
                 <div style="text-align: center; border: solid 1px salmon;">
                     <h2>Auger</h2>
                     <div style="display: flex; align-items: center; flex-direction: column;">
                         <div>
                             <!-- down + turn+, turn+, up+turn,  turn-, + caroussel -->
-                            <button (click)="sendAugerInstruction([-1, 1])">Drill down</button>
+                            <button (click)="sendAugerInstruction([-1, -1])">Drill down</button>
                             <button (click)="sendAugerInstruction([1, 0])">Move Up</button>
-                            <button (click)="sendAugerInstruction([0, 1])">Drill</button>
+                            <button (click)="sendAugerInstruction([0, 1])">Reverse Drill</button>
                             <!-- <button (click)="sendAugerInstruction([1, 1])">Drill Up</button> -->
-                            <button (click)="sendAugerInstruction([0, -1])">Reverse drill</button>
+                            <button (click)="sendAugerInstruction([0, -1])">Drill</button>
                             <button (click)="sendAugerInstruction([0, 0])">Stop drill</button>
                         </div>
                         <!-- <div>

@@ -1,3 +1,4 @@
 <div style="position: relative;">
-    <img [src]="imageSrc" alt="ROS Image Stream" />
+    <img *ngIf="size === 'small' " [src]="imageSrc" height="375px"/>
+    <img *ngIf="size === 'large' " [src]="imageSrc" />
 </div>

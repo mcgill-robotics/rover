@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="/assets/leaflet.css" />
 
 <app-generic height="500px" width="500px" style="margin-right: 10px;">
+  <h3 style="z-index: 1000; position: absolute; margin-left: 50px;">{{currentCoords[0]}} {{currentCoords[1]}}</h3>
   <div id="map" style="scale: 1.00003;">
     <div>
       <a id="updateMarkersBtn" (click)="showModal = true"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"

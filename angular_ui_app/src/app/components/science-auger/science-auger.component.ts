@@ -13,6 +13,8 @@ export class ScienceAugerComponent {
   augerTopic: ROSLIB.Topic;
   carouselTopic: ROSLIB.Topic;
 
+  rotationAngle: any = 0;
+
   ros: ROSLIB.Ros;
 
   constructor(private rosService: RosService) {
@@ -35,10 +37,8 @@ export class ScienceAugerComponent {
 
   // Carousel control [up/down, right left]
   turn() {
-    this.orientationCounter != 7 ? this.orientationCounter++: this.orientationCounter = 0;
-
     this.carouselTopic.publish(new ROSLIB.Message({
-      data : [this.orientationCounter] //actual data to be added (direction, )
+      data : [parseFloat(parseFloat(this.rotationAngle).toFixed())] //actual data to be added (direction, )
     }))
   }
 

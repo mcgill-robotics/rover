@@ -44,6 +44,7 @@ class NodeODriveInterfaceArm:
             # 0x386434413539 = 62003024573753 in decimal
             "rover_arm_shoulder": "386434413539",
             # Not installed yet
+            # "rover_arm_waist": "395935333231",
             "rover_arm_waist": "0",
         }
         self.joint_dict = {

@@ -12,6 +12,8 @@ interface Joint {
   multiplier: number;
   min: number;
   max: number;
+  isBinary?: boolean;  // New property to indicate binary behavior
+
 }
 @Component({
   selector: 'app-arm-component',
@@ -66,9 +68,11 @@ export class ArmComponent implements OnInit {
       button: 4,
       direction: -1,
       setpoint: 0.0,
-      multiplier: 10,
+      multiplier: 50,
       min: -100,
-      max: 100  // Assuming this is a gripper with 0-100% range
+      max: 100,  // Assuming this is a gripper with 0-100% range
+      isBinary: true  // Set to true for binary behavior
+
     },
     {
       name: "joint_wrist_roll",
@@ -76,9 +80,11 @@ export class ArmComponent implements OnInit {
       direction: 1,
       axis: 1,
       setpoint: 0.0,
-      multiplier: 10,
+      multiplier: 50,
       min: -100,
-      max: 100
+      max: 100,
+      isBinary: true  // Set to true for binary behavior
+
     },
     {
       name: "joint_wrist_pitch",
@@ -235,14 +241,26 @@ export class ArmComponent implements OnInit {
       const axisValue = input[key] as number; // Default to axis 1 if not specified
       console.log(`key=${key} axisValue=${axisValue}`);
       if (Math.abs(axisValue) > this.axisThreshold) {
-        if (input[`b${joint.button}`]) {
-          const increment = this.angleIncrement * axisValue * joint.direction * joint.multiplier;
-          const newSetpoint = joint.setpoint + increment;
+        if (joint.isBinary) {
+          if (input[`b${joint.button}`]) {
+            const increment = this.angleIncrement * axisValue * joint.direction * joint.multiplier;
+            const newSetpoint = joint.setpoint + increment;
+            // Enforce limits
+            joint.setpoint = Math.max(joint.min, Math.min(joint.max, newSetpoint));
+          }
+          else {
+            joint.setpoint = 0;
+          }
+        } else {
+          if (input[`b${joint.button}`]) {
+            const increment = this.angleIncrement * axisValue * joint.direction * joint.multiplier;
+            const newSetpoint = joint.setpoint + increment;
 
-          // Enforce limits
-          joint.setpoint = Math.max(joint.min, Math.min(joint.max, newSetpoint));
-
+            // Enforce limits
+            joint.setpoint = Math.max(joint.min, Math.min(joint.max, newSetpoint));
+          }
         }
+
       }
     });
 

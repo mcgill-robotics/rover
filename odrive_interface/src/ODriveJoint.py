@@ -481,7 +481,7 @@ def main():
         # 0x386434413539 = 62003024573753 in decimal
         "rover_arm_elbow": "383834583539",  # change as needed
         "rover_arm_shoulder": "386434413539",
-        "rover_arm_waist": "0",
+        "rover_arm_waist": "395935333231",
         "rover_drive_rf": "385C347A3539",
         "rover_drive_lf": "387134683539",
         "rover_drive_rb": "386134503539",
@@ -609,7 +609,36 @@ def main():
         test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
         test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
     if test_joint_name == "rover_arm_waist":
-        pass
+        print("APPLYING CONFIG for rover_arm_waist...")
+        test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
+        test_odrv_joint.odrv.config.dc_max_positive_current = 6
+        test_odrv_joint.odrv.config.dc_max_negative_current = -0.1
+        test_odrv_joint.odrv.config.brake_resistor0.enable = True
+        test_odrv_joint.odrv.config.brake_resistor0.resistance = 2
+        test_odrv_joint.odrv.axis0.config.motor.motor_type = MotorType.HIGH_CURRENT
+        test_odrv_joint.odrv.axis0.config.motor.torque_constant = 0.04543956043956044
+        test_odrv_joint.odrv.axis0.config.motor.pole_pairs = 7
+        test_odrv_joint.odrv.axis0.config.motor.current_soft_max = 6
+        test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 17.8
+        # test_odrv_joint.odrv.axis0.config.motor.current_hard_max = 12
+        test_odrv_joint.odrv.axis0.config.motor.calibration_current = 2.5
+        test_odrv_joint.odrv.axis0.config.motor.resistance_calib_max_voltage = 2
+        test_odrv_joint.odrv.axis0.config.calibration_lockin.current = 2.5
+        test_odrv_joint.odrv.axis0.controller.config.input_mode = InputMode.PASSTHROUGH
+        test_odrv_joint.odrv.axis0.controller.config.control_mode = (
+            ControlMode.POSITION_CONTROL
+        )
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit = 4
+        test_odrv_joint.odrv.axis0.controller.config.vel_limit_tolerance = 100
+        test_odrv_joint.odrv.axis0.config.torque_soft_min = -2
+        test_odrv_joint.odrv.axis0.config.torque_soft_max = 2
+        test_odrv_joint.odrv.can.config.protocol = Protocol.NONE
+        test_odrv_joint.odrv.config.enable_uart_a = False
+        test_odrv_joint.odrv.rs485_encoder_group0.config.mode = (
+            Rs485EncoderMode.AMT21_POLLING
+        )
+        test_odrv_joint.odrv.axis0.config.load_encoder = EncoderId.RS485_ENCODER0
+        test_odrv_joint.odrv.axis0.config.commutation_encoder = EncoderId.RS485_ENCODER0
     if test_joint_name == "rover_drive_rf":
         test_odrv_joint.odrv.config.dc_bus_overvoltage_trip_level = 30
         test_odrv_joint.odrv.config.dc_bus_undervoltage_trip_level = 10.5

@@ -3,9 +3,9 @@
         <input style="width: 50px;" [(ngModel)]="inputCamera">
         <button style="margin-left: 35px;" (click)="changeCamera()">Change Camera</button>
     </div>
-    <app-camera-box size="large" topic="/camera_frames"/>
+    <app-camera-box size="large" [camId]="camId"/>
 </app-generic>
 
 <app-generic *ngIf="camera_size === 'small'" height="375px" width="500px">
-    <app-camera-box size="small" topic="/camera2/usb_cam2/image_raw/compressed"/>
+    <app-camera-box size="small" [camId]="camId"/>
 </app-generic>

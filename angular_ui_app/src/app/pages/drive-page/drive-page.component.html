@@ -2,15 +2,14 @@
 <div style="width: 100%; height: 100%; margin: auto;">
     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
         <div>
-            <app-camera camera_size="large"/>
+            <app-camera camera_size="large" camId="1"/>
             <!-- <app-backup-camera cameraTopic="/camera_frames" /> -->
             <app-drive-component/>
         </div>
 
         <div>
-            <app-camera camera_size="small"/>
-            <app-science-auger/>
+            <app-camera camera_size="large" camId="2"/>
         </div>
-        <app-gps/>
+        <app-arm-component></app-arm-component>
     </div>
 </div>

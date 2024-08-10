@@ -9,6 +9,7 @@ import { RosService } from 'src/app/ros.service';
 })
 export class CameraComponent {
   @Input() camera_size: string;
+  @Input() camId : string;
 
   cameraSelection: ROSLIB.Topic;
 
@@ -24,7 +25,7 @@ export class CameraComponent {
   ngOnInit() {
     this.cameraSelection = new ROSLIB.Topic({
       ros: this.ros,
-      name: '/camera_selection',
+      name: '/camera_selection_' + this.camId,
       messageType: 'std_msgs/Int16'
     });
   }

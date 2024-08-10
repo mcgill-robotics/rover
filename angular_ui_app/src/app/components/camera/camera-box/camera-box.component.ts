@@ -11,8 +11,9 @@ export class CameraBoxComponent {
   isHovered: boolean = true;
   ros: ROSLIB.Ros;
 
-  @Input() topic: string;
+  // @Input() topic: string;
   @Input() size: string;
+  @Input() camId: string;
 
   public imageSrc: string;
 
@@ -25,7 +26,7 @@ export class CameraBoxComponent {
   ngOnInit() {
     new ROSLIB.Topic({
       ros: this.ros,
-      name: this.topic, //'/usb_cam/image_raw/compressed',
+      name: "camera_frames_" + this.camId,//'/usb_cam/image_raw/compressed',
       messageType: 'std_msgs/String'
     }).subscribe((message: any) => {
       this.imageSrc = 'data:image/jpeg;base64,' + message.data;

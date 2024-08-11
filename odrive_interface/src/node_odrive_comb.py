@@ -414,20 +414,21 @@ class NodeODriveInterfaceComb:
 
             # Home the joints to 0 position
             for joint_name, joint_obj in self.joint_dict.items():
-                try:
-                    if not joint_obj.odrv:
-                        continue
-                    temp = (
-                        self.joint_pos_outshaft_dict[joint_name]
-                        * joint_obj.gear_ratio
-                        / 360
-                    )
-                    joint_obj.odrv.axis0.set_abs_pos(temp)
-                    print("Homing joint: ", joint_name)
-                except Exception as e:
-                    print(
-                        f"Cannot home joint: {joint_name} to position: {self.joint_pos_outshaft_dict[joint_name]} - {str(e)}"
-                    )
+                if "arm" in joint_name:
+                    try:
+                        if not joint_obj.odrv:
+                            continue
+                        temp = (
+                            self.joint_pos_outshaft_dict[joint_name]
+                            * joint_obj.gear_ratio
+                            / 360
+                        )
+                        joint_obj.odrv.axis0.set_abs_pos(temp)
+                        print("Homing joint: ", joint_name)
+                    except Exception as e:
+                        print(
+                            f"Cannot home joint: {joint_name} to position: {self.joint_pos_outshaft_dict[joint_name]} - {str(e)}"
+                        )
 
             # Set all pos_cmd to 0
             for joint_name, joint_obj in self.joint_dict.items():

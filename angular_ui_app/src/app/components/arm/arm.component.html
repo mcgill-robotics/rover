@@ -1,4 +1,4 @@
-<app-generic height="550px" width="450px">
+<app-generic height="600px" width="450px">
     <div style="display: flex; justify-content: space-between;">
         <div>
             Joystick
@@ -10,7 +10,9 @@
             <!-- ArmComponent this.speedControlValue -->
             <td>{{formatNumber(speedControlValue)}}</td>
         </tr>
+        
     </div>
+    <p>State: {{gamepadService.relay_messages_joystick_string}}</p>
     <br />
 
     <div class="arm">

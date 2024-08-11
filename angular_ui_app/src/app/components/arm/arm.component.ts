@@ -41,8 +41,8 @@ export class ArmComponent implements OnInit {
       direction: -1,
       setpoint: 0.0,
       multiplier: 1,
-      min: -35,
-      max: 35
+      min: -45,
+      max: 55
     },
     {
       name: "joint_shoulder",
@@ -123,7 +123,7 @@ export class ArmComponent implements OnInit {
 
   speedControlValue = 0;
 
-  constructor(private gamepadService: GamepadService, private rosService: RosService) {
+  constructor(public gamepadService: GamepadService, private rosService: RosService) {
     this.ros = this.rosService.getRos();
   }
 
@@ -275,6 +275,22 @@ export class ArmComponent implements OnInit {
 
     if (input['b12']) { // Button 11 for brushed joints reset
       console.log('Resetting brushed joints');
+      this.getJointByName("joint_end_effector")!.setpoint = 0.0;
+      this.getJointByName("joint_wrist_roll")!.setpoint = 0.0;
+      this.getJointByName("joint_wrist_pitch")!.setpoint = 0.0;
+    }
+
+    if (input['b10']) {
+      console.log('Straightening End Effector');
+      var newSetpoint = this.getJointByName("joint_shoulder")!.setpoint + this.getJointByName("joint_elbow")!.setpoint;
+      this.getJointByName("joint_wrist_pitch")!.setpoint = Math.max(this.getJointByName("joint_wrist_pitch")!.min, Math.min(this.getJointByName("joint_wrist_pitch")!.max, newSetpoint));
+    }
+
+    if (input['b9']) {
+      console.log('Resting Position');
+      this.getJointByName("joint_elbow")!.setpoint = -40.0;
+      this.getJointByName("joint_shoulder")!.setpoint = -20.0;
+      this.getJointByName("joint_waist")!.setpoint = 0.0;
       this.getJointByName("joint_end_effector")!.setpoint = 0.0;
       this.getJointByName("joint_wrist_roll")!.setpoint = 0.0;
       this.getJointByName("joint_wrist_pitch")!.setpoint = 0.0;

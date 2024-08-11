@@ -14,6 +14,7 @@ export class CameraBoxComponent {
   // @Input() topic: string;
   @Input() size: string;
   @Input() camId: string;
+  @Input() rotationDeg: number;
 
   public imageSrc: string;
 

@@ -1,5 +1,5 @@
 <div style="position: relative;">
     <!-- <img *ngIf="size === 'small' " [src]="imageSrc" height="375px"/> -->
-    <img  style="rotate: 180deg;" *ngIf="camId=='2'" [src]="imageSrc" />
-    <img  *ngIf="camId=='1'" [src]="imageSrc" />
+    <img  [ngStyle]="{'rotate': rotationDeg === 180 ? '180deg' : '0deg'}" *ngIf="camId=='2'" [src]="imageSrc" />
+    <img  [ngStyle]="{'rotate': rotationDeg === 180 ? '180deg' : '0deg'}" *ngIf="camId=='1'" [src]="imageSrc" />
 </div>

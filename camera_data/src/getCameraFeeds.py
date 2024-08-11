@@ -1,6 +1,5 @@
 import cv2
 
-
 class CameraHandler:
     vids = []  # available cameras
 

@@ -40,6 +40,7 @@ catkin_package(
 catkin_install_python(PROGRAMS
   src/node_odrive_arm.py
   src/node_odrive_drive.py
+  src/node_odrive_comb.py
   src/node_brushed.py
   src/node_control_gui.py
   src/ros_path_config.py

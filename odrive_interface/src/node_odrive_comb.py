@@ -31,7 +31,7 @@ class NodeODriveInterfaceComb:
         # CONFIGURATION ---------------------------------------------------------------
         # Serial number of the ODrive controlling the joint
         self.joint_serial_numbers = {
-            #Drive
+            # Drive
             # "rover_drive_rf": "384F34683539",
             "rover_drive_rf": "385C347A3539",
             # "rover_drive_lf": "386134503539",
@@ -40,9 +40,7 @@ class NodeODriveInterfaceComb:
             "rover_drive_rb": "386134503539",
             # "rover_drive_lb": "385C347A3539",
             "rover_drive_lb": "384F34683539",
-
-
-            #Arm
+            # Arm
             # 0x383834583539 = 61814047520057 in decimal
             "rover_arm_elbow": "383834583539",
             # 0x386434413539 = 62003024573753 in decimal
@@ -50,17 +48,17 @@ class NodeODriveInterfaceComb:
             # Not installed yet
             # "rover_arm_waist": "395935333231",
             "rover_arm_waist": "0",
-
         }
 
         # VARIABLES -------------------------------------------------------------------
         # Dictionary of ODriveJoint objects, key is the joint name in string format, value is the ODriveJoint object
         self.joint_dict = {
+            # Drive
             "rover_drive_rf": None,
             "rover_drive_lf": None,
             "rover_drive_rb": None,
             "rover_drive_lb": None,
-
+            # Arm
             "rover_arm_elbow": None,
             "rover_arm_shoulder": None,
             "rover_arm_waist": None,
@@ -79,7 +77,6 @@ class NodeODriveInterfaceComb:
             "rover_arm_waist": [-30, 30],
         }
 
-
         self.locks = {joint_name: Lock() for joint_name in self.joint_dict.keys()}
 
         rospy.init_node("odrive_interface_comb")
@@ -91,7 +88,7 @@ class NodeODriveInterfaceComb:
             "/wheel_velocity_cmd", WheelSpeed, self.handle_drive_cmd
         )
 
-        #Arm
+        # Arm
         self.outshaft_pos_fb_subscriber = rospy.Subscriber(
             "/armBrushlessFb",
             Float32MultiArray,
@@ -103,7 +100,7 @@ class NodeODriveInterfaceComb:
         )
 
         # Publishers
-        #drive
+        # drive
         self.drive_fb_publisher = rospy.Publisher(
             "/wheel_velocity_feedback", WheelSpeed, queue_size=1
         )
@@ -112,7 +109,7 @@ class NodeODriveInterfaceComb:
             "/odrive_state", ODriveStatus, queue_size=1
         )
 
-        #Arm
+        # Arm
         self.odrive_state_publisher = rospy.Publisher(
             "/odrive_status", MotorState, queue_size=1
         )
@@ -170,7 +167,6 @@ class NodeODriveInterfaceComb:
                         f"""Cannot apply vel_cmd {
                             joint_obj.vel_cmd} to joint: {joint_name}"""
                     )
-
 
     def reconnect_joint(self, joint_name, joint_obj):
         # Attempt to reconnect...
@@ -232,12 +228,12 @@ class NodeODriveInterfaceComb:
                 # print("KeyError: 'rover_drive_rf' not found in joint_dict")
                 feedback.right[1] = 0.0  # Default value if key is missing
             self.drive_fb_publisher.publish(feedback)
-    
+
     # Send joints angle feedback to ROS
     def publish_joints_feedback_arm(self):
         feedback = Float32MultiArray()
         for joint_name, joint_obj in self.joint_dict.items():
-            if 'arm' in joint_name:
+            if "arm" in joint_name:
                 if not joint_obj.odrv:
                     continue
                 try:
@@ -264,25 +260,25 @@ class NodeODriveInterfaceComb:
         # CONNECT -----------------------------------------------------
         # for key, value in self.joint_serial_numbers.items():
         for key, value in self.joint_dict.items():
-                # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
-                # self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
-                self.joint_dict[key] = ODriveJoint(
-                    name=key, serial_number=self.joint_serial_numbers[key]
-                )
+            # Instantiate ODriveJoint class whether or not the connection attempt was made/successful
+            # self.joint_dict[key] = ODriveJoint(name=key, serial_number=value)
+            self.joint_dict[key] = ODriveJoint(
+                name=key, serial_number=self.joint_serial_numbers[key]
+            )
 
-                #Set limits for arm
-                if 'arm' in key:
-                    self.joint_dict[key].pos_min_deg = self.joint_pos_lim_dict[key][0]
-                    self.joint_dict[key].pos_max_deg = self.joint_pos_lim_dict[key][1]
+            # Set limits for arm
+            if "arm" in key:
+                self.joint_dict[key].pos_min_deg = self.joint_pos_lim_dict[key][0]
+                self.joint_dict[key].pos_max_deg = self.joint_pos_lim_dict[key][1]
 
-                if value == 0:
-                    print(
-                        f"""Skipping connection for joint: {
+            if value == 0:
+                print(
+                    f"""Skipping connection for joint: {
                             key} due to serial_number being 0"""
-                    )
-                    continue
+                )
+                continue
 
-                self.joint_dict[key].reconnect()
+            self.joint_dict[key].reconnect()
 
         # # CONNECT -----------------------------------------------------
         # for joint_name, joint_obj in self.joint_dict.items():
@@ -340,7 +336,7 @@ class NodeODriveInterfaceComb:
 
         self.is_calibrated = True
 
-         # Set the direction of the motors
+        # Set the direction of the motors
         self.joint_dict["rover_arm_elbow"].gear_ratio = 100
         self.joint_dict["rover_arm_shoulder"].gear_ratio = 100
         self.joint_dict["rover_arm_waist"].gear_ratio = 1
@@ -407,7 +403,7 @@ class NodeODriveInterfaceComb:
                         )
                         t.start()
 
-    #Arm func
+    # Arm func
     def handle_outshaft_fb(self, msg):
         if not self.is_calibrated:
             return
@@ -435,11 +431,11 @@ class NodeODriveInterfaceComb:
 
             # Set all pos_cmd to 0
             for joint_name, joint_obj in self.joint_dict.items():
-                if 'arm' in joint_name:
+                if "arm" in joint_name:
                     joint_obj.pos_cmd = 0
                 self.apply_arm_cmd()
                 self.is_homed = True
-    
+
     # Receive setpoint from external control node
     def handle_arm_cmd(self, msg):
         if not self.is_calibrated:
@@ -453,7 +449,7 @@ class NodeODriveInterfaceComb:
     def apply_arm_cmd(self):
         # APPLY Position Cmd
         for joint_name, joint_obj in self.joint_dict.items():
-            if 'arm' in joint_name:
+            if "arm" in joint_name:
                 if not joint_obj.odrv:
                     continue
                 try:
@@ -482,7 +478,6 @@ class NodeODriveInterfaceComb:
             self.publish_joints_feedback_drive()
 
             self.publish_joints_feedback_arm()
-
 
             # HANDLE ERRORS
             self.handle_joints_error()

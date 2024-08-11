@@ -11,8 +11,8 @@ export class RosService {
   constructor() {
     this.ros = new ROSLIB.Ros({
       // url: 'ws://192.168.154.187:9090'
-      // url: 'ws://192.168.1.69:9090'
-      url: 'ws://localhost:9090'
+      url: 'ws://192.168.1.69:9090'
+      // url: 'ws://localhost:9090'
     });
 
     this.ros.on('connection', () => {

@@ -24,11 +24,13 @@ export class GamepadService {
     controller_callback: (input_dir: { [key: string]: number | boolean }) => void,
   ) {
     window.addEventListener("gamepadconnected", (e: GamepadEvent) => {
-      if (e.gamepad!.id.startsWith("Sony")) {
-        this.controller_gamepad = e.gamepad;
-        this.controller_callback = controller_callback;
-        console.log("Controller connected");
-        setInterval(this.updateControllerStatus.bind(this), 10);
+      console.log("Gamepad connected at index=%d: e.gamepad!.index=%s", e.gamepad!.index, e.gamepad!.id);
+      if (!(e.gamepad!.id.startsWith("Logitech"))) {
+        // if (e.gamepad!.id.startsWith("Sony")) {
+      this.controller_gamepad = e.gamepad;
+      this.controller_callback = controller_callback;
+      console.log("Controller connected");
+      setInterval(this.updateControllerStatus.bind(this), 10);
       }
     });
 
@@ -76,6 +78,7 @@ export class GamepadService {
   }
 
   private updateControllerStatus() {
+    console.log("this.controller_gamepad=%s, this.relay_messages_controller=%s", this.controller_gamepad, this.relay_messages_controller);
     if (this.controller_gamepad && this.relay_messages_controller) {
       let new_gp = navigator.getGamepads()[this.controller_gamepad.index];
       // this.controller_callback(new_gp!.axes.map((v) => v));
@@ -101,6 +104,7 @@ export class GamepadService {
   }
 
   private getJoystickInputDir(gmpd: Gamepad) {
+    console.log("Joystick axes: ", gmpd.axes);
     return {
       "a1": gmpd.axes[0],
       "a2": gmpd.axes[1],
@@ -125,13 +129,19 @@ export class GamepadService {
   }
 
   private getControllerInputDir(gmpd: Gamepad) {
+    console.log("Controller axes getControllerInputDir: ", gmpd.axes);
     return {
+      "axis0": gmpd.axes[0],
+      "axis1": gmpd.axes[1],
+      "axis2": gmpd.axes[2],
+      "axis3": gmpd.axes[3],
+
       "a2": -gmpd.axes[1],
       "a4": gmpd.axes[2],
-      "left": gmpd.buttons[14].pressed,
-      "right": gmpd.buttons[15].pressed,
-      "up": gmpd.buttons[12].pressed,
-      "down": gmpd.buttons[13].pressed
+      // "left": gmpd.buttons[14].pressed,
+      // "right": gmpd.buttons[15].pressed,
+      // "up": gmpd.buttons[12].pressed,
+      // "down": gmpd.buttons[13].pressed
     }
   }
 }

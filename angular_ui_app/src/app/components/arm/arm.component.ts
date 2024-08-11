@@ -51,7 +51,7 @@ export class ArmComponent implements OnInit {
       setpoint: 0.0,
       multiplier: 1,
       min: -50,
-      max: 50
+      max: 90
     },
     {
       name: "joint_waist",
@@ -66,7 +66,7 @@ export class ArmComponent implements OnInit {
     {
       name: "joint_end_effector",
       button: 4,
-      direction: -1,
+      direction: 1,
       setpoint: 0.0,
       multiplier: 50,
       min: -100,
@@ -77,7 +77,7 @@ export class ArmComponent implements OnInit {
     {
       name: "joint_wrist_roll",
       button: 6,
-      direction: 1,
+      direction: -1,
       axis: 1,
       setpoint: 0.0,
       multiplier: 50,
@@ -162,7 +162,7 @@ export class ArmComponent implements OnInit {
     });
 
     // Setup gamepad connection
-    this.gamepadService.connectControllerGamepad(this.controllerCallback.bind(this));
+    // this.gamepadService.connectControllerGamepad(this.controllerCallback.bind(this));
     this.gamepadService.connectJoystickGamepad(this.joystickCallback.bind(this));
   }
 
@@ -192,9 +192,10 @@ export class ArmComponent implements OnInit {
   }
 
 
-  formatNumber(value: number) {
-    return value.toFixed(3);
+  formatNumber(value: number | undefined): string {
+    return (value !== undefined && value !== null) ? value.toFixed(2) : '0.00';
   }
+
 
   private publishJointStates() {
     const brushedMsg = new ROSLIB.Message({
@@ -218,7 +219,7 @@ export class ArmComponent implements OnInit {
 
     // Log joint states
     const jointStates = this.joints.map(joint => `${joint.name}: ${joint.setpoint.toFixed(2)} degrees`).join(' | ');
-    console.log(jointStates);
+    // console.log(jointStates);
   }
 
   private controllerCallback(input: { [key: string]: number | boolean }) {
@@ -239,7 +240,7 @@ export class ArmComponent implements OnInit {
 
       const key = `a${joint.axis || 2}`;
       const axisValue = input[key] as number; // Default to axis 1 if not specified
-      console.log(`key=${key} axisValue=${axisValue}`);
+      // console.log(`key=${key} axisValue=${axisValue}`);
       if (Math.abs(axisValue) > this.axisThreshold) {
         if (joint.isBinary) {
           if (input[`b${joint.button}`]) {

@@ -8,7 +8,7 @@ import * as L from 'leaflet';
 export class MarkerService {
   debris: string = '/assets/obstacle-markers.geojson';
   areas: string = '/assets/debris-areas.geojson';
-  private gps_data: number[] = [51.458529866888036, -112.70487262267218];
+  private gps_data: number[] = [51.470504, -112.751475];
   private prev_gps_data: number[] = [0, 0];
   private control_station: number[] = [0, 0];
   private blueIcon: L.Icon;

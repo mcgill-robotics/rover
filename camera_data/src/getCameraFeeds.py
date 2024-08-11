@@ -1,44 +1,30 @@
+import rospy
+from std_msgs.msg import String
 import cv2
+from camera_config import CAMERA_CONFIG  # Import the camera configuration
 
 class CameraHandler:
-    vids = []  # available cameras
-
     def __init__(self):
-        # Loop 25 times and collect all found cameras
-        # Assumes sequential indices
-        for i in range (25):
-            newCap = cv2.VideoCapture(i, cv2.CAP_V4L2)
+        self.camera_names = list(CAMERA_CONFIG.keys())
+        self.available_cameras = []
 
-            if newCap is not None:
-                newCap.open(i)
+        # Check if cameras are available and open them
+        for name, path in CAMERA_CONFIG.items():
+            newCap = cv2.VideoCapture(path)
+            if newCap.isOpened():
+                self.available_cameras.append(name)  # Store the camera name
+                newCap.release()  # Release after checking
 
-            # check if object is not null
-            if newCap is not None and newCap.isOpened():
-                # add the camera found
-                self.vids.append(newCap)
+    def publish_camera_names(self):
+        rospy.init_node('camera_name_publisher')
+        pub = rospy.Publisher('/available_cameras', String, queue_size=10)
+        rate = rospy.Rate(1)  # 1 Hz
 
-    def get_all_feeds(self):
-        retAndFrame = []
-        # read each capture object in vids and add as a tuple to retAndFrame
-        for i in range(len(self.vids)):
-            newFeed = self.vids[i].read()
-            retAndFrame.append((newFeed[0], newFeed[1], i))
-        
-        return retAndFrame
+        while not rospy.is_shutdown():
+            cameras_str = ",".join(self.available_cameras)  # Join the camera names into a comma-separated string
+            pub.publish(cameras_str)
+            rate.sleep()
 
-# # Runnable for displaying camera feeds
 if __name__ == '__main__':
     camHandler = CameraHandler()
-    while True:
-        retAndFrame = camHandler.get_all_feeds()
-        # display each frame (camera feed) in the list
-        for ret, frame, index in retAndFrame:
-            if ret:
-                cv2.imshow(f"frame {index}", frame)
-
-        # press 'q' to stop displaying
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            for vid in camHandler.vids:
-                vid.release()
-                cv2.destroyAllWindows()
-            break
+    camHandler.publish_camera_names()

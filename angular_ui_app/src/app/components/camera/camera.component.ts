@@ -9,15 +9,13 @@ import { RosService } from 'src/app/ros.service';
 })
 export class CameraComponent {
   @Input() camera_size: string;
-  @Input() camId : string;
+  @Input() camId: string;
 
   cameraSelection: ROSLIB.Topic;
-  rotationDeg : number = 0;
-
-
+  availableCamerasTopic: ROSLIB.Topic;
+  rotationDeg: number = 0;
   inputCamera: string = '';
-  t_val = false;
-
+  availableCameras: string[] = ['No Camera']; // Default option when no cameras are available
   ros: ROSLIB.Ros;
 
   constructor(private rosService: RosService) {
@@ -25,15 +23,35 @@ export class CameraComponent {
   }
 
   ngOnInit() {
+    // Subscribe to the topic that provides available camera names
+    this.availableCamerasTopic = new ROSLIB.Topic({
+      ros: this.ros,
+      name: '/available_cameras', // Topic that will provide the list of camera names
+      messageType: 'std_msgs/String' // Assuming the camera names are sent as a comma-separated string
+    });
+
+    this.availableCamerasTopic.subscribe((message: any) => {
+      if (message.data) {
+        this.availableCameras = message.data.split(','); // Populate the array with camera names
+      } else {
+        this.availableCameras = ['No Camera'];
+      }
+
+      // Automatically select the first available camera or "No Camera" if none are available
+      this.inputCamera = this.availableCameras[0];
+      this.changeCamera();
+    });
+
+    // Initialize the camera selection topic
     this.cameraSelection = new ROSLIB.Topic({
       ros: this.ros,
       name: '/camera_selection_' + this.camId,
-      messageType: 'std_msgs/Int16'
+      messageType: 'std_msgs/String' // Changing to String since camera names are strings
     });
   }
 
   changeCamera() {
-    this.cameraSelection.publish(new ROSLIB.Message({data: parseInt(this.inputCamera)}));
+    this.cameraSelection.publish(new ROSLIB.Message({ data: this.inputCamera }));
   }
 
   flipCamera() {

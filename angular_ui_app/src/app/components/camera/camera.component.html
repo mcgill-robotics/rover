@@ -1,9 +1,10 @@
 <app-generic *ngIf="camera_size === 'large'" height="480px" width="640px">
-    <div style="position: absolute ;margin-left: 85px; z-index: 1000;">
-        <input style="width: 50px;" [(ngModel)]="inputCamera">
-        <button (click)="changeCamera()">Change Camera</button>
+    <div style="position: absolute; margin-left: 85px; z-index: 1000;">
+        <select style="width: 300px;" [(ngModel)]="inputCamera" (change)="changeCamera()">
+            <option *ngFor="let camera of availableCameras" [value]="camera">{{ camera }}</option>
+        </select>
 
-        <button style="margin-left: 250px;" (click)="flipCamera()">Flip</button>
+        <button style="margin-left: 100px;" (click)="flipCamera()">Flip</button>
     </div>
     <app-camera-box size="large" [camId]="camId" [rotationDeg]="rotationDeg"/>
 </app-generic>

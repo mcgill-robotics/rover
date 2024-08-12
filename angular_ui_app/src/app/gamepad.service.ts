@@ -29,10 +29,10 @@ export class GamepadService {
       console.log("Gamepad connected at index=%d: e.gamepad!.index=%s", e.gamepad!.index, e.gamepad!.id);
       if (!(e.gamepad!.id.startsWith("Logitech"))) {
         // if (e.gamepad!.id.startsWith("Sony")) {
-      this.controller_gamepad = e.gamepad;
-      this.controller_callback = controller_callback;
-      console.log("Controller connected");
-      setInterval(this.updateControllerStatus.bind(this), 10);
+        this.controller_gamepad = e.gamepad;
+        this.controller_callback = controller_callback;
+        console.log("Controller connected");
+        setInterval(this.updateControllerStatus.bind(this), 10);
       }
     });
 
@@ -155,11 +155,12 @@ export class GamepadService {
       "b8": gmpd.buttons[8].pressed,
       "b9": gmpd.buttons[9].pressed,
       "b10": gmpd.buttons[10].pressed,
-      "b11": gmpd.buttons[11].pressed
-      // "left": gmpd.buttons[14].pressed,
-      // "right": gmpd.buttons[15].pressed,
-      // "up": gmpd.buttons[12].pressed,
-      // "down": gmpd.buttons[13].pressed
+      "b11": gmpd.buttons[11].pressed,
+
+      "left": gmpd.buttons[14].pressed,
+      "right": gmpd.buttons[15].pressed,
+      "up": gmpd.buttons[12].pressed,
+      "down": gmpd.buttons[13].pressed
     }
   }
 }

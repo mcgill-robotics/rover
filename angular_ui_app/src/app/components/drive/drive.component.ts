@@ -176,20 +176,24 @@ export class DriveComponent implements OnInit, OnDestroy {
     // console.log("Wheel speed", this.wheelVelocityCmd);
     this.publishWheelSpeed();
 
-    if (input['up']) {
-      // this.pantilt_pitch = this.clamp(this.pantilt_pitch + this.angle_delta);
-    }
-    if (input['down']) {
-      // this.pantilt_pitch = this.clamp(this.pantilt_pitch - this.angle_delta);
-    }
-    if (input['left']) {
-      this.pantilt_yaw = this.clamp(this.pantilt_yaw + this.angle_delta);
-    }
-    if (input['right']) {
-      this.pantilt_yaw = this.clamp(this.pantilt_yaw - this.angle_delta);
-    }
+    // let mov = 0.0;
 
-    this.pan_tilt_pub.publish({ data: [this.pantilt_pitch, this.pantilt_yaw] });
+    // if (input['up']) {
+    //   // this.pantilt_pitch = this.clamp(this.pantilt_pitch + this.angle_delta);
+    // }
+    // if (input['down']) {
+    //   // this.pantilt_pitch = this.clamp(this.pantilt_pitch - this.angle_delta);
+    // }
+    // if (input['left']) {
+    //   // this.pantilt_yaw = this.clamp(this.pantilt_yaw + this.angle_delta);
+    //   mov = -1.0;
+    // }
+    // if (input['right']) {
+    //   // this.pantilt_yaw = this.clamp(this.pantilt_yaw - this.angle_delta);
+    //   mov = 1.0;
+    // }
+
+    // this.pan_tilt_pub.publish({ data: [mov] });
   }
   setupGamepadControl() {
 
@@ -292,5 +296,23 @@ export class DriveComponent implements OnInit, OnDestroy {
 
   resetSlider(): void {
     this.keyboard_sensitivity = 0.03;  // Reset to the initial or desired default value
+  }
+
+  // public turn_pantilt_left(): void {
+  //   this.pan_tilt_pub.publish({ data: [-1] });
+  // }
+  // public turn_pantilt_right(): void {
+  //   this.pan_tilt_pub.publish({ data: [1] });
+  // }
+  // public turn_pantilt_null(): void {
+  //   this.pan_tilt_pub.publish({ data: [0] });
+  // }
+
+  public turn_pantilt(direction: number): void {
+    this.pan_tilt_pub.publish({ data: [direction] });
+  }
+
+  public turn_pantilt_null(): void {
+    this.pan_tilt_pub.publish({ data: [0] });
   }
 }

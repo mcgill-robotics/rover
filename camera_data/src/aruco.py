@@ -5,6 +5,7 @@ import numpy as np
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from cv_bridge import CvBridge, CvBridgeError
+import base64
 
 class ArucoDetector:
     def __init__(self):
@@ -52,13 +53,12 @@ class ArucoDetector:
         ret, frame = cap.read()
         if not ret:
             print("Error: Could not read frame.")
-            break
 
         # Convert frame to grayscale
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Detect ArUco markers
-        corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
+        corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
 
 
         if ids is not None:
@@ -76,7 +76,7 @@ class ArucoDetector:
             frame_markers = frame
 
         
-        # rate = rospy.Rate(30) # 20hz
+        rate = rospy.Rate(30) # 20hz
 
         frame_resized = cv2.resize(frame_markers, (640, 480))
         # Convert the frame to JPEG format and compress

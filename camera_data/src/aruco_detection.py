@@ -1,5 +1,21 @@
+#!/usr/bin/env python
+
+import rospy
+from std_msgs.msg import String
+from cv_bridge import CvBridge
+import base64
+from camera_config import CAMERA_CONFIG  # Import the camera configuration
 import cv2
 import numpy as np
+
+class arucopublisher():
+    def __init__(self, camera_indes):
+        rospy.init_node(f'aruco_publisher')
+        self.sub = rospy.Subscriber(f'camera_selection_{self.camera_name.replace(" ", "_")}', String, self.selection_callback)
+        self.webcam_publisher()
+
+
+camera_index = 0
 
 def main():
     # Load the ArUco dictionary and parameters
@@ -7,6 +23,7 @@ def main():
     parameters = cv2.aruco.DetectorParameters_create()
 
     # Open the video capture (0 for the default camera, or provide a video file path)
+    # ui sub topic
     cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
@@ -52,6 +69,9 @@ def main():
     # Release the capture and close windows
     cap.release()
     cv2.destroyAllWindows()
+
+pub = rospy.Publisher(f'camera_frames_{camera_index}', String, queue_size=10)
+
 
 if __name__ == "__main__":
     main()

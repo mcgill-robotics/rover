@@ -42,7 +42,7 @@ export class ArmComponent implements OnInit {
       setpoint: 0.0,
       multiplier: 1,
       min: -45,
-      max: 55
+      max: 60
     },
     {
       name: "joint_shoulder",
@@ -50,7 +50,7 @@ export class ArmComponent implements OnInit {
       direction: -1,
       setpoint: 0.0,
       multiplier: 1,
-      min: -50,
+      min: -54,
       max: 90
     },
     {
@@ -288,8 +288,8 @@ export class ArmComponent implements OnInit {
 
     if (input['b9']) {
       console.log('Resting Position');
-      this.getJointByName("joint_elbow")!.setpoint = -40.0;
-      this.getJointByName("joint_shoulder")!.setpoint = -20.0;
+      this.getJointByName("joint_elbow")!.setpoint = 60.0;
+      this.getJointByName("joint_shoulder")!.setpoint = -45.0;
       this.getJointByName("joint_waist")!.setpoint = 0.0;
       this.getJointByName("joint_end_effector")!.setpoint = 0.0;
       this.getJointByName("joint_wrist_roll")!.setpoint = 0.0;

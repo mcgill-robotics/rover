@@ -176,21 +176,20 @@ export class DriveComponent implements OnInit, OnDestroy {
     // console.log("Wheel speed", this.wheelVelocityCmd);
     this.publishWheelSpeed();
 
-    // if (input_dir['up']) {
-    //   this.pantilt_pitch = this.clamp(this.pantilt_pitch + this.angle_delta);
-    // }
-    // if (input_dir['down']) {
-    //   this.pantilt_pitch = this.clamp(this.pantilt_pitch - this.angle_delta);
-    // }
-    // if (input_dir['left']) {
-    //   this.pantilt_yaw = this.clamp(this.pantilt_yaw + this.angle_delta);
-    // }
-    // if (input_dir['right']) {
-    //   this.pantilt_yaw = this.clamp(this.pantilt_yaw - this.angle_delta);
-    // }
+    if (input['up']) {
+      // this.pantilt_pitch = this.clamp(this.pantilt_pitch + this.angle_delta);
+    }
+    if (input['down']) {
+      // this.pantilt_pitch = this.clamp(this.pantilt_pitch - this.angle_delta);
+    }
+    if (input['left']) {
+      this.pantilt_yaw = this.clamp(this.pantilt_yaw + this.angle_delta);
+    }
+    if (input['right']) {
+      this.pantilt_yaw = this.clamp(this.pantilt_yaw - this.angle_delta);
+    }
 
-    // this.pan_tilt_pub.publish({ data: [this.pantilt_pitch, this.pantilt_yaw] });
-    // );
+    this.pan_tilt_pub.publish({ data: [this.pantilt_pitch, this.pantilt_yaw] });
   }
   setupGamepadControl() {
 

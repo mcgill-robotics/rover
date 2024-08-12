@@ -42,5 +42,6 @@ catkin_install_python(PROGRAMS
   src/camera_publisher_1.py
   src/camera_publisher_2.py
   src/camera_subscriber.py
+  src/aruco.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

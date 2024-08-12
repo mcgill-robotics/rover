@@ -54,14 +54,7 @@ export class MarkerService {
   }
 
   addDefaultDebrisAreas(map: L.Map): void {
-    this.http.get(this.areas).subscribe((res: any) => {
-      for (const c of res.features) {
-        const lon = c.geometry.coordinates[1];
-        const lat = c.geometry.coordinates[0];
-        const rad = c.geometry.size;
-        this.makeNewDebrisAreas(map, c.properties.title, lat, lon, rad);
-      }
-    });
+
   }
 
   makeNewObjectiveMarkers(map: L.Map, title: string, lat: number, long: number): L.Marker {

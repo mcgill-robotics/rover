@@ -31,6 +31,7 @@ export class DriveComponent implements OnInit, OnDestroy {
   // max_linear_vel: number = 3;
   max_linear_vel: number = 50;
   max_angular_vel: number = 10;
+  button_vel_ratio: number = 1;
 
   angular_velocity_scale: number = 0.25; // This will halve the angular velocity
 
@@ -56,7 +57,7 @@ export class DriveComponent implements OnInit, OnDestroy {
 
 
   constructor(
-    private gamepadService: GamepadService,
+    public gamepadService: GamepadService,
     private rosService: RosService
   ) {
     this.ros = this.rosService.getRos();
@@ -143,12 +144,29 @@ export class DriveComponent implements OnInit, OnDestroy {
     // this.rover_angular_vel = -input_dir['axis3'] as number * this.max_angular_vel;
     // this.publishDriveTwist();
 
+    if (input['b6']) { // Button 7 for 25%
+      console.log('Toggled to 25% max speed');
+      this.button_vel_ratio = 0.25;
+    }
+    if (input['b4']) { // Button 4 for 50%
+      console.log('Toggled to 50% max speed');
+      this.button_vel_ratio = 0.5;
+    }
+    if (input['b5']) { // Button 5 for 75%
+      console.log('Toggled to 75% max speed');
+      this.button_vel_ratio = 0.75;
+    }
+    if (input['b7']) { // Button 6 for 100%
+      console.log('Toggled to 100% max speed');
+      this.button_vel_ratio = 1;
+    }
+
     const velocityThreshold = 3;  // Define the velocity threshold
 
-    this.wheelVelocityCmd.leftFront = -input['axis1'] as number * this.max_linear_vel;
-    this.wheelVelocityCmd.leftBack = -input['axis1'] as number * this.max_linear_vel;
-    this.wheelVelocityCmd.rightFront = -input['axis3'] as number * this.max_linear_vel;
-    this.wheelVelocityCmd.rightBack = -input['axis3'] as number * this.max_linear_vel;
+    this.wheelVelocityCmd.leftFront = -input['axis1'] as number * this.max_linear_vel * this.button_vel_ratio;
+    this.wheelVelocityCmd.leftBack = -input['axis1'] as number * this.max_linear_vel * this.button_vel_ratio;
+    this.wheelVelocityCmd.rightFront = -input['axis3'] as number * this.max_linear_vel * this.button_vel_ratio;
+    this.wheelVelocityCmd.rightBack = -input['axis3'] as number * this.max_linear_vel * this.button_vel_ratio;
 
     this.wheelVelocityCmd.leftFront = this.filterVelocity(this.wheelVelocityCmd.leftFront, velocityThreshold);
     this.wheelVelocityCmd.leftBack = this.filterVelocity(this.wheelVelocityCmd.leftBack, velocityThreshold);

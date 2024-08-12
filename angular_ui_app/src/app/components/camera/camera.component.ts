@@ -12,6 +12,8 @@ export class CameraComponent {
   @Input() camId : string;
 
   cameraSelection: ROSLIB.Topic;
+  rotationDeg : number = 0;
+
 
   inputCamera: string = '';
   t_val = false;
@@ -32,5 +34,10 @@ export class CameraComponent {
 
   changeCamera() {
     this.cameraSelection.publish(new ROSLIB.Message({data: parseInt(this.inputCamera)}));
+  }
+
+  flipCamera() {
+    this.rotationDeg += 180;
+    this.rotationDeg = this.rotationDeg % 360;
   }
 }

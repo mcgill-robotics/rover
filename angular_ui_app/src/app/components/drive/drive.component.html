@@ -1,5 +1,5 @@
-<app-generic height="235px" width="640px">
-    Controller <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button>
+<app-generic height="525px" width="640px">
+    Controller <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button> <p>State: {{gamepadService.relay_messages_controller_string}}</p>
     <div class="drive">
         <div id="driveInfo">
             <hr />

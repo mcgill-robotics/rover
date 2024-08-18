@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 
-import arm_kinematics 
+
 import numpy as np
 import rospy
-import math
-from arm_control.msg import ArmControllerInput
 from std_msgs.msg import Float32MultiArray, Float32, Float64
 from sensor_msgs.msg import JointState
-from arm_kinematics import jointLowerLimits, jointUpperLimits
-from std_msgs.msg import String
 
 class Joystick_Gazebo_Trans():
 
@@ -20,8 +16,7 @@ class Joystick_Gazebo_Trans():
         self.elbowCmd = Float64()
         self.wristCmd = Float64()
         self.wristRollCmd = Float64()
-        self.claw1Cmd = Float64()
-        self.claw2Cmd = Float64()
+        self.clawCmd = Float64()
 
         #Initialize fields for FB of each joint of the arm.
         self.tumorFB = Float64()
@@ -29,8 +24,7 @@ class Joystick_Gazebo_Trans():
         self.elbowFB = Float64()
         self.wristFB = Float64()
         self.wristRollFB = Float64()
-        self.claw1FB = Float64()
-        self.claw2FB = Float64()
+        self.clawFB = Float64()
 
         #Initialize fields for Brushed and Brushless FB arrays.
         self.brushedFB = Float32MultiArray()
@@ -72,19 +66,24 @@ class Joystick_Gazebo_Trans():
         brushlessFB = Float32MultiArray()
         
         while not rospy.is_shutdown():
-            brushlessFB.data = [self.elbowFB.data, self.shoulderFB.data, self.tumorFB.data]
-            brushedFB.data = [self.claw1FB.data, self.wristRollFB.data, self.wristFB.data]
 
+            #Put all of the FB data in the corresponding array.
+            brushlessFB.data = [self.elbowFB.data, self.shoulderFB.data, self.tumorFB.data]
+            brushedFB.data = [self.clawFB.data, self.wristRollFB.data, self.wristFB.data]
+
+
+            #Publish msgs to FB topics.
             self.BrushedPublisher.publish(brushedFB)
             self.BrushlessPublisher.publish(brushlessFB)
 
+            #Publish msgs to each arm joint.
             self.joint1Publisher.publish(self.tumorCmd)
             self.joint2Publisher.publish(self.shoulderCmd)
             self.joint3Publisher.publish(self.elbowCmd)
             self.joint4Publisher.publish(self.wristCmd)
             self.joint5Publisher.publish(self.wristRollCmd)
-            self.joint6Publisher.publish(self.claw1Cmd)
-            self.joint7Publisher.publish(self.claw2Cmd)
+            self.joint6Publisher.publish(self.clawCmd)
+            self.joint7Publisher.publish(self.clawCmd)
 
             self.rate.sleep()
 
@@ -99,12 +98,12 @@ class Joystick_Gazebo_Trans():
 
         #If the input for the claw is positive, close it
         if (brushedInp.data[0] > 0):
-            self.claw1Cmd.data, self.claw2Cmd.data = 0.118 
+            self.clawCmd.data = 0.118
+
         
         #if negative, open the claw.
         elif (brushedInp.data[0] < 0):
-            self.claw1Cmd.data, self.claw2Cmd.data = -0.3
-
+            self.clawCmd.data = -0.3
 
     def BrushlessProcess (self, brushlessInp: Float32MultiArray):
         #Distribute entries of brushlessInp into the corresponding topics.
@@ -118,8 +117,7 @@ class Joystick_Gazebo_Trans():
         self.elbowFB.data = jState.position[2] * (180/np.pi)
         self.wristFB.data = jState.position[3] * (180/np.pi)
         self.wristRollFB.data = jState.position[4] * (180/np.pi)
-        self.claw1FB.data = jState.position[5] * (180/np.pi)
-        self.claw2FB.data = jState.position[6] * (180/np.pi)
+        self.clawFB.data = jState.position[5] * (180/np.pi)
 
 if __name__ == "__main__":
   driver = Joystick_Gazebo_Trans()

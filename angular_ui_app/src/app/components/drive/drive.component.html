@@ -1,5 +1,6 @@
 <app-generic height="525px" width="640px">
-    Controller <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button> <p>State: {{gamepadService.relay_messages_controller_string}}</p>
+    Controller <button (click)="enableGamepad()">On</button> <button (click)="disableGamepad()">Off</button>
+    <p>State: {{gamepadService.relay_messages_controller_string}}</p>
     <div class="drive">
         <div id="driveInfo">
             <hr />
@@ -48,6 +49,13 @@
         <div id="panTiltInfo">
             Pan-Tilt
             <p>Pitch: {{pantilt_pitch.toFixed(2)}}, Yaw: {{pantilt_yaw.toFixed(2)}}</p>
+
+            <button type="button" (mousedown)="turn_pantilt(1)" (mouseup)="turn_pantilt_null()"
+                (mouseleave)="turn_pantilt_null()">LEFT</button>
+            <button type="button" (click)="turn_pantilt_null()">STOP</button>
+            <button type="button" (mousedown)="turn_pantilt(-1)" (mouseup)="turn_pantilt_null()"
+                (mouseleave)="turn_pantilt_null()">RIGHT</button>
+
         </div>
     </div>
 </app-generic>

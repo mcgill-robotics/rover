@@ -40,7 +40,7 @@
                     </image>
                     <clip>
                         <near>1.05</near>
-                        <far>5</far>
+                        <far>10</far>
                     </clip>
                 </camera>
                 <plugin name="camera_plugin" filename="libgazebo_ros_openni_kinect.so">
@@ -57,7 +57,7 @@
                     <pointCloudTopicName>/camera/depth/points</pointCloudTopicName>
                     <frameName>camera_link</frameName>
                     <pointCloudCutoff>1.05</pointCloudCutoff>
-                    <pointCloudCutoffMax>5.0</pointCloudCutoffMax>
+                    <pointCloudCutoffMax>10</pointCloudCutoffMax>
                     <distortionK1>0</distortionK1>
                     <distortionK2>0</distortionK2>
                     <distortionK3>0</distortionK3>

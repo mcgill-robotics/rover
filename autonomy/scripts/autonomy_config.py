@@ -7,9 +7,9 @@ ROVER_MODEL_NAME = '/'
 FIXED_FRAME_ID = 'parsed_point_cloud_world'
 
 # offset of the camera from the rover's center
-CAMERA_POSITION_OFFSET = (0, 0, 0)  # visual odom
+# CAMERA_POSITION_OFFSET = (0, 0, 0)  # visual odom
 # CAMERA_POSITION_OFFSET = (0.048, 0, 0.141)  # leo
-# CAMERA_POSITION_OFFSET = (-0.285, 0, 1.1) #  mcgill rover
+CAMERA_POSITION_OFFSET = (-0.285, 0, 1.1) #  mcgill rover
 
 # rounding coefficient for the points
 ROUNDING_COEF = 2

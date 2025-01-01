@@ -5,7 +5,7 @@ from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import Twist
 from gazebo_msgs.msg import ModelStates
 import math
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 
 # Works in three steps 
@@ -31,10 +31,10 @@ class No_obstacles:
     tol_d = 0.1
 
     # angular tolerance (in degrees)
-    tol_a = 3
+    tol_a = 4
 
     # Pick if Position is taken From Gazebo (Cheat) or Odometry
-    CheatT_or_OdomF = True
+    CheatT_or_OdomF = False
     
     def __init__(self):
         rospy.init_node('a_to_b')
@@ -42,7 +42,7 @@ class No_obstacles:
         if (self.CheatT_or_OdomF):
             self.pose_sub = rospy.Subscriber("/gazebo/model_states", ModelStates, self.navigation)
         else:
-            self.pose_sub = rospy.Subscriber("/gazebo/zed2/odom", Odometry, self.navigation)
+            self.pose_sub = rospy.Subscriber("/odometry/filtered", Odometry, self.navigation)
         self.path_sub = rospy.Subscriber("/path", Float32MultiArray, self.update_path)
         rospy.spin()
 
@@ -89,11 +89,12 @@ class No_obstacles:
         return math.sqrt(dx*dx + dy*dy)
     
     def navigation(self, msg):
-        # Update Position and Orientation, Keep the previous one
-        if (self.CheatT_or_OdomF):
-            self.pos = msg.pose[1].position
-            self.ori = self.quart_2D(msg.pose[1].orientation)
-            pitch = self.get_pitch(msg.pose[1].orientation)
+        # Update Position and Orientation
+        if self.CheatT_or_OdomF:
+            model_index = msg.name.index("/")
+            self.pos = msg.pose[model_index].position
+            self.ori = self.quart_2D(msg.pose[model_index].orientation)
+            pitch = self.get_pitch(msg.pose[model_index].orientation)
         else:
             self.pos = msg.pose.pose.position
             self.ori = self.quart_2D(msg.pose.pose.orientation)
@@ -111,8 +112,6 @@ class No_obstacles:
             return
         
         if self.stop_need:
-            print("stopped")
-            print(pitch/45)
             self.vel_pub.publish(Twist(Vector3((pitch/45), 0, 0), Vector3(0, 0, 0)))
             return
 
@@ -147,34 +146,30 @@ class No_obstacles:
             if (angle > self.tol_a):
                 if (angle > 14):
                     angle = 14
-                print("turning")
-                print(pitch/85)
-                print(sign*math.sqrt(angle/50))
-                self.vel_pub.publish(Twist(Vector3(pitch/85,0,0), Vector3(0,0,sign*math.sqrt(angle/50))))
+                if (angle < 5):
+                    angle = 5
+                self.vel_pub.publish(Twist(Vector3(pitch/85,0,0), Vector3(0,0,sign*math.sqrt(angle/80))))
             else:
                 self.turn_need = False
         else:
-            slow = 1
-            turn = 1
+            slow = 1.0
+            turn = 1.0
             if (angle > 15):
                 slow = angle/15
                 turn = 1 - (angle/200)
             dist_left_global = self.global_dist()
             # Thighness of turn is higher for smaller distance and higher angle
             speed_factor = 100*math.sqrt(dist_left_global)
-            if (speed_factor > 0.1):
-                speed_factor = 0.1
-            elif (speed_factor < 0.02):
-                speed_factor = 0.02
+            if (speed_factor > 0.15):
+                speed_factor = 0.15
+            elif (speed_factor < 0.04):
+                speed_factor = 0.04
             if pitch < 0: # Negative pitch will make the robot go backwards if its too big
                 pitch = pitch/100
                 if pitch > -7:
                     pitch = 0
-            print("forward")
-            print(speed_factor/slow + pitch/48)
-            print(sign*math.sqrt(angle/(2000*turn)))
+            self.vel_pub.publish(Twist(Vector3((speed_factor/slow + pitch/48.0),0,0), Vector3(0,0,sign*math.sqrt(angle/(2500*turn)))))
 
-            self.vel_pub.publish(Twist(Vector3((speed_factor/slow + pitch/48),0,0), Vector3(0,0,sign*math.sqrt(angle/(2000*turn)))))
 
 if __name__ == '__main__':
     No_obstacles()

@@ -5,9 +5,8 @@ from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Header, Float32MultiArray
 import sensor_msgs.point_cloud2 as pc2
 from gazebo_msgs.msg._ModelStates import ModelStates
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion, PoseWithCovarianceStamped
 from visualization_msgs.msg import Marker
-from autonomy_config import CAMERA_POSITION_OFFSET, ROUNDING_COEF
 import numpy as np
 from typing import Set, Tuple, List
 from nav_msgs.msg import OccupancyGrid, MapMetaData, Odometry
@@ -53,14 +52,14 @@ class PointCloudTracker:
     CartT_or_GpsF = True
 
     # Pick if Position is taken From Gazebo (Cheat) or Odometry
-    CheatT_or_OdomF = True
+    CheatT_or_OdomF = False
 
 
     # Current Position
-    pos = Point()
+    pos = None
 
     # Current Orientation
-    ori = Quaternion()
+    ori = None
 
     # Landmark arrival tolerance
     tol_d = 0.3
@@ -72,7 +71,7 @@ class PointCloudTracker:
     node_table = dict()
 
     # Entire Landmarks Left
-    landmarks = [[11, 6]]
+    landmarks = [[11, 6], [-5, 11], [-10, -10]]
     # [45.536503, -73.630101]
     
     # Current full path
@@ -116,7 +115,7 @@ class PointCloudTracker:
         if (self.CheatT_or_OdomF):
             self.pose_sub = rospy.Subscriber("/gazebo/model_states", ModelStates, self.update_pos)
         else:
-            self.pose_sub = rospy.Subscriber("/gazebo/zed2/odom", Odometry, self.update_pos)
+            self.pose_sub = rospy.Subscriber("/odometry/filtered", Odometry, self.update_pos)
         self.rviz_rov_marker_pub = rospy.Publisher('rover_position', Marker, queue_size=10)
         self.rviz_landmark_marker_pub = rospy.Publisher('landmarks', Marker, queue_size=10)
         self.new_path = rospy.Publisher('/path', Float32MultiArray, queue_size=10)
@@ -129,8 +128,8 @@ class PointCloudTracker:
             pose_pc = message_filters.Subscriber("/gazebo/model_states", ModelStates)
             ts = message_filters.ApproximateTimeSynchronizer([data_pc, pose_pc], 60, 0.01, allow_headerless=True, reset=True)
         else:
-            pose_pc = message_filters.Subscriber("/gazebo/zed2/odom", Odometry)
-            ts = message_filters.TimeSynchronizer([data_pc, pose_pc], 5)
+            pose_pc = message_filters.Subscriber("/odometry/filtered", Odometry)
+            ts = message_filters.ApproximateTimeSynchronizer([data_pc, pose_pc], 60, 0.01, allow_headerless=True, reset=True)
         ts.registerCallback(self.pcloud2_analysis)
         rospy.spin()
 
@@ -159,16 +158,19 @@ class PointCloudTracker:
             landmark[1] = 6371000 * (lon_rad - ref_lon_rad) * math.cos(ref_lat_rad)
     
     def update_pos(self, msg):
-        if (self.CheatT_or_OdomF):
-            self.pos = msg.pose[1].position
-            self.ori = msg.pose[1].orientation
+        # Update Position and Orientation
+        if self.CheatT_or_OdomF:
+            # Find the index of the desired model
+            model_index = msg.name.index("/")
+            self.pos = msg.pose[model_index].position
+            self.ori = msg.pose[model_index].orientation
         else:
             self.pos = msg.pose.pose.position
             self.ori = msg.pose.pose.orientation
 
         # Update Path if you got close enough
-        if (not self.dist_pp_nobs == None):
-            if (self.dist_pp_nobs < 0.8):
+        if self.dist_pp_nobs is not None:
+            if self.dist_pp_nobs < 0.8:
                 self.dist_pp_nobs = None
                 self.pp_x = None
                 self.pp_y = None
@@ -176,8 +178,8 @@ class PointCloudTracker:
             else:
                 dx = self.pos.x - self.pp_x
                 dy = self.pos.y - self.pp_y
-                curr_dist = math.sqrt(dx*dx + dy*dy)
-                if (curr_dist > self.dist_pp_nobs/3):
+                curr_dist = math.sqrt(dx * dx + dy * dy)
+                if curr_dist > self.dist_pp_nobs / 3:
                     self.dist_pp_nobs = None
                     self.pp_x = None
                     self.pp_y = None
@@ -239,6 +241,10 @@ class PointCloudTracker:
         self.rviz_landmark_marker_pub.publish(marker)
     
     def apply_camera_pose_transform(self, points_tuple: tuple, rover_position_tuple: tuple, camera_orientation_tuple: tuple) -> np.array:
+        # Check if points_tuple is empty
+        if len(points_tuple) == 0:
+            return np.array([])
+        
         Drw = np.reshape(np.array(rover_position_tuple), (3, 1))
         Rrw = self.quaternion_rotation_matrix(self.quaternion_multiplication(camera_orientation_tuple, (0, 0, 0, 1)))
         Trw = np.vstack((
@@ -254,7 +260,7 @@ class PointCloudTracker:
             [-1,0 ,0],
             [0 ,0 ,1]]
         )
-        Dcr = np.reshape(CAMERA_POSITION_OFFSET, (3, 1))
+        Dcr = np.reshape((-0.285, 0, 1.1), (3, 1))
         Tcr = np.vstack((
             np.hstack((Rcr, Dcr)),
             np.hstack((np.zeros((1, 3)), np.array([[1]])))
@@ -274,25 +280,56 @@ class PointCloudTracker:
                 -x1*x0 - y1*y0 - z1*z0 + w1*w0)
 
     def pcloud2_analysis(self, msg1, msg2) -> None:
-        # skip messages which older then 1.1 sec
-        if (msg1.header.stamp.secs + 1 < rospy.get_time()):
+        # Skip messages that are older than 1 seconds
+        if msg1.header.stamp.secs + 1 < rospy.get_time():
             return
-
-        # make sure angular speed was small enough else there will be much of an error on the pointclouds position
-        # if (abs(msg2.twist.twist.angular.x) + abs(msg2.twist.twist.angular.y) + abs(msg2.twist.twist.angular.z) > 0.2):
-        #    return
-        self.pcid = self.pcid + 1
-        if (self.CheatT_or_OdomF):
-            p = msg2.pose[1].position
-            o = msg2.pose[1].orientation
+        
+        self.pcid += 1  # Increment the point cloud ID
+        
+        if self.CheatT_or_OdomF:
+            # Find the index of the desired model in msg2
+            model_index = msg2.name.index("/")  # Replace with your model's name
+            p = msg2.pose[model_index].position
+            o = msg2.pose[model_index].orientation
+            vl = msg2.twist[model_index].linear
+            va = msg2.twist[model_index].angular
+            rover_position_tuple = (p.x, p.y, p.z)
+            rover_orientation_tuple = (o.x, o.y, o.z, o.w)
         else:
+            # Calculate the time difference between the point cloud and localization messages
+            dt = (msg1.header.stamp.secs - msg2.header.stamp.secs) + (msg1.header.stamp.nsecs - msg2.header.stamp.nsecs) / 1e9
             p = msg2.pose.pose.position
             o = msg2.pose.pose.orientation
-        rover_position_tuple = (p.x, p.y, p.z)
-        rover_orientation_tuple = (o.x, o.y, o.z, o.w)
+            vl = msg2.twist.twist.linear
+            va = msg2.twist.twist.angular
+            rover_position_tuple = (p.x + vl.x*dt, p.y + vl.y*dt, p.z + vl.z*dt)
+
+            # Step 1: Calculate the half angle
+            ha = (va.x * 0.5 * dt, va.y * 0.5 * dt, va.z * 0.5 * dt)
+
+            # Step 2: Compute the magnitude of the half angle vector
+            l = math.sqrt(ha[0]**2 + ha[1]**2 + ha[2]**2)
+
+            # Step 3: If the magnitude is greater than zero, normalize the vector
+            if l > 0:
+                ha = (ha[0] * math.sin(l) / l, ha[1] * math.sin(l) / l, ha[2] * math.sin(l) / l)
+            else:
+                ha = (0, 0, 0)  # No rotation if angular velocity is zero
+
+            # Step 4: Create the delta rotation quaternion (cos(l), ha)
+            delta_q = (ha[0], ha[1], ha[2], math.cos(l))
+
+            # Step 5: Update the orientation quaternion
+            o = self.quaternion_multiplication((o.x, o.y, o.z, o.w), delta_q)
+
+            # Step 6: Normalize the resulting quaternion to avoid drift
+            o_mag = math.sqrt(o[0]**2 + o[1]**2 + o[2]**2 + o[3]**2)
+            o = (o[0] / o_mag, o[1] / o_mag, o[2] / o_mag, o[3] / o_mag)
+
+            rover_orientation_tuple = (o[0], o[1], o[2], o[3])
 
         points_np = np.array(list(pc2.read_points(msg1, field_names=['x', 'y', 'z'], skip_nans=True)))
-        points_transformed_np = np.round(self.apply_camera_pose_transform(points_np, rover_position_tuple, rover_orientation_tuple).T, decimals=ROUNDING_COEF)
+        points_transformed_np = np.round(self.apply_camera_pose_transform(points_np, rover_position_tuple, rover_orientation_tuple).T, decimals=2)
         
         new_obstacle_points = points_transformed_np
         # Iterate through the array and map the 2s
@@ -446,7 +483,7 @@ class PointCloudTracker:
                 self.map[X+dxx][Y+dyy].buffer = buffer_lvl
             if buffer_lvl >= self.BUFFER_LVL_1 and self.map[X+dxx][Y+dyy].on_path:
                 self.dangerous_obstacles.append((X+dxx, Y+dyy))
-                if (((p.x - X+dxx)**2 + (p.y - Y+dyy)**2) < 0.64):
+                if (((p.x - X+dxx)**2 + (p.y - Y+dyy)**2) < 0.65):
                     s = Float32MultiArray()
                     s.data = []
                     while (self.new_path.get_num_connections() < 1):
@@ -455,11 +492,13 @@ class PointCloudTracker:
             
     # Find the path, send it to moving.py
     def update_path(self):
-        #   While the path is  being updated, the rover must be stopped
+        start_time = rospy.get_time()  # Record the start time using rospy
+        rospy.loginfo("Finding new path...")
+        # While the path is being updated, the rover must be stopped
         s = Float32MultiArray()
         s.data = []
 
-        while (self.new_path.get_num_connections() < 1):
+        while self.new_path.get_num_connections() < 1:
             pass
         self.new_path.publish(s)
         x1 = self.pos.x
@@ -471,17 +510,17 @@ class PointCloudTracker:
         A = self.xy_to_XY(x1, y1)
         B = self.xy_to_XY(x2, y2)
         new_path_XY = self.pathfinding(tuple(A), tuple(B), self.BUFFER_LVL_1)
-        if (not new_path_XY[0]):
-            print('Allowing Yellow')
+        if not new_path_XY[0]:
+            rospy.loginfo("Allowing Yellow Paths")
             new_path_XY = self.pathfinding(tuple(A), tuple(B), self.BUFFER_LVL_2)
-        if (new_path_XY[0]):
+        if new_path_XY[0]:
             new_path_XY = new_path_XY[1]
-        else: 
-            print("No Path Available")
+        else:
+            rospy.logerr("No Path Available")
             exit()
         # new_path_XY contains the entire path, update the on_path fields.
         # Nuke old fields
-        if (not self.cur_p == None):
+        if self.cur_p is not None:
             for point in self.cur_p:
                 X = point[0]
                 Y = point[1]
@@ -501,10 +540,14 @@ class PointCloudTracker:
             sent_array.append(y)
         f = Float32MultiArray()
         f.data = sent_array
-        while (self.new_path.get_num_connections() < 1):
+        while self.new_path.get_num_connections() < 1:
             pass
         self.new_path.publish(f)
-            
+
+        end_time = rospy.get_time()  # Record the end time using rospy
+        time_taken = end_time - start_time  # Calculate the duration
+        rospy.loginfo(f"New path found. Time taken: {time_taken:.2f} seconds")
+
 
     def quaternion_rotation_matrix(self, Q: tuple):
         """
@@ -658,6 +701,11 @@ class PointCloudTracker:
 if __name__ == '__main__':
     tracker = PointCloudTracker()
     tracker.pubs_and_list()
+    while (tracker.pos == None and tracker.ori == None):
+        pass
+    for landmark in tracker.landmarks:
+        landmark[0] = landmark[0] + tracker.pos.x
+        landmark[1] = landmark[1] + tracker.pos.y
     tracker.mark_landmarks()
     tracker.update_path()
     tracker.cam_listener()

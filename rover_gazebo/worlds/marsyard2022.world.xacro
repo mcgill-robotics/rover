@@ -37,33 +37,7 @@
       <uri>model://marsyard2022_terrain</uri>
     </include>
 
-    <xacro:include filename="sdf/landmark.sdf.xacro" />
-
-    <xacro:macro name="landmark_with_offset" params="id x y z yaw">
-      <xacro:property name="x_offset" value="-17.003807" />
-      <xacro:property name="y_offset" value="7.617856" />
-      <xacro:property name="z_offset" value="1.352268" />
-
-      <xacro:landmark id="${id}">
-        <pose>${x + x_offset} ${y + y_offset} ${z + z_offset} 0 0 ${yaw}</pose>
-      </xacro:landmark>
-    </xacro:macro>
-
-    <xacro:landmark_with_offset id="1" x="10.0" y="0.0" z="-0.18" yaw="0.0" />
-    <xacro:landmark_with_offset id="2" x="10.0" y="-10.0" z="-0.46" yaw="0.0" />
-    <xacro:landmark_with_offset id="3" x="28.35" y="-0.04" z="-0.09" yaw="-0.50" />
-    <xacro:landmark_with_offset id="4" x="21.83" y="-2.80" z="-0.28" yaw="-0.29" />
-    <xacro:landmark_with_offset id="5" x="18.71" y="-17.19" z="0.23" yaw="0.53" />
-    <xacro:landmark_with_offset id="6" x="26.95" y="-7.44" z="-0.08" yaw="-1.35" />
-    <xacro:landmark_with_offset id="7" x="15.97" y="7.57" z="-0.41" yaw="-1.31" />
-    <xacro:landmark_with_offset id="8" x="17.87" y="-7.57" z="0.10" yaw="-0.79" />
-    <xacro:landmark_with_offset id="9" x="10.0" y="10.0" z="-0.39" yaw="-0.90" />
-    <xacro:landmark_with_offset id="10" x="29.26" y="-14.52" z="0.13" yaw="-1.52" />
-    <xacro:landmark_with_offset id="11" x="18.41" y="-25.83" z="0.31" yaw="0.08" />
-    <xacro:landmark_with_offset id="12" x="23.34" y="-14.11" z="0.63" yaw="-0.10" />
-    <xacro:landmark_with_offset id="13" x="8.18" y="-18.63" z="0.44" yaw="-0.40" />
-    <xacro:landmark_with_offset id="15" x="2.27" y="-16.84" z="-0.1" yaw="-0.56" />
-
-
+    <!-- Removed the landmarks section as it was not needed -->
+    
   </world>
 </sdf>

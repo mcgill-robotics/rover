@@ -1,0 +1,13 @@
+<launch>
+  <!-- Launch the rover driving simulation from the rover_gazebo package -->
+  <include file="$(find rover_gazebo)/launch/rover.launch" />
+
+  <!-- Start RViz with the custom configuration -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find autonomy)/rviz/map.rviz" output="screen" />
+
+  <!-- Start the moving.py script -->
+  <node name="moving_node" pkg="autonomy" type="moving.py" output="screen" />
+
+  <!-- Start the mapping.py script -->
+  <node name="mapping_node" pkg="autonomy" type="mapping.py" output="screen" />
+</launch>

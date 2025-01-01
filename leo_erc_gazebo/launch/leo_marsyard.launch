@@ -1,0 +1,6 @@
+<launch>
+
+  <include file="$(find leo_erc_gazebo)/launch/leo_marsyard2022.launch"
+           pass_all_args="true"/>
+
+</launch>

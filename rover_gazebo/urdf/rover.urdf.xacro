@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <robot name="myfirst" xmlns:xacro="http://ros.org/wiki/xacro">
+    <!-- Include other URDF files -->
     <xacro:include filename="$(find rover_gazebo)/urdf/wheel.urdf.xacro" />
     <xacro:include filename="$(find rover_gazebo)/urdf/depth_camera.urdf.xacro" />
+
     <link name="base_link">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <mass value="45.2" />
-            <!-- <inertia ixx="0" ixy="0.0" ixz="0.0" iyy="0" iyz="0.0" izz="0"/> -->
             <inertia ixx="1.7724" ixy="0.0" ixz="0.0" iyy="0.141558" iyz="-0.0" izz="0.179826" />
         </inertial>
         <visual>
@@ -18,7 +19,6 @@
         <collision>
             <origin xyz="0 0 0.4" rpy="0 0 0" />
             <geometry>
-                <!-- <mesh filename="package://rover_gazebo/meshes/Full_Asm_Adjusted.dae"/> -->
                 <box size="1 .5 .25" />
             </geometry>
         </collision>
@@ -30,9 +30,9 @@
         <parent link="base_footprint" />
         <child link="base_link" />
         <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
-        <axis xyz="0 1 0" rpy="0 0 0" />
     </joint>
 
+    <!-- Wheels -->
     <xacro:wheel wheel_prefix="left" parent_link="base_link">
         <origin xyz="0.316275 0.5125 ${-0.060752 + .1}" rpy="0 3.141592 ${3.141592/2}" />
     </xacro:wheel>
@@ -49,13 +49,57 @@
         <origin xyz="-0.306875 -0.5125 ${-0.060752 + .1}" rpy="0 0 ${3.141592/2}" />
     </xacro:wheel>
 
+    <!-- Depth Camera -->
     <xacro:depth_camera parent_link="base_link">
-        <origin xyz="-0.2754 0 ${0.9943 + .1}" rpy="0 0 0"/>
+        <origin xyz="-0.2754 0 ${0.9943 + .1}" rpy="0 0 0" />
     </xacro:depth_camera>
+
+    <!-- IMU sensor -->
+    <joint name="imu_joint" type="fixed">
+        <axis xyz="1 0 0"/>
+        <origin xyz="0 0 0.205"/>  <!-- Raised 10 cm higher -->
+        <parent link="base_link"/>
+        <child link="imu_link"/>
+    </joint>
+
+    <link name="imu_link">
+        <inertial>
+            <mass value="0.001"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.0001"/>
+        </inertial>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.05 0.05 0.05"/>  <!-- Smaller size -->
+            </geometry>
+            <!-- Red material definition -->
+            <material name="red">
+                <color rgba="1.0 0.0 0.0 1.0"/>
+            </material>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <box size="0.05 0.05 0.05"/>  <!-- Smaller size -->
+            </geometry>
+        </collision>
+    </link>
 
     <gazebo>
         <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
             <robotNamespace>/</robotNamespace>
+        </plugin>
+
+        <!-- IMU Sensor Plugin for Gazebo -->
+        <plugin name="imu_sensor_plugin" filename="libgazebo_ros_imu.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>50.0</updateRate>
+            <bodyName>imu_link</bodyName>
+            <topicName>/imu/data</topicName>
+            <gaussianNoise>2.89e-08</gaussianNoise>
+            <xyzOffsets>0 0 0</xyzOffsets>
+            <rpyOffsets>0 0 0</rpyOffsets>
         </plugin>
     </gazebo>
 </robot>

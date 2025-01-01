@@ -1,0 +1,78 @@
+<launch>
+
+  <arg name="robot_ns" default="/"/>
+  <arg name="model_name" default="leo"/>
+
+  <arg name="tf_frame_prefix" 
+       value="$(eval '' if robot_ns == '/' else robot_ns + '/')"/>
+
+  <group ns="$(arg robot_ns)">
+
+    <rosparam command="load" file="$(find leo_erc_gazebo)/config/controllers.yaml"/>
+    
+    <node name="controller_spawner" 
+          pkg="controller_manager"
+          type="spawner" args="
+      gazebo/controllers/state
+      gazebo/controllers/diff_drive
+    "/>
+
+    <group ns="gazebo/zed2">
+
+      <node name="rgbd_odometry"
+            pkg="rtabmap_ros"
+            type="rgbd_odometry">
+        <param name="frame_id" value="$(arg tf_frame_prefix)base_link"/>
+        <param name="odom_frame_id" value="$(arg tf_frame_prefix)odom"/>
+        <param name="publish_tf" value="false"/>
+
+        <remap from="rgb/image" to="/$(arg robot_ns)/zed2/left/image_rect_color"/>
+        <remap from="rgb/camera_info" to="/$(arg robot_ns)/zed2/left/camera_info"/>
+        <remap from="depth/image" to="/$(arg robot_ns)/zed2/depth/depth_registered"/>
+      </node>
+
+      <!-- Disable verbose output from rgbd_odometry node -->
+      <node name="set_rgbd_odometry_log_level"
+            pkg="rosservice"
+            type="rosservice"
+            args="call --wait rgbd_odometry/set_logger_level 'ros.rtabmap_ros' 'warn'"/>
+
+    </group>
+
+    <node name="robot_state_publisher"
+          pkg="robot_state_publisher"
+          type="robot_state_publisher"/>
+
+    <node name="cmd_vel_relay"
+          pkg="topic_tools"
+          type="relay"
+          args="cmd_vel gazebo/controllers/diff_drive/cmd_vel"/>
+
+    <node name="odom_compat_node"
+          pkg="leo_erc_gazebo"
+          type="odom_compat_node"/>
+
+    <node name="zed2_imu_transform_publisher"
+          pkg="rostopic"
+          type="rostopic"
+          args="pub zed2/left_cam_imu_transform geometry_msgs/Transform --latch
+                --file=$(find leo_erc_gazebo)/config/zed2/left_cam_imu_transform.yaml"/>
+
+    <node name="zed2_imu_transform_broadcaster"
+          pkg="leo_erc_gazebo"
+          type="zed2_imu_transform_broadcaster">
+      <param name="tf_frame_prefix" value="$(arg tf_frame_prefix)"/>
+    </node>
+
+    <node name="pdu_node"
+          pkg="leo_erc_gazebo"
+          type="pdu_node">
+      <param name="probe_basename" value="$(arg tf_frame_prefix)probe"/>
+      <param name="spawn_reference_frame"
+             value="$(arg model_name)::$(arg tf_frame_prefix)base_footprint"/>
+      <rosparam command="load" file="$(find leo_erc_gazebo)/config/pdu.yaml"/>
+    </node>
+
+  </group>
+
+</launch>
